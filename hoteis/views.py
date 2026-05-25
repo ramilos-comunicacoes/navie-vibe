@@ -31,6 +31,21 @@ def detalhe(request, hotel_id):
     }
     return render(request, 'hoteis/detalhe.html', context)
 
+def vanity_url(request, slug):
+    """
+    Exibe a vitrine B2C pública do hotel a partir do seu slug customizado (vanity URL).
+    """
+    hotel = get_object_or_404(Hotel, slug=slug)
+    quartos = hotel.quartos.all()
+    imagens = hotel.imagens.all()
+    
+    context = {
+        'hotel': hotel,
+        'quartos': quartos,
+        'imagens': imagens,
+    }
+    return render(request, 'hoteis/detalhe.html', context)
+
 def api_check_disponibilidade(request, hotel_id):
     checkin_str = request.GET.get('checkin')
     checkout_str = request.GET.get('checkout')
@@ -660,6 +675,16 @@ def partner_salvar_configuracoes(request):
     hotel.whatsapp = request.POST.get('whatsapp', hotel.whatsapp)
     hotel.cor_primaria = request.POST.get('cor_primaria', hotel.cor_primaria)
     hotel.hero_tipo = request.POST.get('hero_tipo', hotel.hero_tipo)
+    
+    # URL Customizada (Slug) com verificador de colisão e termos reservados
+    slug = request.POST.get('slug', '').strip().lower().replace(' ', '-')
+    if slug:
+        colisao = Hotel.objects.filter(slug=slug).exclude(id=hotel.id).exists()
+        reservado = slug in ['admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media']
+        if colisao or reservado:
+            messages.error(request, f"O link '/{slug}' já está em uso ou é um termo reservado do sistema. Por favor, escolha outro link.")
+            return redirect('hoteis:partner_dashboard')
+        hotel.slug = slug
     
     # Geolocalização
     lat = request.POST.get('latitude', '').strip().replace(',', '.')

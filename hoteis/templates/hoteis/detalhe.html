@@ -31,21 +31,60 @@
     .swiper-pagination-bullet-active {
         background: {{ hotel.cor_primaria|default:"#2563eb" }} !important;
     }
+
+    /* Cabeçalho transparente premium exclusivo para páginas de hotel */
+    @media (min-width: 768px) {
+        header.sticky {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: transparent !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+            z-index: 100 !important;
+        }
+        header.sticky nav a, header.sticky .text-gray-600, header.sticky span, header.sticky button {
+            color: rgba(255, 255, 255, 0.95) !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        header.sticky nav a:hover {
+            color: var(--navie-primary) !important;
+        }
+        header.sticky i[data-lucide] {
+            color: rgba(255, 255, 255, 0.95) !important;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        header.sticky span.bg-red-500 {
+            background-color: var(--navie-primary) !important;
+            color: #ffffff !important;
+        }
+        header.sticky img {
+            filter: brightness(0) invert(1) !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- CDN do Alpine.js para reatividade de abas no B2C -->
+<script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
+
+<!-- Folha de estilo e Scripts Leaflet para o mapa B2C -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <!-- Modal Premium Notification -->
 <div id="aviso-modal" class="fixed inset-0 flex items-center justify-center z-[100] hidden" style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px);">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden transform transition-all">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden transform transition-all animate-in fade-in zoom-in duration-300">
         <div class="p-6">
             <div class="flex justify-between items-start mb-4">
                 <div class="flex items-center gap-3 text-red-600">
-                    <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                    <span class="flex items-center" style="pointer-events: none;"><i data-lucide="alert-circle" class="w-6 h-6"></i></span>
                     <h3 class="text-xl font-bold text-gray-900">Aviso</h3>
                 </div>
                 <button type="button" onclick="closeModal()" class="text-gray-400 hover:text-gray-800 transition-colors">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+                    <span class="flex items-center" style="pointer-events: none;"><i data-lucide="x" class="w-6 h-6"></i></span>
                 </button>
             </div>
             <p id="modal-msg" class="text-gray-600 text-base leading-relaxed">Mensagem de alerta.</p>
@@ -53,144 +92,105 @@
     </div>
 </div>
 
-<main class="container mx-auto px-4 md:px-8 xl:px-16 py-8">
-    <div class="lg:grid lg:grid-cols-3 lg:gap-12 lg:items-start">
-        
-        <!-- Coluna Esquerda: Informações do Hotel -->
-        <div class="lg:col-span-2">
-            <!-- Carrossel Principal do Hotel -->
-            <div class="relative rounded-2xl overflow-hidden h-64 md:h-96 mb-8 bg-gray-200 z-0">
-                {% if hotel.hero_tipo == 'video' and hotel.hero_video %}
-                    <video src="{{ hotel.hero_video.url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
-                {% elif imagens %}
-                <div class="swiper hotel-swiper h-full w-full">
-                    <div class="swiper-wrapper">
-                        {% if hotel.banner %}
-                        <div class="swiper-slide">
-                            <img src="{{ hotel.banner.url }}" class="w-full h-full object-cover" />
-                        </div>
-                        {% endif %}
-                        {% for img in imagens %}
-                        <div class="swiper-slide">
-                            <img src="{{ img.url_imagem.url }}" class="w-full h-full object-cover" />
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="swiper-pagination"></div>
-                </div>
-                {% else %}
-                    {% if hotel.banner %}
-                        <img src="{{ hotel.banner.url }}" class="w-full h-full object-cover">
-                    {% else %}
-                        <div class="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500">Sem Imagem</div>
-                    {% endif %}
-                {% endif %}
-            </div>
+<!-- HERO BANNER PREMIUM FULL-WIDTH -->
+<div class="relative w-full h-[380px] md:h-[520px] bg-slate-950 overflow-hidden flex items-end">
+    <!-- Mídia de Fundo (Vídeo ou Imagem) -->
+    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-black/40 z-10"></div>
+        {% if hotel.hero_tipo == 'video' and hotel.hero_video %}
+            <video src="{{ hotel.hero_video.url }}" class="w-full h-full object-cover opacity-80" autoplay loop muted playsinline></video>
+        {% elif hotel.banner %}
+            <img src="{{ hotel.banner.url }}" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-85">
+        {% else %}
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-80">
+        {% endif %}
+    </div>
 
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">{{ hotel.nome }}</h1>
-            <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-8 text-gray-600 mb-8">
-                {% if hotel.horario_inicio %}
-                <div class="flex items-center gap-3">
-                    <i data-lucide="clock" class="w-6 h-6 text-action-blue"></i>
-                    <span class="font-semibold">Check-in às {{ hotel.horario_inicio|time:"H:i" }}</span>
-                </div>
-                {% endif %}
-                <div class="flex items-center gap-3">
-                    <i data-lucide="map-pin" class="w-6 h-6 text-action-blue"></i>
-                    <span class="font-semibold">{{ hotel.local.nome }}</span>
-                </div>
+    <!-- Informações do Hotel sobre o Hero -->
+    <div class="container mx-auto px-4 md:px-8 xl:px-16 pb-12 md:pb-16 relative z-20 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div class="flex items-center gap-4 md:gap-6">
+            {% if hotel.logo %}
+            <div class="w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-3xl bg-white p-2 md:p-3 shadow-2xl flex items-center justify-center shrink-0 border border-white/20 select-none">
+                <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain">
             </div>
+            {% endif %}
             
-            <div class="prose max-w-none text-gray-700 space-y-6 text-lg">
-                <h3 class="text-xl font-bold mb-2">Sobre este lugar</h3>
-                <p>{{ hotel.descricao|linebreaksbr }}</p>
-            </div>
-            
-            <div class="mt-12">
-                <h3 class="text-xl font-bold mb-4">Localização</h3>
-                <p class="text-gray-600 mb-4">{{ hotel.local.endereco }}, {{ hotel.local.cidade }} - {{ hotel.local.estado }}</p>
+            <div class="space-y-2 md:space-y-3">
+                <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">{{ hotel.nome }}</h1>
+                <div class="flex flex-wrap items-center gap-3 text-white/90">
+                    {% if hotel.horario_inicio %}
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-3.5 h-3.5 text-action-blue"></i></span> Check-in {{ hotel.horario_inicio|time:"H:i" }}
+                    </span>
+                    {% endif %}
+                    
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-action-blue"></i></span> {{ hotel.local.cidade }}
+                    </span>
+                </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Coluna Direita: Reserva e Painel de Quartos -->
-        <div class="lg:col-start-3 lg:row-start-1 lg:sticky lg:top-28 mt-8 lg:mt-0">
+<!-- FORMULÁRIO DE COMPRA INTEGRADO -->
+<form id="cart-form" action="#" method="POST" class="w-full">
+    {% csrf_token %}
+    
+    <main class="container mx-auto px-4 md:px-8 xl:px-16 py-10 relative">
+        <div class="lg:grid lg:grid-cols-3 lg:gap-12 lg:items-start">
             
-            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 flex flex-col">
-                <h2 class="text-2xl font-bold mb-4 flex items-center gap-2"><i data-lucide="calendar-check" class="text-action-blue w-6 h-6"></i> Planeje sua Viagem</h2>
+            <!-- Coluna Esquerda: Abas Reativas -->
+            <div class="lg:col-span-2" x-data="{ currentTab: 'quartos' }">
                 
-                <!-- Buscador de Datas Customizado Premium -->
-                <div class="mb-8" style="z-index: 20; position: relative;">
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Check-in -->
-                        <div id="btn-checkin" class="bg-white p-4 rounded-2xl text-left shadow-sm hover:shadow-md transition-all flex flex-col cursor-pointer" style="border: 1px solid #f3f4f6;">
-                            <span class="block text-xs uppercase tracking-wider font-bold text-gray-500 mb-2">Check-in</span>
-                            <div class="flex justify-between items-center w-full">
-                                <input type="text" id="label-checkin" placeholder="dd/mm/aaaa" class="font-bold text-gray-800 text-sm mr-2 w-full" style="background: transparent; border: none; outline: none; box-shadow: none;" maxlength="10" autocomplete="off">
-                                <i data-lucide="calendar" class="w-5 h-5 text-action-blue flex-shrink-0 cursor-pointer"></i>
-                            </div>
-                        </div>
-                        
-                        <!-- Check-out -->
-                        <div id="btn-checkout" class="bg-white p-4 rounded-2xl text-left shadow-sm hover:shadow-md transition-all flex flex-col cursor-pointer" style="border: 1px solid #f3f4f6;">
-                            <span class="block text-xs uppercase tracking-wider font-bold text-gray-500 mb-2">Check-out</span>
-                            <div class="flex justify-between items-center w-full">
-                                <input type="text" id="label-checkout" placeholder="dd/mm/aaaa" class="font-bold text-gray-800 text-sm mr-2 w-full" style="background: transparent; border: none; outline: none; box-shadow: none;" maxlength="10" autocomplete="off">
-                                <i data-lucide="calendar" class="w-5 h-5 text-action-blue flex-shrink-0 cursor-pointer"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Inputs reais ocultos -->
-                    <input type="hidden" id="input-checkin" name="checkin" value="">
-                    <input type="hidden" id="input-checkout" name="checkout" value="">
+                <!-- Abas Chaveadoras -->
+                <div class="flex gap-1 border-b border-gray-150 mb-8 select-none">
+                    <button type="button" @click="currentTab = 'quartos'" 
+                            :class="currentTab === 'quartos' ? 'border-action-blue text-action-blue font-black' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200'"
+                            class="py-4 px-6 border-b-2 text-sm uppercase tracking-wider font-bold transition-all flex items-center gap-2">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="bed-double" class="w-4 h-4"></i></span> Quartos Disponíveis
+                    </button>
+                    <button type="button" @click="currentTab = 'sobre'" 
+                            :class="currentTab === 'sobre' ? 'border-action-blue text-action-blue font-black' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200'"
+                            class="py-4 px-6 border-b-2 text-sm uppercase tracking-wider font-bold transition-all flex items-center gap-2">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="info" class="w-4 h-4"></i></span> Conheça o Hotel
+                    </button>
                 </div>
 
-                <!-- Popup global do Calendário - posicionado via JS com position:fixed -->
-                <div id="custom-calendar-popup" class="hidden bg-white rounded-2xl p-4" style="position: fixed; z-index: 9999; width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06);">
-                    <div class="flex justify-between items-center mb-4">
-                        <button type="button" id="cal-prev" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-left" class="w-5 h-5 text-gray-600"></i></button>
-                        <div id="cal-month-year" class="font-bold text-gray-900 text-sm uppercase tracking-wide">Mês Ano</div>
-                        <button type="button" id="cal-next" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-right" class="w-5 h-5 text-gray-600"></i></button>
+                <!-- CONTEÚDO DA ABA 1: QUARTOS DISPONÍVEIS -->
+                <div x-show="currentTab === 'quartos'" class="space-y-6" x-transition.opacity>
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900 leading-tight">Escolha suas Acomodações</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Selecione a quantidade de acomodações ideais para sua estadia</p>
+                        </div>
                     </div>
-                    <div class="mb-2 uppercase" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 10px; font-weight: 800; color: #1d4ed8;">
-                        <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
-                    </div>
-                    <div id="cal-days" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center;">
-                        <!-- Dias Injetados via JS -->
-                    </div>
-                </div>
-                
-                <!-- Formulário de Compra -->
-                <form id="cart-form" action="#" method="POST">
-                    {% csrf_token %}
-                    <h3 class="text-lg font-bold mb-4 text-gray-800">Escolha seu Quarto</h3>
                     
                     <div class="space-y-4" id="lista-quartos">
                         {% for quarto in quartos %}
-                        
-                        <div class="quarto-card bg-white rounded-2xl transition-all duration-300 overflow-hidden" style="box-shadow: 0 6px 20px rgba(0,0,0,0.04); border: 3px solid transparent;" id="quarto-{{ quarto.id }}" data-quarto-id="{{ quarto.id }}" data-preco-base="{{ quarto.preco|stringformat:'f' }}">
+                        <div class="quarto-card bg-white rounded-3xl transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 hover:shadow-md" id="quarto-{{ quarto.id }}" data-quarto-id="{{ quarto.id }}" data-preco-base="{{ quarto.preco|stringformat:'f' }}">
                             
                             <!-- Header do Acordeão (Sempre Visível) -->
-                            <div class="p-4 cursor-pointer hover:bg-gray-50 flex justify-between items-center accordion-header select-none">
+                            <div class="p-5 cursor-pointer hover:bg-slate-50/50 flex justify-between items-center accordion-header select-none">
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-lg text-gray-900">{{ quarto.nome }}</h4>
-                                    <!-- Preço dinâmico atualizado via JS -->
-                                    <p class="font-bold text-action-blue mt-1 preco-label text-xl">R$ {{ quarto.preco }} <span class="text-xs text-gray-500 font-normal">/noite</span></p>
+                                    <h4 class="font-extrabold text-lg text-gray-900 leading-tight">{{ quarto.nome }}</h4>
+                                    <p class="font-black text-action-blue mt-1.5 preco-label text-xl">R$ {{ quarto.preco }} <span class="text-xs text-gray-400 font-normal">/noite</span></p>
                                     
                                     <!-- Badges de Status (Invisível por padrão até carregar datas) -->
-                                    <div class="status-badge hidden mt-2 text-xs font-bold px-3 py-1 rounded inline-block bg-red-100 text-red-700">Indisponível</div>
+                                    <div class="status-badge hidden mt-2 text-xs font-bold px-3 py-1 rounded-full bg-red-50 text-red-600 border border-red-100 inline-block">Indisponível</div>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-6 h-6 text-gray-400 chevron-icon transition-transform"></i>
+                                <span class="p-2 rounded-full bg-slate-100 text-gray-400 chevron-icon transition-transform"><i data-lucide="chevron-down" class="w-5 h-5"></i></span>
                             </div>
                             
-                            <!-- Corpo do Acordeão (Escondido via CSS height: 0 ou hidden) -->
-                            <div class="quarto-body hidden">
-                                <div class="p-4 bg-gray-50/50">
-                                    <p class="text-sm text-gray-600 mb-4">{{ quarto.descricao }}</p>
+                            <!-- Corpo do Acordeão -->
+                            <div class="quarto-body hidden border-t border-gray-50 bg-slate-50/30">
+                                <div class="p-5 space-y-4">
+                                    <p class="text-sm text-gray-600 leading-relaxed">{{ quarto.descricao }}</p>
                                     
                                     <!-- Mini Swiper do Quarto -->
                                     {% if quarto.imagens.all %}
-                                    <div class="swiper quarto-swiper-{{ quarto.id }} h-40 w-full rounded-lg overflow-hidden mb-4 z-0">
+                                    <div class="swiper quarto-swiper-{{ quarto.id }} h-44 w-full rounded-2xl overflow-hidden mb-4 z-0">
                                         <div class="swiper-wrapper">
                                             {% for img in quarto.imagens.all %}
                                             <div class="swiper-slide">
@@ -202,42 +202,197 @@
                                     </div>
                                     {% endif %}
                                     
-                                    <!-- Controls de Quantidade (Ativado apenas se disponível e com data) -->
-                                    <div class="flex justify-between items-center action-area mt-4">
-                                        <span class="text-sm font-semibold text-gray-500">Selecionar Unidades:</span>
-                                        <div class="flex items-center gap-2">
-                                            <button type="button" class="quantity-btn-minus h-8 w-8 flex justify-center items-center rounded-full bg-gray-200 text-gray-700 hover:bg-action-blue hover:text-white transition-colors" disabled>-</button>
-                                            <input type="text" name="tickets[{{ quarto.id }}][quantity]" value="0" readonly class="quantity-value w-8 text-center font-bold bg-transparent">
-                                            <button type="button" class="quantity-btn-plus h-8 w-8 flex justify-center items-center rounded-full bg-gray-200 text-gray-700 hover:bg-action-blue hover:text-white transition-colors" disabled>+</button>
+                                    <!-- Controls de Quantidade -->
+                                    <div class="flex justify-between items-center action-area pt-2">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Selecionar Unidades</span>
+                                        <div class="flex items-center gap-3">
+                                            <button type="button" class="quantity-btn-minus h-9 w-9 flex justify-center items-center rounded-full bg-slate-200/80 text-gray-700 hover:bg-action-blue hover:text-white transition-colors" disabled>-</button>
+                                            <input type="text" name="tickets[{{ quarto.id }}][quantity]" value="0" readonly class="quantity-value w-8 text-center font-extrabold bg-transparent text-gray-800 focus:outline-none">
+                                            <button type="button" class="quantity-btn-plus h-9 w-9 flex justify-center items-center rounded-full bg-slate-200/80 text-gray-700 hover:bg-action-blue hover:text-white transition-colors" disabled>+</button>
                                             <input type="hidden" class="preco-input" name="tickets[{{ quarto.id }}][price]" value="{{ quarto.preco|stringformat:'f' }}">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
                         </div>
-                        
                         {% empty %}
-                        <p class="text-gray-500 text-sm">Sem quartos cadastrados.</p>
+                        <p class="text-gray-500 text-sm">Sem acomodações cadastradas.</p>
                         {% endfor %}
                     </div>
+                </div>
+
+                <!-- CONTEÚDO DA ABA 2: CONHEÇA O HOTEL -->
+                <div x-show="currentTab === 'sobre'" class="space-y-8" x-transition.opacity style="display: none;">
                     
-                    <button id="buy-button" type="button" class="w-full mt-6 bg-gray-300 cursor-not-allowed text-white py-4 rounded-xl font-bold text-lg transition-colors" disabled>
+                    <!-- Descrição Institucional -->
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="info" class="w-5 h-5"></i></span>
+                            <h3 class="text-lg font-black text-gray-900">Sobre a Hospedagem</h3>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed text-base">{{ hotel.descricao|linebreaksbr }}</p>
+                    </div>
+
+                    <!-- Galeria de Imagens Carrossel -->
+                    {% if imagens %}
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="images" class="w-5 h-5"></i></span>
+                            <h3 class="text-lg font-black text-gray-900">Galeria de Fotos</h3>
+                        </div>
+                        <div class="swiper hotel-swiper h-64 md:h-80 w-full rounded-2xl overflow-hidden bg-gray-100 z-0">
+                            <div class="swiper-wrapper">
+                                {% for img in imagens %}
+                                <div class="swiper-slide">
+                                    <img src="{{ img.url_imagem.url }}" class="w-full h-full object-cover" />
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="swiper-pagination"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Localização e Endereço -->
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="map" class="w-5 h-5"></i></span>
+                            <h3 class="text-lg font-black text-gray-900">Como Chegar</h3>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed text-sm">{{ hotel.local.endereco }}, {{ hotel.local.cidade }} - {{ hotel.local.estado }}</p>
+                        
+                        <!-- Leaflet Map para visualização rápida no B2C -->
+                        <div id="mapaB2C" class="w-full h-64 rounded-2xl overflow-hidden border border-gray-200/85 z-20 mt-4"></div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Coluna Direita: Reserva (Sticky) -->
+            <div class="lg:col-start-3 lg:row-start-1 lg:sticky lg:top-28 mt-8 lg:mt-0">
+                <div class="bg-white p-6 rounded-3xl shadow-[0_10px_35px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col">
+                    <h2 class="text-xl font-black mb-6 text-gray-900 flex items-center gap-2"><i data-lucide="calendar-check" class="text-action-blue w-6 h-6"></i> Planeje sua Viagem</h2>
+                    
+                    <!-- Buscador de Datas -->
+                    <div class="mb-6 relative z-30">
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Check-in -->
+                            <div id="btn-checkin" class="bg-white p-4 rounded-2xl text-left hover:shadow-md transition-all flex flex-col cursor-pointer border border-gray-100">
+                                <span class="block text-[9px] uppercase tracking-widest font-black text-gray-400 mb-1.5">Check-in</span>
+                                <div class="flex justify-between items-center w-full">
+                                    <input type="text" id="label-checkin" placeholder="dd/mm/aaaa" class="font-bold text-gray-800 text-xs w-full bg-transparent border-none outline-none focus:ring-0 p-0" maxlength="10" autocomplete="off">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-action-blue shrink-0"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Check-out -->
+                            <div id="btn-checkout" class="bg-white p-4 rounded-2xl text-left hover:shadow-md transition-all flex flex-col cursor-pointer border border-gray-100">
+                                <span class="block text-[9px] uppercase tracking-widest font-black text-gray-400 mb-1.5">Check-out</span>
+                                <div class="flex justify-between items-center w-full">
+                                    <input type="text" id="label-checkout" placeholder="dd/mm/aaaa" class="font-bold text-gray-800 text-xs w-full bg-transparent border-none outline-none focus:ring-0 p-0" maxlength="10" autocomplete="off">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-action-blue shrink-0"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" id="input-checkin" name="checkin" value="">
+                        <input type="hidden" id="input-checkout" name="checkout" value="">
+                    </div>
+                    
+                    <!-- Resumo da Compra e Totalizador -->
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6 space-y-3">
+                        <div class="flex justify-between items-center text-xs text-gray-500 font-medium">
+                            <span>Quantidade:</span>
+                            <span id="selected-units-count">0 acomodações</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-500 font-medium">
+                            <span>Duração:</span>
+                            <span id="selected-nights-count">0 diárias</span>
+                        </div>
+                        <div class="border-t border-slate-200/60 my-2 pt-2 flex justify-between items-end">
+                            <span class="text-sm font-bold text-gray-800">Valor Total:</span>
+                            <span class="text-2xl font-black text-action-blue" id="cart-total-value">R$ 0,00</span>
+                        </div>
+                    </div>
+                    
+                    <button id="buy-button" type="button" class="w-full bg-gray-300 cursor-not-allowed text-white py-4 rounded-2xl font-black text-base transition-all hover:scale-[1.01] active:scale-95 shadow-lg shadow-gray-200/50" disabled>
                         Selecione as Datas Acima
                     </button>
-                    
-                </form>
+                </div>
             </div>
             
         </div>
-    {% if hotel.whatsapp %}
-    <!-- Botão Flutuante do WhatsApp do Hotel -->
-    <a href="https://wa.me/{{ hotel.whatsapp }}" target="_blank" class="fixed bottom-6 right-6 z-[999] bg-[#25d366] hover:bg-[#20ba5a] text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center group" title="Falar Conosco no WhatsApp">
-        <span class="flex items-center" style="pointer-events:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-6 h-6 fill-current"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
-        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap text-xs font-bold font-sans ml-0 group-hover:ml-2">WhatsApp</span>
-    </a>
-    {% endif %}
-</main>
+    </main>
+</form>
+
+<!-- POPUP GLOBAL DO CALENDÁRIO -->
+<div id="custom-calendar-popup" class="hidden bg-white rounded-2xl p-4" style="position: fixed; z-index: 9999; width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06);">
+    <div class="flex justify-between items-center mb-4">
+        <button type="button" id="cal-prev" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-left" class="w-5 h-5 text-gray-600"></i></button>
+        <div id="cal-month-year" class="font-bold text-gray-900 text-sm uppercase tracking-wide">Mês Ano</div>
+        <button type="button" id="cal-next" class="p-2 hover:bg-gray-100 rounded-full transition-colors"><i data-lucide="chevron-right" class="w-5 h-5 text-gray-600"></i></button>
+    </div>
+    <div class="mb-2 uppercase" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; font-size: 10px; font-weight: 800; color: #1d4ed8;">
+        <div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div>
+    </div>
+    <div id="cal-days" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center;">
+        <!-- Dias Injetados via JS -->
+    </div>
+</div>
+
+{% if hotel.whatsapp %}
+<!-- Botão Flutuante do WhatsApp do Hotel -->
+<a href="https://wa.me/{{ hotel.whatsapp }}" target="_blank" class="fixed bottom-6 right-6 z-[999] bg-[#25d366] hover:bg-[#20ba5a] text-white p-4 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 flex items-center justify-center group" title="Falar Conosco no WhatsApp">
+    <span class="flex items-center" style="pointer-events:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-6 h-6 fill-current"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg></span>
+    <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap text-xs font-bold font-sans ml-0 group-hover:ml-2">WhatsApp</span>
+</a>
+{% endif %}
+
+<!-- SCRIPT DE INICIALIZAÇÃO DO MAPA B2C -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let lat = parseFloat('{{ hotel.latitude|stringformat:"f"|default:"-4.004445" }}'.replace(',', '.'));
+        let lon = parseFloat('{{ hotel.longitude|stringformat:"f"|default:"-40.990278" }}'.replace(',', '.'));
+        
+        // Verifica se coordenadas são válidas
+        if (isNaN(lat)) lat = -4.004445;
+        if (isNaN(lon)) lon = -40.990278;
+
+        const mapaB2C = L.map('mapaB2C', {
+            center: [lat, lon],
+            zoom: 15,
+            scrollWheelZoom: false
+        });
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(mapaB2C);
+        
+        const redPin = L.icon({
+            iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32"><path fill="%23ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32]
+        });
+        
+        L.marker([lat, lon], { icon: redPin }).addTo(mapaB2C)
+            .bindPopup('<b>{{ hotel.nome }}</b><br>{{ hotel.local.endereco }}')
+            .openPopup();
+            
+        // Forçar atualização do Leaflet quando mudar de aba
+        // Buscamos o botão de clique da segunda aba Conheça o Hotel
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if (btn.innerText && btn.innerText.includes('Conheça o Hotel')) {
+                btn.addEventListener('click', () => {
+                    setTimeout(() => {
+                        mapaB2C.invalidateSize();
+                        mapaB2C.setView([lat, lon], 15);
+                    }, 150);
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}
 
 {% block extra_scripts %}

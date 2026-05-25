@@ -334,7 +334,7 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Nome do Estabelecimento</label>
                                     <input type="text" name="nome" value="{{ hotel.nome }}" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none" required>
@@ -343,6 +343,15 @@
                                 <div>
                                     <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">WhatsApp de Contato</label>
                                     <input type="text" name="whatsapp" value="{{ hotel.whatsapp|default:'' }}" placeholder="Ex: 5588999999999" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Link da Vitrine (Slug URL)</label>
+                                    <div class="relative flex items-center">
+                                        <span class="absolute left-4 text-xs font-mono text-slate-400">/</span>
+                                        <input type="text" name="slug" value="{{ hotel.slug|default:'' }}" placeholder="pousadaramilostiangua" class="w-full h-12 pl-7 pr-4 rounded-2xl input-glass text-sm font-mono focus:outline-none" required
+                                               oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')">
+                                    </div>
                                 </div>
                             </div>
 

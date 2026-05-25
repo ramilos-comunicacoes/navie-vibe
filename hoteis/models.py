@@ -56,6 +56,7 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Coordenada geográfica de longitude")
     logo = models.ImageField(upload_to='hoteis/logos/', null=True, blank=True, help_text="Logo oficial da pousada")
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
+    slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
 
 
     

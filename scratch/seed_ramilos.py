@@ -53,12 +53,15 @@ hotel, created_hotel = Hotel.objects.get_or_create(
         'local': local,
         'status': 'ativo',
         'destaque': False,
+        'slug': 'pousadaramilostiangua',
     }
 )
 if created_hotel:
     print(f"Hotel '{hotel.nome}' criado com sucesso no banco 'hospedagem'.")
 else:
-    print(f"Hotel '{hotel.nome}' já existia no banco 'hospedagem'.")
+    hotel.slug = 'pousadaramilostiangua'
+    hotel.save()
+    print(f"Hotel '{hotel.nome}' já existia. Forçado slug 'pousadaramilostiangua'.")
 
 # 3. Criar Usuário no banco 'default'
 if not User.objects.filter(username="tiagoismar").exists():
