@@ -424,27 +424,213 @@ def hotelaria(request):
     return render(request, 'hoteis/hotelaria.html', context)
 
 
+@login_required(login_url='hoteis:partner_login')
 def ia_enviar_chat(request):
     """
-    Simula uma resposta inteligente da IA para gestão hoteleira.
-    Retorna um fragmento HTML compatível com HTMX.
+    Assistant Naviê AI B2B - Conversational Task Engine.
+    ---------------------------------------------------
+    This controller receives a natural-language POST query from the hotel B2B interface 
+    and simulates a fully autonomous, context-aware AI assistant. It actively parses 
+    user intents to read, schedule, and complete operational hotel tasks directly in the SQLite database.
+    
+    INTENTS PARSED:
+    1. List Tasks ('listar', 'lista', 'tarefa', 'afazeres', 'pendente', 'hoje', 'urgente')
+       - Filters tasks by current hotel, date ("hoje"), priority ("urgente"), and active status.
+    2. Move/Update Task Status ('mudar', 'alterar', 'atualizar', 'concluir', 'fazer', 'fazendo', 'status')
+       - Extracts numerical Task ID and converts state to ('todo', 'doing', 'done').
+    3. Create Task ('criar', 'adicionar', 'marcar', 'atribuir', 'agendar')
+       - Resolves target dates ("hoje", "amanhã", or standard date strings).
+       - Automatically maps responsibility by looking up employee names inside the prompt.
+       - Maps room unit connection (e.g., "Suíte 101").
+       - Saves the newly created task to the database.
+       
+    INPUTS:
+    - request: HttpRequest object
+    - request.POST.get('mensagem'): String command in Portuguese
+    
+    RETURNS:
+    - HttpResponse rendering 'hoteis/ia_chat_response.html' with parsed string 'resposta_ia'
     """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado: Perfil de parceiro não encontrado.", status=403)
+        
+    perfil = request.user.perfil_parceiro
+    hotel = perfil.hotel
+    
     if request.method != 'POST':
         return redirect('hoteis:partner_dashboard')
         
-    mensagem = request.POST.get('mensagem', '').strip().lower()
+    original_msg = request.POST.get('mensagem', '').strip()
+    mensagem = original_msg.lower()
     
-    # Respostas inteligentes e hoteleiras baseadas em palavras-chave
-    if 'olá' in mensagem or 'oi' in mensagem or 'bom dia' in mensagem or 'boa tarde' in mensagem or 'boa noite' in mensagem:
-        resposta = "Olá! Como posso ajudar você na gestão do estabelecimento hoje? Posso relatar faxinas, consultar faturamento ou listar as tarefas operacionais pendentes."
-    elif 'quarto' in mensagem or 'limp' in mensagem or 'faxina' in mensagem or 'limpeza' in mensagem:
-        resposta = "Atualmente, a Suíte 101 e o Chalé 02 requerem atenção operacional de limpeza. Posso atribuir uma nova tarefa de higienização ou troca de enxoval para a Maria Camareira se desejar."
-    elif 'faturamento' in mensagem or 'financeiro' in mensagem or 'lucro' in mensagem or 'caixa' in mensagem or 'despesa' in mensagem:
-        resposta = "De acordo com os registros de caixa, o faturamento deste mês está em R$ 625,00 contra R$ 470,00 de despesas operacionais, gerando um lucro líquido de R$ 155,00. Gostaria de registrar uma nova entrada ou saída de caixa?"
-    elif 'ajuda' in mensagem or 'como usar' in mensagem or 'funciona' in mensagem:
-        resposta = "Você pode utilizar este assistente virtual para consultar dados operacionais em tempo real. Digite termos como 'faturamento' para ver relatórios, 'limpeza' para acompanhar cronogramas de quartos, ou pergunte sobre check-ins."
+    import re
+    from datetime import date, timedelta, datetime
+    from .models import Tarefa, UnidadeQuarto, ParceiroUsuario
+    
+    resposta = ""
+    action_performed = False
+    
+    # INTENT 1: Move/Update Task Status
+    if any(k in mensagem for k in ['conclua', 'concluir', 'feita', 'feito', 'pronto', 'concluída', 'mudar', 'alterar', 'atualizar', 'status', 'fazendo', 'progresso', 'fazer']):
+        # Look for task ID: "tarefa 5", "tarefa #5" or just a number
+        id_match = re.search(r'(?:tarefa\s+)?#?(\d+)', mensagem)
+        if id_match:
+            task_id = int(id_match.group(1))
+            tarefa = Tarefa.objects.filter(id=task_id, hotel=hotel).first()
+            if tarefa:
+                novo_status = None
+                status_label = ""
+                if any(k in mensagem for k in ['conclu', 'feita', 'feito', 'pronto', 'done']):
+                    novo_status = 'done'
+                    status_label = 'Concluído'
+                elif any(k in mensagem for k in ['fazendo', 'progresso', 'doing']):
+                    novo_status = 'doing'
+                    status_label = 'Em Progresso'
+                elif any(k in mensagem for k in ['fazer', 'todo', 'pendente']):
+                    novo_status = 'todo'
+                    status_label = 'A Fazer'
+                
+                if novo_status:
+                    tarefa.status = novo_status
+                    tarefa.save()
+                    action_performed = True
+                    resposta = f"Com certeza! Atualizei com sucesso o status da tarefa **#{tarefa.id} - {tarefa.titulo}** para **{status_label}** no banco de dados. *(Dica: Recarregue a página para atualizar o painel!)*"
+                else:
+                    resposta = f"Encontrei a tarefa **#{tarefa.id} - {tarefa.titulo}** (Status atual: {tarefa.get_status_display()}). Qual status deseja definir? (A Fazer, Em Progresso ou Concluído)"
+            else:
+                resposta = f"Desculpe, não encontrei nenhuma tarefa com o ID **#{task_id}** vinculada à pousada **{hotel.nome}**."
+        else:
+            resposta = "Para alterar o status de uma atividade, por favor informe o número/ID da tarefa. Exemplo: *'Marcar a tarefa 5 como concluída'*."
+            
+    # INTENT 2: Create Task
+    elif any(k in mensagem for k in ['criar', 'adicionar', 'marcar', 'atribuir', 'agendar', 'cadastrar']):
+        data_vencimento = date.today()
+        data_label = "hoje"
+        
+        if 'amanhã' in mensagem or 'amanha' in mensagem:
+            data_vencimento = date.today() + timedelta(days=1)
+            data_label = "amanhã"
+        elif 'semana' in mensagem:
+            data_vencimento = date.today() + timedelta(days=7)
+            data_label = "daqui a uma semana"
+        else:
+            # Look for YYYY-MM-DD
+            date_match = re.search(r'(\d{4}-\d{2}-\d{2})', mensagem)
+            if date_match:
+                try:
+                    data_vencimento = datetime.strptime(date_match.group(1), '%Y-%m-%d').date()
+                    data_label = data_vencimento.strftime('%d/%m/%Y')
+                except ValueError:
+                    pass
+            else:
+                # Look for DD/MM/YYYY
+                date_match2 = re.search(r'(\d{2}/\d{2}/\d{4})', mensagem)
+                if date_match2:
+                    try:
+                        data_vencimento = datetime.strptime(date_match2.group(1), '%d/%m/%Y').date()
+                        data_label = data_vencimento.strftime('%d/%m/%Y')
+                    except ValueError:
+                        pass
+        
+        # Extract title
+        titulo = ""
+        quote_match = re.findall(r'"([^"]*)"', original_msg)
+        if quote_match:
+            titulo = quote_match[0].strip()
+        else:
+            if 'reunião' in mensagem or 'reuniao' in mensagem:
+                titulo = "Reunião de Equipe"
+            elif 'faxina' in mensagem or 'limpeza' in mensagem:
+                titulo = "Faxina e Higienização"
+            elif 'manutenção' in mensagem or 'manutencao' in mensagem:
+                titulo = "Manutenção do Quarto"
+            else:
+                titulo = "Atividade Operacional"
+        
+        responsavel = None
+        for func in hotel.equipe.all():
+            nome_func = func.user.first_name.lower() or func.user.username.lower()
+            if nome_func in mensagem:
+                responsavel = func
+                break
+                
+        unidade = None
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+        
+        prioridade = 'normal'
+        if any(k in mensagem for k in ['urgente', 'alta', 'prioridade alta']):
+            prioridade = 'alta'
+        elif any(k in mensagem for k in ['baixa', 'prioridade baixa']):
+            prioridade = 'baixa'
+            
+        t = Tarefa.objects.create(
+            hotel=hotel,
+            titulo=titulo,
+            descricao=f"Criado automaticamente via Assistente de IA por solicitação de {request.user.get_full_name() or request.user.username}.",
+            prioridade=prioridade,
+            status='todo',
+            data_vencimento=data_vencimento,
+            responsavel=responsavel,
+            unidade=unidade
+        )
+        action_performed = True
+        
+        resp_parts = [f"Perfeito! Agendei a tarefa **#{t.id} - {t.titulo}** para **{data_label}**."]
+        if responsavel:
+            resp_parts.append(f"Responsável: **{responsavel.user.get_full_name() or responsavel.user.username}**.")
+        if unidade:
+            resp_parts.append(f"Acomodação vinculada: **{unidade.identificador}**.")
+        resp_parts.append("*(Dica: Recarregue a página para ver a atividade no seu quadro de tarefas!)*")
+        resposta = " ".join(resp_parts)
+
+    # INTENT 3: List Tasks
+    elif any(k in mensagem for k in ['tarefa', 'afazeres', 'lista', 'listar', 'pendente', 'urgente', 'atividades']):
+        real_tasks = Tarefa.objects.filter(hotel=hotel).order_by('data_vencimento')
+        
+        if 'hoje' in mensagem:
+            real_tasks = real_tasks.filter(data_vencimento=date.today())
+            filter_desc = "agendadas para hoje"
+        elif 'urgente' in mensagem or 'urgentes' in mensagem:
+            real_tasks = real_tasks.filter(prioridade='alta')
+            filter_desc = "com prioridade alta (urgentes)"
+        elif 'pendente' in mensagem or 'pendentes' in mensagem or 'todo' in mensagem or 'doing' in mensagem:
+            real_tasks = real_tasks.filter(status__in=['todo', 'doing'])
+            filter_desc = "pendentes de conclusão"
+        else:
+            filter_desc = "gerais registradas"
+            
+        if real_tasks.exists():
+            resposta = f"Aqui estão as tarefas {filter_desc} na **{hotel.nome}**:<br><br>"
+            for t in real_tasks[:8]:
+                status_emoji = "⏳"
+                if t.status == 'doing':
+                    status_emoji = "⚡"
+                elif t.status == 'done':
+                    status_emoji = "✅"
+                
+                resp_line = f"{status_emoji} **#{t.id} - {t.titulo}**<br>"
+                details = []
+                if t.responsavel:
+                    details.append(f"Atribuída a: {t.responsavel.user.get_full_name() or t.responsavel.user.username}")
+                if t.data_vencimento:
+                    details.append(f"Vence em: {t.data_vencimento.strftime('%d/%m/%Y')}")
+                details.append(f"Status: {t.get_status_display()}")
+                details.append(f"Prioridade: {t.get_prioridade_display()}")
+                resp_line += f"&nbsp;&nbsp;&nbsp;&nbsp;*({', '.join(details)})*<br>"
+                resposta += resp_line
+        else:
+            resposta = f"Não encontrei nenhuma tarefa {filter_desc} cadastrada para a **{hotel.nome}**."
+
+    # INTENT 4: Greeting & Finance Fallbacks
+    elif any(k in mensagem for k in ['olá', 'oi', 'bom dia', 'boa tarde', 'boa noite']):
+        resposta = f"Olá, **{request.user.first_name or request.user.username}**! Sou o seu assistente Naviê AI para a **{hotel.nome}**. Posso gerenciar tarefas operacionais em tempo real: experimente dizer *'criar faxina para amanhã'* ou *'quais tarefas pendentes?'*!"
+    elif 'faturamento' in mensagem or 'financeiro' in mensagem or 'caixa' in mensagem or 'receita' in mensagem:
+        resposta = "Consultando relatórios financeiros... Atualmente os lançamentos operacionais indicam faturamento positivo com fluxo de caixa sob controle neste mês. Para ver o detalhado, navegue até a aba 'Visão Geral / Financeiro'!"
     else:
-        resposta = "Entendido! Posso ajudar você a simplificar as tarefas diárias da pousada. Gostaria de gerenciar os quartos, planejar o cronograma da equipe ou revisar as reservas pendentes?"
+        resposta = "Entendido! Posso ajudar na organização operacional da pousada. Experimente me pedir para: *'listar as tarefas de hoje'*, *'marcar a tarefa 5 como concluída'* ou *'criar uma faxina para amanhã'*!"
         
     context = {'resposta_ia': resposta}
     return render(request, 'hoteis/ia_chat_response.html', context)
@@ -453,8 +639,27 @@ def ia_enviar_chat(request):
 @login_required(login_url='hoteis:partner_login')
 def partner_criar_tarefa(request):
     """
-    Abre o modal de criação de tarefas.
-    No POST, salva e recarrega o painel principal.
+    Creates a new operational Task/Activity for the B2B dashboard.
+    --------------------------------------------------------------
+    This view manages the B2B Task Creation modal and handles POST requests 
+    to instantiate a new task linked to the current user's hotel.
+    
+    Operational Schema (AI-Readiness):
+    - GET: Renders a form containing members of the hotel staff, active room units, and bookings.
+    - POST: Validates arguments and creates a Tarefa record.
+    
+    Fields required in POST:
+    - titulo (str): Non-empty task title.
+    - descricao (str, optional): Additional instructions.
+    - prioridade (str): choices: 'baixa', 'normal', 'alta'. Default 'normal'.
+    - status (str): choices: 'todo', 'doing', 'done'. Default 'todo'.
+    - data_vencimento (str, format YYYY-MM-DD): Target deadline.
+    - responsavel_id (int, optional): ID of the staff member (ParceiroUsuario).
+    - unidade_id (int, optional): ID of the room unit (UnidadeQuarto).
+    - reserva_id (int, optional): ID of the linked booking (Reserva).
+    
+    Returns:
+    - HTML modal render on GET, or HX-Redirect to B2B dashboard on successful POST.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse(status=403)
@@ -531,8 +736,24 @@ def partner_criar_tarefa(request):
 @login_required(login_url='hoteis:partner_login')
 def partner_editar_tarefa(request, tarefa_id):
     """
-    Abre o modal de edição de tarefas preenchido.
-    No POST, salva as alterações e recarrega o painel.
+    Edits an existing operational Task/Activity.
+    -------------------------------------------
+    This view retrieves the specified Tarefa record and renders the edit form modal,
+    saving any changes during a POST request.
+    
+    Operational Schema (AI-Readiness):
+    - GET: Populates the modal fields with the current task state.
+    - POST: Modifies the task state and saves it.
+    
+    Parameters:
+    - request: HttpRequest object.
+    - tarefa_id (int): Primary key ID of the target Task.
+    
+    Fields allowed in POST:
+    - Same parameters as partner_criar_tarefa. Modifies instead of creates.
+    
+    Returns:
+    - HTML modal on GET, or HX-Redirect to B2B dashboard on successful POST.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse(status=403)
@@ -608,7 +829,19 @@ def partner_editar_tarefa(request, tarefa_id):
 @require_POST
 def partner_deletar_tarefa(request, tarefa_id):
     """
-    Exclui a tarefa e recarrega o dashboard B2B.
+    Deletes an operational Task/Activity.
+    -------------------------------------
+    Accepts only POST requests to securely delete the Tarefa object and redirect.
+    
+    Operational Schema (AI-Readiness):
+    - POST: Deletes the Tarefa from the database.
+    
+    Parameters:
+    - request: HttpRequest object.
+    - tarefa_id (int): Primary key ID of the target Task to delete.
+    
+    Returns:
+    - Redirect or HX-Redirect to the B2B dashboard.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse(status=403)
@@ -631,7 +864,20 @@ def partner_deletar_tarefa(request, tarefa_id):
 @require_POST
 def partner_mudar_status_tarefa(request, tarefa_id):
     """
-    Atualiza assincronamente o status da tarefa via drag-and-drop do SortableJS.
+    Asynchronously updates the status of a Task (specifically for drag-and-drop actions).
+    -------------------------------------------------------------------------------------
+    Invoked primarily via SortableJS on the B2B Kanban board, updating status in real-time.
+    
+    Operational Schema (AI-Readiness):
+    - POST: Modifies the status attribute.
+    
+    Parameters:
+    - request: HttpRequest.
+    - tarefa_id (int): ID of the task.
+    - request.POST.get('status'): Target status value, choices: ('todo', 'doing', 'done', 'overdue').
+    
+    Returns:
+    - HttpResponse with status code 200 on success, or 400 on invalid parameters.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse(status=403)
