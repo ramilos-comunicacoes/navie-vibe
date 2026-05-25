@@ -259,12 +259,12 @@
                     <span class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
                 </a>
                 {% if request.user.is_authenticated %}
-                <a href="{% url 'clientes:painel' %}" class="bg-blue-50 text-action-blue border border-blue-200 px-4 py-2 rounded-full font-bold text-sm hover:bg-action-blue hover:text-white transition-colors flex items-center gap-1.5">
+                <a href="{% url 'clientes:painel' %}" class="header-profile-btn bg-blue-50 text-action-blue border border-blue-200 px-4 py-2 rounded-full font-bold text-sm hover:bg-action-blue hover:text-white transition-colors flex items-center gap-1.5">
                     <i data-lucide="user" class="w-4 h-4"></i>
                     <span>Painel</span>
                 </a>
                 {% else %}
-                <a href="{% url 'clientes:login_cadastro' %}" class="bg-gray-100 px-4 py-2 rounded-full font-semibold text-sm hover:bg-gray-200 transition-colors">
+                <a href="{% url 'clientes:login_cadastro' %}" class="header-profile-btn bg-gray-100 px-4 py-2 rounded-full font-semibold text-sm hover:bg-gray-200 transition-colors">
                     Entrar
                 </a>
                 {% endif %}

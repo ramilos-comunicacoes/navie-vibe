@@ -127,6 +127,25 @@ x-data="{
         document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
         document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
 
+        // YIQ Luminance contrast calculation
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        let brandText = '#ffffff';
+        let brandColorBurned = activeBrandColor;
+        if (yiq >= 170) { // Light color! (Safety contrast)
+            // 55% darker for contrast readability
+            const factor = 0.45;
+            const dr = Math.max(0, Math.round(r * factor));
+            const dg = Math.max(0, Math.round(g * factor));
+            const db = Math.max(0, Math.round(b * factor));
+            brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+            brandText = brandColorBurned; // Burned color as text on top of bright background
+        } else {
+            brandText = '#ffffff';
+            brandColorBurned = activeBrandColor;
+        }
+        document.documentElement.style.setProperty('--brand-text', brandText);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -144,6 +163,8 @@ x-data="{
                             500: brandPalette[500],
                             600: brandPalette[600],
                             900: brandPalette[900],
+                            contrastText: brandText,
+                            burned: brandColorBurned,
                         },
                         // Paleta do modo translúcido (Glassmorphism)
                         navie: {
@@ -253,12 +274,36 @@ x-data="{
             padding: 0.15rem 0.5rem;
             border-radius: 9999px;
         }
-        .badge-proprietario { background-color: var(--brand-color-alpha); color: var(--brand-color); border: 1px solid var(--brand-color-alpha); }
+        .badge-proprietario { background-color: var(--brand-color-alpha); color: var(--brand-color-burned); border: 1px solid var(--brand-color-alpha); }
 
-        .badge-gerente { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-        .badge-portaria { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-        .badge-camareira { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
-        .badge-manutencao { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-gerente { background-color: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-portaria { background-color: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-camareira { background-color: rgba(139, 92, 246, 0.15); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge-manutencao { background-color: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Dynamic smart B2B contrast-safety color overrides */
+        .bg-brand, [class*="bg-brand"]:not([class*="bg-brand-"]):not([class*="-bg-brand"]) {
+            background-color: var(--brand-color) !important;
+            color: var(--brand-text) !important;
+        }
+        .bg-brand svg, .bg-brand i, .bg-brand span, .bg-brand h1, .bg-brand h2, .bg-brand h3, .bg-brand h4 {
+            color: var(--brand-text) !important;
+        }
+        .text-brand, [class*="text-brand"]:not([class*="text-brand-"]):not([class*="-text-brand"]) {
+            color: var(--brand-color-burned) !important;
+        }
+        .text-brand svg, .text-brand i {
+            color: var(--brand-color-burned) !important;
+        }
+        
+        /* Sidebar active navigation override for premium contrast */
+        .group\/sidebar a.bg-brand-50\/80 {
+            background-color: var(--brand-color-alpha) !important;
+            color: var(--brand-color-burned) !important;
+        }
+        .group\/sidebar a.bg-brand-50\/80 i, .group\/sidebar a.bg-brand-50\/80 svg, .group\/sidebar a.bg-brand-50\/80 span {
+            color: var(--brand-color-burned) !important;
+        }
     </style>
 
     <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Previne tela branca e flicker ao recarregar a página) -->

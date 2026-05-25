@@ -5,31 +5,196 @@
 
 {% block extra_head %}
 <!-- Injeção Dinâmica de Cores de Branding no Site do Anfitrião -->
+<script>
+    (function() {
+        const rawColor = "{{ hotel.cor_primaria|default:'#2563eb' }}";
+        let hex = rawColor.replace('#', '');
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        const r = parseInt(hex.substring(0, 2), 16) || 37;
+        const g = parseInt(hex.substring(2, 4), 16) || 99;
+        const b = parseInt(hex.substring(4, 6), 16) || 235;
+        
+        // YIQ Luminance Formula
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        
+        let brandColor = "#" + hex;
+        let brandTextColor = "#ffffff";
+        let brandColorBurned = brandColor;
+        
+        if (yiq >= 170) { // Light color! (Safety contrast)
+            // 55% darker for contrast readability
+            const factor = 0.45;
+            const dr = Math.max(0, Math.round(r * factor));
+            const dg = Math.max(0, Math.round(g * factor));
+            const db = Math.max(0, Math.round(b * factor));
+            brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+            brandTextColor = brandColorBurned; // Burned color as text on top of bright background
+        } else {
+            brandTextColor = "#ffffff";
+            brandColorBurned = brandColor;
+        }
+        
+        document.documentElement.style.setProperty('--brand-color', brandColor);
+        document.documentElement.style.setProperty('--brand-text-color', brandTextColor);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
+        document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
+    })();
+</script>
 <style>
     :root {
-        --navie-primary: {{ hotel.cor_primaria|default:"#2563eb" }};
+        --navie-primary: var(--brand-color, {{ hotel.cor_primaria|default:"#2563eb" }});
     }
     
     /* Mapeamento de Cores Dinâmicas da Pousada B2C */
-    .text-action-blue { color: {{ hotel.cor_primaria|default:"#2563eb" }} !important; }
-    .bg-action-blue, #buy-button.bg-action-blue { background-color: {{ hotel.cor_primaria|default:"#2563eb" }} !important; }
-    .border-action-blue { border-color: {{ hotel.cor_primaria|default:"#2563eb" }} !important; }
+    .text-action-blue { color: var(--brand-color-burned) !important; }
+    .bg-action-blue, #buy-button.bg-action-blue { 
+        background-color: var(--brand-color) !important; 
+        color: var(--brand-text-color) !important;
+    }
+    .border-action-blue { border-color: var(--brand-color-burned) !important; }
     
     /* Cor ativa no botão de compra se habilitado */
     #buy-button:not([disabled]) {
-        background-color: {{ hotel.cor_primaria|default:"#2563eb" }} !important;
+        background-color: var(--brand-color) !important;
+        color: var(--brand-text-color) !important;
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
     }
     
     /* Foco do input com a cor do hotel */
     .navie-input:focus {
-        border-color: {{ hotel.cor_primaria|default:"#2563eb" }} !important;
-        box-shadow: 0 0 0 3px {{ hotel.cor_primaria|default:"#2563eb" }}25 !important;
+        border-color: var(--brand-color) !important;
+        box-shadow: 0 0 0 3px var(--brand-color-alpha) !important;
     }
     
     /* Swiper e elementos dinâmicos */
     .swiper-pagination-bullet-active {
-        background: {{ hotel.cor_primaria|default:"#2563eb" }} !important;
+        background: var(--brand-color) !important;
+    }
+
+    /* Dynamic styling override for the header actions button */
+    .header-profile-btn {
+        background-color: var(--brand-color) !important;
+        color: var(--brand-text-color) !important;
+        border-color: var(--brand-color) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
+        transition: all 0.2s ease !important;
+    }
+    .header-profile-btn i, .header-profile-btn svg, .header-profile-btn span {
+        color: var(--brand-text-color) !important;
+    }
+    .header-profile-btn:hover {
+        opacity: 0.95 !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.05) !important;
+    }
+
+    /* Premium glassy Hero badge style overrides */
+    .hero-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        border-radius: 9999px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+        transition: all 0.2s ease !important;
+    }
+    .hero-badge:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        transform: translateY(-1px) !important;
+    }
+    .hero-badge svg, .hero-badge i {
+        color: #ffffff !important;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2)) !important;
+    }
+
+    /* Premium Room Accordion Cards */
+    .quarto-card {
+        border-radius: 24px !important;
+        background-color: #ffffff !important;
+        border: 1px solid #f1f5f9 !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow: hidden !important;
+        margin-bottom: 20px !important;
+    }
+    .quarto-card:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.05) !important;
+        border-color: var(--brand-color-burned) !important;
+    }
+    .preco-label {
+        font-size: 1.25rem !important;
+        font-weight: 900 !important;
+        color: var(--brand-color-burned) !important;
+        margin-top: 6px !important;
+    }
+    .accordion-header {
+        padding: 20px 24px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        background: #ffffff !important;
+    }
+    .accordion-header:hover {
+        background: #f8fafc !important;
+    }
+    .chevron-icon {
+        padding: 8px !important;
+        border-radius: 9999px !important;
+        background-color: #f1f5f9 !important;
+        color: #64748b !important;
+        transition: transform 0.25s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .quarto-body {
+        border-top: 1px solid #f1f5f9 !important;
+        background-color: #fafbfc !important;
+    }
+    .quarto-swiper-container {
+        height: 220px !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Icon Badge style overrides */
+    .icon-badge-brand {
+        padding: 8px !important;
+        border-radius: 12px !important;
+        background-color: var(--brand-color-alpha) !important;
+        color: var(--brand-color-burned) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Datepicker styling overlays */
+    #btn-checkin, #btn-checkout {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        transition: all 0.2s ease !important;
+    }
+    #btn-checkin:hover, #btn-checkout:hover {
+        border-color: var(--brand-color-burned) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    }
+    #label-checkin, #label-checkout {
+        font-weight: 700 !important;
+        color: #1e293b !important;
     }
 
     /* Cabeçalho transparente premium exclusivo para páginas de hotel */
@@ -49,14 +214,14 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         header.sticky nav a:hover {
-            color: var(--navie-primary) !important;
+            color: var(--brand-color) !important;
         }
         header.sticky i[data-lucide] {
             color: rgba(255, 255, 255, 0.95) !important;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
         header.sticky span.bg-red-500 {
-            background-color: var(--navie-primary) !important;
+            background-color: var(--brand-color) !important;
             color: #ffffff !important;
         }
         header.sticky img {
@@ -129,13 +294,13 @@
                 <h1 class="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-md">{{ hotel.nome }}</h1>
                 <div class="flex flex-wrap items-center gap-3 text-white/90">
                     {% if hotel.horario_inicio %}
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider">
-                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-3.5 h-3.5 text-action-blue"></i></span> Check-in {{ hotel.horario_inicio|time:"H:i" }}
+                    <span class="hero-badge">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-3.5 h-3.5"></i></span> Check-in {{ hotel.horario_inicio|time:"H:i" }}
                     </span>
                     {% endif %}
                     
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider">
-                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-action-blue"></i></span> {{ hotel.local.cidade }}
+                    <span class="hero-badge">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i></span> {{ hotel.local.cidade }}
                     </span>
                 </div>
             </div>
@@ -163,14 +328,14 @@
                     <button type="button" @click="currentTab = 'sobre'" 
                             :class="currentTab === 'sobre' ? 'border-action-blue text-action-blue font-black' : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-200'"
                             class="py-4 px-6 border-b-2 text-sm uppercase tracking-wider font-bold transition-all flex items-center gap-2">
-                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="info" class="w-4 h-4"></i></span> Conheça o Hotel
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="info" class="w-4 h-4"></i></span> Conhecer a {{ hotel.nome }}
                     </button>
                 </div>
 
                 <!-- CONTEÚDO DA ABA 1: QUARTOS DISPONÍVEIS -->
                 <div x-show="currentTab === 'quartos'" class="space-y-6" x-transition.opacity>
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
+                        <span class="icon-badge-brand"><i data-lucide="sparkles" class="w-5 h-5"></i></span>
                         <div>
                             <h3 class="text-xl font-black text-gray-900 leading-tight">Escolha suas Acomodações</h3>
                             <p class="text-xs text-gray-500 mt-0.5">Selecione a quantidade de acomodações ideais para sua estadia</p>
@@ -200,7 +365,7 @@
                                     
                                     <!-- Mini Swiper do Quarto -->
                                     {% if quarto.imagens.all %}
-                                    <div class="swiper quarto-swiper-{{ quarto.id }} h-44 w-full rounded-2xl overflow-hidden mb-4 z-0">
+                                    <div class="swiper quarto-swiper-{{ quarto.id }} quarto-swiper-container z-0">
                                         <div class="swiper-wrapper">
                                             {% for img in quarto.imagens.all %}
                                             <div class="swiper-slide">
@@ -237,7 +402,7 @@
                     <!-- Descrição Institucional -->
                     <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="info" class="w-5 h-5"></i></span>
+                            <span class="icon-badge-brand"><i data-lucide="info" class="w-5 h-5"></i></span>
                             <h3 class="text-lg font-black text-gray-900">Sobre a Hospedagem</h3>
                         </div>
                         <p class="text-gray-600 leading-relaxed text-base">{{ hotel.descricao|linebreaksbr }}</p>
@@ -247,7 +412,7 @@
                     {% if imagens %}
                     <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="images" class="w-5 h-5"></i></span>
+                            <span class="icon-badge-brand"><i data-lucide="images" class="w-5 h-5"></i></span>
                             <h3 class="text-lg font-black text-gray-900">Galeria de Fotos</h3>
                         </div>
                         <div class="swiper hotel-swiper h-64 md:h-80 w-full rounded-2xl overflow-hidden bg-gray-100 z-0">
@@ -266,7 +431,7 @@
                     <!-- Localização e Endereço -->
                     <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] space-y-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <span class="p-2 rounded-2xl bg-action-blue/10 text-action-blue"><i data-lucide="map" class="w-5 h-5"></i></span>
+                            <span class="icon-badge-brand"><i data-lucide="map" class="w-5 h-5"></i></span>
                             <h3 class="text-lg font-black text-gray-900">Como Chegar</h3>
                         </div>
                         <p class="text-gray-600 leading-relaxed text-sm">{{ hotel.local.endereco }}, {{ hotel.local.cidade }} - {{ hotel.local.estado }}</p>
