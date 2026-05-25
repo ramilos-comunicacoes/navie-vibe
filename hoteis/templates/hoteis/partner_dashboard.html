@@ -759,17 +759,23 @@
             let leafletMap;
             let leafletMarker;
             let camadaSatelite;
-            const redPinIcon = L.icon({
-                iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36"><path fill="%23ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
-                iconSize: [36, 36],
-                iconAnchor: [18, 36]
-            });
+            let redPinIcon;
 
             function inicializarMapa() {
                 const inputLat = document.getElementById('hotel_lat');
                 const inputLon = document.getElementById('hotel_lon');
                 let lat = parseFloat(inputLat.value) || -4.004445;
                 let lon = parseFloat(inputLon.value) || -40.990278;
+
+                if (typeof L === 'undefined') return;
+
+                if (!redPinIcon) {
+                    redPinIcon = L.icon({
+                        iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36"><path fill="%23ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 36]
+                    });
+                }
 
                 if (!leafletMap) {
                     camadaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
