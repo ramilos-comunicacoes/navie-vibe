@@ -176,6 +176,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 
+# Media files (Uploads of Logos, Banners, Videos)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Google Cloud / Google Maps API Integration
 GOOGLE_API_KEY = "AIzaSyDnaMUm_EFwesiaLTYw823UaN-IbXoLo5k"
 
