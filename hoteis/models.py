@@ -410,4 +410,34 @@ class ItemPedidoServico(models.Model):
         return f"{self.quantidade}x {self.produto.nome} no Pedido #{self.pedido.id}"
 
 
+class HomeSlide(models.Model):
+    MEDIA_CHOICES = [
+        ('imagem', 'Imagem'),
+        ('video', 'Vídeo'),
+    ]
+    
+    titulo = models.CharField("Título Principal", max_length=200)
+    subtitulo = models.TextField("Subtítulo / Descrição", blank=True)
+    tipo_midia = models.CharField("Tipo de Mídia", max_length=10, choices=MEDIA_CHOICES, default='imagem')
+    imagem = models.ImageField("Imagem do Slide", upload_to='slides/', blank=True, null=True)
+    video = models.FileField("Vídeo do Slide", upload_to='slides/videos/', blank=True, null=True)
+    
+    data_texto = models.CharField("Texto de Data", max_length=100, blank=True, help_text="Ex: 15 a 18 de Junho")
+    local_texto = models.CharField("Texto de Localização", max_length=150, blank=True, help_text="Ex: Tianguá, CE")
+    
+    texto_cta = models.CharField("Texto do Botão", max_length=50, default="Ver Detalhes")
+    link_cta = models.CharField("Link do Botão", max_length=255, blank=True, help_text="URL de destino")
+    
+    ordem = models.PositiveIntegerField("Ordem de Exibição", default=0)
+    ativo = models.BooleanField("Ativo", default=True)
+
+    class Meta:
+        verbose_name = "Slide da Home"
+        verbose_name_plural = "Slides da Home"
+        ordering = ['ordem', 'id']
+
+    def __str__(self):
+        return self.titulo
+
+
 

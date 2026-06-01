@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Produtor, Local, Hotel, HotelImagem, Quarto, QuartoImagem, UnidadeQuarto, Reserva, BloqueioQuarto
+from .models import Produtor, Local, Hotel, HotelImagem, Quarto, QuartoImagem, UnidadeQuarto, Reserva, BloqueioQuarto, HomeSlide
 
 class HotelImagemInline(admin.TabularInline):
     model = HotelImagem
@@ -36,4 +36,10 @@ class ReservaAdmin(admin.ModelAdmin):
 @admin.register(BloqueioQuarto)
 class BloqueioQuartoAdmin(admin.ModelAdmin):
     list_display = ('unidade', 'data_inicio', 'data_fim', 'motivo')
+
+@admin.register(HomeSlide)
+class HomeSlideAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'tipo_midia', 'data_texto', 'local_texto', 'ordem', 'ativo')
+    list_filter = ('ativo', 'tipo_midia')
+    ordering = ('ordem', 'id')
 

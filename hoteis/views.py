@@ -21,12 +21,87 @@ def home(request):
     except Exception:
         pass
 
+    # Carrega slides do carrossel da home
+    from .models import HomeSlide
+    slides = list(HomeSlide.objects.filter(ativo=True))
+    
+    # Se não houver nenhum slide cadastrado, injeta fallbacks dinâmicos de alta definição
+    if not slides:
+        class MockSlide:
+            def __init__(self, id, titulo, subtitulo, tipo_midia, imagem_url, video_url, data_texto, local_texto, texto_cta, link_cta):
+                self.id = id
+                self.titulo = titulo
+                self.subtitulo = subtitulo
+                self.tipo_midia = tipo_midia
+                self.imagem_url = imagem_url
+                self.video_url = video_url
+                self.data_texto = data_texto
+                self.local_texto = local_texto
+                self.texto_cta = texto_cta
+                self.link_cta = link_cta
+
+            @property
+            def banner(self):
+                # Mock object helper to mimic banner.url interface
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.imagem_url) if self.imagem_url else None
+
+            @property
+            def hero_video(self):
+                # Mock object helper to mimic hero_video.url interface
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.video_url) if self.video_url else None
+
+        slides = [
+            MockSlide(
+                id=1,
+                titulo="Viva a Essência da Serra da Ibiapaba",
+                subtitulo="Descubra chalés rústicos, pousadas charmosas e resorts cercados pela natureza exuberante.",
+                tipo_midia="imagem",
+                imagem_url="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80",
+                video_url="",
+                data_texto="Temporada de Inverno",
+                local_texto="Serra da Ibiapaba, CE",
+                texto_cta="Explorar Hotéis",
+                link_cta="/hotelaria/"
+            ),
+            MockSlide(
+                id=2,
+                titulo="Chalés Exclusivos com Vista Panorâmica",
+                subtitulo="Aproveite o clima frio e aconchegante da serra em acomodações de alto padrão com todo o conforto.",
+                tipo_midia="imagem",
+                imagem_url="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80",
+                video_url="",
+                data_texto="Finais de Semana Especiais",
+                local_texto="Tianguá, Ceará",
+                texto_cta="Reservar Chalé",
+                link_cta="/hotelaria/?tipo=chale"
+            ),
+            MockSlide(
+                id=3,
+                titulo="Refúgios & Pousadas Boutique de Luxo",
+                subtitulo="Viva momentos inesquecíveis com experiências completas de bem-estar, lazer e alta gastronomia.",
+                tipo_midia="imagem",
+                imagem_url="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=1920&q=80",
+                video_url="",
+                data_texto="Pacotes Exclusivos",
+                local_texto="Ubajara, Ceará",
+                texto_cta="Ver Pousadas",
+                link_cta="/hotelaria/?tipo=pousada"
+            )
+        ]
+
     destaque = Hotel.objects.filter(destaque=True, status='ativo').first()
     proximos = Hotel.objects.filter(status='ativo').order_by('id')[:6]
     
     context = {
         'destaque': destaque,
         'proximos': proximos,
+        'slides': slides,
     }
     return render(request, 'hoteis/home.html', context)
 
