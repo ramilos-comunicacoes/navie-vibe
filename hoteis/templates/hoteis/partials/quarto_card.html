@@ -3,8 +3,8 @@
      data-ai-titulo="{{ quarto.seo_titulo|default:quarto.nome }}"
      data-ai-descricao="{{ quarto.seo_descricao|default:quarto.descricao }}">
     
-    <!-- Imagem Principal (Quadrada/Retangular Grande, Cantos Bem Arredondados) -->
-    <div class="relative w-full aspect-[4/3] sm:aspect-square md:aspect-[4/3] overflow-hidden rounded-[2rem] bg-gray-100 mb-4">
+    <!-- Imagem Principal (Proporcional, Cantos Arredondados Elegantes) -->
+    <div class="relative w-full aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 mb-2.5">
         {% if quarto.imagens.all %}
         <div class="swiper quarto-swiper-{{ quarto.id }} h-full w-full">
             <div class="swiper-wrapper">
@@ -23,31 +23,31 @@
         <video src="{{ quarto.video_url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
         {% else %}
         <div class="w-full h-full bg-slate-100 flex items-center justify-center">
-            <i data-lucide="image" class="w-10 h-10 text-slate-300"></i>
+            <i data-lucide="image" class="w-8 h-8 text-slate-300"></i>
         </div>
         {% endif %}
 
-        <!-- Badge Capacidade -->
-        <div class="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-sm z-10 flex items-center gap-1.5">
-            <i data-lucide="users" class="w-3.5 h-3.5"></i> Até {{ quarto.capacidade_pessoas }}
+        <!-- Badge Capacidade Delicado -->
+        <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-black text-gray-800 shadow-sm z-10 flex items-center gap-1">
+            <i data-lucide="users" class="w-3 h-3"></i> {{ quarto.capacidade_pessoas }}
         </div>
     </div>
     
-    <!-- Corpo do Card (Sem bordas, tipografia clean) -->
-    <div class="flex flex-col gap-1 px-1">
-        <h4 class="font-display font-bold text-lg text-gray-900 truncate" title="{{ quarto.nome }}">{{ quarto.nome }}</h4>
+    <!-- Corpo do Card (Sem bordas, tipografia clean otimizada para grids menores) -->
+    <div class="flex flex-col gap-0.5 px-0.5">
+        <h4 class="font-display font-extrabold text-sm sm:text-base text-gray-900 truncate" title="{{ quarto.nome }}">{{ quarto.nome }}</h4>
         
-        <p class="text-sm text-gray-500 truncate" title="{{ quarto.descricao|striptags }}">{{ quarto.descricao|striptags|truncatechars:60 }}</p>
+        <p class="text-xs text-gray-500 truncate" title="{{ quarto.descricao|striptags }}">{{ quarto.descricao|striptags|truncatechars:50 }}</p>
         
         <!-- Tags / Comodidades -->
         {% if quarto.comodidades %}
-        <p class="text-[13px] text-gray-500 truncate">
+        <p class="text-[11px] text-gray-400 truncate">
             {{ quarto.comodidades }}
         </p>
         {% endif %}
         
-        <div class="mt-2 text-base text-gray-900">
-            <span class="font-extrabold">R$ {{ quarto.preco }}</span> <span class="text-gray-500 font-normal">/ noite</span>
+        <div class="mt-1 text-xs sm:text-sm text-gray-900">
+            <span class="font-black">R$ {{ quarto.preco }}</span> <span class="text-gray-400 font-normal">/ noite</span>
         </div>
     </div>
 </a>

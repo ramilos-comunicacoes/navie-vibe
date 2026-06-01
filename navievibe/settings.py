@@ -56,6 +56,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.apple',
     'allauth.socialaccount.providers.microsoft',
+    'sslserver',
+    'vouchers',
+    'financeiro',
+    'estoque',
 ]
 
 MIDDLEWARE = [
@@ -184,4 +188,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Google Cloud / Google Maps API Integration
 GOOGLE_API_KEY = "AIzaSyDnaMUm_EFwesiaLTYw823UaN-IbXoLo5k"
+
+
+# Integração Oficial Mercado Pago (Checkout Transparente)
+MERCADOPAGO_PUBLIC_KEY = 'APP_USR-358bd3a8-e2f0-4e9d-b2fd-9e4a673b09a2'
+MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-4287188570193981-052909-e4fdb78128da8bdc840b1d95a9e9d141-3435684980'
+
 

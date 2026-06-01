@@ -4,6 +4,12 @@
 {% block title %}Naviê Vibe - {{ hotel.nome }}{% endblock %}
 
 {% block extra_head %}
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
 <!-- Injeção Dinâmica de Cores de Branding no Site do Anfitrião -->
 <script>
     (function() {
@@ -51,7 +57,10 @@
     :root {
         --navie-primary: var(--brand-color, {{ hotel.cor_primaria|default:"#2563eb" }});
     }
-    
+
+    /* Ocultar elementos AlpineJS enquanto x-data não inicializa */
+    [x-cloak] { display: none !important; }
+
     /* Mapeamento de Cores Dinâmicas da Pousada B2C */
     .text-action-blue { color: var(--brand-color-burned) !important; }
     .bg-action-blue, #buy-button.bg-action-blue { 
@@ -254,10 +263,23 @@
     /* Ajuste de Altura do Hero B2C para evitar colapso e efeito espremido */
     .hero-banner-b2c {
         height: 400px !important;
+        overflow: visible !important;
     }
     @media (min-width: 768px) {
         .hero-banner-b2c {
             height: 550px !important;
+            overflow: visible !important;
+        }
+    }
+
+    /* Regras exclusivas de posicionamento do conteúdo do hero para mobile e desktop */
+    .hero-content-shift {
+        position: relative;
+        top: -2%;
+    }
+    @media (min-width: 768px) {
+        .hero-content-shift {
+            top: 0;
         }
     }
 
@@ -274,6 +296,80 @@
         transform: translateY(-6px);
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
         border-color: var(--brand-color-alpha-focus);
+    }
+
+    /* ─────────────────────────────────────────────────────────────────
+       PREMIUM FLATPICKR CALENDAR OVERRIDES
+       ───────────────────────────────────────────────────────────────── */
+    .flatpickr-calendar {
+        background: #ffffff !important;
+        border: 1px solid #f8fafc !important;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        border-radius: 24px !important;
+        padding: 12px !important;
+        font-family: 'Poppins', sans-serif !important;
+        border: none !important;
+    }
+    /* Centering calendar as modal on mobile devices */
+    @media (max-width: 640px) {
+        .flatpickr-calendar {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 99999 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35) !important;
+        }
+    }
+    .flatpickr-months {
+        margin-bottom: 8px !important;
+    }
+    .flatpickr-month {
+        color: #1e293b !important;
+    }
+    .flatpickr-current-month {
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #1e293b !important;
+    }
+    .flatpickr-weekday {
+        color: #64748b !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+    }
+    /* Selected date ranges matching hotel brand color */
+    .flatpickr-day.selected, 
+    .flatpickr-day.startRange, 
+    .flatpickr-day.endRange,
+    .flatpickr-day.selected.inRange,
+    .flatpickr-day.startRange.inRange,
+    .flatpickr-day.endRange.inRange,
+    .flatpickr-day.selected:focus,
+    .flatpickr-day.startRange:focus,
+    .flatpickr-day.endRange:focus,
+    .flatpickr-day.selected:hover,
+    .flatpickr-day.startRange:hover,
+    .flatpickr-day.endRange:hover {
+        background: var(--brand-color) !important;
+        border-color: var(--brand-color) !important;
+        color: var(--brand-text-color) !important;
+        border-radius: 12px !important;
+    }
+    .flatpickr-day.inRange {
+        background: var(--brand-color-alpha) !important;
+        border-color: transparent !important;
+        color: var(--brand-color-burned) !important;
+        border-radius: 0 !important;
+    }
+    .flatpickr-day {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        color: #334155 !important;
+    }
+    .flatpickr-day:hover {
+        background: #f1f5f9 !important;
     }
 </style>
 {% endblock %}
@@ -305,9 +401,9 @@
 </div>
 
 <!-- HERO BANNER PREMIUM FULL-WIDTH -->
-<div class="relative w-full bg-slate-950 overflow-hidden flex items-center justify-center hero-banner-b2c">
-    <!-- Mídia de Fundo (Vídeo ou Imagem) -->
-    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none">
+<div class="relative w-full bg-slate-950 flex items-center justify-center hero-banner-b2c z-30">
+    <!-- Mídia de Fundo (Vídeo ou Imagem) com corte arredondado no mobile e reto no desktop -->
+    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden rounded-b-[1.5rem] md:rounded-none">
         <div class="absolute inset-0 bg-black/50 z-10"></div>
         {% if hotel.hero_tipo == 'video' and hotel.hero_video %}
             <video src="{{ hotel.hero_video.url }}" class="w-full h-full object-cover opacity-80" autoplay loop muted playsinline></video>
@@ -318,8 +414,8 @@
         {% endif %}
     </div>
 
-    <!-- Informações do Hotel sobre o Hero (Centralizado) -->
-    <div class="container mx-auto px-4 relative z-20 flex flex-col items-center justify-center text-center pb-8 h-full">
+    <!-- Informações do Hotel sobre o Hero (Centralizado com deslocamento vertical no mobile) -->
+    <div class="container mx-auto px-4 relative z-20 flex flex-col items-center justify-center text-center pb-8 h-full hero-content-shift">
         {% if hotel.logo %}
         <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white p-3 shadow-2xl flex items-center justify-center shrink-0 border-4 border-white/20 select-none mb-6">
             <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain rounded-full">
@@ -327,7 +423,9 @@
         {% endif %}
         
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-xl mb-4">{{ hotel.nome }}</h1>
-        <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90">
+        
+        <!-- Localização e Informações de Check-in -->
+        <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90 mb-6 sm:mb-8">
             {% if hotel.horario_inicio %}
             <span class="hero-badge">
                 <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-4 h-4"></i></span> Check-in {{ hotel.horario_inicio|time:"H:i" }}
@@ -338,34 +436,114 @@
                 <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-4 h-4"></i></span> {{ hotel.local.cidade }} / {{ hotel.local.estado }}
             </span>
         </div>
+
+        <!-- BARRA DE BUSCA HORIZONTAL COMPACTA (Estritamente posicionada abaixo da localização) -->
+        <div class="w-[92%] sm:w-full max-w-2xl lg:max-w-3xl mx-auto z-[60]">
+            <div class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]" style="position: relative;">
+                
+                <!-- Campo 1: Tipo de Quarto (Dropdown Customizado) -->
+                <div class="flex flex-col text-center px-1.5 sm:px-6 py-2 sm:py-3 flex-[1.3] md:flex-1 relative border-r border-slate-100 rounded-l-full"
+                     x-data="{ openDest: false, selected: 'todas', selectedLabel: 'Acomodações' }" 
+                     @click.outside="openDest = false">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center">Acomodação</label>
+                    <button type="button" @click="openDest = !openDest"
+                            class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 cursor-pointer bg-transparent border-none outline-none w-full select-none text-center">
+                        <span x-text="selectedLabel" class="truncate font-bold"></span>
+                    </button>
+                    <input type="hidden" id="search-pousada" :value="selected">
+
+                    <!-- Painel Flutuante do Destino -->
+                    <div x-show="openDest" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                         class="absolute left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar"
+                         style="display: none; top: calc(100% + 8px); z-index: 9999; min-width: 200px; width: max-content; max-width: 300px;">
+                        <button type="button" @click="selected = 'todas'; selectedLabel = 'Todas as Acomodações'; openDest = false;" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">Todas as Acomodações</button>
+                        {% for q in quartos %}
+                        <button type="button" @click="selected = '{{ q.id }}'; selectedLabel = '{{ q.nome }}'; openDest = false;" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">{{ q.nome }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Campo 2: Período/Datas -->
+                <div class="flex flex-col text-left px-1.5 sm:px-6 py-2 sm:py-3 flex-[0.7] md:flex-1 border-r border-slate-100 cursor-pointer"
+                     onclick="openAvailabilityModal()">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate">Datas</label>
+                    <input type="text" id="search-dates" placeholder="Datas" readonly 
+                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full font-bold"
+                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;">
+                </div>
+
+                <!-- Campo 3: Hóspedes (Dropdown Customizado) -->
+                <div class="flex flex-col text-center px-1.5 sm:px-6 py-2 sm:py-3 flex-[1.0] md:flex-1 relative" 
+                     x-data="{ openGuests: false, guests: 2, guestsLabel: '2 Hóspedes' }" 
+                     @click.outside="openGuests = false">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center">Hóspedes</label>
+                    <button type="button" @click="openGuests = !openGuests"
+                            class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 cursor-pointer bg-transparent border-none outline-none w-full select-none text-center">
+                        <span x-text="guestsLabel" class="truncate font-bold"></span>
+                    </button>
+                    <input type="hidden" id="search-guests" :value="guests">
+
+                    <!-- Dropdown de Hóspedes -->
+                    <div x-show="openGuests" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                         class="absolute left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar"
+                         style="display: none; top: calc(100% + 8px); z-index: 9999; min-width: 165px; width: max-content; max-width: 260px;">
+                        <template x-for="g in [1, 2, 3, 4, 5, 6, 7, '8 ou mais']">
+                            <button type="button" 
+                                    @click="guests = g; guestsLabel = (g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')); openGuests = false;"
+                                    class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
+                                <span x-text="g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Botão Buscar Incorporado -->
+                <button type="button" id="hero-search-btn"
+                        @click="document.getElementById('lista-quartos').scrollIntoView({ behavior: 'smooth', block: 'start' })"
+                        class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
+                        title="Buscar Acomodações">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- ÁREA PRINCIPAL COM SOBREPOSIÇÃO BRANCA ARREDONDADA -->
-<main class="container mx-auto px-4 md:px-6 xl:px-12 pb-20 relative z-30 -mt-12 md:-mt-16 bg-white rounded-t-[2.5rem] pt-12 shadow-[0_-15px_40px_rgba(0,0,0,0.1)]">
-    <div class="max-w-[90rem] mx-auto" x-data="{ currentTab: 'quartos' }">
+<!-- Fundo branco com borda superior sutil -->
+<div class="relative z-20 bg-white" style="border-radius: 1rem 1rem 0 0; margin-top: -6px;">
+<main class="container mx-auto px-4 md:px-6 xl:px-12 pb-12 pt-8 md:pt-10">
+    <div class="max-w-[90rem] mx-auto">
         
-        <!-- Abas Chaveadoras (Estilo Pílula Minimalista / Airbnb) -->
-        <div class="flex flex-wrap gap-2 mb-10 select-none justify-center md:justify-start">
-            <button type="button" @click="currentTab = 'quartos'" 
-                    :class="currentTab === 'quartos' ? 'bg-gray-900 text-white font-bold' : 'bg-transparent text-gray-500 hover:bg-gray-100 font-semibold'"
-                    class="py-3 px-6 rounded-full text-sm md:text-base transition-all duration-300 flex items-center gap-2">
-                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="bed-double" class="w-4 h-4 md:w-5 md:h-5"></i></span> Acomodações
-            </button>
-            <button type="button" @click="currentTab = 'sobre'" 
-                    :class="currentTab === 'sobre' ? 'bg-gray-900 text-white font-bold' : 'bg-transparent text-gray-500 hover:bg-gray-100 font-semibold'"
-                    class="py-3 px-6 rounded-full text-sm md:text-base transition-all duration-300 flex items-center gap-2">
-                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="info" class="w-4 h-4 md:w-5 md:h-5"></i></span> Sobre a {{ hotel.nome }}
-            </button>
+        <!-- SEÇÃO 0: DESTAQUES -->
+        {% include 'hoteis/partials/tab_destaques.html' %}
+        
+        <!-- SEÇÃO 1: ACOMODAÇÕES -->
+        <div class="mt-8 md:mt-10">
+            {% include 'hoteis/partials/tab_acomodacoes.html' %}
         </div>
 
-        <!-- CONTEÚDO DA ABA 1: QUARTOS DISPONÍVEIS (GRID CARDS) -->
-        {% include 'hoteis/partials/tab_acomodacoes.html' %}
-
-        <!-- CONTEÚDO DA ABA 2: CONHEÇA O HOTEL -->
-        {% include 'hoteis/partials/tab_sobre.html' %}
+        <!-- SEÇÃO 2: SOBRE A POUSADA -->
+        <div class="mt-10 md:mt-12">
+            {% include 'hoteis/partials/tab_sobre.html' %}
+        </div>
     </div>
 </main>
+</div>
 
 <!-- POPUP GLOBAL DO CALENDÁRIO -->
 <div id="custom-calendar-popup" class="hidden bg-white rounded-2xl p-4" style="position: fixed; z-index: 9999; width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06);">
@@ -420,27 +598,26 @@
             .bindPopup('<b>{{ hotel.nome }}</b><br>{{ hotel.local.endereco }}')
             .openPopup();
             
-        // Forçar atualização do Leaflet quando mudar de aba
-        // Buscamos o botão de clique da segunda aba Conheça o Hotel
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(btn => {
-            if (btn.innerText && btn.innerText.includes('Conheça o Hotel')) {
-                btn.addEventListener('click', () => {
-                    setTimeout(() => {
-                        mapaB2C.invalidateSize();
-                        mapaB2C.setView([lat, lon], 15);
-                    }, 150);
-                });
-            }
-        });
+        // Mapa agora é sempre visível (sem abas), forçar resize após renderização
+        setTimeout(() => {
+            mapaB2C.invalidateSize();
+            mapaB2C.setView([lat, lon], 15);
+        }, 300);
     });
 </script>
+
+{% include 'hoteis/quartos/modal_disponibilidade.html' %}
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         lucide.createIcons();
+
+        // Lucide icons are initialized below
         
         // 1. Instanciar Swipers
         if (document.querySelector('.hotel-swiper')) {

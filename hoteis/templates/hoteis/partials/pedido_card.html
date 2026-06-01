@@ -1,0 +1,98 @@
+<div id="pedido-card-{{ p.id }}" 
+     :class="{
+        'border-amber-500/20 bg-amber-500/[0.02]': '{{ p.status }}' === 'pendente',
+        'border-blue-500/20 bg-blue-500/[0.02]': '{{ p.status }}' === 'preparo',
+        'border-green-500/20 bg-green-500/[0.02]': '{{ p.status }}' === 'entregue',
+        'border-slate-300/20 bg-slate-500/[0.02]': '{{ p.status }}' === 'cancelado'
+     }"
+     class="p-5 border rounded-[2rem] shadow-sm backdrop-blur-md flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-brand-500/20 transition-all duration-300 relative overflow-hidden">
+    
+    <!-- Left Details -->
+    <div class="flex items-center gap-4 min-w-0 flex-1">
+        <!-- Room identifier -->
+        <div :class="{
+                'bg-amber-500/10 text-amber-600 dark:text-amber-400': '{{ p.status }}' === 'pendente',
+                'bg-blue-500/10 text-blue-600 dark:text-blue-400': '{{ p.status }}' === 'preparo',
+                'bg-green-500/10 text-green-600 dark:text-green-400': '{{ p.status }}' === 'entregue',
+                'bg-slate-500/10 text-slate-600 dark:text-slate-400': '{{ p.status }}' === 'cancelado'
+             }"
+             class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 font-black text-sm">
+            {{ p.unidade.identificador }}
+        </div>
+        
+        <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[9px] font-black uppercase tracking-wider text-slate-400">{{ p.reserva.hospede_nome }}</span>
+                <span :class="{
+                        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': '{{ p.status }}' === 'pendente',
+                        'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20': '{{ p.status }}' === 'preparo',
+                        'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20': '{{ p.status }}' === 'entregue',
+                        'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20': '{{ p.status }}' === 'cancelado'
+                     }"
+                     class="text-[8px] font-extrabold uppercase px-2 py-0.5 rounded-full border">
+                    {{ p.get_status_display }}
+                </span>
+            </div>
+            
+            <h5 class="text-sm font-bold text-slate-800 dark:text-white mt-1.5">
+                {% for item in p.itens.all %}
+                    {{ item.quantidade }}x {{ item.produto.nome }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    {{ p.observacoes|default:"Solicitação de serviço de quarto" }}
+                {% endfor %}
+            </h5>
+            
+            <!-- Metadata -->
+            <p class="text-[10px] text-slate-400 mt-1 font-medium flex items-center gap-1.5">
+                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-3.5 h-3.5"></i></span>
+                <span>Solicitado em {{ p.criado_em|date:"d/m/Y H:i" }}</span>
+                {% if p.observacoes and p.itens.exists %}
+                    <span class="text-brand dark:text-slate-400 font-bold ml-1.5">• Observações: "{{ p.observacoes }}"</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    
+    <!-- Value & Actions -->
+    <div class="flex items-center justify-between md:justify-end gap-5 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-white/5 shrink-0">
+        <!-- Billing Value -->
+        <div class="flex flex-col items-start md:items-end">
+            <span class="text-[8px] font-black uppercase text-slate-400">Total</span>
+            <span class="text-xs font-black text-slate-800 dark:text-white mt-0.5">R$ <span class="moeda-br" data-valor="{{ p.valor_total }}">0,00</span></span>
+        </div>
+        
+        <!-- Status Action Buttons (only for pending/preparo) -->
+        {% if p.status == 'pendente' or p.status == 'preparo' %}
+            <div class="flex gap-1.5">
+                {% if p.status == 'pendente' %}
+                    <button type="button"
+                            hx-post="{% url 'hoteis:partner_hospedes_atualizar_status' p.id %}"
+                            hx-vals='{"status": "preparo"}'
+                            hx-target="#pedido-card-{{ p.id }}"
+                            hx-swap="outerHTML"
+                            class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1">
+                        <i data-lucide="clock-4" class="w-3.5 h-3.5"></i> Preparar
+                    </button>
+                {% endif %}
+                
+                <button type="button"
+                        hx-post="{% url 'hoteis:partner_hospedes_atualizar_status' p.id %}"
+                        hx-vals='{"status": "entregue"}'
+                        hx-target="#pedido-card-{{ p.id }}"
+                        hx-swap="outerHTML"
+                        class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1">
+                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Entregar
+                </button>
+                
+                <button type="button"
+                        hx-post="{% url 'hoteis:partner_hospedes_atualizar_status' p.id %}"
+                        hx-vals='{"status": "cancelado"}'
+                        hx-target="#pedido-card-{{ p.id }}"
+                        hx-swap="outerHTML"
+                        class="bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                    Cancelar
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>

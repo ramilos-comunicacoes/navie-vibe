@@ -7,11 +7,20 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime, date, timedelta
 from django.db import models
-from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tarefa, HospedeReserva, VeiculoReserva
+from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tarefa, HospedeReserva, VeiculoReserva, ReservaLog, ProdutoConsumo, PedidoServico, ItemPedidoServico
 from .utils import checar_disponibilidade_quarto, buscar_datas_proximas
 from decimal import Decimal
 
 def home(request):
+    # Incrementa contador de visualizações global da plataforma
+    from core.models import PlataformaConfig
+    try:
+        config = PlataformaConfig.get_solo()
+        config.visualizacoes += 1
+        config.save(update_fields=['visualizacoes'])
+    except Exception:
+        pass
+
     destaque = Hotel.objects.filter(destaque=True, status='ativo').first()
     proximos = Hotel.objects.filter(status='ativo').order_by('id')[:6]
     
@@ -23,12 +32,28 @@ def home(request):
 
 def detalhe(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
+    hotel.visualizacoes += 1
+    hotel.save(update_fields=['visualizacoes'])
+    
+    # Incrementa visualizações da Empresa associada
+    if hotel.empresa:
+        hotel.empresa.visualizacoes += 1
+        hotel.empresa.save(update_fields=['visualizacoes'])
+    
     quartos = hotel.quartos.all()
     imagens = hotel.imagens.all()
+    
+    # 3 quartos com mais visualizações (destaque) - Garantir exatamente 3 cards repetindo se houver menos
+    quartos_destaque_qs = hotel.quartos.all().order_by('-visualizacoes')
+    quartos_destaque = list(quartos_destaque_qs[:3])
+    if len(quartos_destaque) > 0:
+        while len(quartos_destaque) < 3:
+            quartos_destaque.append(quartos_destaque[len(quartos_destaque) % len(quartos_destaque_qs)])
     
     context = {
         'hotel': hotel,
         'quartos': quartos,
+        'quartos_destaque': quartos_destaque,
         'imagens': imagens,
     }
     return render(request, 'hoteis/detalhe.html', context)
@@ -38,12 +63,28 @@ def vanity_url(request, slug):
     Exibe a vitrine B2C pública do hotel a partir do seu slug customizado (vanity URL).
     """
     hotel = get_object_or_404(Hotel, slug=slug)
+    hotel.visualizacoes += 1
+    hotel.save(update_fields=['visualizacoes'])
+    
+    # Incrementa visualizações da Empresa associada
+    if hotel.empresa:
+        hotel.empresa.visualizacoes += 1
+        hotel.empresa.save(update_fields=['visualizacoes'])
+    
     quartos = hotel.quartos.all()
     imagens = hotel.imagens.all()
+    
+    # 3 quartos com mais visualizações (destaque) - Garantir exatamente 3 cards repetindo se houver menos
+    quartos_destaque_qs = hotel.quartos.all().order_by('-visualizacoes')
+    quartos_destaque = list(quartos_destaque_qs[:3])
+    if len(quartos_destaque) > 0:
+        while len(quartos_destaque) < 3:
+            quartos_destaque.append(quartos_destaque[len(quartos_destaque) % len(quartos_destaque_qs)])
     
     context = {
         'hotel': hotel,
         'quartos': quartos,
+        'quartos_destaque': quartos_destaque,
         'imagens': imagens,
     }
     return render(request, 'hoteis/detalhe.html', context)
@@ -253,6 +294,12 @@ def partner_dashboard(request):
     unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
     reservas = Reserva.objects.filter(unidade__quarto__hotel=hotel).order_by('-criado_em')
 
+    # === CENTRAL DE HÓSPEDES & CONCIERGE ===
+    from .models import ProdutoConsumo, PedidoServico
+    hospedes_ativos = Reserva.objects.filter(unidade__quarto__hotel=hotel, status='hospedado').order_by('unidade__identificador')
+    pedidos_ativos = PedidoServico.objects.filter(hotel=hotel).order_by('-criado_em')
+    produtos_consumo = ProdutoConsumo.objects.filter(hotel=hotel, disponivel=True)
+
     # === SISTEMA DE RESERVAS & PMS GRID (CABANAS) ===
     # 1. Categoria selecionada (Quarto)
     quarto_id = request.GET.get('quarto_id')
@@ -390,17 +437,52 @@ def partner_dashboard(request):
             })
         dias_calendario.append(semana_dias)
         
-    # Lançamentos simulados de caixa (Proprietário e Gerente vêem)
-    financeiro_lancamentos = [
-        {'id': 1, 'tipo': 'receita', 'desc': 'Reserva Suite 101 - Tiago', 'valor': 550.00, 'data': '2026-05-24'},
-        {'id': 2, 'tipo': 'despesa', 'desc': 'Compra de enxoval (Toalhas)', 'valor': 350.00, 'data': '2026-05-23'},
-        {'id': 3, 'tipo': 'receita', 'desc': 'Frigobar Consumo Chalé 02', 'valor': 75.00, 'data': '2026-05-23'},
-        {'id': 4, 'tipo': 'despesa', 'desc': 'Reparo Chuveiro Elétrico 104', 'valor': 120.00, 'data': '2026-05-22'},
-    ]
+    # === KPI FINANCEIRO REAL & ESTATÍSTICA HOTELEIRA ===
+    from financeiro.models import TransacaoFinanceira
     
-    faturamento_total = sum(l['valor'] for l in financeiro_lancamentos if l['tipo'] == 'receita')
-    despesas_total = sum(l['valor'] for l in financeiro_lancamentos if l['tipo'] == 'despesa')
+    # 1. Obter lançamentos contábeis reais do banco de dados
+    transacoes_qs = TransacaoFinanceira.objects.filter(hotel=hotel)
+    financeiro_lancamentos = transacoes_qs.order_by('-data', '-criado_em')[:50]
     
+    faturamento_total = transacoes_qs.filter(tipo='receita').aggregate(models.Sum('valor'))['valor__sum'] or Decimal('0.00')
+    despesas_total = transacoes_qs.filter(tipo='despesa').aggregate(models.Sum('valor'))['valor__sum'] or Decimal('0.00')
+    lucro_total = faturamento_total - despesas_total
+    
+    # 2. Métricas de Performance Hoteleira (ADR, RevPAR, Ocupação)
+    unidades_count = max(1, UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True).count())
+    occupied_nights = Reserva.objects.filter(unidade__quarto__hotel=hotel, status__in=['hospedado', 'finalizada']).count()
+    diarias_faturamento = transacoes_qs.filter(categoria='diarias').aggregate(models.Sum('valor'))['valor__sum'] or Decimal('0.00')
+    
+    adr = diarias_faturamento / Decimal(max(1, occupied_nights))
+    # RevPAR baseado no faturamento total de diárias dos últimos 30 dias distribuído pela capacidade mestre
+    revpar = diarias_faturamento / Decimal(unidades_count * 30)
+    
+    reservas_hospedadas_count = Reserva.objects.filter(unidade__quarto__hotel=hotel, status='hospedado').count()
+    taxa_ocupacao = min(100, int((reservas_hospedadas_count / unidades_count) * 100))
+    
+    # 3. Algoritmo de Ocupação & Forecasting de Faturamento Futuro (Projeção 12 dias para o Chart.js B2B)
+    forecast_labels = []
+    forecast_values = []
+    current_projected = faturamento_total # Parte do acumulado real do caixa atual
+    
+    for i in range(12):
+        dia = hoje + timedelta(days=i)
+        # Filtra reservas cujas estadas ativas cobrem o dia projetado
+        dia_reservas = Reserva.objects.filter(
+            unidade__quarto__hotel=hotel,
+            data_checkin__lte=dia,
+            data_checkout__gt=dia,
+            status__in=['confirmada', 'hospedado']
+        )
+        dia_faturamento = Decimal('0.00')
+        for r in dia_reservas:
+            duracao = max(1, (r.data_checkout - r.data_checkin).days)
+            dia_faturamento += Decimal(r.valor_total) / duracao
+            
+        current_projected += dia_faturamento
+        forecast_labels.append(dia.strftime('%d/%m'))
+        forecast_values.append(float(current_projected))
+        
     context = {
         'perfil': perfil,
         'hotel': hotel,
@@ -408,10 +490,19 @@ def partner_dashboard(request):
         'equipe': equipe,
         'unidades': unidades,
         'reservas': reservas,
+        
+        # Dados Financeiros Reais
         'financeiro': financeiro_lancamentos,
         'faturamento_total': faturamento_total,
         'despesas_total': despesas_total,
-        'lucro_total': faturamento_total - despesas_total,
+        'lucro_total': lucro_total,
+        
+        # Métricas de Inteligência SaaS
+        'adr': adr,
+        'revpar': revpar,
+        'taxa_ocupacao': taxa_ocupacao,
+        'forecast_labels': forecast_labels,
+        'forecast_values': forecast_values,
         
         # Atividades Kanban & Calendário:
         'overdue': overdue,
@@ -435,6 +526,11 @@ def partner_dashboard(request):
         'hospedados_qtd': hospedados_qtd,
         'pendentes_qtd': pendentes_qtd,
         'unidades_data': unidades_data,
+        
+        # Central de Hóspedes & Pedidos B2B:
+        'hospedes_ativos': hospedes_ativos,
+        'pedidos_ativos': pedidos_ativos,
+        'produtos_consumo': produtos_consumo,
     }
     
     is_htmx = request.headers.get('HX-Request') == 'true'
@@ -1288,6 +1384,10 @@ def quarto_detalhe(request, hotel_id, quarto_slug):
     """
     hotel = get_object_or_404(Hotel, id=hotel_id)
     quarto = get_object_or_404(Quarto, hotel=hotel, slug=quarto_slug)
+    
+    # Incrementa contador de visualizações
+    quarto.visualizacoes += 1
+    quarto.save(update_fields=['visualizacoes'])
 
     imagens = list(quarto.imagens.all())
     primeira_imagem = imagens[0] if imagens else None
@@ -1386,21 +1486,36 @@ def carrinho_salvar_fnrh(request):
     if idx == 0:
         if not all([nome, cpf, email, telefone, cep, endereco]):
             return JsonResponse({'success': False, 'error': 'Preencha todos os campos obrigatórios do hóspede principal.'}, status=400)
+        
+        fnrh = {
+            'nome': nome,
+            'cpf': cpf,
+            'email': email,
+            'telefone': telefone,
+            'rg': rg,
+            'nacionalidade': nacionalidade,
+            'profissao': profissao,
+            'cep': cep,
+            'endereco': endereco
+        }
     else:
-        if not all([nome, cpf]):
+        # Se vier 100% em branco, permite salvar vazio
+        if not nome and not cpf and not email and not telefone and not rg and not cep and not endereco:
+            fnrh = {}
+        elif not all([nome, cpf]):
             return JsonResponse({'success': False, 'error': 'Preencha todos os campos obrigatórios (Nome e CPF) do acompanhante.'}, status=400)
-            
-    fnrh = {
-        'nome': nome,
-        'cpf': cpf,
-        'email': email,
-        'telefone': telefone,
-        'rg': rg,
-        'nacionalidade': nacionalidade,
-        'profissao': profissao,
-        'cep': cep,
-        'endereco': endereco
-    }
+        else:
+            fnrh = {
+                'nome': nome,
+                'cpf': cpf,
+                'email': email,
+                'telefone': telefone,
+                'rg': rg,
+                'nacionalidade': nacionalidade,
+                'profissao': profissao,
+                'cep': cep,
+                'endereco': endereco
+            }
     
     hospedes[idx] = fnrh
     carrinho_data['hospedes'] = hospedes
@@ -1427,15 +1542,19 @@ def carrinho_salvar_fnrh(request):
     request.session['carrinho'] = carrinho_data
     request.session.modified = True
     
-    # Ligar FNRH salva do usuário no perfil principal da conta (apenas para o titular)
+    # Ligar FNRH salva do usuário no perfil principal da conta (apenas para o titular se o campo estiver vazio)
     if idx == 0 and request.user.is_authenticated:
         from clientes.models import ClientePerfil
         try:
             perfil, _ = ClientePerfil.objects.get_or_create(user=request.user)
-            perfil.cpf = cpf
-            perfil.telefone = telefone
-            perfil.cep = cep
-            perfil.endereco = endereco
+            if cpf and not perfil.cpf:
+                perfil.cpf = cpf
+            if telefone and not perfil.telefone:
+                perfil.telefone = telefone
+            if cep and not perfil.cep:
+                perfil.cep = cep
+            if endereco and not perfil.endereco:
+                perfil.endereco = endereco
             perfil.save()
         except Exception as e:
             pass
@@ -1510,8 +1629,15 @@ def carrinho_salvar_veiculo(request):
 
 @login_required
 def checkout_processar(request):
+    import json
+    import uuid
+    import requests
+    from django.conf import settings
+    
     carrinho_data = request.session.get('carrinho')
     if not carrinho_data:
+        if request.method == 'POST' or request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Seu carrinho de compras está vazio.'}, status=400)
         messages.error(request, 'Seu carrinho de compras está vazio.')
         return redirect('hoteis:home')
         
@@ -1528,10 +1654,22 @@ def checkout_processar(request):
     required_acompanhante = ['nome', 'cpf']
     
     for idx, h in enumerate(hospedes):
-        req_list = required_titular if idx == 0 else required_acompanhante
-        if not all(h.get(f) for f in req_list):
-            messages.error(request, f'Preencha todos os dados obrigatórios do hóspede {idx + 1} antes de finalizar.')
-            return redirect('hoteis:home')
+        if idx == 0:
+            if not all(h.get(f) for f in required_titular):
+                if request.method == 'POST':
+                    return JsonResponse({'success': False, 'error': 'Preencha todos os dados obrigatórios do hóspede titular antes de finalizar.'}, status=400)
+                messages.error(request, 'Preencha todos os dados obrigatórios do hóspede titular antes de finalizar.')
+                return redirect('hoteis:home')
+        else:
+            # Acompanhante é opcional se estiver completamente vazio.
+            # Mas se tiver qualquer dado preenchido, deve obrigatoriamente preencher Nome e CPF.
+            h_tem_dados = any(h.get(f) for f in ['nome', 'cpf', 'email', 'telefone', 'rg', 'nacionalidade', 'profissao', 'cep', 'endereco'])
+            if h_tem_dados:
+                if not all(h.get(f) for f in required_acompanhante):
+                    if request.method == 'POST':
+                        return JsonResponse({'success': False, 'error': f'Preencha todos os dados obrigatórios (Nome e CPF) do acompanhante {idx + 1} antes de finalizar.'}, status=400)
+                    messages.error(request, f'Preencha todos os dados obrigatórios (Nome e CPF) do acompanhante {idx + 1} antes de finalizar.')
+                    return redirect('hoteis:home')
             
     quarto_id = carrinho_data['quarto_id']
     quarto = get_object_or_404(Quarto, id=quarto_id)
@@ -1540,24 +1678,9 @@ def checkout_processar(request):
         checkin = datetime.strptime(carrinho_data['checkin'], '%Y-%m-%d').date()
         checkout = datetime.strptime(carrinho_data['checkout'], '%Y-%m-%d').date()
     except ValueError:
+        if request.method == 'POST':
+            return JsonResponse({'success': False, 'error': 'Datas inválidas no carrinho.'}, status=400)
         messages.error(request, 'Datas inválidas no carrinho.')
-        return redirect('hoteis:home')
-        
-    # Verificar e alocar UnidadeQuarto física livre
-    unidades = quarto.unidades.filter(ativa=True)
-    unidade_alocada = None
-    
-    from hoteis.utils import verifica_disponibilidade_unidade
-    for uni in unidades:
-        if verifica_disponibilidade_unidade(uni, checkin, checkout):
-            unidade_alocada = uni
-            break
-            
-    if not unidade_alocada:
-        messages.error(request, 'Desculpe, a acomodação escolhida não possui mais vagas físicas disponíveis para este período.')
-        if 'carrinho' in request.session:
-            del request.session['carrinho']
-            request.session.modified = True
         return redirect('hoteis:home')
         
     # Calcular valores financeiros
@@ -1568,68 +1691,212 @@ def checkout_processar(request):
     from sas.financeiro import calcular_taxas_reserva
     fin = calcular_taxas_reserva(quarto.hotel.empresa, 'hospedagem', quarto.preco, noites)
     
-    # Criar Reserva
-    titular_fnrh = hospedes[0]
-    reserva = Reserva.objects.create(
-        usuario=request.user,
-        unidade=unidade_alocada,
-        data_checkin=checkin,
-        data_checkout=checkout,
-        subtotal=fin['subtotal'],
-        taxas=fin['taxa_servico'],
-        valor_total=fin['total_cliente'],
-        taxa_servico_plataforma=fin['taxa_servico'],
-        taxa_gateway=fin['taxa_gateway'],
-        repasse_parceiro=fin['repasse_parceiro'],
-        ganho_liquido_plataforma=fin['ganho_liquido'],
-        status='confirmada',
-        canal_venda='marketplace',
-        hospede_nome=titular_fnrh['nome'],
-        hospede_cpf=titular_fnrh['cpf'],
-        hospede_email=titular_fnrh['email'],
-        hospede_telefone=titular_fnrh['telefone'],
-        hospede_rg=titular_fnrh.get('rg', ''),
-        hospede_nacionalidade=titular_fnrh.get('nacionalidade', 'Brasileira'),
-        hospede_profissao=titular_fnrh.get('profissao', ''),
-        hospede_endereco=f"{titular_fnrh['endereco']} (CEP: {titular_fnrh['cep']})",
-        quantidade_hospedes=quantidade_hospedes
-    )
-    
-    # Criar registros de HospedeReserva para todos
-    for idx, h in enumerate(hospedes):
-        endereco_completo = h.get('endereco', '')
-        if h.get('cep'):
-            endereco_completo = f"{endereco_completo} (CEP: {h['cep']})".strip()
+    if request.method == 'GET':
+        # Renderizar a página de checkout pagamento
+        context = {
+            'carrinho': carrinho_data,
+            'quarto': quarto,
+            'noites': noites,
+            'financeiro': fin,
+            'mp_public_key': getattr(settings, 'MERCADOPAGO_PUBLIC_KEY', ''),
+        }
+        return render(request, 'hoteis/checkout_pagamento.html', context)
+        
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'Formato de payload inválido.'}, status=400)
             
-        HospedeReserva.objects.create(
-            reserva=reserva,
-            ordem=idx + 1,
-            nome=h['nome'],
-            cpf=h['cpf'],
-            email=h.get('email', ''),
-            telefone=h.get('telefone', ''),
-            rg=h.get('rg', ''),
-            nacionalidade=h.get('nacionalidade', 'Brasileira'),
-            profissao=h.get('profissao', ''),
-            endereco=endereco_completo
+        forma_pagamento = data.get('forma_pagamento')
+        if forma_pagamento not in ['cartao', 'pix']:
+            return JsonResponse({'success': False, 'error': 'Selecione uma forma de pagamento válida.'}, status=400)
+            
+        # 1. Verificar e alocar UnidadeQuarto física livre para prevenir overbooking
+        unidades = quarto.unidades.filter(ativa=True)
+        unidade_alocada = None
+        
+        from hoteis.utils import verifica_disponibilidade_unidade
+        for uni in unidades:
+            if verifica_disponibilidade_unidade(uni, checkin, checkout):
+                unidade_alocada = uni
+                break
+                
+        if not unidade_alocada:
+            return JsonResponse({'success': False, 'error': 'Desculpe, a acomodação escolhida não possui mais vagas físicas disponíveis para este período.'}, status=400)
+            
+        # 2. Conectar ao Mercado Pago (Checkout Transparente API)
+        url_mp = "https://api.mercadopago.com/v1/payments"
+        headers = {
+            "Authorization": f"Bearer {settings.MERCADOPAGO_ACCESS_TOKEN}",
+            "Content-Type": "application/json",
+            "X-Idempotency-Key": str(uuid.uuid4())
+        }
+        
+        titular_fnrh = hospedes[0]
+        cpf_limpo = titular_fnrh['cpf'].replace(".", "").replace("-", "").replace(" ", "").strip()
+        
+        # Estrutura base do payer
+        payer = {
+            "email": titular_fnrh['email'],
+            "first_name": titular_fnrh['nome'].split()[0],
+            "last_name": " ".join(titular_fnrh['nome'].split()[1:]) or "Silva",
+            "identification": {
+                "type": "CPF",
+                "number": cpf_limpo
+            }
+        }
+        
+        payload_mp = {
+            "transaction_amount": float(fin['total_cliente']),
+            "description": f"Reserva {quarto.nome} - {quarto.hotel.nome}",
+            "payer": payer,
+        }
+        
+        if forma_pagamento == 'cartao':
+            token = data.get('token')
+            installments = int(data.get('installments', 1))
+            payment_method_id = data.get('payment_method_id')
+            
+            if not token:
+                return JsonResponse({'success': False, 'error': 'Token do cartão de crédito não foi gerado.'}, status=400)
+                
+            payload_mp.update({
+                "token": token,
+                "installments": installments,
+                "payment_method_id": payment_method_id,
+            })
+        elif forma_pagamento == 'pix':
+            payload_mp.update({
+                "payment_method_id": "pix"
+            })
+            
+        try:
+            # Em ambiente de teste unitário, podemos mockar ou injetar chamadas simuladas caso a rede falhe
+            response = requests.post(url_mp, headers=headers, json=payload_mp, timeout=15)
+            resp_data = response.json()
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Falha na comunicação com o gateway de pagamento: {str(e)}'}, status=500)
+            
+        if response.status_code not in [200, 201]:
+            error_message = resp_data.get('message', 'Erro desconhecido no gateway de pagamento.')
+            # Tratar caso o token esteja inválido ou sandbox dê erro
+            if 'cause' in resp_data and resp_data['cause']:
+                error_message = resp_data['cause'][0].get('description', error_message)
+            return JsonResponse({'success': False, 'error': f'Pagamento Recusado: {error_message}'}, status=400)
+            
+        status_pagamento = resp_data.get('status')
+        status_detail = resp_data.get('status_detail')
+        
+        # Pix fica 'pending', cartão deve estar 'approved'
+        if forma_pagamento == 'cartao' and status_pagamento != 'approved':
+            return JsonResponse({'success': False, 'error': f'O pagamento foi recusado pelo banco. Detalhe: {status_detail}'}, status=400)
+            
+        # 3. Criar a Reserva no Banco
+        status_reserva = 'confirmada' if status_pagamento == 'approved' else 'pendente'
+        reserva = Reserva.objects.create(
+            usuario=request.user,
+            unidade=unidade_alocada,
+            data_checkin=checkin,
+            data_checkout=checkout,
+            subtotal=fin['subtotal'],
+            taxas=fin['taxa_servico'],
+            valor_total=fin['total_cliente'],
+            taxa_servico_plataforma=fin['taxa_servico'],
+            taxa_gateway=fin['taxa_gateway'],
+            repasse_parceiro=fin['repasse_parceiro'],
+            ganho_liquido_plataforma=fin['ganho_liquido'],
+            status=status_reserva,
+            canal_venda='marketplace',
+            hospede_nome=titular_fnrh['nome'],
+            hospede_cpf=titular_fnrh['cpf'],
+            hospede_email=titular_fnrh['email'],
+            hospede_telefone=titular_fnrh['telefone'],
+            hospede_rg=titular_fnrh.get('rg', ''),
+            hospede_nacionalidade=titular_fnrh.get('nacionalidade', 'Brasileira'),
+            hospede_profissao=titular_fnrh.get('profissao', ''),
+            hospede_endereco=f"{titular_fnrh['endereco']} (CEP: {titular_fnrh['cep']})",
+            quantidade_hospedes=quantidade_hospedes
         )
         
-    # Criar VeiculoReserva se placa informada
-    veiculo_data = carrinho_data.get('veiculo', {})
-    if veiculo_data and veiculo_data.get('placa'):
-        VeiculoReserva.objects.create(
-            reserva=reserva,
-            placa=veiculo_data['placa'].upper(),
-            modelo=veiculo_data.get('modelo', ''),
-            cor=veiculo_data.get('cor', '')
+        # Criar registros de HospedeReserva para todos
+        for idx, h in enumerate(hospedes):
+            endereco_completo = h.get('endereco', '')
+            if h.get('cep'):
+                endereco_completo = f"{endereco_completo} (CEP: {h['cep']})".strip()
+                
+            HospedeReserva.objects.create(
+                reserva=reserva,
+                ordem=idx + 1,
+                nome=h['nome'],
+                cpf=h['cpf'],
+                email=h.get('email', ''),
+                telefone=h.get('telefone', ''),
+                rg=h.get('rg', ''),
+                nacionalidade=h.get('nacionalidade', 'Brasileira'),
+                profissao=h.get('profissao', ''),
+                endereco=endereco_completo
+            )
+            
+        # Criar VeiculoReserva se placa informada
+        veiculo_data = carrinho_data.get('veiculo', {})
+        if veiculo_data and veiculo_data.get('placa'):
+            VeiculoReserva.objects.create(
+                reserva=reserva,
+                placa=veiculo_data['placa'].upper(),
+                modelo=veiculo_data.get('modelo', ''),
+                cor=veiculo_data.get('cor', '')
+            )
+            
+        # Criar o Voucher Universal Naviê
+        from vouchers.models import Voucher
+        # Obfuscate CPF para cache de portaria
+        cpf_limpo = titular_fnrh['cpf'].replace(".", "").replace("-", "").replace(" ", "").strip()
+        cpf_ocultado = f"***.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-**" if len(cpf_limpo) == 11 else "USER-UNKNOWN"
+
+        Voucher.objects.create(
+            empresa=quarto.hotel.empresa,
+            tipo='hospedagem',
+            object_id=str(reserva.id),
+            codigo_seguro=f"VALIDA-RESERVA-{reserva.id}-{unidade_alocada.identificador}-{cpf_ocultado}",
+            titulo_exibicao=f"{unidade_alocada.identificador} ({quarto.nome})",
+            subtitulo_exibicao=quarto.hotel.nome,
+            nome_beneficiario=titular_fnrh['nome'],
+            documento_beneficiario=cpf_ocultado,
+            detalhes_json={
+                'checkin': checkin.strftime('%d/%m/%Y'),
+                'checkout': checkout.strftime('%d/%m/%Y'),
+                'noites': noites,
+                'reserva_id': str(reserva.id)
+            }
         )
+            
+        # 4. Limpar o carrinho
+        if 'carrinho' in request.session:
+            del request.session['carrinho']
+            request.session.modified = True
+            
+        # Retornar dados de sucesso
+        ret_data = {
+            'success': True,
+            'reserva_id': str(reserva.id),
+            'redirect_url': request.build_absolute_uri(f'/carrinho/sucesso/{reserva.id}/')
+        }
         
-    # Limpar carrinho
-    if 'carrinho' in request.session:
-        del request.session['carrinho']
-        request.session.modified = True
-        
-    return redirect('hoteis:checkout_sucesso', reserva_id=reserva.id)
+        # Inserir payload Pix para o front-end se aplicável
+        if forma_pagamento == 'pix':
+            try:
+                qr_code = resp_data['point_of_interaction']['transaction_data']['qr_code']
+                qr_code_base64 = resp_data['point_of_interaction']['transaction_data']['qr_code_base64']
+                ret_data.update({
+                    'forma_pagamento': 'pix',
+                    'pix_qr_code': qr_code,
+                    'pix_qr_code_base64': qr_code_base64
+                })
+            except Exception:
+                pass
+                
+        return JsonResponse(ret_data)
 
 @login_required
 def checkout_sucesso(request, reserva_id):
@@ -1640,24 +1907,321 @@ def checkout_sucesso(request, reserva_id):
     })
 
 @login_required(login_url='hoteis:partner_login')
-def partner_reserva_detalhe(request, reserva_id):
+@login_required(login_url='hoteis:partner_login')
+def partner_reserva_criar(request):
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse("Não autorizado", status=403)
     
     hotel = request.user.perfil_parceiro.hotel
+    quartos = hotel.quartos.all()
+    unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
+    
+    if request.method == 'POST':
+        unidade_id = request.POST.get('unidade_id')
+        data_checkin_str = request.POST.get('data_checkin')
+        data_checkout_str = request.POST.get('data_checkout')
+        valor_total_str = request.POST.get('valor_total', '0.00').strip()
+        if ',' in valor_total_str:
+            valor_total_str = valor_total_str.replace('.', '').replace(',', '.')
+        status = request.POST.get('status', 'pendente')
+        quantidade_hospedes = int(request.POST.get('quantidade_hospedes', '1'))
+        
+        unidade = get_object_or_404(UnidadeQuarto, id=unidade_id, quarto__hotel=hotel)
+        
+        # Parse datas
+        from datetime import datetime
+        try:
+            d_checkin = datetime.strptime(data_checkin_str, '%Y-%m-%d').date()
+            d_checkout = datetime.strptime(data_checkout_str, '%Y-%m-%d').date()
+        except ValueError:
+            return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">Formato de datas inválido. Use AAAA-MM-DD.</div>', status=400)
+            
+        if d_checkout <= d_checkin:
+            return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">A data de checkout deve ser posterior ao checkin.</div>', status=400)
+            
+        # Validar conflitos de reservas
+        conflitos = Reserva.objects.filter(
+            unidade=unidade,
+            data_checkin__lt=d_checkout,
+            data_checkout__gt=d_checkin
+        ).exclude(status='cancelada')
+        
+        if conflitos.exists():
+            return HttpResponse(f'<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">O quarto {unidade.identificador} já possui uma reserva ativa neste período.</div>', status=400)
+            
+        try:
+            valor_total = float(valor_total_str)
+        except ValueError:
+            valor_total = 0.00
+            
+        # Pegar dados do hóspede titular (ordem=1)
+        nome_1 = request.POST.get('nome_1', '').strip()
+        cpf_1 = request.POST.get('cpf_1', '').strip()
+        email_1 = request.POST.get('email_1', '').strip()
+        telefone_1 = request.POST.get('telefone_1', '').strip()
+        rg_1 = request.POST.get('rg_1', '').strip()
+        nacionalidade_1 = request.POST.get('nacionalidade_1', 'Brasileira').strip()
+        profissao_1 = request.POST.get('profissao_1', '').strip()
+        endereco_1 = request.POST.get('endereco_1', '').strip()
+        
+        if not nome_1:
+            return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">O nome do Hóspede 1 (Titular) é obrigatório.</div>', status=400)
+            
+        # Criar reserva walk-in
+        reserva = Reserva.objects.create(
+            unidade=unidade,
+            data_checkin=d_checkin,
+            data_checkout=d_checkout,
+            subtotal=valor_total,
+            valor_total=valor_total,
+            status=status,
+            canal_venda='walk-in',
+            quantidade_hospedes=quantidade_hospedes,
+            hospede_nome=nome_1,
+            hospede_cpf=cpf_1,
+            hospede_email=email_1,
+            hospede_telefone=telefone_1,
+            hospede_rg=rg_1,
+            hospede_nacionalidade=nacionalidade_1,
+            hospede_profissao=profissao_1,
+            hospede_endereco=endereco_1
+        )
+        
+        # Registrar todos os hóspedes
+        import re
+        for i in range(1, quantidade_hospedes + 1):
+            nome = request.POST.get(f'nome_{i}', '').strip()
+            cpf = request.POST.get(f'cpf_{i}', '').strip()
+            email = request.POST.get(f'email_{i}', '').strip()
+            telefone = request.POST.get(f'telefone_{i}', '').strip()
+            rg = request.POST.get(f'rg_{i}', '').strip()
+            nacionalidade = request.POST.get(f'nacionalidade_{i}', 'Brasileira').strip()
+            profissao = request.POST.get(f'profissao_{i}', '').strip()
+            endereco = request.POST.get(f'endereco_{i}', '').strip()
+            
+            # Pular acompanhantes sem nome se quantidade informada exceder
+            if i > 1 and not nome:
+                continue
+                
+            docs_list = request.FILES.getlist(f'documentos_{i}')
+            hospede = HospedeReserva.objects.create(
+                reserva=reserva,
+                ordem=i,
+                nome=nome or f"Acompanhante {i}",
+                cpf=cpf,
+                email=email,
+                telefone=telefone,
+                rg=rg,
+                nacionalidade=nacionalidade,
+                profissao=profissao,
+                endereco=endereco,
+                documento_frente=docs_list[0] if len(docs_list) > 0 else None,
+                documento_verso=docs_list[1] if len(docs_list) > 1 else None
+            )
+            
+        # Registrar veículo se placa informada
+        placa_1 = request.POST.get('placa_1', '').strip()
+        if placa_1:
+            VeiculoReserva.objects.create(
+                reserva=reserva,
+                placa=placa_1.upper(),
+                modelo=request.POST.get('modelo_1', '').strip(),
+                cor=request.POST.get('cor_1', '').strip()
+            )
+            
+        response = HttpResponse("""
+            <script>
+                document.getElementById('modal-container').innerHTML = '';
+                if (typeof window.triggerReservasRefresh === 'function') {
+                    window.triggerReservasRefresh();
+                }
+            </script>
+        """)
+        return response
+        
+    # GET: renderizar formulário em branco
+    from datetime import date, timedelta
+    data_inicio = date.today()
+    data_fim = data_inicio + timedelta(days=1)
+    
+    return render(request, 'hoteis/partials/modal_reserva_form.html', {
+        'is_create': True,
+        'hotel': hotel,
+        'quartos': quartos,
+        'unidades': unidades,
+        'reserva': None,
+        'hospedes': [],
+        'veiculo': None,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim
+    })
+
+@login_required(login_url='hoteis:partner_login')
+def partner_reserva_detalhe(request, reserva_id):
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
     reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
     
-    hospedes = reserva.hospedes.all()
+    quartos = hotel.quartos.all()
+    unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
+    
+    hospedes = list(reserva.hospedes.all().order_by('ordem'))
+    
     try:
         veiculo = reserva.veiculo
     except Exception:
         veiculo = None
         
-    return render(request, 'hoteis/partials/modal_reserva_detalhe.html', {
+    return render(request, 'hoteis/partials/modal_reserva_form.html', {
+        'is_create': False,
+        'hotel': hotel,
+        'quartos': quartos,
+        'unidades': unidades,
         'reserva': reserva,
         'hospedes': hospedes,
         'veiculo': veiculo
     })
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_reserva_salvar(request, reserva_id):
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    
+    unidade_id = request.POST.get('unidade_id')
+    data_checkin_str = request.POST.get('data_checkin')
+    data_checkout_str = request.POST.get('data_checkout')
+    valor_total_str = request.POST.get('valor_total', '0.00').strip()
+    if ',' in valor_total_str:
+        valor_total_str = valor_total_str.replace('.', '').replace(',', '.')
+    status = request.POST.get('status', reserva.status)
+    quantidade_hospedes = int(request.POST.get('quantidade_hospedes', '1'))
+    
+    unidade = get_object_or_404(UnidadeQuarto, id=unidade_id, quarto__hotel=hotel)
+    
+    # Parse datas
+    from datetime import datetime
+    try:
+        d_checkin = datetime.strptime(data_checkin_str, '%Y-%m-%d').date()
+        d_checkout = datetime.strptime(data_checkout_str, '%Y-%m-%d').date()
+    except ValueError:
+        return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">Formato de datas inválido. Use AAAA-MM-DD.</div>', status=400)
+        
+    if d_checkout <= d_checkin:
+        return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">A data de checkout deve ser posterior ao checkin.</div>', status=400)
+        
+    # Validar conflitos de reservas
+    conflitos = Reserva.objects.filter(
+        unidade=unidade,
+        data_checkin__lt=d_checkout,
+        data_checkout__gt=d_checkin
+    ).exclude(id=reserva.id).exclude(status='cancelada')
+    
+    if conflitos.exists():
+        return HttpResponse(f'<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">O quarto {unidade.identificador} já possui uma reserva ativa neste período.</div>', status=400)
+        
+    try:
+        valor_total = float(valor_total_str)
+    except ValueError:
+        valor_total = reserva.valor_total
+        
+    # Pegar dados do hóspede titular (ordem=1)
+    nome_1 = request.POST.get('nome_1', '').strip()
+    cpf_1 = request.POST.get('cpf_1', '').strip()
+    email_1 = request.POST.get('email_1', '').strip()
+    telefone_1 = request.POST.get('telefone_1', '').strip()
+    rg_1 = request.POST.get('rg_1', '').strip()
+    nacionalidade_1 = request.POST.get('nacionalidade_1', 'Brasileira').strip()
+    profissao_1 = request.POST.get('profissao_1', '').strip()
+    endereco_1 = request.POST.get('endereco_1', '').strip()
+    
+    if not nome_1:
+        return HttpResponse('<div class="p-4 mb-4 text-sm text-red-800 bg-red-50 rounded-xl">O nome do Hóspede 1 (Titular) é obrigatório.</div>', status=400)
+        
+    # Atualizar reserva
+    reserva.unidade = unidade
+    reserva.data_checkin = d_checkin
+    reserva.data_checkout = d_checkout
+    reserva.subtotal = valor_total
+    reserva.valor_total = valor_total
+    reserva.status = status
+    reserva.quantidade_hospedes = quantidade_hospedes
+    reserva.hospede_nome = nome_1
+    reserva.hospede_cpf = cpf_1
+    reserva.hospede_email = email_1
+    reserva.hospede_telefone = telefone_1
+    reserva.hospede_rg = rg_1
+    reserva.hospede_nacionalidade = nacionalidade_1
+    reserva.hospede_profissao = profissao_1
+    reserva.hospede_endereco = endereco_1
+    reserva.save()
+    
+    # Atualizar hóspedes
+    import re
+    for i in range(1, quantidade_hospedes + 1):
+        nome = request.POST.get(f'nome_{i}', '').strip()
+        cpf = request.POST.get(f'cpf_{i}', '').strip()
+        email = request.POST.get(f'email_{i}', '').strip()
+        telefone = request.POST.get(f'telefone_{i}', '').strip()
+        rg = request.POST.get(f'rg_{i}', '').strip()
+        nacionalidade = request.POST.get(f'nacionalidade_{i}', 'Brasileira').strip()
+        profissao = request.POST.get(f'profissao_{i}', '').strip()
+        endereco = request.POST.get(f'endereco_{i}', '').strip()
+        
+        if i > 1 and not nome:
+            continue
+            
+        hospede, created = HospedeReserva.objects.get_or_create(reserva=reserva, ordem=i)
+        hospede.nome = nome or f"Hóspede {i}"
+        hospede.cpf = cpf
+        hospede.email = email
+        hospede.telefone = telefone
+        hospede.rg = rg
+        hospede.nacionalidade = nacionalidade
+        hospede.profissao = profissao
+        hospede.endereco = endereco
+        
+        if request.POST.get(f'delete_doc_frente_{i}') == 'true':
+            hospede.documento_frente = None
+        if request.POST.get(f'delete_doc_verso_{i}') == 'true':
+            hospede.documento_verso = None
+
+        docs_list = request.FILES.getlist(f'documentos_{i}')
+        if len(docs_list) > 0:
+            hospede.documento_frente = docs_list[0]
+        if len(docs_list) > 1:
+            hospede.documento_verso = docs_list[1]
+            
+        hospede.save()
+        
+    # Deletar acompanhantes sobressalentes
+    reserva.hospedes.filter(ordem__gt=quantidade_hospedes).delete()
+    
+    # Atualizar veículo
+    placa_1 = request.POST.get('placa_1', '').strip()
+    if placa_1:
+        veiculo, created = VeiculoReserva.objects.get_or_create(reserva=reserva)
+        veiculo.placa = placa_1.upper()
+        veiculo.modelo = request.POST.get('modelo_1', '').strip()
+        veiculo.cor = request.POST.get('cor_1', '').strip()
+        veiculo.save()
+    else:
+        VeiculoReserva.objects.filter(reserva=reserva).delete()
+        
+    response = HttpResponse("""
+        <script>
+            document.getElementById('modal-container').innerHTML = '';
+            if (typeof window.triggerReservasRefresh === 'function') {
+                window.triggerReservasRefresh();
+            }
+        </script>
+    """)
+    return response
 
 @login_required(login_url='hoteis:partner_login')
 @require_POST
@@ -1668,23 +2232,53 @@ def partner_reserva_checkin(request, reserva_id):
     hotel = request.user.perfil_parceiro.hotel
     reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
     
-    from django.utils import timezone
-    reserva.status = 'hospedado'
-    reserva.checkin_realizado_em = timezone.now()
-    reserva.save()
-    
-    response = HttpResponse("""
-        <script>
-            document.getElementById('modal-container').innerHTML = '';
-            // disparar atualização do grid
-            const filtro = document.getElementById('filtro-periodo');
-            if (filtro) {
-                htmx.trigger(filtro, 'change');
-            } else {
-                window.location.reload();
-            }
-        </script>
-    """)
+    # Toggle Check-in
+    if reserva.status == 'hospedado' or reserva.status == 'concluido':
+        # Unmark check-in: revert to 'confirmada' and clear timestamps
+        reserva.status = 'confirmada'
+        reserva.checkin_realizado_em = None
+        reserva.checkout_realizado_em = None
+        reserva.save()
+        # Log action
+        ReservaLog.objects.create(
+            reserva=reserva,
+            usuario=request.user,
+            acao='desmarcar_checkin',
+            detalhes=f"Check-in desmarcado pelo usuário {request.user.username}."
+        )
+    else:
+        # Mark check-in
+        reserva.status = 'hospedado'
+        from django.utils import timezone
+        reserva.checkin_realizado_em = timezone.now()
+        reserva.save()
+        # Log action
+        ReservaLog.objects.create(
+            reserva=reserva,
+            usuario=request.user,
+            acao='checkin',
+            detalhes=f"Check-in realizado pelo usuário {request.user.username}."
+        )
+        
+    # Render the modal form to keep it open with the updated state
+    quartos = hotel.quartos.all()
+    unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
+    hospedes = list(reserva.hospedes.all().order_by('ordem'))
+    try:
+        veiculo = reserva.veiculo
+    except Exception:
+        veiculo = None
+        
+    response = render(request, 'hoteis/partials/modal_reserva_form.html', {
+        'is_create': False,
+        'hotel': hotel,
+        'quartos': quartos,
+        'unidades': unidades,
+        'reserva': reserva,
+        'hospedes': hospedes,
+        'veiculo': veiculo,
+        'trigger_grid_update': True
+    })
     return response
 
 @login_required(login_url='hoteis:partner_login')
@@ -1696,34 +2290,64 @@ def partner_reserva_checkout(request, reserva_id):
     hotel = request.user.perfil_parceiro.hotel
     reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
     
-    from django.utils import timezone
-    reserva.status = 'concluido'
-    reserva.checkout_realizado_em = timezone.now()
-    reserva.save()
-    
-    # Criar tarefa de limpeza
-    Tarefa.objects.create(
-        hotel=hotel,
-        titulo=f"Limpeza e Preparação - {reserva.unidade.identificador}",
-        descricao=f"Realizar limpeza pós-checkout da reserva #{str(reserva.id)[:8].upper()} do hóspede {reserva.hospede_nome}.",
-        prioridade='alta',
-        status='todo',
-        unidade=reserva.unidade,
-        reserva=reserva
-    )
-    
-    response = HttpResponse("""
-        <script>
-            document.getElementById('modal-container').innerHTML = '';
-            // disparar atualização do grid
-            const filtro = document.getElementById('filtro-periodo');
-            if (filtro) {
-                htmx.trigger(filtro, 'change');
-            } else {
-                window.location.reload();
-            }
-        </script>
-    """)
+    # Toggle Check-out
+    if reserva.status == 'concluido':
+        # Unmark check-out: revert to 'hospedado'
+        reserva.status = 'hospedado'
+        reserva.checkout_realizado_em = None
+        reserva.save()
+        # Log action
+        ReservaLog.objects.create(
+            reserva=reserva,
+            usuario=request.user,
+            acao='desmarcar_checkout',
+            detalhes=f"Check-out desmarcado pelo usuário {request.user.username}."
+        )
+    else:
+        # Mark check-out
+        reserva.status = 'concluido'
+        from django.utils import timezone
+        reserva.checkout_realizado_em = timezone.now()
+        reserva.save()
+        # Log action
+        ReservaLog.objects.create(
+            reserva=reserva,
+            usuario=request.user,
+            acao='checkout',
+            detalhes=f"Check-out realizado pelo usuário {request.user.username}."
+        )
+        
+        # Criar tarefa de limpeza pós-checkout se não existir
+        if not Tarefa.objects.filter(reserva=reserva, titulo__icontains="Limpeza").exists():
+            Tarefa.objects.create(
+                hotel=hotel,
+                titulo=f"Limpeza e Preparação - {reserva.unidade.identificador}",
+                descricao=f"Realizar limpeza pós-checkout da reserva #{str(reserva.id)[:8].upper()} do hóspede {reserva.hospede_nome}.",
+                prioridade='alta',
+                status='todo',
+                unidade=reserva.unidade,
+                reserva=reserva
+            )
+        
+    # Render the modal form to keep it open with the updated state
+    quartos = hotel.quartos.all()
+    unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
+    hospedes = list(reserva.hospedes.all().order_by('ordem'))
+    try:
+        veiculo = reserva.veiculo
+    except Exception:
+        veiculo = None
+        
+    response = render(request, 'hoteis/partials/modal_reserva_form.html', {
+        'is_create': False,
+        'hotel': hotel,
+        'quartos': quartos,
+        'unidades': unidades,
+        'reserva': reserva,
+        'hospedes': hospedes,
+        'veiculo': veiculo,
+        'trigger_grid_update': True
+    })
     return response
 
 @login_required(login_url='hoteis:partner_login')
@@ -1751,5 +2375,108 @@ def partner_reserva_cancelar(request, reserva_id):
         </script>
     """)
     return response
+
+
+@login_required(login_url='hoteis:partner_login')
+def partner_hospedes_pedidos(request):
+    """
+    Retorna a lista de pedidos de quarto do hotel logado (útil para atualização assíncrona).
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+    hotel = request.user.perfil_parceiro.hotel
+    pedidos = PedidoServico.objects.filter(hotel=hotel).order_by('-criado_em')
+    return render(request, 'hoteis/partials/pedidos_lista.html', {'pedidos_ativos': pedidos})
+
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_hospedes_atualizar_status(request, pedido_id):
+    """
+    Atualiza o status de uma solicitação de hóspede e retorna o card unitário atualizado.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+    hotel = request.user.perfil_parceiro.hotel
+    pedido = get_object_or_404(PedidoServico, id=pedido_id, hotel=hotel)
+    
+    novo_status = request.POST.get('status')
+    if novo_status in dict(PedidoServico.STATUS_CHOICES):
+        pedido.status = novo_status
+        pedido.save()
+        
+    return render(request, 'hoteis/partials/pedido_card.html', {'p': pedido})
+
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_hospedes_lancar_consumo(request, reserva_id):
+    """
+    Lança um item de consumo (frigobar/bomboniere) na conta da reserva e atualiza a grade de reservas.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+    hotel = request.user.perfil_parceiro.hotel
+    reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    
+    produto_id = request.POST.get('produto_id')
+    quantidade_str = request.POST.get('quantidade', '1')
+    observacoes = request.POST.get('observacoes', '').strip()
+    
+    try:
+        quantidade = int(quantidade_str)
+    except ValueError:
+        quantidade = 1
+        
+    produto = get_object_or_404(ProdutoConsumo, id=produto_id, hotel=hotel)
+    valor_total = produto.preco * quantidade
+    
+    # Criar um pedido do tipo 'entregue' para faturamento do frigobar
+    pedido = PedidoServico.objects.create(
+        reserva=reserva,
+        unidade=reserva.unidade,
+        hotel=hotel,
+        status='entregue',
+        observacoes=observacoes or f"Consumo lançado pela recepção: {produto.nome}.",
+        valor_total=valor_total
+    )
+    
+    ItemPedidoServico.objects.create(
+        pedido=pedido,
+        produto=produto,
+        quantidade=quantidade,
+        preco_unitario=produto.preco
+    )
+    
+    # Adicionar o consumo ao valor total da reserva
+    reserva.valor_total += valor_total
+    reserva.save()
+    
+    # Log de auditoria
+    try:
+        ReservaLog.objects.create(
+            reserva=reserva,
+            usuario=request.user if request.user.is_authenticated else None,
+            acao='consumo_lancado',
+            detalhes=f"Lançado consumo de {quantidade}x {produto.nome} (Total: R$ {valor_total})."
+        )
+    except Exception:
+        pass
+    
+    # Resposta com feedback e atualização do grid B2B em background
+    return HttpResponse(f"""
+        <div id="lancar-consumo-feedback" class="p-3 mb-3 text-xs text-green-800 bg-green-50 rounded-xl border border-green-500/20">
+            Lançado com sucesso! R$ {valor_total} adicionados ao quarto {reserva.unidade.identificador}.
+        </div>
+        <script>
+            if (typeof window.triggerReservasRefresh === 'function') {{
+                window.triggerReservasRefresh();
+            }}
+            setTimeout(() => {{
+                document.getElementById('lancar-consumo-feedback')?.remove();
+            }}, 3500);
+        </script>
+    """)
+
 
 

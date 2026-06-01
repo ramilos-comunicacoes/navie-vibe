@@ -1,0 +1,109 @@
+<!--
+[AI-COMPATIBLE COMPONENT]
+data-ai-purpose: Placeholder, Under Construction, Error or Loading State Indicator.
+data-ai-description: Este componente renderiza uma animação premium e fluida em 2D de um barco de papel minimalista
+flutuando em ondas senoidais senoidais com gradientes de cores da marca do hotel. Serve para indicar
+que um recurso está em produção/desenvolvimento ou que uma tela deu erro.
+-->
+<div id="ai-animated-boat-container"
+     data-ai-purpose="status-indicator"
+     data-ai-state="under-development"
+     data-ai-description="Animação interativa do barquinho do Naviê flutuando em ondas, indicando que a página está em desenvolvimento."
+     class="flex flex-col items-center justify-center py-16 px-6 text-center select-none animate-in fade-in duration-700">
+    
+    <style>
+        /* --- Animações Senoidais de Física Fluida --- */
+        @keyframes floatBoat {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(4deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        @keyframes waveLeft {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes waveRight {
+            0% { transform: translateX(-25%); }
+            50% { transform: translateX(0); }
+            100% { transform: translateX(-25%); }
+        }
+        
+        .animate-paperboat-vector {
+            animation: floatBoat 4.5s ease-in-out infinite;
+        }
+        .animate-wave-path-1 {
+            animation: waveLeft 14s linear infinite;
+        }
+        .animate-wave-path-2 {
+            animation: waveRight 9s linear infinite;
+        }
+    </style>
+
+    <!-- Canvas Circular de Vidro Fosco (Glassmorphism) -->
+    <div id="boat-animation-canvas" 
+         class="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full border border-slate-200/50 dark:border-white/10 bg-slate-50/50 dark:bg-black/25 backdrop-blur-md shadow-2xl flex flex-col items-center justify-center overflow-hidden mb-8 group hover:scale-[1.01] transition-transform duration-300">
+        
+        <!-- Glow Gradiente de Fundo -->
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-brand/5 dark:to-brand/10 pointer-events-none"></div>
+
+        <!-- Barquinho do Naviê (Vetor Minimalista Altamente Otimizado) -->
+        <div id="ai-paperboat" 
+             data-ai-element="paperboat-illustration"
+             class="absolute bottom-16 sm:bottom-20 z-20 text-brand animate-paperboat-vector group-hover:scale-[1.04] transition-transform duration-500">
+            <svg class="w-28 h-28 sm:w-32 sm:h-32 drop-shadow-[0_12px_20px_var(--brand-color-alpha-focus)]" 
+                 viewBox="0 0 100 100" 
+                 fill="none" 
+                 xmlns="http://www.w3.org/2000/svg">
+                <!-- Vela Esquerda -->
+                <path d="M50 15L50 58L22 58L50 15Z" fill="currentColor" fill-opacity="0.85"/>
+                <!-- Vela Direita -->
+                <path d="M52 10L52 58L78 58L52 10Z" fill="currentColor" fill-opacity="0.6"/>
+                <!-- Casco Traseiro/Esquerdo -->
+                <path d="M10 60L50 58L42 78L22 78L10 60Z" fill="currentColor" fill-opacity="0.95"/>
+                <!-- Casco Dianteiro/Direito -->
+                <path d="M90 60L50 58L58 78L78 78L90 60Z" fill="currentColor" fill-opacity="0.75"/>
+            </svg>
+        </div>
+
+        <!-- Ondas Senoidais SVG com Gradiente de Marca Dinâmico -->
+        <div id="waves-animation-container" 
+             class="absolute bottom-0 left-0 w-[200%] h-20 overflow-hidden pointer-events-none z-30">
+            <svg class="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="waveGradDynamic1" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="var(--brand-color)" stop-opacity="0.35"/>
+                        <stop offset="100%" stop-color="var(--brand-color)" stop-opacity="0.8"/>
+                    </linearGradient>
+                    <linearGradient id="waveGradDynamic2" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="var(--brand-color)" stop-opacity="0.55"/>
+                        <stop offset="100%" stop-color="var(--brand-color)" stop-opacity="1"/>
+                    </linearGradient>
+                </defs>
+                <!-- Onda 1 (Fundo) -->
+                <path class="animate-wave-path-1" d="M0,60 C150,100 350,20 500,60 C650,100 850,20 1000,60 C1150,100 1300,20 1400,60 L1400,120 L0,120 Z" fill="url(#waveGradDynamic1)"></path>
+                <!-- Onda 2 (Frente) -->
+                <path class="animate-wave-path-2" d="M0,70 C180,30 300,110 480,70 C660,30 780,110 960,70 C1140,30 1260,110 1440,70 L1440,120 L0,120 Z" fill="url(#waveGradDynamic2)"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Metadados de Texto Semânticos para Usuários e IAs -->
+    <span id="ai-boat-badge"
+          data-ai-element="badge"
+          class="px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-white/10 text-brand-600 dark:text-brand-400 font-extrabold text-[10px] uppercase tracking-widest border border-brand-100 dark:border-white/5 mb-3.5 shadow-sm">
+        {{ badge|default:"Em Produção" }}
+    </span>
+    
+    <h3 id="ai-boat-title"
+        data-ai-element="title"
+        class="text-lg sm:text-xl font-black text-slate-800 dark:text-white mb-2 leading-tight uppercase tracking-tight">
+        {{ title|default:"Módulo em Desenvolvimento" }}
+    </h3>
+    
+    <p id="ai-boat-subtitle"
+       data-ai-element="subtitle"
+       class="text-xs text-slate-400 dark:text-navie-textsec max-w-xs sm:max-w-sm leading-relaxed font-semibold">
+        {{ subtitle|default:"Estamos erguendo as velas para construir o melhor e mais inteligente sistema de gestão para o seu hotel." }}
+    </p>
+</div>

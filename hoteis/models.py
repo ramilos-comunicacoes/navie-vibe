@@ -60,6 +60,7 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     logo = models.ImageField(upload_to='hoteis/logos/', null=True, blank=True, help_text="Logo oficial da pousada")
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
+    visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página do hotel")
 
 
     
@@ -96,6 +97,7 @@ class Quarto(models.Model): # Antigo 'Tipos de Ingresso'
     # Otimização SEO e Assistentes IA (ex: Google Gemini)
     seo_titulo = models.CharField(max_length=150, blank=True, null=True, help_text="Título customizado para buscadores/IA")
     seo_descricao = models.TextField(blank=True, null=True, help_text="Descrição customizada para buscadores/IA")
+    visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações do quarto")
     
     class Meta:
         # Garante que o slug é único dentro de cada hotel (não globalmente)
@@ -273,6 +275,28 @@ class Tarefa(models.Model):
         return False
 
 
+def get_hospede_upload_path(instance, filename):
+    """Gera o caminho físico organizado para documentos do hóspede na pasta clientes/hospedes."""
+    empresa_slug = 'default'
+    try:
+        hotel = instance.reserva.unidade.quarto.hotel
+        if hotel.empresa:
+            empresa_slug = hotel.empresa.slug or slugify(hotel.empresa.nome_fantasia)
+        else:
+            empresa_slug = hotel.slug or 'default'
+    except Exception:
+        pass
+        
+    # Limpar nome e CPF/RG para criar uma pasta organizada e segura
+    cliente_nome = slugify(instance.nome) or 'sem_nome'
+    cliente_cpf = re.sub(r'\D', '', instance.cpf) or instance.rg or 'sem_documento'
+    
+    cliente_nome = cliente_nome.replace('-', '_')
+    pasta_cliente = f"{cliente_nome}_{cliente_cpf}"
+    
+    return f"{empresa_slug}/clientes/hospedes/{pasta_cliente}/{filename}"
+
+
 class HospedeReserva(models.Model):
     """FNRH individual de cada hóspede da reserva."""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -289,6 +313,10 @@ class HospedeReserva(models.Model):
     profissao = models.CharField(max_length=100, blank=True)
     endereco = models.TextField(blank=True)
     
+    # Documentos anexados (Identidade frente e verso)
+    documento_frente = models.FileField(upload_to=get_hospede_upload_path, null=True, blank=True)
+    documento_verso = models.FileField(upload_to=get_hospede_upload_path, null=True, blank=True)
+    
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -302,5 +330,84 @@ class VeiculoReserva(models.Model):
     placa = models.CharField(max_length=10)
     modelo = models.CharField(max_length=100, blank=True)
     cor = models.CharField(max_length=50, blank=True)
+
+
+class ReservaLog(models.Model):
+    """Log de auditoria de check-in e check-out de reservas."""
+    reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, related_name='logs')
+    usuario = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='reserva_logs', db_constraint=False)
+    acao = models.CharField(max_length=100) # 'checkin', 'checkout', 'desmarcar_checkin', 'desmarcar_checkout'
+    data_hora = models.DateTimeField(auto_now_add=True)
+    detalhes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-data_hora']
+        db_table = 'hoteis_reservalog'
+
+
+class ProdutoConsumo(models.Model):
+    """Itens e produtos disponíveis para Room Service, Frigobar ou Consumo Geral."""
+    TIPO_CHOICES = [
+        ('bebida', 'Bebida'),
+        ('comida', 'Comida'),
+        ('servico', 'Serviço'),
+        ('cortesia', 'Cortesia/Apoio'),
+    ]
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='cardapio_consumo')
+    nome = models.CharField(max_length=150)
+    descricao = models.TextField(blank=True, null=True)
+    preco = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES, default='bebida')
+    disponivel = models.BooleanField(default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['nome']
+        db_table = 'hoteis_produtoconsumo'
+
+    def __str__(self):
+        return f"{self.nome} - R$ {self.preco} ({self.get_tipo_display()})"
+
+
+class PedidoServico(models.Model):
+    """Solicitações de serviços de quarto, copa ou recepção feitas pelo hóspede."""
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('preparo', 'Em Preparo'),
+        ('entregue', 'Entregue'),
+        ('cancelado', 'Cancelado'),
+    ]
+    reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE, related_name='pedidos_servico')
+    unidade = models.ForeignKey(UnidadeQuarto, on_delete=models.CASCADE, related_name='pedidos_servico')
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='pedidos_servico')
+    
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pendente', db_index=True)
+    observacoes = models.TextField(blank=True, null=True)
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+        db_table = 'hoteis_pedidoservico'
+
+    def __str__(self):
+        return f"Pedido #{self.id} ({self.unidade.identificador}) - {self.get_status_display()}"
+
+
+class ItemPedidoServico(models.Model):
+    """Item individual cobrado e associado a um pedido/solicitação."""
+    pedido = models.ForeignKey(PedidoServico, on_delete=models.CASCADE, related_name='itens')
+    produto = models.ForeignKey(ProdutoConsumo, on_delete=models.PROTECT, related_name='itens_pedido')
+    quantidade = models.PositiveIntegerField(default=1)
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        db_table = 'hoteis_itempedidoservico'
+
+    def __str__(self):
+        return f"{self.quantidade}x {self.produto.nome} no Pedido #{self.pedido.id}"
+
 
 

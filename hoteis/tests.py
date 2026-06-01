@@ -4,13 +4,22 @@ from core.models import Empresa
 from hoteis.models import Local, Hotel, Quarto, UnidadeQuarto, ParceiroUsuario, Reserva
 from hoteis.views import partner_quarto_salvar
 from django.contrib.messages.storage.base import BaseStorage
+from unittest.mock import patch
+import json
 import datetime
+
 
 class MockStorage(BaseStorage):
     def _get(self):
         return [], True
     def _store(self, messages, response, *args, **kwargs):
         return []
+
+class MockSession(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.modified = False
+
 
 class PartnerQuartoSaveTestCase(TestCase):
     databases = '__all__'
@@ -60,6 +69,7 @@ class PartnerQuartoSaveTestCase(TestCase):
         
         request = self.factory.post('/hospedagens/quartos/formulario/salvar/', data)
         request.user = self.user
+        request.session = {}
         
         # Enable messages framework in request using MockStorage
         setattr(request, '_messages', MockStorage(request))
@@ -102,6 +112,7 @@ class PartnerQuartoSaveTestCase(TestCase):
         
         request = self.factory.post('/hospedagens/quartos/formulario/salvar/', data)
         request.user = self.user
+        request.session = {}
         setattr(request, '_messages', MockStorage(request))
         
         response = partner_quarto_salvar(request)
@@ -147,6 +158,7 @@ class PartnerQuartoSaveTestCase(TestCase):
         
         request = self.factory.post('/hospedagens/quartos/formulario/salvar/', data)
         request.user = self.user
+        request.session = {}
         setattr(request, '_messages', MockStorage(request))
         
         response = partner_quarto_salvar(request)
@@ -193,6 +205,7 @@ class PartnerQuartoSaveTestCase(TestCase):
         
         request = self.factory.post('/hospedagens/quartos/formulario/salvar/', data)
         request.user = self.user
+        request.session = {}
         setattr(request, '_messages', MockStorage(request))
         
         response = partner_quarto_salvar(request)
@@ -207,3 +220,415 @@ class PartnerQuartoSaveTestCase(TestCase):
         u2.refresh_from_db()
         self.assertFalse(u2.ativa)
         self.assertTrue(UnidadeQuarto.objects.filter(id=u2.id).exists())
+
+
+class PartnerReservaSaveTestCase(TestCase):
+    databases = '__all__'
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='partner_res_user', password='password123')
+        self.empresa = Empresa.objects.create(
+            nome_fantasia='Test Empresa 2',
+            razao_social='Test Empresa 2 LTDA',
+            cnpj='98.765.432/0001-10',
+            categoria='hospedagem',
+            endereco='Av. Central, 100',
+            cidade='Tianguá',
+            estado='CE',
+            cep='62320-000',
+            email_contato='contato2@test.com',
+            telefone_contato='88999999998'
+        )
+        self.local = Local.objects.create(nome='Test Local 2', endereco='Av. Central, 100', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(
+            empresa=self.empresa,
+            nome='Pousada Ramilos 2',
+            descricao='Pousada Teste 2',
+            local=self.local,
+            slug='pousadaramilos2'
+        )
+        self.parceiro = ParceiroUsuario.objects.create(
+            user=self.user,
+            hotel=self.hotel,
+            role='proprietario',
+            ativo=True
+        )
+        self.quarto = Quarto.objects.create(
+            hotel=self.hotel,
+            nome='Suíte Executiva',
+            preco=250.00,
+            capacidade_pessoas=2
+        )
+        self.unidade = UnidadeQuarto.objects.create(quarto=self.quarto, identificador='105', ativa=True)
+
+    def test_create_reserva_manual_with_brl_format(self):
+        from hoteis.views import partner_reserva_criar
+        
+        # We will post formatted BRL price e.g. "1.250,00"
+        data = {
+            'unidade_id': str(self.unidade.id),
+            'data_checkin': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+            'data_checkout': (datetime.date.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d'),
+            'valor_total': '1.250,00',
+            'status': 'confirmada',
+            'quantidade_hospedes': '2',
+            'nome_1': 'Hóspede Um',
+            'cpf_1': '123.456.789-01',
+            'email_1': 'h1@gmail.com',
+            'telefone_1': '(88) 99999-8888',
+            'nome_2': 'Hóspede Dois',
+            'cpf_2': '987.654.321-02',
+        }
+        
+        request = self.factory.post('/hospedagens/sistema/reservas/criar/', data)
+        request.user = self.user
+        request.session = {}
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = partner_reserva_criar(request)
+        self.assertEqual(response.status_code, 200)
+        
+        # Verify Reserva was created with correct parsed price
+        reserva = Reserva.objects.get(unidade=self.unidade)
+        self.assertEqual(reserva.valor_total, 1250.00)
+        self.assertEqual(reserva.quantidade_hospedes, 2)
+        
+        # Verify guests
+        hospedes = list(reserva.hospedes.all().order_by('ordem'))
+        self.assertEqual(len(hospedes), 2)
+        self.assertEqual(hospedes[0].nome, 'Hóspede Um')
+        self.assertEqual(hospedes[0].cpf, '123.456.789-01')
+        self.assertEqual(hospedes[1].nome, 'Hóspede Dois')
+
+
+class ConciergeTestCase(TestCase):
+    databases = '__all__'
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='partner_res_user', password='password123')
+        self.empresa = Empresa.objects.create(
+            nome_fantasia='Test Empresa 2',
+            razao_social='Test Empresa 2 LTDA',
+            cnpj='98.765.432/0001-10',
+            categoria='hospedagem',
+            endereco='Av. Central, 100',
+            cidade='Tianguá',
+            estado='CE',
+            cep='62320-000',
+            email_contato='contato2@test.com',
+            telefone_contato='88999999998'
+        )
+        self.local = Local.objects.create(nome='Test Local 2', endereco='Av. Central, 100', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(
+            empresa=self.empresa,
+            nome='Pousada Ramilos 2',
+            descricao='Pousada Teste 2',
+            local=self.local,
+            slug='pousadaramilos2'
+        )
+        self.parceiro = ParceiroUsuario.objects.create(
+            user=self.user,
+            hotel=self.hotel,
+            role='proprietario',
+            ativo=True
+        )
+        self.quarto = Quarto.objects.create(
+            hotel=self.hotel,
+            nome='Suíte Executiva',
+            preco=250.00,
+            capacidade_pessoas=2
+        )
+        self.unidade = UnidadeQuarto.objects.create(quarto=self.quarto, identificador='105', ativa=True)
+        
+        # Create an active reservation
+        self.reserva = Reserva.objects.create(
+            unidade=self.unidade,
+            data_checkin=datetime.date.today(),
+            data_checkout=datetime.date.today() + datetime.timedelta(days=2),
+            valor_total=500.00,
+            status='hospedado',
+            quantidade_hospedes=1
+        )
+        
+        # Create a consumption product
+        from hoteis.models import ProdutoConsumo
+        self.produto = ProdutoConsumo.objects.create(
+            hotel=self.hotel,
+            nome='Coca-Cola Lata',
+            preco=6.50,
+            tipo='bebida',
+            disponivel=True
+        )
+
+    def test_partner_hospedes_pedidos_authorized(self):
+        from hoteis.views import partner_hospedes_pedidos
+        from hoteis.models import PedidoServico
+        
+        # Create a service order
+        PedidoServico.objects.create(
+            reserva=self.reserva,
+            unidade=self.unidade,
+            hotel=self.hotel,
+            status='pendente',
+            valor_total=0.0
+        )
+        
+        request = self.factory.get('/partner/hospedes/pedidos/')
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_hospedes_pedidos(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Solicitação de serviço de quarto', status_code=200, html=False)
+
+    def test_partner_hospedes_pedidos_empty(self):
+        from hoteis.views import partner_hospedes_pedidos
+        
+        request = self.factory.get('/partner/hospedes/pedidos/')
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_hospedes_pedidos(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Nenhum pedido de quarto ativo', status_code=200, html=False)
+
+    def test_partner_hospedes_pedidos_unauthorized(self):
+        from hoteis.views import partner_hospedes_pedidos
+        
+        # Create an unauthorized user without a perfil_parceiro
+        unauthorized_user = User.objects.create_user(username='other_user', password='password123')
+        request = self.factory.get('/partner/hospedes/pedidos/')
+        request.user = unauthorized_user
+        request.session = {}
+        
+        response = partner_hospedes_pedidos(request)
+        self.assertEqual(response.status_code, 403)
+
+    def test_partner_hospedes_atualizar_status(self):
+        from hoteis.views import partner_hospedes_atualizar_status
+        from hoteis.models import PedidoServico
+        
+        pedido = PedidoServico.objects.create(
+            reserva=self.reserva,
+            unidade=self.unidade,
+            hotel=self.hotel,
+            status='pendente',
+            valor_total=0.0
+        )
+        
+        request = self.factory.post(f'/partner/hospedes/pedido/{pedido.id}/status/', {'status': 'preparo'})
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_hospedes_atualizar_status(request, pedido_id=pedido.id)
+        self.assertEqual(response.status_code, 200)
+        
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.status, 'preparo')
+        self.assertContains(response, 'Em Preparo')
+
+    def test_partner_hospedes_lancar_consumo(self):
+        from hoteis.views import partner_hospedes_lancar_consumo
+        from hoteis.models import PedidoServico, ItemPedidoServico, ReservaLog
+        
+        data = {
+            'produto_id': str(self.produto.id),
+            'quantidade': '2',
+            'observacoes': 'Teste de consumo'
+        }
+        
+        request = self.factory.post(f'/partner/hospedes/reserva/{self.reserva.id}/lancar/', data)
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_hospedes_lancar_consumo(request, reserva_id=self.reserva.id)
+        self.assertEqual(response.status_code, 200)
+        
+        # Check that reservation total value increased by 2 * 6.50 = 13.00
+        self.reserva.refresh_from_db()
+        self.assertEqual(self.reserva.valor_total, 513.00)
+        
+        # Check that PedidoServico and ItemPedidoServico were created
+        pedido = PedidoServico.objects.filter(reserva=self.reserva).first()
+        self.assertIsNotNone(pedido)
+        self.assertEqual(pedido.status, 'entregue')
+        self.assertEqual(pedido.valor_total, 13.00)
+        
+        item = ItemPedidoServico.objects.filter(pedido=pedido).first()
+        self.assertIsNotNone(item)
+        self.assertEqual(item.produto, self.produto)
+        self.assertEqual(item.quantidade, 2)
+        self.assertEqual(item.preco_unitario, 6.50)
+        
+        # Check that audit log was created
+        log = ReservaLog.objects.filter(reserva=self.reserva, acao='consumo_lancado').first()
+        self.assertIsNotNone(log)
+        self.assertIn('Coca-Cola Lata', log.detalhes)
+
+
+class CheckoutPaymentTestCase(TestCase):
+    databases = '__all__'
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='checkout_user', password='password123')
+        self.empresa = Empresa.objects.create(
+            nome_fantasia='Test Empresa Checkout',
+            razao_social='Test Empresa Checkout LTDA',
+            cnpj='88.765.432/0001-10',
+            categoria='hospedagem',
+            endereco='Av. Central, 100',
+            cidade='Tianguá',
+            estado='CE',
+            cep='62320-000',
+            email_contato='contato3@test.com',
+            telefone_contato='88999999998'
+        )
+        self.local = Local.objects.create(nome='Test Local Checkout', endereco='Av. Central, 100', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(
+            empresa=self.empresa,
+            nome='Pousada Ramilos Checkout',
+            descricao='Pousada Teste Checkout',
+            local=self.local,
+            slug='pousadacheckout'
+        )
+        self.parceiro = ParceiroUsuario.objects.create(
+            user=self.user,
+            hotel=self.hotel,
+            role='proprietario',
+            ativo=True
+        )
+        self.quarto = Quarto.objects.create(
+            hotel=self.hotel,
+            nome='Suíte Executiva',
+            preco=250.00,
+            capacidade_pessoas=2
+        )
+        self.unidade = UnidadeQuarto.objects.create(quarto=self.quarto, identificador='105', ativa=True)
+        
+        # Pre-configured B2C Session Cart
+        self.cart_session = {
+            'quarto_id': self.quarto.id,
+            'unidade_identificador': '105',
+            'checkin': (datetime.date.today() + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+            'checkout': (datetime.date.today() + datetime.timedelta(days=3)).strftime('%Y-%m-%d'),
+            'quantidade_hospedes': 1,
+            'hospedes': [{
+                'nome': 'Hóspede Titular',
+                'cpf': '123.456.789-01',
+                'email': 'titular@gmail.com',
+                'telefone': '(88) 99999-8888',
+                'cep': '62320-000',
+                'endereco': 'Rua Teste, 100'
+            }],
+            'veiculo': {
+                'placa': 'ABC-1234',
+                'modelo': 'Fusca',
+                'cor': 'Azul'
+            }
+        }
+
+    def test_checkout_pagamento_get(self):
+        from hoteis.views import checkout_processar
+        
+        request = self.factory.get('/carrinho/checkout/')
+        request.user = self.user
+        request.session = MockSession({'carrinho': self.cart_session})
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = checkout_processar(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Confirmar Pagamento', status_code=200, html=False)
+
+    @patch('requests.post')
+    def test_checkout_processar_post_card_approved(self, mock_post):
+        from hoteis.views import checkout_processar
+        from hoteis.models import Reserva
+        
+        # Mock Mercado Pago Response
+        mock_response = mock_post.return_value
+        mock_response.status_code = 201
+        mock_response.json.return_value = {
+            'status': 'approved',
+            'status_detail': 'accredited',
+            'id': 1234567890
+        }
+        
+        data = {
+            'forma_pagamento': 'cartao',
+            'token': 'mock_token_123',
+            'payment_method_id': 'visa',
+            'installments': 1
+        }
+        
+        request = self.factory.post(
+            '/carrinho/checkout/', 
+            data=json.dumps(data), 
+            content_type='application/json'
+        )
+        request.user = self.user
+        request.session = MockSession({'carrinho': self.cart_session})
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = checkout_processar(request)
+        self.assertEqual(response.status_code, 200)
+        
+        resp_json = json.loads(response.content)
+        self.assertTrue(resp_json['success'])
+        self.assertIn('redirect_url', resp_json)
+        
+        # Verify Reserva created
+        reserva = Reserva.objects.get(id=resp_json['reserva_id'])
+        self.assertEqual(reserva.status, 'confirmada')
+        self.assertEqual(reserva.valor_total, 550.00)
+
+    @patch('requests.post')
+    def test_checkout_processar_post_pix_pending(self, mock_post):
+        from hoteis.views import checkout_processar
+        from hoteis.models import Reserva
+        
+        # Mock Mercado Pago Response
+        mock_response = mock_post.return_value
+        mock_response.status_code = 201
+        mock_response.json.return_value = {
+            'status': 'pending',
+            'status_detail': 'pending_waiting_transfer',
+            'id': 987654321,
+            'point_of_interaction': {
+                'transaction_data': {
+                    'qr_code': 'mock_pix_copy_paste_code_here',
+                    'qr_code_base64': 'mock_base64_image_data'
+                }
+            }
+        }
+        
+        data = {
+            'forma_pagamento': 'pix'
+        }
+        
+        request = self.factory.post(
+            '/carrinho/checkout/', 
+            data=json.dumps(data), 
+            content_type='application/json'
+        )
+        request.user = self.user
+        request.session = MockSession({'carrinho': self.cart_session})
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = checkout_processar(request)
+        self.assertEqual(response.status_code, 200)
+        
+        resp_json = json.loads(response.content)
+        self.assertTrue(resp_json['success'])
+        self.assertEqual(resp_json['forma_pagamento'], 'pix')
+        self.assertEqual(resp_json['pix_qr_code'], 'mock_pix_copy_paste_code_here')
+        self.assertEqual(resp_json['pix_qr_code_base64'], 'mock_base64_image_data')
+        
+        # Verify Reserva created as pending
+        reserva = Reserva.objects.get(id=resp_json['reserva_id'])
+        self.assertEqual(reserva.status, 'pendente')
+
+
+

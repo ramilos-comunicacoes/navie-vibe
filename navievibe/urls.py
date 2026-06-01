@@ -24,6 +24,8 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),  # Login Social / OAuth
     path('api/', include('api.urls')),
     path('clientes/', include('clientes.urls')),
+    path('vouchers/', include('vouchers.urls')),
+    path('financeiro/', include('financeiro.urls')),
     path('', include('hoteis.urls')),
     path('', include('parceiros.urls')),
 ]

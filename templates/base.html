@@ -45,11 +45,25 @@
         }
 
         /* Regras Customizadas Vanilla (Avançadas) */
-        html { scroll-behavior: smooth; }
+        html { 
+            scroll-behavior: smooth; 
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: var(--navie-bg); 
             color: var(--navie-text);
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Ocultar barra de rolagem globalmente para um visual ultra-clean */
+        *::-webkit-scrollbar {
+            display: none !important;
+        }
+        * {
+            -ms-overflow-style: none !important; /* IE e Edge */
+            scrollbar-width: none !important; /* Firefox */
         }
 
         /* ─────────────────────────────────────────────────────────────────
@@ -237,7 +251,7 @@
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="w-full text-gray-800">
+<body class="w-full text-gray-800 flex flex-col min-h-screen">
 
     <!-- Header Simples -->
     <header class="bg-white sticky top-0 z-50 shadow-sm">
@@ -284,9 +298,11 @@
         </div>
     </header>
 
-    {% block content %}
-    <!-- Conteúdo da Página Aqui -->
-    {% endblock %}
+    <main class="flex-grow w-full">
+        {% block content %}
+        <!-- Conteúdo da Página Aqui -->
+        {% endblock %}
+    </main>
 
     {% include 'parceiros/modal_cadastro.html' %}
     {% include 'partials/carrinho_overlay.html' %}

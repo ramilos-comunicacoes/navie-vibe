@@ -50,8 +50,63 @@ def api_login(request):
     
     if user is not None:
         if user.is_active:
+            # 1. Preserve the cart session data before login cycles/clears the session
+            carrinho_data = request.session.get('carrinho')
+            
+            # 2. Login the user (this will cycle/clear the session)
             login(request, user)
-            return JsonResponse({'ok': True, 'redirect_url': '/clientes/painel/'})
+            
+            # 3. Restore the cart session data
+            if carrinho_data:
+                request.session['carrinho'] = carrinho_data
+                request.session.modified = True
+                
+            # 4. Prepare user_data to return to client-side so we can pre-fill empty inputs
+            from clientes.models import ClientePerfil
+            perfil, _ = ClientePerfil.objects.get_or_create(user=user)
+            
+            user_data = {
+                'nome': user.get_full_name() or user.username,
+                'cpf': getattr(perfil, 'cpf', '') or '',
+                'email': user.email,
+                'telefone': getattr(perfil, 'telefone', '') or '',
+                'cep': getattr(perfil, 'cep', '') or '',
+                'endereco': getattr(perfil, 'endereco', '') or ''
+            }
+            
+            # 5. Sincronizar FNRH do carrinho com o perfil se estiver vazio na conta (apenas para o titular)
+            if carrinho_data:
+                hospedes = carrinho_data.get('hospedes', [])
+                if hospedes:
+                    titular = hospedes[0]
+                    if titular:
+                        try:
+                            cpf = titular.get('cpf', '').strip()
+                            telefone = titular.get('telefone', '').strip()
+                            cep = titular.get('cep', '').strip()
+                            endereco = titular.get('endereco', '').strip()
+                            
+                            if cpf and not perfil.cpf:
+                                perfil.cpf = cpf
+                                user_data['cpf'] = cpf
+                            if telefone and not perfil.telefone:
+                                perfil.telefone = telefone
+                                user_data['telefone'] = telefone
+                            if cep and not perfil.cep:
+                                perfil.cep = cep
+                                user_data['cep'] = cep
+                            if endereco and not perfil.endereco:
+                                perfil.endereco = endereco
+                                user_data['endereco'] = endereco
+                            perfil.save()
+                        except Exception as e:
+                            pass
+                            
+            return JsonResponse({
+                'ok': True, 
+                'redirect_url': '/clientes/painel/',
+                'user_data': user_data
+            })
         else:
             return JsonResponse({'ok': False, 'erro': 'Esta conta de usuário foi desativada pela administração.'}, status=403)
     else:
@@ -164,7 +219,7 @@ def api_registrar(request):
             )
             
         # Log the user in directly after successful registration
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return JsonResponse({'ok': True, 'redirect_url': '/clientes/painel/'})
 
     except IntegrityError:

@@ -53,7 +53,7 @@ def calcular_taxas_reserva(empresa, categoria, valor_unitario, noites=1):
             percentual = config.taxa_parques
             
         subtotal = valor_unitario * noites
-        taxa_servico = subtotal * (percentual / Decimal('100.00'))
+        taxa_servico = subtotal * (Decimal(str(percentual)) / Decimal('100.00'))
         
     subtotal = valor_unitario * noites
     total_cliente = subtotal + taxa_servico

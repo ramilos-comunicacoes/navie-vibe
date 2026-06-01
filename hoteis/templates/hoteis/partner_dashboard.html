@@ -89,6 +89,23 @@
             }
          }">
 
+        <!-- Botão Novo Walk-in (Botãozinho Quadrado com Ícone Mais) -->
+        <button hx-get="{% url 'hoteis:partner_reserva_criar' %}" hx-target="#modal-container"
+                class="bg-brand hover:bg-brand/90 text-white w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-brand/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                title="Nova Reserva Manual (Walk-in)">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="plus" class="w-5 h-5"></i></span>
+        </button>
+
+        <!-- Botão Leitor QR Code da Portaria (Scanner Mobile Câmera) -->
+        <button @click="abrirScannerCamera()" type="button"
+                class="bg-blue-600 hover:bg-blue-500 text-white w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                title="Validar Voucher / Portaria por Câmera">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="qr-code" class="w-5 h-5"></i></span>
+        </button>
+
+        <!-- Separador visual -->
+        <div class="w-px h-6 bg-slate-200 dark:bg-white/10"></div>
+
         <!-- Seletor Modelo de Quarto (Custom Dropdown Estilizado) -->
         <div class="relative">
             <button @click="quartoOpen = !quartoOpen" @click.away="quartoOpen = false" type="button"
@@ -131,10 +148,22 @@
                 <input type="text" id="filtro-data-fim" name="data_fim"
                        value="{{ data_fim|date:'Y-m-d' }}"
                        readonly
-                       class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[11px] font-black rounded-2xl pl-8 pr-3 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer w-[115px] sm:w-[125px] hover:border-brand/50 focus:border-brand transition-all">
+                       class="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white text-[11px] font-black rounded-2xl pl-8 pr-3 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer w-[115px] sm:w-[125px] hover:border-brand/50 focus:border-brand transition-all">
                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-brand pointer-events-none flex items-center"><i data-lucide="calendar" class="w-3.5 h-3.5"></i></span>
             </div>
         </div>
+    </div>
+
+    <!-- Controles do Financeiro no Cabeçalho -->
+    <div x-show="activeTab === 'financeiro'" class="flex items-center gap-2.5 sm:gap-3" x-transition.opacity>
+        <!-- Botão Novo Lançamento -->
+        <button @click="$dispatch('open-novo-lancamento')"
+                data-ai-purpose="action-trigger"
+                data-ai-description="Dispara e abre o formulário modal de cadastro de novas receitas ou despesas contábeis no caixa do hotel."
+                class="bg-brand hover:bg-brand/90 text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-2xl text-xs font-black transition-all shadow-md shadow-brand/25 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 cursor-pointer">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="plus" class="w-4 h-4"></i></span>
+            <span class="hidden sm:inline">Novo Lançamento</span>
+        </button>
     </div>
 </div>
 {% endblock %}
@@ -194,82 +223,213 @@
          SEÇÃO FINANCEIRA (PROPRIETÁRIO / GERENTE)
          ───────────────────────────────────────────────────────────── -->
     {% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}
-    <div x-show="activeTab === 'financeiro'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-        <!-- KPIs Financeiros premium -->
+    <div x-show="activeTab === 'financeiro'" 
+         data-ai-purpose="finance-dashboard"
+         data-ai-description="Dashboard financeiro contábil real do hotel. Permite gerenciar receitas, despesas e visualizar projeções de ocupação."
+         class="space-y-6" 
+         x-transition:enter="transition ease-out duration-300">
+        
+        <!-- KPIs Financeiros premium (DRE Operacional Mestre) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
+            <div data-ai-element="kpi-card" data-ai-type="revenue" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-green-500/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-4">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturamento Mensal</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Faturamento Histórico</span>
                     <span class="p-2 rounded-2xl bg-green-500/10 text-green-500"><i data-lucide="trending-up" class="w-5 h-5"></i></span>
                 </div>
                 <h3 class="text-3xl font-black text-green-600 dark:text-green-400">R$ <span class="moeda-br" data-valor="{{ faturamento_total }}">{{ faturamento_total|floatformat:2 }}</span></h3>
-                <p class="text-[10px] text-slate-400 mt-2 font-medium">Entradas consolidadas no caixa</p>
+                <p class="text-[10px] text-slate-400 mt-2 font-medium">Entradas totais consolidadas no caixa real do hotel</p>
             </div>
 
-            <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
+            <div data-ai-element="kpi-card" data-ai-type="expense" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-red-500/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-4">
                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Despesas Operacionais</span>
                     <span class="p-2 rounded-2xl bg-red-500/10 text-red-500"><i data-lucide="trending-down" class="w-5 h-5"></i></span>
                 </div>
                 <h3 class="text-3xl font-black text-red-600 dark:text-red-400">R$ <span class="moeda-br" data-valor="{{ despesas_total }}">{{ despesas_total|floatformat:2 }}</span></h3>
-                <p class="text-[10px] text-slate-400 mt-2 font-medium">Saídas e manutenções do mês</p>
+                <p class="text-[10px] text-slate-400 mt-2 font-medium">Saídas registradas (manutenção, amenities, salários)</p>
             </div>
 
-            <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
+            <div data-ai-element="kpi-card" data-ai-type="profit" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-500/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-4">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Líquido</span>
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lucro Líquido Real</span>
                     <span class="p-2 rounded-2xl bg-brand-500/10 text-brand-500"><i data-lucide="wallet" class="w-5 h-5"></i></span>
                 </div>
                 <h3 class="text-3xl font-black text-brand-600 dark:text-brand-400">R$ <span class="moeda-br" data-valor="{{ lucro_total }}">{{ lucro_total|floatformat:2 }}</span></h3>
-                <p class="text-[10px] text-slate-400 mt-2 font-medium">Saldo positivo disponível</p>
+                <p class="text-[10px] text-slate-400 mt-2 font-medium">Saldo nominal positivo em caixa após deduções</p>
             </div>
         </div>
 
-        <!-- Tabela de Caixa de Lançamentos -->
+        <!-- Bloco de Métricas Hoteleiras de Elite & Gráfico de Ocupação/Forecast ( WOW ) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Gráfico de Forecasting (Chart.js dinâmico baseado em ocupação de reservas futuras) -->
+            <div class="lg:col-span-2 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Previsão Acumulada de Fluxo de Caixa</h4>
+                        <p class="text-[10px] text-slate-400 mt-0.5 font-bold uppercase tracking-wider">Faturamento estimado baseado em diárias de reservas futuras</p>
+                    </div>
+                    <span class="p-2 rounded-2xl bg-brand-500/10 text-brand-500 animate-pulse"><i data-lucide="line-chart" class="w-4.5 h-4.5"></i></span>
+                </div>
+                <div class="w-full h-64 relative">
+                    <canvas id="forecastChart" data-ai-element="forecasting-chart" data-ai-description="Gráfico com projeção de caixa calculada pelo cruzamento de datas de diárias das estadias futuras."></canvas>
+                </div>
+            </div>
+            
+            <!-- Métricas Contábeis de Hotéis de Luxo -->
+            <div class="space-y-6 flex flex-col justify-between">
+                <!-- Diária Média (ADR) -->
+                <div data-ai-element="metric-card" data-ai-metric="adr" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-5 shadow-sm backdrop-blur-md flex items-center justify-between flex-1 group hover:scale-[1.01] transition-transform duration-300">
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Diária Média (ADR)</span>
+                        <h4 class="text-2xl font-black text-slate-800 dark:text-white">R$ <span class="moeda-br" data-valor="{{ adr }}">{{ adr|floatformat:2 }}</span></h4>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-1">Média de diárias vendidas no hotel</span>
+                    </div>
+                    <span class="p-3.5 rounded-2xl bg-blue-500/10 text-blue-500 group-hover:scale-105 transition-transform"><i data-lucide="dollar-sign" class="w-5 h-5"></i></span>
+                </div>
+                
+                <!-- RevPAR -->
+                <div data-ai-element="metric-card" data-ai-metric="revpar" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-5 shadow-sm backdrop-blur-md flex items-center justify-between flex-1 group hover:scale-[1.01] transition-transform duration-300">
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">RevPAR</span>
+                        <h4 class="text-2xl font-black text-slate-800 dark:text-white">R$ <span class="moeda-br" data-valor="{{ revpar }}">{{ revpar|floatformat:2 }}</span></h4>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-1">Eficiência de receita por quarto disponível</span>
+                    </div>
+                    <span class="p-3.5 rounded-2xl bg-purple-500/10 text-purple-500 group-hover:scale-105 transition-transform"><i data-lucide="percent" class="w-5 h-5"></i></span>
+                </div>
+                
+                <!-- Taxa de Ocupação Média -->
+                <div data-ai-element="metric-card" data-ai-metric="occupancy" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-5 shadow-sm backdrop-blur-md flex items-center justify-between flex-1 group hover:scale-[1.01] transition-transform duration-300">
+                    <div>
+                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Taxa de Ocupação</span>
+                        <h4 class="text-2xl font-black text-brand-600 dark:text-brand-400">{{ taxa_ocupacao }}%</h4>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-1">Quartos com check-in ativo hoje</span>
+                    </div>
+                    <span class="p-3.5 rounded-2xl bg-brand-500/10 text-brand-500 group-hover:scale-105 transition-transform"><i data-lucide="door-open" class="w-5 h-5"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela Contábil de Caixa (Lançamentos Reais) -->
         <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <div>
                     <h4 class="text-lg font-bold text-slate-800 dark:text-white">Lançamentos de Caixa</h4>
-                    <p class="text-xs text-slate-400 mt-0.5">Histórico financeiro em tempo real</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Histórico financeiro real e auditado da pousada</p>
                 </div>
-                <button class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-md shadow-brand-600/10 flex items-center justify-center gap-2">
-                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="plus" class="w-4 h-4"></i></span> Novo Lançamento
-                </button>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse" data-ai-element="financial-ledger-table">
                     <thead>
                         <tr class="border-b border-slate-100 dark:border-navie-border text-xs text-slate-400 uppercase font-bold">
                             <th class="pb-3 px-4">Descrição</th>
-                            <th class="pb-3">Data</th>
-                            <th class="pb-3">Tipo</th>
+                            <th class="pb-3">Vencimento / Status</th>
+                            <th class="pb-3">Categoria</th>
                             <th class="pb-3 text-right px-4">Valor</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100 dark:divide-white/5">
                         {% for l in financeiro %}
-                        <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
-                            <td class="py-4 px-4 font-semibold text-slate-700 dark:text-slate-200">{{ l.desc }}</td>
-                            <td class="py-4 text-slate-400">{{ l.data }}</td>
+                        <!-- 
+                        🚨 COMPATIBILIDADE SEMÂNTICA DE IA 🚨
+                        Cada linha da tabela possui a propriedade 'data-ai-description' contendo o resumo em linguagem natural.
+                        -->
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors"
+                            data-ai-element="ledger-row"
+                            data-ai-type="{{ l.tipo }}"
+                            data-ai-description="{{ l.ai_summary }}">
+                            <td class="py-4 px-4 text-slate-700 dark:text-slate-200">
+                                <div class="flex flex-col">
+                                    <div class="font-semibold flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full {% if l.tipo == 'receita' %}bg-green-500{% else %}bg-red-500{% endif %}" title="{{ l.get_tipo_display }}"></span>
+                                        <span>{{ l.descricao }}</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5 mt-1.5 items-center">
+                                        <span class="text-[9px] font-mono text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-black">{{ l.codigo }}</span>
+                                        {% if l.unidade %}
+                                        <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                            <i data-lucide="home" class="w-2.5 h-2.5"></i>
+                                            Quarto {{ l.unidade.identificador }}
+                                        </span>
+                                        {% endif %}
+                                        {% if l.reserva %}
+                                        <span class="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                            <i data-lucide="user" class="w-2.5 h-2.5"></i>
+                                            Res: {{ l.reserva.hospede_nome|default:"Hóspede" }}
+                                        </span>
+                                        {% endif %}
+                                        
+                                        <!-- Comprovantes em anexo -->
+                                        {% if l.anexos.exists %}
+                                        <div class="flex flex-wrap gap-1.5 items-center">
+                                            {% for anexo in l.anexos.all %}
+                                            <a href="{{ anexo.arquivo.url }}" target="_blank" class="text-[9px] bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded flex items-center gap-1 font-extrabold transition-all hover:scale-105" title="{{ anexo.arquivo.name }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                                <span>ANX-{{ forloop.counter }}</span>
+                                            </a>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4">
+                                <div class="flex flex-col text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                    <span>Venc: {{ l.data_vencimento|date:"d/m/Y" }}</span>
+                                    {% if l.data_pagamento %}
+                                    <span class="text-[10px] text-green-500 dark:text-green-400 font-black flex items-center gap-0.5 mt-1 uppercase tracking-tight">
+                                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-green-500 shrink-0"></i>
+                                        Pago em {{ l.data_pagamento|date:"d/m/Y" }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-[10px] text-amber-500 dark:text-amber-400 font-black flex items-center gap-0.5 mt-1 uppercase tracking-tight">
+                                        <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+                                        Pendente
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
                             <td class="py-4">
                                 <span class="text-[9px] uppercase font-black px-2.5 py-1 rounded-full 
-                                    {% if l.tipo == 'receita' %}bg-green-500/10 text-green-500 border border-green-500/20{% else %}bg-red-500/10 text-red-500 border border-red-500/20{% endif %}">
-                                    {{ l.tipo }}
+                                    {% if l.tipo == 'receita' %}bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20{% else %}bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20{% endif %}">
+                                    {{ l.get_categoria_display }}
                                 </span>
                             </td>
                             <td class="py-4 text-right font-black px-4 {% if l.tipo == 'receita' %}text-green-500{% else %}text-red-500{% endif %}">
                                 R$ <span class="moeda-br" data-valor="{{ l.valor }}">{{ l.valor|floatformat:2 }}</span>
                             </td>
                         </tr>
+                        {% empty %}
+                        <tr data-ai-element="ledger-empty-row">
+                            <td colspan="4" class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
+                                Nenhum lançamento contábil registrado até o momento.
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
             </div>
         </div>
     </div>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         SEÇÃO ESTOQUE (PROPRIETÁRIO / GERENTE)
+         ───────────────────────────────────────────────────────────── -->
+    {% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}
+    <div x-show="activeTab === 'estoque'" 
+         data-ai-purpose="inventory-dashboard"
+         data-ai-description="Dashboard de estoque e almoxarifado (Atualmente em desenvolvimento)."
+         class="space-y-6 animate-in fade-in duration-300" 
+         x-transition:enter="transition ease-out duration-300" 
+         style="display: none;">
+        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-8 shadow-sm backdrop-blur-md">
+            {% include 'hoteis/partials/animated_boat.html' with badge="Em Desenvolvimento" title="Módulo de Almoxarifado & Estoque" subtitle="O Naviê está erguendo as velas para preparar a mais completa ferramenta de controle de produtos, entrada com alertas de validade de lotes e controle de margens de lucro." %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- ─────────────────────────────────────────────────────────────
          SEÇÃO QUARTOS (PROPRIETÁRIO / GERENTE)
@@ -1122,48 +1282,190 @@
         </div>
     </div>
 
-    <!-- Ocupação portaria -->
-    <div x-show="activeTab === 'ocupacao'" class="space-y-6" x-transition:enter="transition ease-out duration-300" style="display: none;">
-        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md">
-            <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Mapa de Ocupação</h4>
-            <p class="text-xs text-slate-400 mb-6">Quartos ativos do dia</p>
+    <!-- ─────────────────────────────────────────────────────────────
+         SEÇÃO HÓSPEDES & ATENDIMENTO (CONCIERGE / CONSUMO)
+         ───────────────────────────────────────────────────────────── -->
+    <div x-show="activeTab === 'hospedes'" 
+         x-data="{ hospedesSubTab: 'ativos', showLancarConsumo: false, selectedReservaId: '', selectedReservaNome: '', selectedUnidade: '', lancarProdutoId: '', lancarQtd: 1, lancarObs: '' }"
+         class="space-y-6 animate-in fade-in duration-300" 
+         x-transition:enter="transition ease-out duration-300"
+         style="display: none;">
+        
+        <!-- Header & Sub-Tabs Switcher -->
+        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h4 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <span class="flex items-center text-brand" style="pointer-events:none;"><i data-lucide="bell-ring" class="w-5 h-5"></i></span>
+                    Atendimento / Central de Hóspedes
+                </h4>
+                <p class="text-xs text-slate-400 mt-1">Gerencie a estadia, atenda pedidos de room service e fature frigobar/bomboniere ao vivo.</p>
+            </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="p-5 border border-green-500/20 bg-green-500/5 rounded-3xl text-center group hover:scale-[1.03] transition-transform">
-                    <span class="text-3xl font-black text-green-500">101</span>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Ocupado<br><span class="text-[9px] text-slate-400">(Check-out Hoje)</span></p>
-                </div>
-                <div class="p-5 border border-blue-500/20 bg-blue-500/5 rounded-3xl text-center group hover:scale-[1.03] transition-transform">
-                    <span class="text-3xl font-black text-blue-500">102</span>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Disponível<br><span class="text-[9px] text-slate-400">(Higienizado)</span></p>
-                </div>
-                <div class="p-5 border border-red-500/20 bg-red-500/5 rounded-3xl text-center group hover:scale-[1.03] transition-transform">
-                    <span class="text-3xl font-black text-red-500">103</span>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Bloqueado<br><span class="text-[9px] text-slate-400">(Manutenção)</span></p>
-                </div>
-                <div class="p-5 border border-amber-500/20 bg-amber-500/5 rounded-3xl text-center group hover:scale-[1.03] transition-transform">
-                    <span class="text-3xl font-black text-amber-500">104</span>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">Sujo<br><span class="text-[9px] text-slate-400">(Aguardando Faxina)</span></p>
-                </div>
+            <!-- Sub-Tabs Capsule Carrousel -->
+            <div class="bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5 flex items-center gap-1 select-none">
+                <button type="button" @click="hospedesSubTab = 'ativos'"
+                        :class="hospedesSubTab === 'ativos' ? 'bg-brand text-brand-contrastText shadow-sm font-black' : 'text-slate-500 dark:text-navie-textsec hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
+                        class="px-4 py-2 rounded-xl text-[10px] transition-all uppercase tracking-wider shrink-0 cursor-pointer flex items-center gap-1.5">
+                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="users" class="w-3.5 h-3.5"></i></span> Hóspedes Ativos
+                </button>
+                <button type="button" @click="hospedesSubTab = 'pedidos'"
+                        :class="hospedesSubTab === 'pedidos' ? 'bg-brand text-brand-contrastText shadow-sm font-black' : 'text-slate-500 dark:text-navie-textsec hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
+                        class="px-4 py-2 rounded-xl text-[10px] transition-all uppercase tracking-wider shrink-0 cursor-pointer flex items-center gap-1.5">
+                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="concierge-bell" class="w-3.5 h-3.5"></i></span> Central de Pedidos
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Pedidos portaria -->
-    <div x-show="activeTab === 'pedidos'" class="space-y-6" x-transition:enter="transition ease-out duration-300" style="display: none;">
-        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md">
-            <h4 class="text-lg font-bold text-slate-800 dark:text-white mb-1">Pedidos de Hóspedes</h4>
-            <p class="text-xs text-slate-400 mb-6">Solicitações de serviços de quarto e recepção</p>
-            
-            <div class="space-y-4">
-                <div class="p-5 border border-slate-100 dark:border-navie-border bg-slate-50/50 dark:bg-black/20 rounded-3xl flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-brand-500/20 transition-colors">
-                    <div>
-                        <span class="text-[9px] font-black uppercase text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-full border border-brand-500/20">Suíte 101</span>
-                        <h5 class="text-sm font-bold text-slate-700 dark:text-white mt-3">2 Toalhas de banho extras</h5>
-                        <p class="text-[10px] text-slate-400 mt-1 font-medium">Solicitado há 10 min por WhatsApp do Hotel</p>
+        <!-- SUB-TAB 1: HÓSPEDES ATIVOS -->
+        <div x-show="hospedesSubTab === 'ativos'" class="space-y-6" x-transition.opacity>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {% for r in hospedes_ativos %}
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-[2rem] p-6 shadow-sm backdrop-blur-md hover:border-brand/40 group transition-all relative overflow-hidden flex flex-col justify-between h-[230px]">
+                        <!-- Card Header -->
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-11 h-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center font-black text-sm shrink-0">
+                                    {{ r.unidade.identificador }}
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <h5 class="text-sm font-extrabold text-slate-800 dark:text-white truncate" title="{{ r.hospede_nome }}">{{ r.hospede_nome }}</h5>
+                                    <p class="text-[10px] text-slate-400 mt-0.5 truncate">{{ r.hospede_email|default:"Sem email cadastrado" }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Check-out Date Badge -->
+                            <div class="shrink-0 flex flex-col items-end">
+                                <span class="text-[8px] font-black uppercase text-slate-400">Checkout</span>
+                                <span class="text-[10px] font-bold text-slate-700 dark:text-white mt-0.5">{{ r.data_checkout|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Middle Info (Consumption Total) -->
+                        <div class="py-3 border-t border-b border-slate-100 dark:border-white/5 my-3 flex justify-between items-center text-xs">
+                            <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                                <i data-lucide="shopping-cart" class="w-4 h-4 text-slate-400"></i>
+                                <span>Consumo Acumulado:</span>
+                            </div>
+                            <div class="font-black text-brand text-sm">
+                                R$ <span class="moeda-br" data-valor="{% if r.valor_total %}{{ r.valor_total }}{% else %}0.00{% endif %}">0,00</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="flex gap-2">
+                            <!-- Launch consumption button -->
+                            <button type="button" 
+                                    @click="selectedReservaId = '{{ r.id }}'; selectedReservaNome = '{{ r.hospede_nome|escapejs }}'; selectedUnidade = '{{ r.unidade.identificador }}'; showLancarConsumo = true"
+                                    class="flex-1 py-2.5 rounded-xl bg-brand hover:bg-brand/90 text-brand-contrastText text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 cursor-pointer">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Lançar Frigobar
+                            </button>
+                            <!-- View stay details -->
+                            <button type="button"
+                                    hx-get="{% url 'hoteis:partner_reserva_detalhe' r.id %}"
+                                    hx-target="#modal-container"
+                                    class="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-white text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
-                    <button class="bg-green-600 hover:bg-green-500 text-white px-5 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-md shadow-green-600/10">Marcar como Entregue</button>
+                {% empty %}
+                    <div class="col-span-full py-16 text-center bg-white/40 dark:bg-black/10 border border-dashed border-slate-300 dark:border-white/10 rounded-3xl">
+                        <span class="flex justify-center text-slate-400 mb-3"><i data-lucide="users-round" class="w-12 h-12"></i></span>
+                        <h5 class="text-sm font-bold text-slate-600 dark:text-slate-300">Nenhum hóspede hospedado no momento</h5>
+                        <p class="text-xs text-slate-400 mt-1">Realize check-ins no PMS Grid para listá-los de forma reativa nesta tela.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- SUB-TAB 2: CENTRAL DE PEDIDOS (ROOM SERVICE) -->
+        <div x-show="hospedesSubTab === 'pedidos'" class="space-y-6" x-transition.opacity>
+            <div id="pedidos-lista-container" 
+                 hx-get="{% url 'hoteis:partner_hospedes_pedidos' %}" 
+                 hx-trigger="load, every 15s"
+                 class="space-y-4">
+                {% include "hoteis/partials/pedidos_lista.html" %}
+            </div>
+        </div>
+        
+        <!-- MODAL SUSPENSO: LANÇAR CONSUMO FRIGOBAR / BOMBONIERE -->
+        <div x-show="showLancarConsumo" style="display: none;" class="fixed inset-0 z-[200] flex items-center justify-center p-4 pointer-events-none">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto" @click="showLancarConsumo = false"></div>
+            
+            <div class="bg-white dark:bg-[#121212] rounded-[2rem] border border-slate-200/50 dark:border-white/10 w-full max-w-md overflow-hidden relative z-50 p-6 shadow-2xl pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3 mb-4">
+                    <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="shopping-cart" class="w-4 h-4 text-brand"></i>
+                        Lançar Consumo: Quarto <span x-text="selectedUnidade" class="text-brand"></span>
+                    </h3>
+                    <button type="button" @click="showLancarConsumo = false" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition-colors">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
                 </div>
+                
+                <form :hx-post="'/hospedagens/hospedes/reserva/' + selectedReservaId + '/lancar/'"
+                      hx-target="#lancar-feedback-area"
+                      @submit="setTimeout(() => { lancarProdutoId = ''; selectedProdLabel = 'Selecione um produto...'; lancarQtd = 1; lancarObs = ''; }, 1000)"
+                      class="space-y-4">
+                    {% csrf_token %}
+                    <div id="lancar-feedback-area"></div>
+                    
+                    <!-- Produto Dropdown Customizado AlpineJS -->
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Escolher Item / Produto</label>
+                        <div x-data="{ openProd: false, selectedProdLabel: 'Selecione um produto...' }" class="relative w-full">
+                            <button type="button" @click="openProd = !openProd" 
+                                    class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs text-left flex justify-between items-center focus:outline-none">
+                                <span x-text="selectedProdLabel" class="truncate"></span>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="openProd ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="openProd" @click.away="openProd = false" 
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute left-0 right-0 mt-1.5 z-[210] bg-white dark:bg-[#121212] border border-slate-200/50 dark:border-white/10 rounded-2xl shadow-xl max-h-48 overflow-y-auto select-dropdown-container">
+                                
+                                <div class="p-1.5 space-y-1">
+                                    {% for p in produtos_consumo %}
+                                        <button type="button" 
+                                                @click="lancarProdutoId = '{{ p.id }}'; selectedProdLabel = '{{ p.nome|escapejs }} (R$ {{ p.preco }})'; openProd = false"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                            <span>{{ p.nome }}</span>
+                                            <span class="font-extrabold text-brand shrink-0">R$ {{ p.preco }}</span>
+                                        </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <input type="hidden" name="produto_id" :value="lancarProdutoId" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantidade -->
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Quantidade</label>
+                        <input type="number" name="quantidade" x-model="lancarQtd" min="1" max="50" required
+                               class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs font-bold focus:outline-none">
+                    </div>
+                    
+                    <!-- Observações -->
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Observações (Opcional)</label>
+                        <textarea name="observacoes" x-model="lancarObs" rows="2" placeholder="Ex: Consumo frigobar, abastecido na suíte"
+                                  class="w-full p-4 rounded-2xl modal-input-glass text-xs focus:outline-none"></textarea>
+                    </div>
+                    
+                    <!-- Submit -->
+                    <button type="submit"
+                            class="w-full py-3 rounded-2xl bg-brand text-brand-contrastText text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i data-lucide="check" class="w-4 h-4"></i> Lançar na Conta do Quarto
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -1226,13 +1528,95 @@
     </div>
     {% endif %}
 
+    <!-- ─────────────────────────────────────────────────────────────
+     MODAL UNIVERSAL DE ESCANEAMENTO DE QR CODE (PORTARIA NAVIÊ)
+     ───────────────────────────────────────────────────────────── -->
+    <div id="modal-scanner-portaria" style="display:none; position:fixed; inset:0; z-index:150; overflow-y:auto;">
+        <!-- Backdrop Blur -->
+        <div onclick="fecharScannerCamera()" style="position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);"></div>
+
+        <!-- Scanner Container -->
+        <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1rem;">
+            <div class="bg-white dark:bg-[#151515] border border-slate-200/80 dark:border-white/10" 
+                 style="position:relative; border-radius:28px; width:100%; max-width:420px; padding:1.5rem; z-index:151; box-shadow:0 25px 50px -12px rgba(0,0,0,0.4);">
+                
+                <!-- Header -->
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-white/5 mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="p-1.5 rounded-lg bg-blue-500/10 text-blue-500"><i data-lucide="camera" class="w-4 h-4"></i></span>
+                        <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Validador de Voucher</h4>
+                    </div>
+                    <button onclick="fecharScannerCamera()" class="text-slate-400 hover:text-red-500 transition-colors cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Feed da Câmera / Tela de Confirmação -->
+                <div class="bg-slate-50 dark:bg-black/40 border border-dashed border-slate-200 dark:border-white/5 flex flex-col items-center justify-center relative overflow-hidden" 
+                     style="border-radius:20px; min-height:300px;">
+                    
+                    <!-- Área de Vídeo Ativa -->
+                    <div id="reader" class="w-full h-full overflow-hidden" style="border:none !important;"></div>
+                    
+                    <!-- Overlay de Voucher Inválido / Alerta -->
+                    <div id="scanner-alerta-box" class="absolute inset-0 bg-red-600/95 text-white flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300" style="display:none; z-index:40;">
+                        <i data-lucide="alert-triangle" class="w-12 h-12 mb-3 animate-bounce"></i>
+                        <h5 class="font-extrabold text-sm uppercase tracking-wide">Voucher Inválido</h5>
+                        <p id="scanner-alerta-msg" class="text-xs text-red-100 mt-2 font-medium"></p>
+                        <button onclick="reiniciarScannerPortaria()" class="mt-5 bg-white text-red-600 px-5 py-2 rounded-full font-bold text-xs shadow-md active:scale-95 transition-transform cursor-pointer">
+                            Tentar Novamente
+                        </button>
+                    </div>
+
+                    <!-- Overlay de Voucher Válido (Confirmador de Entrada) -->
+                    <div id="scanner-sucesso-box" class="absolute inset-0 bg-white dark:bg-[#181818] text-slate-800 dark:text-white flex flex-col justify-between p-5 animate-in slide-in-from-bottom duration-300" style="display:none; z-index:40;">
+                        <div class="text-center pt-2">
+                            <div class="w-12 h-12 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center mx-auto mb-3">
+                                <i data-lucide="check-circle-2" class="w-7 h-7"></i>
+                            </div>
+                            <span id="sucesso-voucher-tipo" class="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">Hospedagem</span>
+                            <h5 id="sucesso-voucher-titulo" class="font-black text-base text-slate-800 dark:text-white mt-2 leading-tight">Chalé 04 (Suíte Master)</h5>
+                            <p id="sucesso-voucher-subtitulo" class="text-[10px] text-slate-400 dark:text-navie-textsec mt-1">Pousada da Serra</p>
+                        </div>
+
+                        <!-- Dados Rápidos Ocultados para Privacidade -->
+                        <div class="bg-slate-50 dark:bg-black/30 border border-slate-100 dark:border-white/5 rounded-2xl p-3.5 space-y-2 text-left text-xs font-semibold">
+                            <div class="flex justify-between"><span class="text-slate-400">Hóspede:</span><span id="sucesso-voucher-nome">Mateus Silva</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Documento:</span><span id="sucesso-voucher-doc" class="font-mono">***.***.***-**</span></div>
+                            <div class="flex justify-between" id="sucesso-voucher-extra-row"><span class="text-slate-400">Período:</span><span id="sucesso-voucher-extra">01/01 a 05/01</span></div>
+                        </div>
+
+                        <!-- Botão de Consumo Principal -->
+                        <div class="flex gap-2">
+                            <button onclick="reiniciarScannerPortaria()" class="flex-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 py-3 rounded-2xl text-xs font-black transition-colors cursor-pointer">
+                                Voltar
+                            </button>
+                            <button id="btn-confirmar-voucher" onclick="confirmarVoucherConsumo()" class="flex-2 bg-green-600 hover:bg-green-500 text-white py-3 px-4 rounded-2xl text-xs font-black transition-all shadow-lg shadow-green-600/20 flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01] active:scale-95">
+                                <i data-lucide="check" class="w-4.5 h-4.5"></i>
+                                <span>Liberar Entrada</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <p class="text-[10px] text-center text-slate-400 dark:text-navie-textsec mt-4 font-bold uppercase tracking-wider">
+                    Scanner Universal Naviê Vibe
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- ─────────────────────────────────────────────────────────────
+     MODAL DE NOVO LANÇAMENTO FINANCEIRO (B2B SAAS CAIXA) MIGRADO PARA EXTRA_MODALS
+     ───────────────────────────────────────────────────────────── -->
 {% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        function triggerReservasRefresh() {
+        window.triggerReservasRefresh = function() {
             const quartoId = document.getElementById('hidden-quarto-id')?.value || '';
             const inicio = document.getElementById('filtro-data-inicio')?.value || '';
             const fim = document.getElementById('filtro-data-fim')?.value || '';
@@ -1257,7 +1641,7 @@
                     disableMobile: true,
                     onChange: function(selectedDates, dateStr) {
                         elInicio.value = dateStr;
-                        triggerReservasRefresh();
+                        window.triggerReservasRefresh();
                     }
                 });
             }
@@ -1272,7 +1656,7 @@
                     disableMobile: true,
                     onChange: function(selectedDates, dateStr) {
                         elFim.value = dateStr;
-                        triggerReservasRefresh();
+                        window.triggerReservasRefresh();
                     }
                 });
             }
@@ -1288,4 +1672,1013 @@
         });
     });
 </script>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    let html5QrcodeScanner = null;
+    let currentVoucherIdScanned = null;
+
+    function abrirScannerCamera() {
+        document.getElementById('modal-scanner-portaria').style.display = 'block';
+        document.getElementById('scanner-alerta-box').style.display = 'none';
+        document.getElementById('scanner-sucesso-box').style.display = 'none';
+        if (window.lucide) lucide.createIcons();
+        
+        setTimeout(() => {
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 15, qrbox: { width: 220, height: 220 } };
+            
+            html5QrcodeScanner.start(
+                { facingMode: "environment" }, 
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error("Erro ao iniciar câmera: ", err);
+                alert("Não foi possível acessar a câmera do dispositivo. Verifique as permissões de privacidade.");
+                fecharScannerCamera();
+            });
+        }, 100);
+    }
+
+    function fecharScannerCamera() {
+        document.getElementById('modal-scanner-portaria').style.display = 'none';
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                html5QrcodeScanner = null;
+            }).catch(err => console.warn(err));
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        console.log(`Scan bem-sucedido: ${decodedText}`);
+        
+        try {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = context.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, context.currentTime);
+            osc.connect(context.destination);
+            osc.start();
+            osc.stop(context.currentTime + 0.15);
+        } catch(e){}
+
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                html5QrcodeScanner = null;
+                validarVoucherNoServidor(decodedText);
+            }).catch(err => console.error(err));
+        }
+    }
+
+    function onScanFailure(error) {}
+
+    function validarVoucherNoServidor(payload) {
+        fetch(`/vouchers/api/validar/?payload=${encodeURIComponent(payload)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    currentVoucherIdScanned = data.voucher_id;
+                    
+                    // Preencher dados do sucesso de forma polimórfica
+                    document.getElementById('sucesso-voucher-tipo').textContent = data.tipo_display;
+                    document.getElementById('sucesso-voucher-titulo').textContent = data.titulo;
+                    document.getElementById('sucesso-voucher-subtitulo').textContent = data.subtitulo;
+                    document.getElementById('sucesso-voucher-nome').textContent = data.beneficiario;
+                    document.getElementById('sucesso-voucher-doc').textContent = data.documento;
+                    
+                    const extraRow = document.getElementById('sucesso-voucher-extra-row');
+                    const extraVal = document.getElementById('sucesso-voucher-extra');
+                    
+                    if (data.tipo === 'hospedagem') {
+                        extraRow.style.display = 'flex';
+                        extraVal.textContent = `${data.detalhes.checkin} até ${data.detalhes.checkout} (${data.detalhes.noites} noites)`;
+                    } else {
+                        extraRow.style.display = 'none';
+                    }
+                    
+                    document.getElementById('scanner-sucesso-box').style.display = 'flex';
+                    if (window.lucide) lucide.createIcons();
+                } else {
+                    exibirErroScanner(data.error || "Código inválido ou não pertencente a este parceiro.");
+                }
+            })
+            .catch(err => {
+                exibirErroScanner("Erro de rede ou servidor inacessível.");
+            });
+    }
+
+    function confirmarVoucherConsumo() {
+        if (!currentVoucherIdScanned) return;
+        
+        const btn = document.getElementById('btn-confirmar-voucher');
+        btn.classList.add('pointer-events-none', 'opacity-70');
+        
+        // Obter CSRF token dos cookies do navegador
+        let cookies = document.cookie.split(';');
+        let csrfToken = '';
+        for (let i = 0; i < cookies.length; i++) {
+            let c = cookies[i].trim();
+            if (c.startsWith('csrftoken=')) {
+                csrfToken = c.substring('csrftoken='.length);
+                break;
+            }
+        }
+        
+        fetch(`/vouchers/api/confirmar/${currentVoucherIdScanned}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.classList.remove('pointer-events-none', 'opacity-70');
+            if (data.success) {
+                fecharScannerCamera();
+                // Sucesso absoluto! Abre a reserva diretamente no modal usando HTMX
+                fetch(`/vouchers/api/validar/?payload=${currentVoucherIdScanned}`)
+                    .then(res => res.json())
+                    .then(vData => {
+                        if (vData.tipo === 'hospedagem') {
+                            htmx.ajax('GET', `/hospedagens/reservas/${vData.object_id}/`, { target: '#modal-container' });
+                        }
+                    });
+            } else {
+                alert(data.error || "Ocorreu um erro ao processar a entrada.");
+            }
+        })
+        .catch(err => {
+            btn.classList.remove('pointer-events-none', 'opacity-70');
+            alert("Erro ao confirmar entrada.");
+        });
+    }
+
+    function exibirErroScanner(mensagem) {
+        document.getElementById('scanner-alerta-msg').textContent = mensagem;
+        document.getElementById('scanner-alerta-box').style.display = 'flex';
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function reiniciarScannerPortaria() {
+        document.getElementById('scanner-alerta-box').style.display = 'none';
+        document.getElementById('scanner-sucesso-box').style.display = 'none';
+        currentVoucherIdScanned = null;
+        abrirScannerCamera();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // GRAFICADOR DE FORECASTING CONTÁBIL (CHART.JS SAAS REAL)
+    // ─────────────────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+        // Extrai a cor ativa do tema da marca (definida dinamicamente no cabeçalho)
+        let brandColor = getComputedStyle(document.documentElement).getPropertyValue('--brand-color').trim();
+        if (!brandColor || !brandColor.startsWith('#')) brandColor = '#f97316';
+        
+        const canvas = document.getElementById('forecastChart');
+        if (canvas) {
+            const labels = {{ forecast_labels|safe|default:"[]" }};
+            const values = {{ forecast_values|safe|default:"[]" }};
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Criação do gradiente de área preenchida translúcido premium
+            const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+            gradient.addColorStop(0, `rgba(${hexToRgbValues(brandColor)}, 0.28)`);
+            gradient.addColorStop(1, `rgba(${hexToRgbValues(brandColor)}, 0.01)`);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Previsão de Saldo Acumulado',
+                        data: values,
+                        borderColor: brandColor,
+                        borderWidth: 3.5,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.38,
+                        pointBackgroundColor: brandColor,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: brandColor,
+                        pointHoverBorderColor: '#ffffff',
+                        pointHoverBorderWidth: 2.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            titleFont: { size: 10, weight: 'bold', family: 'Inter' },
+                            bodyFont: { size: 12, weight: 'extrabold', family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 16,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: 'rgba(156, 163, 175, 0.75)',
+                                font: { size: 9, weight: 'bold', family: 'Inter' }
+                            }
+                        },
+                        y: {
+                            grid: { 
+                                color: 'rgba(156, 163, 175, 0.08)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: 'rgba(156, 163, 175, 0.75)',
+                                font: { size: 9, weight: 'bold', family: 'Inter' },
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // Função utilitária para converter HEX para valores RGB separados
+    function hexToRgbValues(hex) {
+        hex = hex.replace('#', '').trim();
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        return `${r}, ${g}, ${b}`;
+    }
+</script>
+{% endblock %}
+
+{% block extra_modals %}
+<!-- ─────────────────────────────────────────────────────────────
+     MODAL DE NOVO LANÇAMENTO FINANCEIRO (B2B SAAS CAIXA)
+     ───────────────────────────────────────────────────────────── -->
+<div x-data="{ 
+         open: false,
+         openTipo: false, 
+         selectedTipo: 'receita', 
+         selectedTipoLabel: 'Receita (Entrada de Caixa)',
+         openCategoria: false, 
+         selectedCategoria: 'diarias', 
+         selectedCategoriaLabel: 'Diárias e Hospedagens (Marketplace Naviê)',
+         openUnidade: false,
+         selectedUnidade: '',
+         selectedUnidadeLabel: 'Nenhum quarto associado',
+         searchUnidade: '',
+         openReserva: false,
+         selectedReserva: '',
+         selectedReservaLabel: 'Nenhuma reserva associada',
+         selectedReservaUnidadeId: '',
+         searchReserva: '',
+         fileCount: 0,
+         filesList: [],
+         
+         handleFilesChange(files) {
+             let list = [...this.filesList];
+             for (let i = 0; i < files.length; i++) {
+                 list.push({
+                     file: files[i],
+                     name: files[i].name,
+                     size: (files[i].size / 1024).toFixed(1) + ' KB',
+                     ext: files[i].name.split('.').pop().toLowerCase()
+                 });
+             }
+             this.filesList = list;
+             this.fileCount = list.length;
+             this.syncNativeInput();
+         },
+         
+         removeFile(index) {
+             this.filesList.splice(index, 1);
+             this.fileCount = this.filesList.length;
+             this.syncNativeInput();
+         },
+         
+         clearAllFiles() {
+             this.filesList = [];
+             this.fileCount = 0;
+             this.syncNativeInput();
+         },
+         
+         syncNativeInput() {
+             const input = document.getElementById('ai-form-input-arquivos');
+             if (!input) return;
+             const dt = new DataTransfer();
+             this.filesList.forEach(item => {
+                 dt.items.add(item.file);
+             });
+             input.files = dt.files;
+         },
+         
+         triggerFileInput() {
+             const input = document.getElementById('ai-form-input-arquivos');
+             if (input) input.click();
+         }
+     }" 
+     @open-novo-lancamento.window="open = true" 
+     x-show="open" 
+     x-cloak
+     data-ai-purpose="transaction-modal-form"
+     data-ai-description="Formulário de cadastro contábil de receitas e despesas. Permite que IAs ou usuários insiram transações contábeis reais."
+     style="display: none;" 
+     class="fixed inset-0 z-[9999] overflow-hidden">
+    
+    <!-- Backdrop Blur (Heavy dark blur) - Placed outside scroll container to ensure it covers all content -->
+    <div @click="open = false" 
+         x-show="open"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-0"></div>
+    
+    <!-- Container do Form (Handles clicking outside to close) -->
+    <div @click="open = false" class="fixed inset-0 overflow-y-auto z-10 flex items-center justify-center p-2 md:p-4">
+        <!-- Modal Card (Stops click propagation to keep open) -->
+        <div @click.stop class="bg-white dark:bg-[#151515] border border-slate-200/80 dark:border-white/10 rounded-3xl max-w-3xl w-full p-5 md:p-6 shadow-2xl relative z-20 animate-in zoom-in duration-200 max-h-[96vh] flex flex-col overflow-y-auto scrollbar-none my-1 md:my-2">
+            <!-- Header do Modal -->
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-white/5 mb-4">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                    <span class="p-1.5 rounded-lg bg-brand-500/10 text-brand-500"><i data-lucide="circle-dollar-sign" class="w-4.5 h-4.5"></i></span>
+                    Lançar Transação de Caixa
+                </h3>
+                <button type="button"
+                        @click="open = false" 
+                        data-ai-purpose="close-trigger"
+                        class="text-slate-400 hover:text-red-500 transition-colors cursor-pointer bg-transparent border-none p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            
+            <!-- Formulário Contábil Reativo -->
+            <form action="{% url 'financeiro:criar_transacao' %}" 
+                  method="post" 
+                  hx-post="{% url 'financeiro:criar_transacao' %}" 
+                  hx-swap="none"
+                  enctype="multipart/form-data"
+                  data-ai-element="finance-post-form"
+                  data-ai-description="Formulário reativo que submete a transação contábil para o backend via AJAX/HTMX."
+                  class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Coluna Esquerda: Campos Principais -->
+                    <div class="space-y-4">
+                        <!-- Tipo de Lançamento -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Tipo de Lançamento</label>
+                            <div class="relative w-full">
+                                <button type="button" @click="openTipo = !openTipo" 
+                                        class="w-full h-11 px-4 rounded-2xl input-glass text-xs text-left flex justify-between items-center focus:outline-none cursor-pointer">
+                                    <span x-text="selectedTipoLabel" class="truncate font-bold"></span>
+                                    <span class="flex items-center text-slate-400 shrink-0">
+                                        <svg class="w-4 h-4 transition-transform duration-200" :class="openTipo ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div x-show="openTipo" @click.away="openTipo = false" 
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute left-0 right-0 mt-1.5 z-[160] bg-white dark:bg-[#121212] border border-slate-200/50 dark:border-white/10 rounded-2xl shadow-xl max-h-56 overflow-y-auto select-dropdown-container scrollbar-none" style="display: none;">
+                                    
+                                    <div class="p-1.5 space-y-1">
+                                        <button type="button" 
+                                                @click="selectedTipo = 'receita'; selectedTipoLabel = 'Receita (Entrada de Caixa)'; openTipo = false;"
+                                                :class="selectedTipo === 'receita' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Receita (Entrada de Caixa)</span>
+                                            <span x-show="selectedTipo === 'receita'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedTipo = 'despesa'; selectedTipoLabel = 'Despesa (Saída de Caixa)'; openTipo = false;"
+                                                :class="selectedTipo === 'despesa' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Despesa (Saída de Caixa)</span>
+                                            <span x-show="selectedTipo === 'despesa'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="tipo" id="ai-form-input-tipo" :value="selectedTipo" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Categoria Contábil -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Categoria Contábil</label>
+                            <div class="relative w-full">
+                                <button type="button" @click="openCategoria = !openCategoria" 
+                                        class="w-full h-11 px-4 rounded-2xl input-glass text-xs text-left flex justify-between items-center focus:outline-none cursor-pointer">
+                                    <span x-text="selectedCategoriaLabel" class="truncate font-bold"></span>
+                                    <span class="flex items-center text-slate-400 shrink-0">
+                                        <svg class="w-4 h-4 transition-transform duration-200" :class="openCategoria ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div x-show="openCategoria" @click.away="openCategoria = false" 
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute left-0 right-0 mt-1.5 z-[160] bg-white dark:bg-[#121212] border border-slate-200/50 dark:border-white/10 rounded-2xl shadow-xl max-h-64 overflow-y-auto select-dropdown-container scrollbar-none" style="display: none;">
+                                    
+                                    <div class="p-1.5 space-y-1">
+                                        <!-- Receitas -->
+                                        <div class="px-2.5 py-1 text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-white/5 mb-1 select-none">Receitas (Entradas)</div>
+                                        
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'diarias'; selectedCategoriaLabel = 'Diárias e Hospedagens (Marketplace Naviê)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'diarias' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Diárias e Hospedagens (Marketplace Naviê)</span>
+                                            <span x-show="selectedCategoria === 'diarias'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'walk_in'; selectedCategoriaLabel = 'Balcão / Reservas Diretas (Hóspede walk-in)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'walk_in' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Balcão / Reservas Diretas (Hóspede walk-in)</span>
+                                            <span x-show="selectedCategoria === 'walk_in'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'frigobar'; selectedCategoriaLabel = 'Consumos de Frigobar (Quarto)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'frigobar' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Consumos de Frigobar (Quarto)</span>
+                                            <span x-show="selectedCategoria === 'frigobar'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'room_service'; selectedCategoriaLabel = 'Serviço de Quarto / Copa'; openCategoria = false;"
+                                                :class="selectedCategoria === 'room_service' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Serviço de Quarto / Copa</span>
+                                            <span x-show="selectedCategoria === 'room_service'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'spa_lazer'; selectedCategoriaLabel = 'Lazer & Experiências (Massagens/Spa)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'spa_lazer' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Lazer & Experiências (Massagens/Spa)</span>
+                                            <span x-show="selectedCategoria === 'spa_lazer'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'eventos_espaco'; selectedCategoriaLabel = 'Eventos & Aluguel de Espaços'; openCategoria = false;"
+                                                :class="selectedCategoria === 'eventos_espaco' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Eventos & Aluguel de Espaços</span>
+                                            <span x-show="selectedCategoria === 'eventos_espaco'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'estacionamento'; selectedCategoriaLabel = 'Taxa de Estacionamento / Garagem'; openCategoria = false;"
+                                                :class="selectedCategoria === 'estacionamento' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Taxa de Estacionamento / Garagem</span>
+                                            <span x-show="selectedCategoria === 'estacionamento'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'lavanderia'; selectedCategoriaLabel = 'Serviços de Lavanderia'; openCategoria = false;"
+                                                :class="selectedCategoria === 'lavanderia' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Serviços de Lavanderia</span>
+                                            <span x-show="selectedCategoria === 'lavanderia'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'cancelamentos_multas'; selectedCategoriaLabel = 'Multas de Cancelamento & No-show'; openCategoria = false;"
+                                                :class="selectedCategoria === 'cancelamentos_multas' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Multas de Cancelamento & No-show</span>
+                                            <span x-show="selectedCategoria === 'cancelamentos_multas'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'outro_receita'; selectedCategoriaLabel = 'Outras Receitas e Ajustes'; openCategoria = false;"
+                                                :class="selectedCategoria === 'outro_receita' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Outras Receitas e Ajustes</span>
+                                            <span x-show="selectedCategoria === 'outro_receita'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+
+                                        <!-- Despesas -->
+                                        <div class="px-2.5 py-1 text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-100 dark:border-white/5 mt-3 mb-1 select-none">Despesas (Saídas)</div>
+                                        
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'salarios'; selectedCategoriaLabel = 'Folha de Pagamento (Funcionários)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'salarios' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Folha de Pagamento (Funcionários)</span>
+                                            <span x-show="selectedCategoria === 'salarios'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'manutencao'; selectedCategoriaLabel = 'Manutenção Predial / Infraestrutura'; openCategoria = false;"
+                                                :class="selectedCategoria === 'manutencao' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Manutenção Predial / Infraestrutura</span>
+                                            <span x-show="selectedCategoria === 'manutencao'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'energia_agua'; selectedCategoriaLabel = 'Contas de Consumo (Energia/Água/Gás)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'energia_agua' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Contas de Consumo (Energia/Água/Gás)</span>
+                                            <span x-show="selectedCategoria === 'energia_agua'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'amenities'; selectedCategoriaLabel = 'Amenities e Brindes (Shampoos/Mimos)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'amenities' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Amenities e Brindes (Shampoos/Mimos)</span>
+                                            <span x-show="selectedCategoria === 'amenities'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'taxa_marketplace'; selectedCategoriaLabel = 'Comissões Naviê / OTAs'; openCategoria = false;"
+                                                :class="selectedCategoria === 'taxa_marketplace' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Comissões Naviê / OTAs</span>
+                                            <span x-show="selectedCategoria === 'taxa_marketplace'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'marketing_anuncios'; selectedCategoriaLabel = 'Publicidade & Marketing'; openCategoria = false;"
+                                                :class="selectedCategoria === 'marketing_anuncios' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Publicidade & Marketing</span>
+                                            <span x-show="selectedCategoria === 'marketing_anuncios'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'impostos_taxas'; selectedCategoriaLabel = 'Tributos, Impostos & Licenças'; openCategoria = false;"
+                                                :class="selectedCategoria === 'impostos_taxas' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Tributos, Impostos & Licenças</span>
+                                            <span x-show="selectedCategoria === 'impostos_taxas'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'ti_escritorio'; selectedCategoriaLabel = 'Tecnologia & Escritório (TI)'; openCategoria = false;"
+                                                :class="selectedCategoria === 'ti_escritorio' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Tecnologia & Escritório (TI)</span>
+                                            <span x-show="selectedCategoria === 'ti_escritorio'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'enxoval_lavanderia'; selectedCategoriaLabel = 'Enxoval & Lavanderia Externa'; openCategoria = false;"
+                                                :class="selectedCategoria === 'enxoval_lavanderia' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Enxoval & Lavanderia Externa</span>
+                                            <span x-show="selectedCategoria === 'enxoval_lavanderia'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'tarifas_bancarias'; selectedCategoriaLabel = 'Tarifas Bancárias & Taxas'; openCategoria = false;"
+                                                :class="selectedCategoria === 'tarifas_bancarias' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Tarifas Bancárias & Taxas</span>
+                                            <span x-show="selectedCategoria === 'tarifas_bancarias'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        <button type="button" 
+                                                @click="selectedCategoria = 'outro_despesa'; selectedCategoriaLabel = 'Outras Despesas e Perdas'; openCategoria = false;"
+                                                :class="selectedCategoria === 'outro_despesa' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Outras Despesas e Perdas</span>
+                                            <span x-show="selectedCategoria === 'outro_despesa'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="categoria" id="ai-form-input-categoria" :value="selectedCategoria" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Valor do Lançamento (R$) -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Valor do Lançamento (R$)</label>
+                            <input type="text" 
+                                   name="valor" 
+                                   id="ai-form-input-valor"
+                                   data-ai-element="input-valor"
+                                   data-ai-description="O valor nominal do lançamento em reais (R$). Aceita formatação brasileira com vírgulas."
+                                   placeholder="0,00" 
+                                   required 
+                                   class="w-full p-3 rounded-2xl text-xs font-bold input-glass focus:outline-none">
+                        </div>
+                        
+                        <!-- Descrição / Motivo -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Descrição / Motivo</label>
+                            <input type="text" 
+                                   name="descricao" 
+                                   id="ai-form-input-descricao"
+                                   data-ai-element="input-descricao"
+                                   data-ai-description="Explicação sucinta sobre o motivo ou natureza do lançamento contábil."
+                                   placeholder="Ex: Pagamento da conta de energia - Maio" 
+                                   required 
+                                   class="w-full p-3 rounded-2xl text-xs font-bold input-glass focus:outline-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Coluna Direita: Novas Funcionalidades -->
+                    <div class="space-y-4">
+                        <!-- Associação de Quarto Físico -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Associar a um Quarto</label>
+                            <div class="relative w-full">
+                                <button type="button" @click="openUnidade = !openUnidade" 
+                                        class="w-full h-11 px-4 rounded-2xl input-glass text-xs text-left flex justify-between items-center focus:outline-none cursor-pointer">
+                                    <span x-text="selectedUnidadeLabel" class="truncate font-bold text-slate-700 dark:text-slate-300"></span>
+                                    <span class="flex items-center text-slate-400 shrink-0">
+                                        <svg class="w-4 h-4 transition-transform duration-200" :class="openUnidade ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div x-show="openUnidade" @click.away="openUnidade = false; searchUnidade = '';" 
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute left-0 right-0 mt-1.5 z-[160] bg-white dark:bg-[#121212] border border-slate-200/50 dark:border-white/10 rounded-2xl shadow-xl max-h-60 overflow-y-auto select-dropdown-container scrollbar-none" style="display: none;">
+                                    
+                                    <!-- Search Input -->
+                                    <div class="p-2 border-b border-slate-100 dark:border-white/5 sticky top-0 bg-white dark:bg-[#121212] z-10">
+                                        <div class="relative">
+                                            <input type="text" 
+                                                   x-model="searchUnidade" 
+                                                   placeholder="Pesquisar quarto..." 
+                                                   class="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 focus:outline-none focus:border-brand/40 text-slate-700 dark:text-slate-200"
+                                                   @click.stop>
+                                            <span class="absolute left-2.5 top-2.5 text-slate-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-1.5 space-y-1">
+                                        <button type="button" 
+                                                @click="selectedUnidade = ''; selectedUnidadeLabel = 'Nenhum quarto associado'; openUnidade = false; searchUnidade = '';"
+                                                :class="selectedUnidade === '' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Nenhum quarto associado</span>
+                                            <span x-show="selectedUnidade === ''">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        {% for u in unidades %}
+                                        <button type="button" 
+                                                x-show="searchUnidade === '' || '{{ u.identificador }}'.toLowerCase().includes(searchUnidade.toLowerCase()) || '{{ u.quarto.nome }}'.toLowerCase().includes(searchUnidade.toLowerCase())"
+                                                @click="selectedUnidade = '{{ u.id }}'; selectedUnidadeLabel = 'Quarto {{ u.identificador }} ({{ u.quarto.nome }})'; openUnidade = false; searchUnidade = ''; if (selectedUnidade !== '' && selectedReservaUnidadeId !== selectedUnidade) { selectedReserva = ''; selectedReservaLabel = 'Nenhuma reserva associada'; selectedReservaUnidadeId = ''; }"
+                                                :class="selectedUnidade === '{{ u.id }}' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Quarto {{ u.identificador }} ({{ u.quarto.nome }})</span>
+                                            <span x-show="selectedUnidade === '{{ u.id }}'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <input type="hidden" name="unidade" :value="selectedUnidade">
+                            </div>
+                        </div>
+
+                        <!-- Associação de Hóspede / Reserva -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Associar a um Hóspede / Reserva</label>
+                            <div class="relative w-full">
+                                <button type="button" @click="openReserva = !openReserva" 
+                                        class="w-full h-11 px-4 rounded-2xl input-glass text-xs text-left flex justify-between items-center focus:outline-none cursor-pointer">
+                                    <span x-text="selectedReservaLabel" class="truncate font-bold text-slate-700 dark:text-slate-300"></span>
+                                    <span class="flex items-center text-slate-400 shrink-0">
+                                        <svg class="w-4 h-4 transition-transform duration-200" :class="openReserva ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div x-show="openReserva" @click.away="openReserva = false; searchReserva = '';" 
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95"
+                                     class="absolute left-0 right-0 mt-1.5 z-[160] bg-white dark:bg-[#121212] border border-slate-200/50 dark:border-white/10 rounded-2xl shadow-xl max-h-60 overflow-y-auto select-dropdown-container scrollbar-none" style="display: none;">
+                                    
+                                    <!-- Search Input -->
+                                    <div class="p-2 border-b border-slate-100 dark:border-white/5 sticky top-0 bg-white dark:bg-[#121212] z-10">
+                                        <div class="relative">
+                                            <input type="text" 
+                                                   x-model="searchReserva" 
+                                                   placeholder="Pesquisar hóspede ou quarto..." 
+                                                   class="w-full pl-8 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/5 focus:outline-none focus:border-brand/40 text-slate-700 dark:text-slate-200"
+                                                   @click.stop>
+                                            <span class="absolute left-2.5 top-2.5 text-slate-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="p-1.5 space-y-1">
+                                        <button type="button" 
+                                                @click="selectedReserva = ''; selectedReservaLabel = 'Nenhuma reserva associada'; selectedReservaUnidadeId = ''; openReserva = false; searchReserva = '';"
+                                                :class="selectedReserva === '' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Nenhuma reserva associada</span>
+                                            <span x-show="selectedReserva === ''">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        {% for r in reservas %}
+                                        <button type="button" 
+                                                x-show="(selectedUnidade === '' || '{{ r.unidade.id }}' === selectedUnidade) && (searchReserva === '' || '{{ r.hospede_nome|default:"Hóspede" }}'.toLowerCase().includes(searchReserva.toLowerCase()) || '{{ r.unidade.identificador }}'.toLowerCase().includes(searchReserva.toLowerCase()))"
+                                                @click="selectedReserva = '{{ r.id }}'; selectedReservaLabel = 'Res: {{ r.hospede_nome|default:'Hóspede' }} (Qto {{ r.unidade.identificador }})'; selectedReservaUnidadeId = '{{ r.unidade.id }}'; openReserva = false; searchReserva = '';"
+                                                :class="selectedReserva === '{{ r.id }}' ? 'bg-brand/10 dark:bg-brand/20 text-brand font-black' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5'"
+                                                class="w-full text-left px-4 py-2.5 rounded-xl text-xs transition-colors flex items-center justify-between cursor-pointer">
+                                            <span>Res: {{ r.hospede_nome|default:"Hóspede" }} (Qto {{ r.unidade.identificador }} - {{ r.data_checkin|date:"d/m" }} a {{ r.data_checkout|date:"d/m" }})</span>
+                                            <span x-show="selectedReserva === '{{ r.id }}'">
+                                                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+                                                </svg>
+                                            </span>
+                                        </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <input type="hidden" name="reserva" :value="selectedReserva">
+                            </div>
+                        </div>
+
+                        <!-- Anexar Comprovantes / Arquivos -->
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Anexar Comprovantes / Arquivos</label>
+                            
+                            <!-- Hidden Native File Input -->
+                            <input type="file" 
+                                   name="arquivos" 
+                                   id="ai-form-input-arquivos"
+                                   multiple
+                                   @change="handleFilesChange($event.target.files)"
+                                   class="hidden">
+
+                            <!-- Empty State (fileCount === 0) -->
+                            <div x-show="fileCount === 0"
+                                 @click="triggerFileInput()"
+                                 class="relative border border-dashed border-slate-200 dark:border-white/10 rounded-2xl h-[112px] transition-all hover:border-brand/40 flex flex-col items-center justify-center cursor-pointer group bg-slate-50/50 dark:bg-white/[0.02]">
+                                <div class="flex flex-col items-center justify-center text-center space-y-1">
+                                    <span class="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 group-hover:text-brand transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                                    </span>
+                                    <div class="text-xs font-bold text-slate-600 dark:text-slate-300">
+                                        Arrastar arquivos ou <span class="text-brand">clicar para procurar</span>
+                                    </div>
+                                    <div class="text-[9px] text-slate-400 uppercase tracking-wider font-extrabold">
+                                        Formatos aceitos: PDF, Imagens, Excel
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Active State (fileCount > 0) -->
+                            <div x-show="fileCount > 0"
+                                 style="display: none;"
+                                 class="border border-slate-200 dark:border-white/10 rounded-2xl h-[112px] p-3 flex flex-col bg-slate-50/50 dark:bg-white/[0.02]">
+                                
+                                <!-- Compact Header -->
+                                <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/5 mb-2 shrink-0 select-none">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold uppercase tracking-wider" 
+                                              x-text="fileCount === 1 ? '1 arquivo' : fileCount + ' arquivos'"></span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <!-- Clear Button -->
+                                        <button type="button" 
+                                                @click="clearAllFiles()" 
+                                                class="text-[9px] font-black text-slate-400 hover:text-red-500 uppercase tracking-wider transition-colors cursor-pointer bg-transparent border-none">
+                                            Limpar tudo
+                                        </button>
+                                        <span class="text-slate-200 dark:text-white/10 text-[10px]">|</span>
+                                        <!-- Add More Button -->
+                                        <button type="button" 
+                                                @click="triggerFileInput()" 
+                                                class="text-[9px] font-black text-brand hover:text-brand/80 uppercase tracking-wider transition-colors cursor-pointer bg-transparent border-none flex items-center gap-0.5">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                            Adicionar
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Scrollable Cards List -->
+                                <div class="flex-1 overflow-y-auto scrollbar-none pr-1 space-y-1.5">
+                                    <template x-for="(f, index) in filesList" :key="index">
+                                        <div :class="{
+                                                 'bg-red-500/10 border-red-500/20 text-red-500 dark:text-red-400': f.ext === 'pdf',
+                                                 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 dark:text-emerald-400': ['xlsx', 'xls', 'csv'].includes(f.ext),
+                                                 'bg-purple-500/10 border-purple-500/20 text-purple-500 dark:text-purple-400': ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f.ext),
+                                                 'bg-slate-500/10 border-slate-500/20 text-slate-500 dark:text-slate-400': !['pdf', 'xlsx', 'xls', 'csv', 'png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f.ext)
+                                             }"
+                                             class="flex items-center justify-between px-2.5 py-1 rounded-xl border text-[10px] font-bold">
+                                            
+                                            <div class="flex items-center gap-1.5 truncate flex-1 pr-2">
+                                                <!-- Dynamic Icon based on extension -->
+                                                <span class="shrink-0">
+                                                    <!-- PDF Icon -->
+                                                    <template x-if="f.ext === 'pdf'">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M9 15h6"/><path d="M9 18h6"/></svg>
+                                                    </template>
+                                                    <!-- Excel Icon -->
+                                                    <template x-if="['xlsx', 'xls', 'csv'].includes(f.ext)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>
+                                                    </template>
+                                                    <!-- Image Icon -->
+                                                    <template x-if="['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f.ext)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                                                    </template>
+                                                    <!-- Generic File Icon -->
+                                                    <template x-if="!['pdf', 'xlsx', 'xls', 'csv', 'png', 'jpg', 'jpeg', 'webp', 'gif'].includes(f.ext)">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                                                    </template>
+                                                </span>
+                                                
+                                                <span x-text="f.name" class="truncate"></span>
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-2 shrink-0 select-none">
+                                                <span x-text="f.size" class="text-[8px] opacity-75"></span>
+                                                <!-- Individual Delete Button -->
+                                                <button type="button" 
+                                                        @click="removeFile(index)" 
+                                                        class="p-0.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer text-inherit shrink-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Centralized Dates Grid at the Bottom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100 dark:border-white/5">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Data de Vencimento <span class="text-red-500">*</span></label>
+                        <input type="date" 
+                               name="data_vencimento" 
+                               id="ai-form-input-data-vencimento"
+                               value="{% now 'Y-m-d' %}" 
+                               required 
+                               class="w-full p-3 rounded-2xl text-xs font-bold input-glass focus:outline-none cursor-pointer">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Data de Pagamento (Opcional)</label>
+                        <input type="date" 
+                               name="data_pagamento" 
+                               id="ai-form-input-data-pagamento"
+                               value="{% now 'Y-m-d' %}" 
+                               class="w-full p-3 rounded-2xl text-xs font-bold input-glass focus:outline-none cursor-pointer">
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="button" 
+                            @click="open = false" 
+                            data-ai-purpose="cancel-trigger"
+                            class="flex-1 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 py-3 rounded-2xl text-xs font-black transition-colors cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            id="ai-form-submit-btn"
+                            data-ai-purpose="submit-trigger"
+                            data-ai-description="Confirma, salva e insere o lançamento financeiro no banco de hospedagem."
+                            class="flex-1 bg-brand hover:bg-brand/90 text-white py-3 rounded-2xl text-xs font-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.01] active:scale-95 cursor-pointer">
+                        Confirmar Lançamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

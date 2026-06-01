@@ -11,6 +11,8 @@ class NavieVibeRouter:
         'eventos': 'eventos',
         'parques': 'parques',
         'parceiros': 'parceiros',
+        'financeiro': 'hospedagem',
+        'estoque': 'hospedagem',
     }
 
     def db_for_read(self, model, **hints):

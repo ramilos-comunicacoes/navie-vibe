@@ -6,6 +6,7 @@ from clientes.models import ClientePerfil
 import json
 
 class ClientePerfilModelTest(TestCase):
+    databases = {'default', 'hospedagem'}
     """
     Test suite for the ClientePerfil database model.
     Verifies creation, relationship integrity, and audit logging features.
@@ -51,6 +52,7 @@ class ClientePerfilModelTest(TestCase):
 
 
 class ClientesAuthViewsTest(TestCase):
+    databases = {'default', 'hospedagem'}
     """
     Test suite for the AJAX authentication views and endpoints.
     Checks dynamic registration, logins, validation, and session lifecycles.
@@ -235,6 +237,7 @@ class ClientesAuthViewsTest(TestCase):
 
 
 class ClientesDashboardViewTest(TestCase):
+    databases = {'default', 'hospedagem'}
     """
     Test suite for the customer cockpit (Dashboard/Painel).
     Verifies access permissions, stays loading, and mock vertical data integration.

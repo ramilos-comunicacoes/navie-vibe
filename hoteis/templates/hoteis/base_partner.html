@@ -304,6 +304,15 @@ x-data="{
         .group\/sidebar a.bg-brand-50\/80 i, .group\/sidebar a.bg-brand-50\/80 svg, .group\/sidebar a.bg-brand-50\/80 span {
             color: var(--brand-color-burned) !important;
         }
+
+        /* Ocultar barras de rolagem nativas para seletores customizados */
+        .scrollbar-none::-webkit-scrollbar {
+            display: none !important;
+        }
+        .scrollbar-none {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
     </style>
 
     <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Previne tela branca e flicker ao recarregar a página) -->
@@ -416,16 +425,22 @@ x-data="{
                     <!-- PROPRIETÁRIO / GERENTE -->
                     {% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}
                     <li>
-                        <a href="javascript:void(0)" @click="activeTab = 'financeiro'" :class="activeTab === 'financeiro' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                        <a href="javascript:void(0)" @click="activeTab = 'financeiro'" :class="activeTab === 'financeiro' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"
+                           data-ai-purpose="tab-navigation"
+                           data-ai-target="financeiro"
+                           data-ai-description="Navega para o Painel Geral Financeiro, DRE Contábil, Fluxo de Caixa Real, Métricas Hoteleiras (RevPAR/ADR) e Projeções do hotel.">
                             <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
-                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="layout-dashboard" class="w-5 h-5"></i></span>
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="wallet" class="w-5 h-5"></i></span>
                             </div>
-                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Visão Geral / Financeiro</span>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Financeiro</span>
                         </a>
                     </li>
                     
                     <li>
-                        <a href="javascript:void(0)" @click="activeTab = 'quartos'" :class="activeTab === 'quartos' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                        <a href="javascript:void(0)" @click="activeTab = 'quartos'" :class="activeTab === 'quartos' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"
+                           data-ai-purpose="tab-navigation"
+                           data-ai-target="quartos"
+                           data-ai-description="Navega para a Gestão de Acomodações, Quartos, Tipos de Quarto, Unidades Físicas e Tarifação.">
                             <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
                                 <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bed" class="w-5 h-5"></i></span>
                             </div>
@@ -434,11 +449,26 @@ x-data="{
                     </li>
                     
                     <li>
-                        <a href="javascript:void(0)" @click="activeTab = 'reservas'" :class="activeTab === 'reservas' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                        <a href="javascript:void(0)" @click="activeTab = 'reservas'" :class="activeTab === 'reservas' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"
+                           data-ai-purpose="tab-navigation"
+                           data-ai-target="reservas"
+                           data-ai-description="Navega para a Lista Geral de Reservas, Walk-ins, Check-ins ativos, fechamentos de estadias e checkouts.">
                             <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
                                 <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="calendar-check" class="w-5 h-5"></i></span>
                             </div>
                             <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Reservas</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="javascript:void(0)" @click="activeTab = 'estoque'" :class="activeTab === 'estoque' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"
+                           data-ai-purpose="tab-navigation"
+                           data-ai-target="estoque"
+                           data-ai-description="Navega para a Gestão de Estoque, Almoxarifado, Entrada de Produtos, Alertas de Validade e Custos Contábeis.">
+                            <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="boxes" class="w-5 h-5"></i></span>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Gestão de Estoque</span>
                         </a>
                     </li>
 
@@ -457,6 +487,15 @@ x-data="{
                                 <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="users" class="w-5 h-5"></i></span>
                             </div>
                             <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Equipe & Permissões</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="javascript:void(0)" @click="activeTab = 'hospedes'" :class="activeTab === 'hospedes' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                            <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bell-ring" class="w-5 h-5"></i></span>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Atendimento / Hóspedes</span>
                         </a>
                     </li>
                     
@@ -481,19 +520,11 @@ x-data="{
                         </a>
                     </li>
                     <li>
-                        <a href="javascript:void(0)" @click="activeTab = 'ocupacao'" :class="activeTab === 'ocupacao' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                        <a href="javascript:void(0)" @click="activeTab = 'hospedes'" :class="activeTab === 'hospedes' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
                             <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
-                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="door-closed" class="w-5 h-5"></i></span>
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bell-ring" class="w-5 h-5"></i></span>
                             </div>
-                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Ocupação do Dia</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="javascript:void(0)" @click="activeTab = 'pedidos'" :class="activeTab === 'pedidos' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
-                            <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
-                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bell" class="w-5 h-5"></i></span>
-                            </div>
-                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Pedidos de Hóspedes</span>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Atendimento / Hóspedes</span>
                         </a>
                     </li>
                     {% endif %}
@@ -587,9 +618,10 @@ x-data="{
                 <div class="hidden md:flex flex-col">
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
-                        <span x-show="activeTab === 'financeiro'">Visão Geral / Financeiro</span>
+                        <span x-show="activeTab === 'financeiro'">Financeiro</span>
                         <span x-show="activeTab === 'quartos'">Acomodações & Categorias</span>
                         <span x-show="activeTab === 'reservas'">Aprovações & Reservas</span>
+                        <span x-show="activeTab === 'estoque'">Estoque & Almoxarifado</span>
                         <span x-show="activeTab === 'atividades'">Cronograma & Atividades da Equipe</span>
                         <span x-show="activeTab === 'equipe'">Colaboradores & Acessos</span>
                         <span x-show="activeTab === 'checkin'">Check-in / Validador</span>
@@ -605,6 +637,7 @@ x-data="{
                         <span x-show="activeTab === 'financeiro'">Histórico financeiro e fluxo de caixa em tempo real</span>
                         <span x-show="activeTab === 'quartos'">Gerenciamento de tarifas e quartos do estabelecimento</span>
                         <span x-show="activeTab === 'reservas'">Histórico de reservas ativas dos clientes</span>
+                        <span x-show="activeTab === 'estoque'">Auditoria física de inventário, reposição de almoxarifado e validade</span>
                         <span x-show="activeTab === 'atividades'">Gestão operacional de limpeza, manutenção e recepção B2B</span>
                         <span x-show="activeTab === 'equipe'">Quadro operacional da pousada e níveis de acesso</span>
                         <span x-show="activeTab === 'checkin'">Validador dinâmico de estadias da plataforma Naviê</span>
@@ -708,6 +741,41 @@ x-data="{
     </script>
     
     <script>
+        function formatMoedas() {
+            document.querySelectorAll('.moeda-br').forEach(el => {
+                let raw = el.getAttribute('data-valor') || '';
+                let clean = raw.replace(/\s/g, '');
+                if (clean.includes(',') && clean.includes('.')) {
+                    clean = clean.replace(/\./g, '').replace(',', '.');
+                } else if (clean.includes(',')) {
+                    clean = clean.replace(',', '.');
+                }
+                let val = parseFloat(clean) || 0;
+                el.innerText = val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            });
+        }
+
+        function initMascaraMonetaria() {
+            const input = document.getElementById('ai-form-input-valor');
+            if (!input) return;
+            
+            input.addEventListener('input', function(e) {
+                let value = e.target.value;
+                value = value.replace(/\D/g, ""); // Remove não dígitos
+                if (value === "") {
+                    e.target.value = "";
+                    return;
+                }
+                let floatValue = parseFloat(value) / 100;
+                e.target.value = floatValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            formatMoedas();
+            initMascaraMonetaria();
+        });
+
         if(typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
@@ -723,11 +791,10 @@ x-data="{
                 flatpickr(".date-picker", { locale: "pt", dateFormat: "d/m/Y" });
                 flatpickr(".datetime-picker", { locale: "pt", enableTime: true, dateFormat: "d/m/Y H:i", disableMobile: "true" });
             }
-            document.querySelectorAll('.moeda-br').forEach(el => {
-                let val = parseFloat(el.getAttribute('data-valor')) || 0;
-                el.innerText = val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            });
+            formatMoedas();
+            initMascaraMonetaria();
         });
+
     </script>
 
     {% block scripts %}{% endblock %}

@@ -40,10 +40,17 @@ urlpatterns = [
     path('carrinho/sucesso/<uuid:reserva_id>/', views.checkout_sucesso, name='checkout_sucesso'),
     
     # Operações de Portaria & Reservas B2B
+    path('hospedagens/reservas/criar/', views.partner_reserva_criar, name='partner_reserva_criar'),
     path('hospedagens/reservas/<uuid:reserva_id>/', views.partner_reserva_detalhe, name='partner_reserva_detalhe'),
+    path('hospedagens/reservas/<uuid:reserva_id>/salvar/', views.partner_reserva_salvar, name='partner_reserva_salvar'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkin/', views.partner_reserva_checkin, name='partner_reserva_checkin'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkout/', views.partner_reserva_checkout, name='partner_reserva_checkout'),
     path('hospedagens/reservas/<uuid:reserva_id>/cancelar/', views.partner_reserva_cancelar, name='partner_reserva_cancelar'),
+    
+    # Atendimento ao Hóspede, Concierge & Consumo
+    path('hospedagens/hospedes/pedidos/', views.partner_hospedes_pedidos, name='partner_hospedes_pedidos'),
+    path('hospedagens/hospedes/pedido/<int:pedido_id>/status/', views.partner_hospedes_atualizar_status, name='partner_hospedes_atualizar_status'),
+    path('hospedagens/hospedes/reserva/<uuid:reserva_id>/lancar/', views.partner_hospedes_lancar_consumo, name='partner_hospedes_lancar_consumo'),
     
     path('<slug:slug>/', views.vanity_url, name='vanity_url'),
 ]

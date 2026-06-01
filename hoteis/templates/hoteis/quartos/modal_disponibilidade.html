@@ -398,6 +398,14 @@
         // FECHAR O MODAL IMEDIATAMENTE (Sem alertas ou popups nativos)
         closeAvailabilityModal();
 
+        // Se o input de datas da busca flutuante existir, atualiza ele!
+        const searchDatesInput = document.getElementById('search-dates');
+        if (searchDatesInput) {
+            searchDatesInput.value = `${checkinStr} - ${checkoutStr}`;
+            searchDatesInput.dispatchEvent(new Event('input'));
+            searchDatesInput.dispatchEvent(new Event('change'));
+        }
+
         // Injetar resumo de datas selecionadas na barra lateral
         const checkinSummaryElement = document.getElementById('sidebar-summary-dates');
         if (checkinSummaryElement) {

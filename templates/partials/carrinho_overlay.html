@@ -41,9 +41,58 @@
     header.cart-open-header img {
         filter: none !important;
     }
+
+    /* ==================== ESTILOS EXCLUSIVOS DO RODAPÉ DO CARRINHO (NATIVO/VANILLA) ==================== */
+    
+    .cart-summary-footer {
+        background-color: #ffffff !important;
+        border-top: 1px solid #f1f5f9 !important;
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.05) !important;
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        z-index: 30 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 1.25rem 2rem !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Layout Mobile Exclusivo (Telas < 768px) */
+    @media (max-width: 767px) {
+        .cart-desktop-layout {
+            display: none !important;
+        }
+        .cart-mobile-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 1rem !important;
+            width: 100% !important;
+        }
+        .cart-summary-footer {
+            padding: 1.25rem 1rem !important;
+        }
+    }
+
+    /* Layout Desktop Exclusivo (Telas >= 768px) */
+    @media (min-width: 768px) {
+        .cart-mobile-layout {
+            display: none !important;
+        }
+        .cart-desktop-layout {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 1.5rem !important;
+        }
+    }
 </style>
 
-<div id="navieCartOverlay" class="fixed top-[72px] left-0 w-full h-[calc(100vh-72px)] bg-white z-[40] transition-transform duration-500 ease-in-out flex flex-col" style="transform: translateY(-120%);">
+<div id="navieCartOverlay" class="fixed top-[72px] left-0 w-full bg-white z-[40] transition-transform duration-500 ease-in-out flex flex-col" style="transform: translateY(-120%); height: calc(100vh - 72px) !important; max-height: calc(100vh - 72px) !important; overflow: hidden !important;">
     
     <!-- Title Section Discreta e Elegante -->
     <div class="px-4 md:px-8 pt-7 pb-4 max-w-[90rem] mx-auto w-full shrink-0 border-b border-gray-100/50">
@@ -76,12 +125,12 @@
     </div>
 
     <!-- Resumo Fixed Footer Redesenhado com Geometria e Design Responsivo Infalível -->
-    <div class="bg-white px-4 md:px-8 py-5 shrink-0 absolute bottom-0 left-0 w-full z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] border-t border-slate-100 flex items-center justify-center">
+    <div class="cart-summary-footer">
         <div class="max-w-[90rem] w-full">
             
             {% if carrinho %}
-                <!-- ==================== LAYOUT DESKTOP (MD EM DIANTE) ==================== -->
-                <div class="hidden md:flex flex-row justify-between items-center w-full gap-6">
+                <!-- ==================== LAYOUT DESKTOP (MEDIA QUERY NATIVA) ==================== -->
+                <div class="cart-desktop-layout">
                     <!-- Detalhamento Financeiro Sólido e Uniforme -->
                     <div class="flex flex-col gap-1 flex-1">
                         <div class="flex items-center gap-2 text-[11px] sm:text-xs text-slate-400 font-semibold font-poppins">
@@ -110,19 +159,19 @@
                                 {% else %}
                                     class="w-full py-4 px-6 rounded-full font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/10 hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs sm:text-sm hover:-translate-y-0.5"
                                 {% endif %}
-                                onclick="window.location.href='{% url 'hoteis:checkout_processar' %}'">
+                                onclick="confirmarIrPagamento()">
                             {% if not carrinho.todos_hospedes_completos %}
                                 <i data-lucide="lock" class="w-4 h-4 shrink-0"></i>
                                 Preencha os dados do hóspede titular
                             {% else %}
-                                Finalizar Compra <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+                                Ir para Pagamento <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
                             {% endif %}
                         </button>
                     </div>
                 </div>
 
-                <!-- ==================== LAYOUT MOBILE (ABAIXO DE MD) ==================== -->
-                <div class="flex md:hidden flex-col gap-4 w-full">
+                <!-- ==================== LAYOUT MOBILE (MEDIA QUERY NATIVA) ==================== -->
+                <div class="cart-mobile-layout">
                     <!-- Resumo Financeiro estruturado em tabela limpa no Mobile -->
                     <div class="w-full bg-slate-50/70 p-4 rounded-3xl border border-slate-200/40 text-xs shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]">
                         <div class="flex justify-between text-slate-500 font-semibold">
@@ -153,12 +202,12 @@
                                 {% else %}
                                     class="w-full py-4 px-6 rounded-full font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/10 hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs"
                                 {% endif %}
-                                onclick="window.location.href='{% url 'hoteis:checkout_processar' %}'">
+                                onclick="confirmarIrPagamento()">
                             {% if not carrinho.todos_hospedes_completos %}
                                 <i data-lucide="lock" class="w-4 h-4 shrink-0"></i>
                                 Preencha os dados obrigatórios
                             {% else %}
-                                Finalizar Compra <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+                                Ir para Pagamento <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
                             {% endif %}
                         </button>
                     </div>
@@ -175,7 +224,56 @@
     </div>
 </div>
 
+<!-- Modal de Login Seguro para Checkout (B2C Flat Opaque) -->
+<div id="cartLoginModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 transition-opacity duration-300 opacity-0 pointer-events-none">
+    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 max-w-md w-full mx-4 relative shadow-2xl transition-transform duration-300 scale-95 border border-slate-100 dark:border-slate-800" id="cartLoginModalContent">
+        <!-- Botão Fechar -->
+        <button onclick="closeCartLoginModal()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer transition-all border border-slate-100 dark:border-slate-800">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-extrabold text-slate-800 dark:text-white font-poppins">Entrar no Naviê</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1.5">Identifique-se para continuar para o pagamento seguro.</p>
+        </div>
+
+        <!-- Alerta de Erro -->
+        <div id="cartLoginError" class="hidden p-3.5 mb-4 text-xs text-red-800 dark:text-red-400 bg-red-50 dark:bg-red-950/20 rounded-2xl border border-red-500/10 font-medium"></div>
+
+        <form id="cartLoginForm" onsubmit="submitCartLogin(event)" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider mb-2 px-1">CPF</label>
+                <input type="text" id="cartLoginCpf" required placeholder="000.000.000-00" maxlength="14" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all font-semibold placeholder-slate-500 font-poppins">
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <label class="block text-[10px] font-black uppercase text-slate-500 dark:text-slate-400 tracking-wider">Senha</label>
+                    <a href="{% url 'account_reset_password' %}" class="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 hover:underline">Esqueci a Senha</a>
+                </div>
+                <input type="password" id="cartLoginPassword" required placeholder="Sua senha secreta" class="w-full bg-slate-900 border border-slate-800 rounded-2xl px-5 py-3.5 text-xs text-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all font-semibold placeholder-slate-500 font-poppins">
+            </div>
+
+            <button type="submit" id="btnCartLoginSubmit" class="w-full py-4 px-6 rounded-full font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/10 hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs uppercase tracking-wider">
+                Entrar e Pagar <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+            </button>
+        </form>
+
+        <!-- Conteúdo de Sucesso (Oculto Inicialmente) -->
+        <div id="cartLoginSuccess" class="hidden text-center py-8 space-y-4">
+            <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/30 rounded-full flex items-center justify-center mx-auto text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 scale-0 transition-transform duration-500 ease-out" id="cartLoginSuccessCheck">
+                <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+            </div>
+            <h4 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-wider font-poppins">Acesso Confirmado</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold max-w-[200px] mx-auto leading-relaxed">Você foi conectado com sucesso e já pode finalizar sua reserva.</p>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Global Authentication State tracking for non-reloading checkout transitions
+    window.isUserAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
     function toggleNavieCart() {
         const cart = document.getElementById('navieCartOverlay');
         const header = document.querySelector('header');
@@ -194,23 +292,207 @@
         }
     }
 
+    function confirmarIrPagamento() {
+        if (window.isUserAuthenticated) {
+            window.location.href = "{% url 'hoteis:checkout_processar' %}";
+        } else {
+            abrirLoginModal();
+        }
+    }
+
+    function abrirLoginModal() {
+        const modal = document.getElementById('cartLoginModal');
+        const content = document.getElementById('cartLoginModalContent');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+        modal.classList.add('opacity-100');
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function closeCartLoginModal() {
+        const modal = document.getElementById('cartLoginModal');
+        const content = document.getElementById('cartLoginModalContent');
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        content.classList.remove('scale-100');
+        content.classList.add('scale-95');
+    }
+
+    async function submitCartLogin(e) {
+        e.preventDefault();
+        const cpf = document.getElementById('cartLoginCpf').value;
+        const password = document.getElementById('cartLoginPassword').value;
+        const errorDiv = document.getElementById('cartLoginError');
+        const btnSubmit = document.getElementById('btnCartLoginSubmit');
+        
+        errorDiv.classList.add('hidden');
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = 'Processando...';
+        
+        try {
+            const response = await fetch("{% url 'clientes:api_login' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    username: cpf,
+                    password: password
+                })
+            });
+            const data = await response.json();
+            
+            if (data.ok) {
+                // 1. Autenticado com sucesso! Atualiza a flag global
+                window.isUserAuthenticated = true;
+
+                // 2. Atualiza o link do cabeçalho de perfil dinamicamente
+                const profileBtns = document.querySelectorAll('.header-profile-btn');
+                profileBtns.forEach(btn => {
+                    btn.setAttribute('href', '/clientes/painel/');
+                    btn.className = "header-profile-btn bg-blue-50 text-action-blue border border-blue-200 w-10 h-10 md:w-auto md:h-auto rounded-full font-bold text-sm hover:bg-action-blue hover:text-white transition-colors flex items-center justify-center md:px-4 md:py-2 md:gap-1.5 shrink-0";
+                    const textSpan = btn.querySelector('span');
+                    if (textSpan) {
+                        textSpan.className = "hidden md:inline";
+                        textSpan.innerText = "Painel";
+                    }
+                });
+
+                // 3. Preencher dados vazios no formulário de hóspedes FNRH por pura comodidade
+                if (data.user_data) {
+                    const ud = data.user_data;
+                    const nomeInput = document.querySelector('input[name="hospede_nome"]');
+                    const cpfInput = document.querySelector('input[name="hospede_cpf"]');
+                    const emailInput = document.querySelector('input[name="hospede_email"]');
+                    const telInput = document.querySelector('input[name="hospede_telefone"]');
+                    const cepInput = document.querySelector('input[name="hospede_cep"]');
+                    const endInput = document.querySelector('input[name="hospede_endereco"]');
+
+                    if (nomeInput && !nomeInput.value) nomeInput.value = ud.nome || '';
+                    if (cpfInput && !cpfInput.value) cpfInput.value = ud.cpf || '';
+                    if (emailInput && !emailInput.value) emailInput.value = ud.email || '';
+                    if (telInput && !telInput.value) telInput.value = ud.telefone || '';
+                    if (cepInput && !cepInput.value) cepInput.value = ud.cep || '';
+                    if (endInput && !endInput.value) endInput.value = ud.endereco || '';
+                }
+
+                // 4. Ocultar formulário de login e título anterior
+                document.getElementById('cartLoginForm').style.display = 'none';
+                document.querySelector('#cartLoginModalContent .text-center').style.display = 'none';
+                if (errorDiv) errorDiv.classList.add('hidden');
+
+                // 5. Exibir tela de sucesso animada
+                const successContainer = document.getElementById('cartLoginSuccess');
+                successContainer.classList.remove('hidden');
+
+                setTimeout(() => {
+                    const checkIcon = document.getElementById('cartLoginSuccessCheck');
+                    if (checkIcon) {
+                        checkIcon.classList.remove('scale-0');
+                        checkIcon.classList.add('scale-100');
+                    }
+                }, 100);
+
+                // 6. Fechar após 2 segundos
+                setTimeout(() => {
+                    closeCartLoginModal();
+                    
+                    // Restaurar formulário para futuras interações limpas
+                    setTimeout(() => {
+                        document.getElementById('cartLoginForm').style.display = 'block';
+                        document.querySelector('#cartLoginModalContent .text-center').style.display = 'block';
+                        successContainer.classList.add('hidden');
+                        const checkIcon = document.getElementById('cartLoginSuccessCheck');
+                        if (checkIcon) {
+                            checkIcon.classList.remove('scale-100');
+                            checkIcon.classList.add('scale-0');
+                        }
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = 'Entrar e Pagar <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>';
+                        document.getElementById('cartLoginCpf').value = '';
+                        document.getElementById('cartLoginPassword').value = '';
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    }, 400);
+                }, 2000);
+            } else {
+                errorDiv.innerText = data.erro || 'CPF ou senha incorretos.';
+                errorDiv.classList.remove('hidden');
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = 'Entrar e Pagar <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>';
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        } catch (err) {
+            errorDiv.innerText = 'Falha na comunicação com o servidor.';
+            errorDiv.classList.remove('hidden');
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = 'Entrar e Pagar <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>';
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    }
+
     function verificarCheckoutLiberado() {
         const pendencias = document.querySelectorAll('.cart-pendencia-ativa');
         const btnCompra = document.getElementById('btnConfirmarCompra');
+        const btnCompraMobile = document.getElementById('btnConfirmarCompraMobile');
 
         if (pendencias.length > 0) {
-            btnCompra.disabled = true;
-            btnCompra.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-slate-400 bg-slate-100 border border-slate-200/80 transition-all flex justify-center items-center gap-2 cursor-not-allowed text-xs sm:text-sm';
-            btnCompra.innerHTML = `<i data-lucide="lock" class="w-4 h-4 shrink-0"></i> Preencha as informações obrigatórias`;
+            if (btnCompra) {
+                btnCompra.disabled = true;
+                btnCompra.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-slate-400 bg-slate-100 border border-slate-200/80 transition-all flex justify-center items-center gap-2 cursor-not-allowed text-xs sm:text-sm';
+                btnCompra.innerHTML = `<i data-lucide="lock" class="w-4 h-4 shrink-0"></i> Preencha as informações obrigatórias`;
+            }
+            if (btnCompraMobile) {
+                btnCompraMobile.disabled = true;
+                btnCompraMobile.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-slate-400 bg-slate-100 border border-slate-200/80 transition-all flex justify-center items-center gap-2 cursor-not-allowed text-xs';
+                btnCompraMobile.innerHTML = `<i data-lucide="lock" class="w-4 h-4 shrink-0"></i> Preencha os dados obrigatórios`;
+            }
         } else {
-            btnCompra.disabled = false;
-            btnCompra.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-white bg-action-blue hover:bg-action-blue-dark shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs sm:text-sm hover:-translate-y-0.5';
-            btnCompra.innerHTML = `Finalizar Compra <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>`;
+            if (btnCompra) {
+                btnCompra.disabled = false;
+                btnCompra.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-white bg-action-blue hover:bg-action-blue-dark shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs sm:text-sm hover:-translate-y-0.5';
+                btnCompra.innerHTML = `Ir para Pagamento <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>`;
+            }
+            if (btnCompraMobile) {
+                btnCompraMobile.disabled = false;
+                btnCompraMobile.className = 'w-full py-3.5 px-6 rounded-2xl font-bold text-white bg-action-blue hover:bg-action-blue-dark shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs';
+                btnCompraMobile.innerHTML = `Ir para Pagamento <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>`;
+            }
         }
-        lucide.createIcons();
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     }
     
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(verificarCheckoutLiberado, 500);
+        
+        // Máscara dinâmica de CPF no modal
+        const cpfInput = document.getElementById('cartLoginCpf');
+        if (cpfInput) {
+            cpfInput.addEventListener('input', function(e) {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 11) {
+                    v = v.substring(0, 11);
+                }
+                if (v.length > 9) {
+                    v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, "$1.$2.$3-$4");
+                } else if (v.length > 6) {
+                    v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, "$1.$2.$3");
+                } else if (v.length > 3) {
+                    v = v.replace(/^(\d{3})(\d{1,3})$/, "$1.$2");
+                }
+                e.target.value = v;
+            });
+        }
     });
 </script>
