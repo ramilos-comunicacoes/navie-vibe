@@ -47,9 +47,93 @@
         document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
         document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
         document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
+        
+        // Cor Secundária (Detalhes)
+        const rawSecColor = "{{ hotel.cor_secundaria|default:'#2563eb' }}";
+        let hexSec = rawSecColor.replace('#', '');
+        if (hexSec.length === 3) { hexSec = hexSec[0]+hexSec[0]+hexSec[1]+hexSec[1]+hexSec[2]+hexSec[2]; }
+        const sr = parseInt(hexSec.substring(0, 2), 16) || 37;
+        const sg = parseInt(hexSec.substring(2, 4), 16) || 99;
+        const sb = parseInt(hexSec.substring(4, 6), 16) || 235;
+        document.documentElement.style.setProperty('--brand-color-secondary', "#" + hexSec);
+        document.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+        
+        if (yiq >= 170) {
+            document.documentElement.classList.add('brand-light-mode');
+        } else {
+            document.documentElement.classList.add('brand-dark-mode');
+        }
     })();
 </script>
 <style>
+    /* Estilos dinâmicos adaptativos para a Seção Inteira sobre/como chegar */
+    .hotel-brand-section {
+        background-color: var(--brand-color) !important;
+        transition: all 0.3s ease;
+    }
+    
+    /* Quando a cor da marca é CLARA */
+    .brand-light-mode .hotel-brand-section {
+        color: #0f172a !important; /* Texto Escuro */
+        border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+    .brand-light-mode .hotel-brand-section h3 {
+        color: #0f172a !important;
+    }
+    .brand-light-mode .hotel-brand-section p {
+        color: #334155 !important;
+    }
+    .brand-light-mode .hotel-brand-section .map-toggle-container {
+        background-color: rgba(0, 0, 0, 0.05) !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+    .brand-light-mode .hotel-brand-section .map-toggle-btn {
+        color: rgba(15, 23, 42, 0.6) !important;
+        background-color: transparent !important;
+    }
+    .brand-light-mode .hotel-brand-section .map-toggle-btn.active {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
+    }
+    .brand-light-mode .hotel-brand-section .border-t-brand-sep {
+        border-top-color: rgba(0, 0, 0, 0.08) !important;
+    }
+    .brand-light-mode .hotel-brand-section #mapaB2C {
+        border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* Quando a cor da marca é ESCURA */
+    .brand-dark-mode .hotel-brand-section {
+        color: #ffffff !important; /* Texto Branco */
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .brand-dark-mode .hotel-brand-section h3 {
+        color: #ffffff !important;
+    }
+    .brand-dark-mode .hotel-brand-section p {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+    .brand-dark-mode .hotel-brand-section .map-toggle-container {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+    .brand-dark-mode .hotel-brand-section .map-toggle-btn {
+        color: rgba(255, 255, 255, 0.6) !important;
+        background-color: transparent !important;
+    }
+    .brand-dark-mode .hotel-brand-section .map-toggle-btn.active {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+    }
+    .brand-dark-mode .hotel-brand-section .border-t-brand-sep {
+        border-top-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    .brand-dark-mode .hotel-brand-section #mapaB2C {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
     /* Ocultar barra de rolagem da página inteira */
     ::-webkit-scrollbar { display: none; }
     html, body { scrollbar-width: none; }
@@ -403,24 +487,17 @@
 <!-- HERO BANNER PREMIUM FULL-WIDTH -->
 <div class="relative w-full bg-slate-950 flex items-center justify-center hero-banner-b2c z-30">
     <!-- Mídia de Fundo (Vídeo ou Imagem) com corte arredondado no mobile e reto no desktop -->
-    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden rounded-b-[1.5rem] md:rounded-none">
+    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden rounded-b-[1.5rem] md:rounded-none" id="hero-media-container">
         <div class="absolute inset-0 bg-black/50 z-10"></div>
-        {% if hotel.hero_tipo == 'video' and hotel.hero_video %}
-            <video src="{{ hotel.hero_video.url }}" class="w-full h-full object-cover opacity-80" autoplay loop muted playsinline></video>
-        {% elif hotel.banner %}
-            <img src="{{ hotel.banner.url }}" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-85">
-        {% else %}
-            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-80">
-        {% endif %}
+        <video id="hero-media-video" src="{% if hotel.hero_video %}{{ hotel.hero_video.url }}{% endif %}" class="w-full h-full object-cover opacity-80 {% if hotel.hero_tipo != 'video' or not hotel.hero_video %}hidden{% endif %}" autoplay loop muted playsinline></video>
+        <img id="hero-media-img" src="{% if hotel.banner %}{{ hotel.banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-85 {% if hotel.hero_tipo == 'video' and hotel.hero_video %}hidden{% endif %}">
     </div>
 
     <!-- Informações do Hotel sobre o Hero (Centralizado com deslocamento vertical no mobile) -->
     <div class="container mx-auto px-4 relative z-20 flex flex-col items-center justify-center text-center pb-8 h-full hero-content-shift">
-        {% if hotel.logo %}
-        <div class="w-24 h-24 md:w-32 md:h-32 rounded-full bg-white p-3 shadow-2xl flex items-center justify-center shrink-0 border-4 border-white/20 select-none mb-6">
-            <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain rounded-full">
+        <div id="hero-logo-wrapper" class="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center shrink-0 select-none mb-6 {% if not hotel.logo %}hidden{% endif %}">
+            <img id="hero-logo-img" src="{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain">
         </div>
-        {% endif %}
         
         <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-xl mb-4">{{ hotel.nome }}</h1>
         
@@ -441,45 +518,17 @@
         <div class="w-[92%] sm:w-full max-w-2xl lg:max-w-3xl mx-auto z-[60]">
             <div class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]" style="position: relative;">
                 
-                <!-- Campo 1: Tipo de Quarto (Dropdown Customizado) -->
-                <div class="flex flex-col text-center px-1.5 sm:px-6 py-2 sm:py-3 flex-[1.3] md:flex-1 relative border-r border-slate-100 rounded-l-full"
-                     x-data="{ openDest: false, selected: 'todas', selectedLabel: 'Acomodações' }" 
-                     @click.outside="openDest = false">
-                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center">Acomodação</label>
-                    <button type="button" @click="openDest = !openDest"
-                            class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 cursor-pointer bg-transparent border-none outline-none w-full select-none text-center">
-                        <span x-text="selectedLabel" class="truncate font-bold"></span>
-                    </button>
-                    <input type="hidden" id="search-pousada" :value="selected">
-
-                    <!-- Painel Flutuante do Destino -->
-                    <div x-show="openDest" x-cloak
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-                         class="absolute left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar"
-                         style="display: none; top: calc(100% + 8px); z-index: 9999; min-width: 200px; width: max-content; max-width: 300px;">
-                        <button type="button" @click="selected = 'todas'; selectedLabel = 'Todas as Acomodações'; openDest = false;" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">Todas as Acomodações</button>
-                        {% for q in quartos %}
-                        <button type="button" @click="selected = '{{ q.id }}'; selectedLabel = '{{ q.nome }}'; openDest = false;" class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">{{ q.nome }}</button>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                <!-- Campo 2: Período/Datas -->
-                <div class="flex flex-col text-left px-1.5 sm:px-6 py-2 sm:py-3 flex-[0.7] md:flex-1 border-r border-slate-100 cursor-pointer"
+                <!-- Campo 1: Período/Datas -->
+                <div class="flex flex-col text-center px-4 sm:px-8 py-2 sm:py-3 flex-[1.2] border-r border-slate-100 cursor-pointer rounded-l-full hover:bg-slate-50 transition-colors"
                      onclick="openAvailabilityModal()">
-                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate">Datas</label>
-                    <input type="text" id="search-dates" placeholder="Datas" readonly 
-                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full font-bold"
-                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate text-center w-full">Datas</label>
+                    <input type="text" id="search-dates" placeholder="Selecione as datas" readonly 
+                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full font-bold text-center focus:outline-none"
+                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;text-align:center!important;outline:none!important;">
                 </div>
 
-                <!-- Campo 3: Hóspedes (Dropdown Customizado) -->
-                <div class="flex flex-col text-center px-1.5 sm:px-6 py-2 sm:py-3 flex-[1.0] md:flex-1 relative" 
+                <!-- Campo 2: Hóspedes (Dropdown Customizado) -->
+                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors" 
                      x-data="{ openGuests: false, guests: 2, guestsLabel: '2 Hóspedes' }" 
                      @click.outside="openGuests = false">
                     <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center">Hóspedes</label>
@@ -511,13 +560,23 @@
 
                 <!-- Botão Buscar Incorporado -->
                 <button type="button" id="hero-search-btn"
-                        @click="document.getElementById('lista-quartos').scrollIntoView({ behavior: 'smooth', block: 'start' })"
+                        onclick="buscarQuartosDisponiveis()"
                         class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
                         title="Buscar Acomodações">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.3-4.3"></path>
-                    </svg>
+                    <!-- Ícone de Busca -->
+                    <span id="search-btn-icon" class="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                    </span>
+                    <!-- Loader -->
+                    <span id="search-btn-loader" class="hidden flex items-center justify-center">
+                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" style="color: var(--brand-text-color);">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
                 </button>
             </div>
         </div>
@@ -526,9 +585,12 @@
 
 <!-- Fundo branco com borda superior sutil -->
 <div class="relative z-20 bg-white" style="border-radius: 1rem 1rem 0 0; margin-top: -6px;">
-<main class="container mx-auto px-4 md:px-6 xl:px-12 pb-12 pt-8 md:pt-10">
+<main class="container mx-auto px-4 md:px-6 xl:px-12 pt-8 pb-16 md:pt-10 md:pb-24">
     <div class="max-w-[90rem] mx-auto">
         
+        <!-- CONTÊINER PARA RESULTADOS DE BUSCA DINÂMICA (Antes dos destaques) -->
+        <div id="resultados-busca-container" class="hidden animate-in fade-in slide-in-from-bottom-5 duration-500 max-w-[90rem] mx-auto w-full mb-10"></div>
+
         <!-- SEÇÃO 0: DESTAQUES -->
         {% include 'hoteis/partials/tab_destaques.html' %}
         
@@ -536,13 +598,15 @@
         <div class="mt-8 md:mt-10">
             {% include 'hoteis/partials/tab_acomodacoes.html' %}
         </div>
-
-        <!-- SEÇÃO 2: SOBRE A POUSADA -->
-        <div class="mt-10 md:mt-12">
-            {% include 'hoteis/partials/tab_sobre.html' %}
-        </div>
     </div>
 </main>
+</div>
+
+<!-- SEÇÃO 2: SOBRE A POUSADA & LOCALIZAÇÃO (Fundo Dinâmico Full-Bleed) -->
+<div class="relative z-20 hotel-brand-section py-16 md:py-20">
+    <div class="max-w-[90rem] mx-auto px-4 md:px-6 xl:px-12">
+        {% include 'hoteis/partials/tab_sobre.html' %}
+    </div>
 </div>
 
 <!-- POPUP GLOBAL DO CALENDÁRIO -->
@@ -578,15 +642,42 @@
         if (isNaN(lat)) lat = -4.004445;
         if (isNaN(lon)) lon = -40.990278;
 
+        const roadmapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        });
+
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 19,
+            attribution: 'Imagens &copy; Esri'
+        });
+
         const mapaB2C = L.map('mapaB2C', {
             center: [lat, lon],
             zoom: 15,
+            layers: [satelliteLayer], // Satélite por padrão
             scrollWheelZoom: false
         });
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(mapaB2C);
+
+        const btnB2cRoadmap = document.getElementById('btn-b2c-roadmap');
+        const btnB2cSatellite = document.getElementById('btn-b2c-satellite');
+
+        if (btnB2cRoadmap && btnB2cSatellite) {
+            btnB2cRoadmap.addEventListener('click', function() {
+                mapaB2C.removeLayer(satelliteLayer);
+                mapaB2C.addLayer(roadmapLayer);
+                
+                btnB2cRoadmap.classList.add('active');
+                btnB2cSatellite.classList.remove('active');
+            });
+
+            btnB2cSatellite.addEventListener('click', function() {
+                mapaB2C.removeLayer(roadmapLayer);
+                mapaB2C.addLayer(satelliteLayer);
+                
+                btnB2cSatellite.classList.add('active');
+                btnB2cRoadmap.classList.remove('active');
+            });
+        }
         
         const redPin = L.icon({
             iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32"><path fill="%23ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
@@ -661,6 +752,67 @@
                 });
             }
         });
+
+        window.buscarQuartosDisponiveis = function() {
+            const datesInput = document.getElementById('search-dates');
+            const guestsInput = document.getElementById('search-guests');
+            const searchBtn = document.getElementById('hero-search-btn');
+            const btnIcon = document.getElementById('search-btn-icon');
+            const btnLoader = document.getElementById('search-btn-loader');
+            const resultsContainer = document.getElementById('resultados-busca-container');
+
+            if (!datesInput || !datesInput.value.trim()) {
+                openAvailabilityModal();
+                return;
+            }
+
+            if (searchBtn) searchBtn.disabled = true;
+            if (btnIcon) btnIcon.classList.add('hidden');
+            if (btnLoader) btnLoader.classList.remove('hidden');
+
+            const hotelId = "{{ hotel.id }}";
+            const dates = datesInput.value.trim();
+            const guests = guestsInput ? guestsInput.value : '2';
+            const url = `/api/hotel/${hotelId}/buscar-quartos/?datas=${encodeURIComponent(dates)}&guests=${encodeURIComponent(guests)}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na busca de quartos');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = html;
+                        resultsContainer.classList.remove('hidden');
+                        
+                        if (window.lucide) {
+                            window.lucide.createIcons();
+                        }
+                        
+                        setTimeout(() => {
+                            const targetSection = document.getElementById('resultados-busca-secao');
+                            if (targetSection) {
+                                targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }, 100);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    if (typeof showModal === 'function') {
+                        showModal('Infelizmente ocorreu um erro ao buscar os quartos. Tente novamente.');
+                    } else {
+                        alert('Erro ao buscar quartos.');
+                    }
+                })
+                .finally(() => {
+                    if (searchBtn) searchBtn.disabled = false;
+                    if (btnIcon) btnIcon.classList.remove('hidden');
+                    if (btnLoader) btnLoader.classList.add('hidden');
+                });
+        };
         
     });
 </script>

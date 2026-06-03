@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +26,7 @@ SECRET_KEY = 'django-insecure-6^j*32n^cu7t0b1ldy0p$@4@!n1mbe5-(y%58tx9xzz1yktrh6
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'parques',
     'clientes',
     'sas',
+    'analytics',
     
     # Login Social / OAuth (django-allauth)
     'allauth',
@@ -60,12 +62,15 @@ INSTALLED_APPS = [
     'vouchers',
     'financeiro',
     'estoque',
+    'administracao',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'analytics.middleware.TrackerMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'core.middleware.SubdomainMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -97,32 +102,91 @@ WSGI_APPLICATION = 'navievibe.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    'hospedagem': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db_hospedagem.sqlite3',
-    },
-    'cinema': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db_cinema.sqlite3',
-    },
-    'eventos': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db_eventos.sqlite3',
-    },
-    'parques': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db_parques.sqlite3',
-    },
-    'parceiros': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db_parceiros.sqlite3',
-    },
-}
+USE_POSTGRES = os.getenv('USE_POSTGRES', 'False') == 'True'
+
+if USE_POSTGRES:
+    DB_PASSWORD = os.getenv('DB_PASSWORD', 'sua_senha_segura')
+    DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
+    DB_PORT = os.getenv('DB_PORT', '5432')
+    DB_USER = os.getenv('DB_USER', 'navievibe_user')
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_default',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+        'hospedagem': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_hospedagem',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+        'cinema': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_cinema',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+        'eventos': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_eventos',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+        'parques': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_parques',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+        'parceiros': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_parceiros',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        },
+        'hospedagem': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_hospedagem.sqlite3',
+        },
+        'cinema': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_cinema.sqlite3',
+        },
+        'eventos': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_eventos.sqlite3',
+        },
+        'parques': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_parques.sqlite3',
+        },
+        'parceiros': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_parceiros.sqlite3',
+        },
+    }
 
 DATABASE_ROUTERS = ['core.routers.NavieVibeRouter']
 

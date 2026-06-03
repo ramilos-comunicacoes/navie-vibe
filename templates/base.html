@@ -6,9 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Naviê Vibe - Descubra os Melhores Destinos{% endblock %}</title>
     
-    <!-- Favicon do Naviê Vibe (Barquinho) -->
-    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
-    <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
+    <!-- Metatags de Compartilhamento (Open Graph / WhatsApp / redes sociais) -->
+    {% block og_tags %}
+    {% if request.hotel_atual %}
+        <meta property="og:title" content="{{ request.hotel_atual.nome }}">
+        <meta property="og:description" content="{{ request.hotel_atual.descricao }}">
+        {% if request.hotel_atual.imagem_compartilhamento %}
+            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ request.hotel_atual.imagem_compartilhamento.url }}">
+        {% elif request.hotel_atual.logo %}
+            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ request.hotel_atual.logo.url }}">
+        {% endif %}
+    {% elif hotel %}
+        <meta property="og:title" content="{{ hotel.nome }}">
+        <meta property="og:description" content="{{ hotel.descricao }}">
+        {% if hotel.imagem_compartilhamento %}
+            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ hotel.imagem_compartilhamento.url }}">
+        {% elif hotel.logo %}
+            <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ hotel.logo.url }}">
+        {% endif %}
+    {% else %}
+        <meta property="og:title" content="Naviê Vibe - Descubra os Melhores Destinos">
+        <meta property="og:description" content="Encontre hotéis, chalés, ingressos de cinema e parques com facilidade.">
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'images/logo.png' %}">
+    {% endif %}
+    <meta property="og:type" content="website">
+    {% endblock %}
+    
+    <!-- Favicon Dinâmico -->
+    {% if request.hotel_atual and request.hotel_atual.logo %}
+        <link rel="icon" type="image/png" href="{{ request.hotel_atual.logo.url }}">
+        <link rel="apple-touch-icon" href="{{ request.hotel_atual.logo.url }}">
+    {% elif hotel and hotel.logo %}
+        <link rel="icon" type="image/png" href="{{ hotel.logo.url }}">
+        <link rel="apple-touch-icon" href="{{ hotel.logo.url }}">
+    {% else %}
+        <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+        <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
+    {% endif %}
     <!-- Google Fonts: Poppins (Sans) e Quicksand (Display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +83,8 @@
             scroll-behavior: smooth; 
             margin: 0 !important;
             padding: 0 !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
         }
         body { 
             font-family: 'Inter', sans-serif; 
@@ -56,6 +92,8 @@
             color: var(--navie-text);
             margin: 0 !important;
             padding: 0 !important;
+            overflow-x: hidden !important;
+            width: 100% !important;
         }
         /* Ocultar barra de rolagem globalmente para um visual ultra-clean */
         *::-webkit-scrollbar {
@@ -256,12 +294,8 @@
     <!-- Header Simples -->
     <header class="bg-white sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="{% url 'hoteis:home' %}" class="flex items-center gap-3 text-2xl font-black tracking-tight" style="min-width: 200px;">
-                {% if hotel and hotel.logo %}
-                    <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="h-10 w-auto max-w-[120px] object-contain rounded-lg">
-                {% else %}
-                    <img src="{% static 'images/logo.png' %}" alt="Logo Naviê" class="h-10 w-auto object-contain">
-                {% endif %}
+            <a href="{% if request.parent_host_url %}{{ request.parent_host_url }}/{% else %}{% url 'hoteis:home' %}{% endif %}" class="flex items-center gap-3 text-2xl font-black tracking-tight" style="min-width: 200px;">
+                <img src="{% static 'images/logo.png' %}" alt="Logo Naviê" class="h-10 w-auto object-contain">
                 <span class="font-poppins"><span id="typewriter-text"></span><span class="type-cursor"></span></span>
             </a>
             
@@ -460,6 +494,18 @@
             setTimeout(typeLoop, 500);
         });
     </script>
+    <!-- Rastreamento de Analytics Naviê -->
+    <script>
+        window.NavieConfig = {
+            trackUrl: "{% url 'analytics:api_registrar_interacao' %}",
+            category: "{% if hotel or request.hotel_atual or quarto %}hospedagem{% elif filme or cinema or sessao %}cinema{% elif restaurante %}restaurante{% endif %}" || null,
+            itemId: "{{ quarto.id|default:'' }}" || "{{ filme.id|default:'' }}" || null,
+            parentId: "{{ hotel.id|default:'' }}" || "{{ request.hotel_atual.id|default:'' }}" || "{{ cinema.id|default:'' }}" || "{{ restaurante.id|default:'' }}" || null,
+            metadata: {}
+        };
+    </script>
+    <script src="{% static 'js/navie_tracker.js' %}"></script>
+
     {% block extra_scripts %}{% endblock %}
     <script>
         // Inicializar ícones Lucide em todo o site

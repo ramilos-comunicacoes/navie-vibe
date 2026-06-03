@@ -1,0 +1,845 @@
+{% extends 'administracao/base_admin.html' %}
+
+{% block extra_head %}
+<!-- Leaflet.js CSS (OpenStreetMap) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+    /* Estilo para ajustar visual do Leaflet no modo Dark/Glass */
+    .leaflet-control-zoom a {
+        background-color: #ffffff !important;
+        color: #1e293b !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+    }
+    .dark .leaflet-control-zoom a {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+    .leaflet-bar {
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
+    }
+    .dark .leaflet-bar {
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+    {% if action == 'create' %}Adicionar Novo Hotel{% else %}Editar Hotel - {{ hotel.nome }}{% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if action == 'create' %}Novo Hotel / Pousada{% else %}Editar Hotel: {{ hotel.nome }}{% endif %}
+{% endblock %}
+{% block page_subtitle %}
+    {% if action == 'create' %}Cadastre um novo estabelecimento e crie o usuário gestor{% else %}Atualize os dados, branding e credenciais do gestor{% endif %}
+{% endblock %}
+
+{% block header_actions %}
+    <a href="{% url 'administracao:hoteis_list' %}" class="btn-header btn-header-secondary">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Voltar
+    </a>
+    <button type="submit" form="hotel-form-main" class="btn-header btn-header-primary">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        {% if action == 'create' %}Cadastrar{% else %}Salvar{% endif %}
+    </button>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8" 
+     x-data="{ 
+         selectLocal: '{% if action == 'edit' %}{{ hotel.local.pk }}{% else %}new{% endif %}',
+         showPass: false,
+         showConfirm: false,
+         passValue: '',
+         confirmValue: ''
+     }">
+    
+    <!-- Alert de Erros -->
+    {% if errors %}
+        <div class="p-4 rounded-xl text-sm font-semibold bg-red-500/15 border border-red-500/35 text-red-600 dark:text-red-400 space-y-1">
+            <p class="font-bold flex items-center gap-2">
+                <i data-lucide="alert-triangle" class="w-5 h-5 shrink-0"></i>
+                Por favor, corrija os seguintes erros:
+            </p>
+            <ul class="list-disc list-inside text-xs pl-2 font-medium">
+                {% for err in errors %}
+                    <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form id="hotel-form-main" action="" method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {% csrf_token %}
+
+        <!-- Colunas 1 e 2: Lógica e Formulários -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Card 1: Identificação da Operação (Hotel & Empresa) -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/60 dark:border-navie-border space-y-6 relative z-30">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/50 dark:border-navie-border/60 pb-3">
+                    <i data-lucide="building" class="w-4 h-4 text-blue-500"></i>
+                    Identificação da Operação
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_nome_fantasia">Nome Fantasia (Exibido no site)</label>
+                        <input type="text" name="nome_fantasia" id="id_nome_fantasia" value="{{ hotel.nome|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_razao_social">Razão Social</label>
+                        <input type="text" name="razao_social" id="id_razao_social" value="{{ empresa.razao_social|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_cnpj">CNPJ</label>
+                        <input type="text" name="cnpj" id="id_cnpj" value="{{ empresa.cnpj|default:'' }}" placeholder="00.000.000/0000-00" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="space-y-1.5" x-data="{
+                        slug: '{{ hotel.slug|default:'' }}',
+                        status: '',
+                        message: '',
+                        checking: false,
+                        checkSlug() {
+                            this.slug = this.slug.toLowerCase().replace(/[^a-z0-9-_]/g, '');
+                            if (!this.slug) {
+                                this.status = '';
+                                this.message = '';
+                                return;
+                            }
+                            this.checking = true;
+                            const hotelId = '{{ hotel.id|default:'' }}';
+                            fetch(`/api/hotel/verificar-subdominio/?slug=${this.slug}&exclude_id=${hotelId}`)
+                                .then(r => r.json())
+                                .then(data => {
+                                    this.status = data.disponivel ? 'disponivel' : 'indisponivel';
+                                    this.message = data.mensagem;
+                                })
+                                .finally(() => {
+                                    this.checking = false;
+                                });
+                        }
+                    }" x-init="if(slug) { checkSlug() }">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_slug">Subdomínio da Pousada (Slug)</label>
+                        <div class="relative">
+                            <input type="text" name="slug" id="id_slug" 
+                                   x-model="slug" 
+                                   @input.debounce.300ms="checkSlug()" 
+                                   required 
+                                   class="w-full h-11 pl-4 pr-24 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            
+                            <!-- Status Icons/Spinners -->
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                <template x-if="checking">
+                                    <svg class="animate-spin h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </template>
+                                <template x-if="!checking && status === 'disponivel'">
+                                    <span class="flex items-center text-xs text-emerald-500 font-bold gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                        Disponível
+                                    </span>
+                                </template>
+                                <template x-if="!checking && status === 'indisponivel'">
+                                    <span class="flex items-center text-xs text-rose-500 font-bold gap-1 bg-rose-500/10 px-2 py-0.5 rounded-full">
+                                        Indisponível
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center px-1">
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                                Ex: <span class="font-mono text-slate-500 dark:text-slate-300" x-text="slug ? slug + '.localhost:8060' : 'subdominio.localhost:8060'"></span>
+                            </span>
+                            <span class="text-[10px] font-bold" :class="status === 'disponivel' ? 'text-emerald-500' : 'text-rose-500'" x-text="message"></span>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2 space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_descricao">Descrição do Estabelecimento</label>
+                        <textarea name="descricao" id="id_descricao" rows="4" required class="w-full p-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-xs font-medium text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 leading-relaxed">{{ hotel.descricao|default:'' }}</textarea>
+                    </div>
+
+                    <!-- Custom Dropdown Status de Operação -->
+                    <div class="relative space-y-1.5" x-data="{ 
+                        open: false, 
+                        selectedVal: '{{ hotel.status|default:'ativo' }}',
+                        selectedLabel: '{% if hotel.status == 'inativo' %}Inativo{% else %}Ativo{% endif %}',
+                        options: [
+                            { val: 'ativo', label: 'Ativo' },
+                            { val: 'inativo', label: 'Inativo' }
+                        ],
+                        selectOption(val, label) {
+                            this.selectedVal = val;
+                            this.selectedLabel = label;
+                            this.open = false;
+                        }
+                    }" @click.outside="open = false">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Status de Operação</label>
+                        <input type="hidden" name="status" :value="selectedVal">
+                        
+                        <div @click="open = !open; $nextTick(() => { if (window.lucide) lucide.createIcons(); });" class="w-full h-12 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between cursor-pointer select-none">
+                            <span x-text="selectedLabel"></span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                        </div>
+                        
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl shadow-lg overflow-hidden" 
+                             style="display: none;">
+                            <ul class="max-h-60 overflow-y-auto p-1.5 no-scrollbar text-xs font-semibold text-slate-700 dark:text-slate-300 space-y-0.5">
+                                <template x-for="opt in options" :key="opt.val">
+                                    <li @click="selectOption(opt.val, opt.label)" 
+                                        class="px-3.5 py-2.5 rounded-lg hover:bg-blue-600 hover:text-white cursor-pointer transition-colors flex items-center justify-between"
+                                        :class="selectedVal === opt.val ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" x-show="selectedVal === opt.val"></i>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Destaque (Switch iOS premium animado) -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_destaque">Exibir em Destaque</label>
+                        <div class="w-full h-12 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl flex items-center justify-between">
+                            <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Mostrar na página principal</span>
+                            <label class="relative inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" name="destaque" id="id_destaque" {% if hotel.destaque %}checked{% endif %} class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 dark:bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:after:border-navie-border peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Contato & Branding -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/60 dark:border-navie-border space-y-6 relative z-20">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/50 dark:border-navie-border/60 pb-3">
+                    <i data-lucide="palette" class="w-4 h-4 text-blue-500"></i>
+                    Contato & Branding
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_whatsapp">WhatsApp de Contato</label>
+                        <input type="text" name="whatsapp" id="id_whatsapp" value="{{ hotel.whatsapp|default:'' }}" placeholder="(00) 00000-0000" class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_email_contato">E-mail Comercial</label>
+                        <input type="email" name="email_contato" id="id_email_contato" value="{{ empresa.email_contato|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Cor Primária com Swatch Integrado Corretamente -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_cor_primaria">Cor Primária (Hex)</label>
+                        <div class="relative flex items-center">
+                            <input type="text" name="cor_primaria" x-ref="corInput" id="id_cor_primaria" value="{{ hotel.cor_primaria|default:'#f97316' }}" required class="w-full h-11 pl-4 pr-12 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            <input type="color" value="{{ hotel.cor_primaria|default:'#f97316' }}" @input="$refs.corInput.value = $el.value" class="absolute right-2 w-8 h-8 border-0 rounded-lg cursor-pointer bg-transparent p-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Localização com Google Maps Autocomplete -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/60 dark:border-navie-border space-y-6 relative z-10">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/50 dark:border-navie-border/60 pb-3">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
+                    Localização & Endereço
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <!-- Custom Dropdown Vincular a Localização com Busca -->
+                    <div class="relative space-y-1.5 sm:col-span-2" x-data="{ 
+                        open: false, 
+                        search: '', 
+                        selectedVal: '{% if action == 'edit' %}{{ hotel.local.pk }}{% else %}new{% endif %}',
+                        selectedLabel: '{% if action == 'edit' %}{{ hotel.local.nome }} ({{ hotel.local.cidade }}/{{ hotel.local.estado }}){% else %}-- Cadastrar Nova Localização --{% endif %}',
+                        options: [
+                            { val: 'new', label: '-- Cadastrar Nova Localização --' },
+                            {% for loc in locais %}
+                                { val: '{{ loc.pk }}', label: '{{ loc.nome }} ({{ loc.cidade }}/{{ loc.estado }})' },
+                            {% endfor %}
+                        ],
+                        get filteredOptions() {
+                            return this.options.filter(opt => opt.label.toLowerCase().includes(this.search.toLowerCase()));
+                        },
+                        selectOption(val, label) {
+                            this.selectedVal = val;
+                            this.selectedLabel = label;
+                            this.open = false;
+                            this.search = '';
+                            selectLocal = val;
+                        }
+                    }" @click.outside="open = false">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Vincular a Localização</label>
+                        <input type="hidden" name="local_id" :value="selectedVal">
+                        
+                        <div @click="open = !open; $nextTick(() => { if (open) { $refs.searchInput.focus(); } if (window.lucide) lucide.createIcons(); });" class="w-full h-12 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between cursor-pointer select-none">
+                            <span x-text="selectedLabel"></span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                        </div>
+                        
+                        <div x-show="open" 
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl shadow-lg overflow-hidden" 
+                             style="display: none;">
+                             
+                            <!-- Campo de Busca interno -->
+                            <div class="p-2 border-b border-slate-100 dark:border-navie-border/60">
+                                <div class="relative">
+                                    <input type="text" x-ref="searchInput" x-model="search" placeholder="Buscar localização..." class="w-full h-9 pl-8 pr-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                                    <i data-lucide="search" class="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Lista de Opções -->
+                            <ul class="max-h-60 overflow-y-auto p-1.5 no-scrollbar text-xs font-semibold text-slate-700 dark:text-slate-300 space-y-0.5">
+                                <template x-for="opt in filteredOptions" :key="opt.val">
+                                    <li @click="selectOption(opt.val, opt.label)" 
+                                        class="px-3.5 py-2.5 rounded-lg hover:bg-blue-600 hover:text-white cursor-pointer transition-colors flex items-center justify-between"
+                                        :class="selectedVal === opt.val ? 'bg-blue-600/10 text-blue-600 dark:text-blue-400 font-bold' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i data-lucide="check" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" x-show="selectedVal === opt.val"></i>
+                                    </li>
+                                </template>
+                                <li x-show="filteredOptions.length === 0" class="px-4 py-3 text-center text-slate-400 italic">
+                                    Nenhum resultado encontrado
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Nome do Local (Exibido apenas se for criar localização nova) -->
+                    <div class="space-y-1.5" x-show="selectLocal === 'new'">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_local_nome">Identificador do Local</label>
+                        <input type="text" name="local_nome" id="id_local_nome" placeholder="Ex: Tianguá Centro" class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Campo de Endereço (Target do Autocomplete OpenStreetMap) -->
+                    <div class="space-y-1.5 sm:col-span-2 relative" x-data="{ 
+                        suggestions: [],
+                        showSuggestions: false,
+                        loading: false,
+                        timeout: null,
+                        fetchAddress(query) {
+                            if (this.timeout) clearTimeout(this.timeout);
+                            if (query.length < 3) {
+                                this.suggestions = [];
+                                return;
+                            }
+                            this.loading = true;
+                            this.timeout = setTimeout(() => {
+                                fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=br&q=${encodeURIComponent(query)}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        this.suggestions = data.map(item => {
+                                            const addr = item.address;
+                                            return {
+                                                display_name: item.display_name,
+                                                lat: item.lat,
+                                                lon: item.lon,
+                                                cep: addr.postcode || '',
+                                                cidade: addr.city || addr.town || addr.village || addr.municipality || '',
+                                                estado: addr.state || '',
+                                                rua: addr.road || addr.suburb || addr.pedestrian || ''
+                                            };
+                                        });
+                                        this.loading = false;
+                                        this.showSuggestions = true;
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        this.loading = false;
+                                    });
+                            }, 400);
+                        },
+                        selectSuggestion(sug) {
+                            document.getElementById('id_endereco').value = sug.rua || sug.display_name.split(',')[0];
+                            if (sug.cep) document.getElementById('id_cep').value = sug.cep;
+                            if (sug.cidade) document.getElementById('id_cidade').value = sug.cidade;
+                            if (sug.estado) {
+                                const states = {
+                                    'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM', 'Bahia': 'BA',
+                                    'Ceará': 'CE', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES', 'Goiás': 'GO',
+                                    'Maranhão': 'MA', 'Mato Grosso': 'MT', 'Mato Grosso do Sul': 'MS', 'Minas Gerais': 'MG',
+                                    'Pará': 'PA', 'Paraíba': 'PB', 'Paraná': 'PR', 'Pernambuco': 'PE', 'Piauí': 'PI',
+                                    'Rio de Janeiro': 'RJ', 'Rio Grande do Norte': 'RN', 'Rio Grande do Sul': 'RS',
+                                    'Rondônia': 'RO', 'Roraima': 'RR', 'Santa Catarina': 'SC', 'São Paulo': 'SP',
+                                    'Sergipe': 'SE', 'Tocantins': 'TO'
+                                };
+                                const uf = states[sug.estado] || sug.estado.substring(0, 2).toUpperCase();
+                                document.getElementById('id_estado').value = uf;
+                            }
+                            
+                            document.getElementById('id_latitude').value = parseFloat(sug.lat).toFixed(6);
+                            document.getElementById('id_longitude').value = parseFloat(sug.lon).toFixed(6);
+                            
+                            if (window.updateMapMarker) {
+                                window.updateMapMarker(sug.lat, sug.lon);
+                            }
+                            
+                            this.showSuggestions = false;
+                            this.suggestions = [];
+                        }
+                    }" @click.outside="showSuggestions = false">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_endereco">Pesquisar Endereço (Rua, Av, Número)</label>
+                        <div class="relative flex items-center">
+                            <input type="text" name="endereco" id="id_endereco" value="{{ empresa.endereco|default:'' }}" required placeholder="Digite a rua para buscar o endereço" @input="fetchAddress($event.target.value)" @focus="if(suggestions.length > 0) showSuggestions = true" class="w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            <i data-lucide="search" x-show="!loading" class="absolute right-3.5 top-[14px] w-4 h-4 text-slate-400 pointer-events-none search-icon"></i>
+                            <i data-lucide="loader-2" x-show="loading" class="absolute right-3.5 top-[14px] w-4 h-4 text-slate-400 animate-spin" style="display:none;"></i>
+                        </div>
+                        
+                        <!-- Dropdown de Sugestões OpenStreetMap -->
+                        <div x-show="showSuggestions && suggestions.length > 0" class="absolute z-50 w-full mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl shadow-lg overflow-hidden" style="display: none;">
+                            <ul class="max-h-60 overflow-y-auto p-1.5 no-scrollbar text-xs font-semibold text-slate-700 dark:text-slate-300 space-y-0.5">
+                                <template x-for="(sug, index) in suggestions" :key="index">
+                                    <li @click="selectSuggestion(sug)" class="px-3.5 py-2.5 rounded-lg hover:bg-blue-600 hover:text-white cursor-pointer transition-colors flex items-center gap-2">
+                                        <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0 text-slate-400"></i>
+                                        <span x-text="sug.display_name" class="truncate"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_cep">CEP</label>
+                        <input type="text" name="cep" id="id_cep" value="{{ empresa.cep|default:'' }}" required placeholder="00000-000" class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="space-y-1.5 sm:col-span-2">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_cidade">Cidade</label>
+                        <input type="text" name="cidade" id="id_cidade" value="{{ empresa.cidade|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_estado">Estado (UF)</label>
+                        <input type="text" name="estado" id="id_estado" value="{{ empresa.estado|default:'' }}" required placeholder="CE" maxlength="2" class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500 text-center uppercase">
+                    </div>
+
+                    <!-- Campos de Latitude e Longitude -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_latitude">Latitude</label>
+                        <input type="text" name="latitude" id="id_latitude" value="{{ hotel.latitude|default:'' }}" readonly placeholder="Automático ou clique no mapa" class="w-full h-11 px-4 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 focus:outline-none cursor-not-allowed">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_longitude">Longitude</label>
+                        <input type="text" name="longitude" id="id_longitude" value="{{ hotel.longitude|default:'' }}" readonly placeholder="Automático ou clique no mapa" class="w-full h-11 px-4 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 focus:outline-none cursor-not-allowed">
+                    </div>
+                    <div></div><!-- Espaçador grid -->
+
+                    <!-- Div do Google Maps -->
+                    <div class="sm:col-span-3 space-y-3">
+                        <div class="flex items-center justify-between flex-wrap gap-3">
+                            <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Selecione a Localização no Mapa (Clique para marcar)</label>
+                            
+                            <div class="flex items-center gap-3">
+                                <!-- Botão Achar Localização Automática -->
+                                <button type="button" 
+                                        id="btn-auto-locate"
+                                        class="flex items-center gap-1.5 px-3 py-1.5 bg-brand hover:bg-brand-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs border-none cursor-pointer">
+                                    <i data-lucide="locate" class="w-3.5 h-3.5"></i>
+                                    <span>Achar Minha Localização</span>
+                                </button>
+
+                                <!-- Alternador Mapa / Satélite Customizado -->
+                                <div class="flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200 dark:border-navie-border/60">
+                                    <button type="button" 
+                                            id="btn-toggle-satellite"
+                                            class="px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs">
+                                        Satélite
+                                    </button>
+                                    <button type="button" 
+                                            id="btn-toggle-roadmap"
+                                            class="px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent">
+                                        Mapa Padrão
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="map-selection" class="w-full h-64 rounded-xl border border-slate-200 dark:border-navie-border shadow-inner" style="min-height: 250px;"></div>
+                        <p class="text-[9px] text-slate-400 dark:text-slate-500">Você pode arrastar o marcador ou clicar em qualquer ponto do mapa para refinar a localização exata do hotel.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Usuário Gestor com Olho e Confirmação Dupla -->
+            <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200/60 dark:border-navie-border space-y-6 relative z-0">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/50 dark:border-navie-border/60 pb-3">
+                    <i data-lucide="user-cog" class="w-4 h-4 text-blue-500"></i>
+                    Acesso do Proprietário / Gestor
+                </h3>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_responsavel_nome">Nome Completo do Gestor</label>
+                        <input type="text" name="responsavel_nome" id="id_responsavel_nome" value="{{ user_obj.first_name|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_cpf">CPF do Gestor</label>
+                        <input type="text" name="cpf" id="id_cpf" value="{{ parceiro_usuario.cpf|default:'' }}" required placeholder="000.000.000-00" class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_username">Nome de Usuário (Username)</label>
+                        <input type="text" name="username" id="id_username" value="{{ user_obj.username|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_user_email">E-mail de Acesso</label>
+                        <input type="email" name="user_email" id="id_user_email" value="{{ user_obj.email|default:'' }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <!-- Senha 1 -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_password">Senha do Gestor</label>
+                        <div class="relative flex items-center">
+                            <input :type="showPass ? 'text' : 'password'" name="password" id="id_password" x-model="passValue" {% if action == 'create' %}required{% endif %} placeholder="Digite a nova senha" class="w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            <button type="button" @click="showPass = !showPass" class="absolute right-3.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 focus:outline-none">
+                                <span x-show="!showPass" class="flex items-center"><i data-lucide="eye" class="w-4.5 h-4.5"></i></span>
+                                <span x-show="showPass" style="display:none;" class="flex items-center"><i data-lucide="eye-off" class="w-4.5 h-4.5"></i></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Senha 2 (Confirmação) -->
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_password_confirm">Confirmar Senha</label>
+                        <div class="relative flex items-center">
+                            <input :type="showConfirm ? 'text' : 'password'" name="password_confirm" id="id_password_confirm" x-model="confirmValue" {% if action == 'create' %}required{% endif %} placeholder="Confirme a nova senha" class="w-full h-11 pl-4 pr-10 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                            <button type="button" @click="showConfirm = !showConfirm" class="absolute right-3.5 text-slate-400 dark:text-slate-500 hover:text-slate-600 focus:outline-none">
+                                <span x-show="!showConfirm" class="flex items-center"><i data-lucide="eye" class="w-4.5 h-4.5"></i></span>
+                                <span x-show="showConfirm" style="display:none;" class="flex items-center"><i data-lucide="eye-off" class="w-4.5 h-4.5"></i></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {% if action == 'edit' %}
+                        <div class="sm:col-span-2">
+                            <p class="text-[9px] text-slate-400 leading-tight">Deixe os campos de senha em branco para manter a senha atual do parceiro.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Coluna 3: Arquivos com Miniaturas Premium -->
+        <div class="space-y-6">
+            
+            <div class="glass-card rounded-2xl p-6 shadow-md border border-slate-200/60 dark:border-navie-border space-y-6 sticky top-4">
+                <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-200/50 dark:border-navie-border/60 pb-3">
+                    <i data-lucide="image" class="w-4 h-4 text-blue-500"></i>
+                    Branding & Mídias
+                </h3>
+
+                <!-- Logo Box Premium -->
+                <div class="space-y-2" x-data="{ 
+                    previewUrl: {% if hotel.logo %}'{{ hotel.logo.url }}'{% else %}null{% endif %},
+                    deleted: false
+                }">
+                    <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Logo da Pousada</label>
+                    <input type="hidden" name="clear_logo" :value="deleted ? 'true' : 'false'">
+                    
+                    <div class="relative group w-28 h-28 rounded-2xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-navie-border/60 hover:border-blue-500 dark:hover:border-blue-500 bg-slate-50 dark:bg-white/5 transition-all flex items-center justify-center cursor-pointer">
+                        <input type="file" name="logo" id="logo-input" @change="const file = $event.target.files[0]; if (file) { previewUrl = URL.createObjectURL(file); deleted = false; }" class="absolute inset-0 opacity-0 cursor-pointer z-10" :class="previewUrl && !deleted ? 'pointer-events-none' : ''">
+                        
+                        <div x-show="!previewUrl || deleted" class="text-center p-4 flex flex-col items-center justify-center space-y-1">
+                            <i data-lucide="image-plus" class="w-6 h-6 text-slate-400"></i>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Enviar Logo</span>
+                        </div>
+                        
+                        <template x-if="previewUrl && !deleted">
+                            <div class="absolute inset-0 w-full h-full">
+                                <img :src="previewUrl" alt="Logo preview" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                                    <button type="button" @click.stop="deleted = true; document.getElementById('logo-input').value = '';" class="w-10 h-10 rounded-full bg-red-600/90 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 focus:outline-none">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Banner Box Premium -->
+                <div class="space-y-2" x-data="{ 
+                    previewUrl: {% if hotel.banner %}'{{ hotel.banner.url }}'{% else %}null{% endif %},
+                    deleted: false
+                }">
+                    <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Banner de Cabeçalho (Hero)</label>
+                    <input type="hidden" name="clear_banner" :value="deleted ? 'true' : 'false'">
+                    
+                    <div class="relative group w-full h-28 rounded-2xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-navie-border/60 hover:border-blue-500 dark:hover:border-blue-500 bg-slate-50 dark:bg-white/5 transition-all flex items-center justify-center cursor-pointer">
+                        <input type="file" name="banner" id="banner-input" @change="const file = $event.target.files[0]; if (file) { previewUrl = URL.createObjectURL(file); deleted = false; }" class="absolute inset-0 opacity-0 cursor-pointer z-10" :class="previewUrl && !deleted ? 'pointer-events-none' : ''">
+                        
+                        <div x-show="!previewUrl || deleted" class="text-center p-4 flex flex-col items-center justify-center space-y-1">
+                            <i data-lucide="image-plus" class="w-6 h-6 text-slate-400"></i>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Enviar Banner Hero</span>
+                        </div>
+                        
+                        <template x-if="previewUrl && !deleted">
+                            <div class="absolute inset-0 w-full h-full">
+                                <img :src="previewUrl" alt="Banner preview" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                                    <button type="button" @click.stop="deleted = true; document.getElementById('banner-input').value = '';" class="w-10 h-10 rounded-full bg-red-600/90 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 focus:outline-none">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Glass Backdrop Box Premium -->
+                <div class="space-y-2" x-data="{ 
+                    previewUrl: {% if hotel.foto_fundo %}'{{ hotel.foto_fundo.url }}'{% else %}null{% endif %},
+                    deleted: false
+                }">
+                    <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Imagem de Fundo (Modo Glass)</label>
+                    <input type="hidden" name="clear_foto_fundo" :value="deleted ? 'true' : 'false'">
+                    
+                    <div class="relative group w-full h-28 rounded-2xl overflow-hidden border-2 border-dashed border-slate-300 dark:border-navie-border/60 hover:border-blue-500 dark:hover:border-blue-500 bg-slate-50 dark:bg-white/5 transition-all flex items-center justify-center cursor-pointer">
+                        <input type="file" name="foto_fundo" id="foto_fundo-input" @change="const file = $event.target.files[0]; if (file) { previewUrl = URL.createObjectURL(file); deleted = false; }" class="absolute inset-0 opacity-0 cursor-pointer z-10" :class="previewUrl && !deleted ? 'pointer-events-none' : ''">
+                        
+                        <div x-show="!previewUrl || deleted" class="text-center p-4 flex flex-col items-center justify-center space-y-1">
+                            <i data-lucide="image-plus" class="w-6 h-6 text-slate-400"></i>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Enviar Imagem Fundo</span>
+                        </div>
+                        
+                        <template x-if="previewUrl && !deleted">
+                            <div class="absolute inset-0 w-full h-full">
+                                <img :src="previewUrl" alt="Fundo preview" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                                    <button type="button" @click.stop="deleted = true; document.getElementById('foto_fundo-input').value = '';" class="w-10 h-10 rounded-full bg-red-600/90 hover:bg-red-700 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 focus:outline-none">
+                                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Leaflet.js Script (OpenStreetMap) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inicializar Leaflet Map (OpenStreetMap)
+        let map;
+        let marker;
+        const latInput = document.getElementById('id_latitude');
+        const lngInput = document.getElementById('id_longitude');
+        const mapContainer = document.getElementById('map-selection');
+        
+        function startLeaflet() {
+            try {
+                let initialLat = parseFloat(latInput.value) || -3.722; // Região de Tianguá / CE padrão
+                let initialLng = parseFloat(lngInput.value) || -40.992;
+                
+                if (mapContainer) {
+                    // Escolher tile layer correspondente ao tema (light ou dark/glass)
+                    let tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                    if (document.documentElement.classList.contains('dark')) {
+                        tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                    }
+
+                    const roadmapLayer = L.tileLayer(tileUrl, {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                        subdomains: 'abcd',
+                        maxZoom: 20
+                    });
+
+                    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: 'Imagens &copy; Esri'
+                    });
+
+                    map = L.map(mapContainer, {
+                        center: [initialLat, initialLng],
+                        zoom: 14,
+                        layers: [satelliteLayer] // Satélite por padrão
+                    });
+
+                    // Configuração dos botões customizados de alternância de mapa/satélite
+                    const btnToggleSatellite = document.getElementById('btn-toggle-satellite');
+                    const btnToggleRoadmap = document.getElementById('btn-toggle-roadmap');
+
+                    if (btnToggleSatellite && btnToggleRoadmap) {
+                        btnToggleSatellite.addEventListener('click', function() {
+                            map.removeLayer(roadmapLayer);
+                            map.addLayer(satelliteLayer);
+                            
+                            // Atualiza estilos dos botões
+                            btnToggleSatellite.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs";
+                            btnToggleRoadmap.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                        });
+
+                        btnToggleRoadmap.addEventListener('click', function() {
+                            map.removeLayer(satelliteLayer);
+                            map.addLayer(roadmapLayer);
+                            
+                            // Atualiza estilos dos botões
+                            btnToggleRoadmap.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs";
+                            btnToggleSatellite.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                        });
+                    }
+
+                    // Configuração da geolocalização automática
+                    const btnAutoLocate = document.getElementById('btn-auto-locate');
+                    if (btnAutoLocate) {
+                        btnAutoLocate.addEventListener('click', function() {
+                            if (!navigator.geolocation) {
+                                alert("Geolocalização não é suportada por seu navegador.");
+                                return;
+                            }
+                            
+                            const btnText = btnAutoLocate.querySelector('span');
+                            const originalText = btnText.textContent;
+                            btnText.textContent = "Obtendo...";
+                            btnAutoLocate.disabled = true;
+
+                            navigator.geolocation.getCurrentPosition(
+                                function(position) {
+                                    const lat = position.coords.latitude;
+                                    const lng = position.coords.longitude;
+                                    
+                                    latInput.value = lat.toFixed(6);
+                                    lngInput.value = lng.toFixed(6);
+                                    
+                                    const latlng = [lat, lng];
+                                    marker.setLatLng(latlng);
+                                    map.setView(latlng, 17);
+                                    
+                                    btnText.textContent = originalText;
+                                    btnAutoLocate.disabled = false;
+                                },
+                                function(error) {
+                                    console.error(error);
+                                    alert("Não foi possível obter sua localização. Verifique as permissões do navegador.");
+                                    btnText.textContent = originalText;
+                                    btnAutoLocate.disabled = false;
+                                },
+                                { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+                            );
+                        });
+                    }
+                    
+                    marker = L.marker([initialLat, initialLng], {
+                        draggable: true
+                    }).addTo(map);
+                    
+                    // Listener ao arrastar marcador
+                    marker.on('dragend', function() {
+                        const position = marker.getLatLng();
+                        latInput.value = position.lat.toFixed(6);
+                        lngInput.value = position.lng.toFixed(6);
+                    });
+                    
+                    // Listener ao clicar no mapa
+                    map.on('click', function(event) {
+                        const position = event.latlng;
+                        marker.setLatLng(position);
+                        latInput.value = position.lat.toFixed(6);
+                        lngInput.value = position.lng.toFixed(6);
+                    });
+                    
+                    // Função global para atualizar marcador e centralizar mapa a partir do autocomplete Nominatim
+                    window.updateMapMarker = function(lat, lng) {
+                        const latlng = [parseFloat(lat), parseFloat(lng)];
+                        marker.setLatLng(latlng);
+                        map.setView(latlng, 17);
+                    };
+                }
+            } catch (error) {
+                console.error("Erro ao inicializar o Leaflet Map:", error);
+            }
+        }
+
+        // Garante que o Leaflet esteja carregado antes de inicializar o mapa
+        if (typeof L !== 'undefined') {
+            startLeaflet();
+        } else {
+            const checkInterval = setInterval(function() {
+                if (typeof L !== 'undefined') {
+                    clearInterval(checkInterval);
+                    startLeaflet();
+                }
+            }, 100);
+        }
+
+        // Eventos de Mascaramento em Tempo Real (CNPJ, CPF, WhatsApp)
+        const cnpjInput = document.getElementById('id_cnpj');
+        if (cnpjInput) {
+            const format = (v) => {
+                v = v.replace(/\D/g, '');
+                if (v.length > 14) v = v.substring(0, 14);
+                return v
+                    .replace(/^(\d{2})(\d)/, '$1.$2')
+                    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+                    .replace(/(\d{4})(\d)/, '$1-$2');
+            };
+            cnpjInput.addEventListener('input', (e) => { e.target.value = format(e.target.value); });
+            // Pre-formatar se tiver valor inicial
+            if (cnpjInput.value) cnpjInput.value = format(cnpjInput.value);
+        }
+
+        const cpfInput = document.getElementById('id_cpf');
+        if (cpfInput) {
+            const format = (v) => {
+                v = v.replace(/\D/g, '');
+                if (v.length > 11) v = v.substring(0, 11);
+                return v
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+                    .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+            };
+            cpfInput.addEventListener('input', (e) => { e.target.value = format(e.target.value); });
+            if (cpfInput.value) cpfInput.value = format(cpfInput.value);
+        }
+
+        const whatsappInput = document.getElementById('id_whatsapp');
+        if (whatsappInput) {
+            const format = (v) => {
+                v = v.replace(/\D/g, '');
+                if (v.length > 11) v = v.substring(0, 11);
+                return v
+                    .replace(/^(\d{2})(\d)/, '($1) $2')
+                    .replace(/(\d{5})(\d)/, '$1-$2');
+            };
+            whatsappInput.addEventListener('input', (e) => { e.target.value = format(e.target.value); });
+            if (whatsappInput.value) whatsappInput.value = format(whatsappInput.value);
+        }
+    });
+</script>
+{% endblock %}

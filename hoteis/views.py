@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime, date, timedelta
@@ -12,6 +13,11 @@ from .utils import checar_disponibilidade_quarto, buscar_datas_proximas
 from decimal import Decimal
 
 def home(request):
+    # Se acessado via subdomínio, exibe a vitrine B2C diretamente
+    hotel_atual = getattr(request, 'hotel_atual', None)
+    if hotel_atual:
+        return vanity_url(request, slug=hotel_atual.slug)
+
     # Incrementa contador de visualizações global da plataforma
     from core.models import PlataformaConfig
     try:
@@ -95,6 +101,36 @@ def home(request):
             )
         ]
 
+    # Carrega cidades para o carrossel de cidades da Ibiapaba
+    from .models import Cidade
+    cidades = list(Cidade.objects.all())
+    if not cidades:
+        class MockCidade:
+            def __init__(self, nome, slug, imagem_url, descricao=""):
+                self.nome = nome
+                self.slug = slug
+                self.imagem_url = imagem_url
+                self.descricao = descricao
+
+            @property
+            def imagem(self):
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.imagem_url)
+                
+        cidades = [
+            MockCidade("Tianguá", "tiangua", "/static/images/cidades/tiangua.png", "Portal da Serra da Ibiapaba"),
+            MockCidade("Ubajara", "ubajara", "/static/images/cidades/ubajara.png", "Cidade das Flores e Bondinho"),
+            MockCidade("Viçosa do Ceará", "vicosa-do-ceara", "/static/images/cidades/vicosa.png", "Patrimônio Histórico e Cachaça Premium"),
+            MockCidade("São Benedito", "sao-benedito", "/static/images/cidades/sao_benedito.png", "Capital das Rosas"),
+            MockCidade("Guaraciaba do Norte", "guaraciaba-do-norte", "https://images.unsplash.com/photo-1498307818166-5248f52068f6?auto=format&fit=crop&w=800&q=80", "Polo Hortifrutigranjeiro"),
+            MockCidade("Ipu", "ipu", "/static/images/cidades/ipu.png", "Bica do Ipu e Iracema"),
+            MockCidade("Carnaubal", "carnaubal", "https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=800&q=80", "Belezas e Trilhas Ecológicas"),
+            MockCidade("Croatá", "croata", "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80", "Acolhedora e Produtiva"),
+            MockCidade("Ibiapina", "ibiapina", "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80", "Cachoeiras e Clima Agradável")
+        ]
+
     destaque = Hotel.objects.filter(destaque=True, status='ativo').first()
     proximos = Hotel.objects.filter(status='ativo').order_by('id')[:6]
     
@@ -102,9 +138,202 @@ def home(request):
         'destaque': destaque,
         'proximos': proximos,
         'slides': slides,
+        'cidades': cidades,
     }
     return render(request, 'hoteis/home.html', context)
 
+
+def cidade_detalhe(request, cidade_slug):
+    """
+    Exibe o portal de experiências B2C exclusivo de uma cidade da Ibiapaba.
+    Exibe carrosséis temáticos para: Shows/Eventos, Pousadas, Restaurantes e Cinema.
+    """
+    from .models import Cidade, Hotel, Restaurante
+    from eventos.models import Evento
+    from cinema.models import Filme
+    
+    cidade = Cidade.objects.filter(slug=cidade_slug).first()
+    
+    # Fallback caso a cidade não exista no banco
+    if not cidade:
+        class MockCidade:
+            def __init__(self, nome, slug, banner_url, descricao=""):
+                self.nome = nome
+                self.slug = slug
+                self.banner_url = banner_url
+                self.descricao = descricao
+
+            @property
+            def banner(self):
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.banner_url)
+
+        # Determina os metadados de fallback com base no slug
+        nome_cidade = cidade_slug.replace('-', ' ').title()
+        banner_url = "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80"
+        if cidade_slug == 'tiangua':
+            nome_cidade = "Tianguá"
+            banner_url = "/static/images/cidades/tiangua.png"
+        elif cidade_slug == 'ubajara':
+            nome_cidade = "Ubajara"
+            banner_url = "/static/images/cidades/ubajara.png"
+        elif cidade_slug == 'vicosa-do-ceara':
+            nome_cidade = "Viçosa do Ceará"
+            banner_url = "/static/images/cidades/vicosa.png"
+        elif cidade_slug == 'sao-benedito':
+            nome_cidade = "São Benedito"
+            banner_url = "/static/images/cidades/sao_benedito.png"
+        elif cidade_slug == 'ipu':
+            nome_cidade = "Ipu"
+            banner_url = "/static/images/cidades/ipu.png"
+            
+        cidade = MockCidade(
+            nome=nome_cidade,
+            slug=cidade_slug,
+            banner_url=banner_url,
+            descricao=f"Descubra o melhor de {nome_cidade}: shows imperdíveis, as melhores pousadas da serra, gastronomia e cinema."
+        )
+
+    # 1. Pousadas e Hotéis da Cidade (Reais com fallback dinâmico)
+    pousadas = list(Hotel.objects.filter(local__cidade__iexact=cidade.nome, status='ativo'))
+    if not pousadas:
+        pousadas = Hotel.objects.filter(status='ativo')[:4]  # fallback com os hotéis ativos gerais
+        
+    # 2. Shows e Eventos (Reais com fallback dinâmico)
+    shows = list(Evento.objects.filter(local_nome__icontains=cidade.nome).exclude(status__in=['cancelado', 'encerrado']))
+    if not shows:
+        # Cria eventos mockados dinâmicos e deslumbrantes específicos da cidade
+        class MockEvento:
+            def __init__(self, id, nome, descricao, banner_url, data_evento, local_nome):
+                self.id = id
+                self.nome = nome
+                self.descricao = descricao
+                self.banner_url = banner_url
+                self.data_evento = data_evento
+                self.local_nome = local_nome
+
+            @property
+            def banner(self):
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.banner_url)
+
+        shows = [
+            MockEvento(
+                id=1,
+                nome="Ibiapaba Jazz Festival",
+                descricao="O maior festival de música instrumental da serra, reunindo artistas nacionais e internacionais.",
+                banner_url="https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80",
+                data_evento=datetime.now() + timedelta(days=15),
+                local_nome=f"Arena Central, {cidade.nome}"
+            ),
+            MockEvento(
+                id=2,
+                nome="Festival Gastronômico da Serra",
+                descricao="Sabores regionais, oficinas culinárias com chefs renomados e apresentações culturais.",
+                banner_url="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
+                data_evento=datetime.now() + timedelta(days=30),
+                local_nome=f"Parque da Cidade, {cidade.nome}"
+            )
+        ]
+
+    # 3. Restaurantes (Reais com fallback dinâmico)
+    restaurantes = list(Restaurante.objects.filter(cidade_nome__iexact=cidade.nome, ativo=True))
+    if not restaurantes:
+        class MockRestaurante:
+            def __init__(self, nome, especialidade, imagem_url, endereco, whatsapp):
+                self.nome = nome
+                self.especialidade = especialidade
+                self.imagem_url = imagem_url
+                self.endereco = endereco
+                self.whatsapp = whatsapp
+
+            @property
+            def imagem(self):
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.imagem_url)
+
+        restaurantes = [
+            MockRestaurante(
+                nome="Cantina da Serra",
+                especialidade="Massas & Vinho",
+                imagem_url="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+                endereco=f"Av. Central, 120 - {cidade.nome}",
+                whatsapp="88999990011"
+            ),
+            MockRestaurante(
+                nome="Sabor da Terra",
+                especialidade="Culinária Regional",
+                imagem_url="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
+                endereco=f"Rua das Flores, 45 - {cidade.nome}",
+                whatsapp="88999990022"
+            ),
+            MockRestaurante(
+                nome="Pizzaria Bella Vista",
+                especialidade="Pizzas no Forno a Lenha",
+                imagem_url="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+                endereco=f"Mirante da Serra - {cidade.nome}",
+                whatsapp="88999990033"
+            )
+        ]
+
+    # 4. Cinema / Filmes em Cartaz no Cine Ibiapaba (Reais com fallback dinâmico)
+    filmes = list(Filme.objects.filter(em_cartaz=True))
+    if not filmes:
+        class MockFilme:
+            def __init__(self, titulo, genero, poster_url, duracao_minutos, classificacao_indicativa):
+                self.titulo = titulo
+                self.genero = genero
+                self.poster_url = poster_url
+                self.duracao_minutos = duracao_minutos
+                self.classificacao_indicativa = classificacao_indicativa
+
+            @property
+            def poster(self):
+                class UrlHelper:
+                    def __init__(self, url):
+                        self.url = url
+                return UrlHelper(self.poster_url)
+
+        filmes = [
+            MockFilme(
+                titulo="O Mistério da Serra",
+                genero="Aventura / Suspense",
+                poster_url="https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=800&q=80",
+                duracao_minutos=110,
+                classificacao_indicativa="12 anos"
+            ),
+            MockFilme(
+                titulo="Coração de Criança",
+                genero="Comédia / Família",
+                poster_url="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80",
+                duracao_minutos=95,
+                classificacao_indicativa="Livre"
+            ),
+            MockFilme(
+                titulo="Trilhas do Destino",
+                genero="Drama / Romance",
+                poster_url="https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80",
+                duracao_minutos=125,
+                classificacao_indicativa="14 anos"
+            )
+        ]
+        
+    context = {
+        'cidade': cidade,
+        'pousadas': pousadas,
+        'shows': shows,
+        'restaurantes': restaurantes,
+        'filmes': filmes,
+    }
+    return render(request, 'hoteis/cidade_detalhe.html', context)
+
+@xframe_options_exempt
 def detalhe(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
     hotel.visualizacoes += 1
@@ -133,6 +362,7 @@ def detalhe(request, hotel_id):
     }
     return render(request, 'hoteis/detalhe.html', context)
 
+@xframe_options_exempt
 def vanity_url(request, slug):
     """
     Exibe a vitrine B2C pública do hotel a partir do seu slug customizado (vanity URL).
@@ -1191,17 +1421,8 @@ def partner_salvar_configuracoes(request):
     hotel.descricao = request.POST.get('descricao', hotel.descricao)
     hotel.whatsapp = request.POST.get('whatsapp', hotel.whatsapp)
     hotel.cor_primaria = request.POST.get('cor_primaria', hotel.cor_primaria)
+    hotel.cor_secundaria = request.POST.get('cor_secundaria', hotel.cor_secundaria)
     hotel.hero_tipo = request.POST.get('hero_tipo', hotel.hero_tipo)
-    
-    # URL Customizada (Slug) com verificador de colisão e termos reservados
-    slug = request.POST.get('slug', '').strip().lower().replace(' ', '-')
-    if slug:
-        colisao = Hotel.objects.filter(slug=slug).exclude(id=hotel.id).exists()
-        reservado = slug in ['admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media']
-        if colisao or reservado:
-            messages.error(request, f"O link '/{slug}' já está em uso ou é um termo reservado do sistema. Por favor, escolha outro link.")
-            return redirect('hoteis:partner_dashboard')
-        hotel.slug = slug
     
     # Geolocalização
     lat = request.POST.get('latitude', '').strip().replace(',', '.')
@@ -1217,15 +1438,26 @@ def partner_salvar_configuracoes(request):
         except ValueError:
             pass
             
-    # Upload de arquivos
-    if 'banner' in request.FILES:
+    # Upload de arquivos e remoções
+    if request.POST.get('remover_banner') == 'true':
+        hotel.banner = None
+    elif 'banner' in request.FILES:
         hotel.banner = request.FILES['banner']
         
-    if 'logo' in request.FILES:
+    if request.POST.get('remover_logo') == 'true':
+        hotel.logo = None
+    elif 'logo' in request.FILES:
         hotel.logo = request.FILES['logo']
         
-    if 'foto_fundo' in request.FILES:
+    if request.POST.get('remover_foto_fundo') == 'true':
+        hotel.foto_fundo = None
+    elif 'foto_fundo' in request.FILES:
         hotel.foto_fundo = request.FILES['foto_fundo']
+        
+    if request.POST.get('remover_imagem_compartilhamento') == 'true':
+        hotel.imagem_compartilhamento = None
+    elif 'imagem_compartilhamento' in request.FILES:
+        hotel.imagem_compartilhamento = request.FILES['imagem_compartilhamento']
         
     # Processa remoção ou novo upload do vídeo do banner
     if request.POST.get('remover_hero_video') == 'true':
@@ -1515,6 +1747,29 @@ def carrinho_adicionar(request, quarto_id):
     }
     request.session.modified = True
     
+    # Rastrear carrinho no analytics de forma segura
+    try:
+        from analytics.models import CarrinhoStatus
+        tracker_id = getattr(request, 'tracker_id', None)
+        if tracker_id:
+            CarrinhoStatus.objects.update_or_create(
+                tracker_id=tracker_id,
+                category='hospedagem',
+                item_id=str(quarto.id),
+                defaults={
+                    'usuario': request.user if request.user.is_authenticated else None,
+                    'quantidade': 1,
+                    'recuperado': False,
+                    'metadata': {
+                        'checkin': checkin_str,
+                        'checkout': checkout_str,
+                        'quantidade_hospedes': quarto.capacidade_pessoas
+                    }
+                }
+            )
+    except Exception as e:
+        print("Erro ao registrar carrinho no analytics:", e)
+        
     return JsonResponse({'success': True})
 
 def carrinho_remover(request):
@@ -1946,6 +2201,33 @@ def checkout_processar(request):
             }
         )
             
+        # Rastrear recuperação de carrinho e registrar consumo no analytics
+        try:
+            from analytics.models import CarrinhoStatus
+            from analytics.analytics import registrar_consumo_unificado
+            tracker_id = getattr(request, 'tracker_id', None)
+            if tracker_id:
+                # 1. Marcar carrinho como recuperado
+                CarrinhoStatus.objects.filter(
+                    tracker_id=tracker_id,
+                    category='hospedagem',
+                    item_id=str(quarto.id),
+                    recuperado=False
+                ).update(recuperado=True, usuario=request.user)
+                
+                # 2. Registrar consumo da reserva
+                registrar_consumo_unificado(
+                    usuario=request.user,
+                    tracker_id=tracker_id,
+                    category='hospedagem',
+                    item_id=str(quarto.id),
+                    nome=f"Reserva {quarto.nome} - {quarto.hotel.nome} ({noites} noites)",
+                    preco=reserva.valor_total,
+                    quantidade=1
+                )
+        except Exception as e:
+            print("Erro ao atualizar analytics no checkout:", e)
+
         # 4. Limpar o carrinho
         if 'carrinho' in request.session:
             del request.session['carrinho']
@@ -2527,6 +2809,22 @@ def partner_hospedes_lancar_consumo(request, reserva_id):
     reserva.valor_total += valor_total
     reserva.save()
     
+    # Registrar consumo unificado no analytics
+    try:
+        from analytics.analytics import registrar_consumo_unificado
+        if reserva.usuario:
+            registrar_consumo_unificado(
+                usuario=reserva.usuario,
+                tracker_id=None,
+                category='hospedagem',
+                item_id=str(produto.id),
+                nome=produto.nome,
+                preco=produto.preco,
+                quantidade=quantidade
+            )
+    except Exception as e:
+        print("Erro ao lançar consumo no analytics:", e)
+    
     # Log de auditoria
     try:
         ReservaLog.objects.create(
@@ -2552,6 +2850,167 @@ def partner_hospedes_lancar_consumo(request, reserva_id):
             }}, 3500);
         </script>
     """)
+
+
+def api_verificar_subdominio(request):
+    slug = request.GET.get('slug', '').strip().lower().replace(' ', '-')
+    exclude_id = request.GET.get('exclude_id')
+    
+    if not slug:
+        return JsonResponse({'disponivel': False, 'mensagem': 'Subdomínio não pode ser vazio.'})
+    
+    reservados = ['admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media', 'www', 'dashboard', 'navievibe']
+    if slug in reservados:
+        return JsonResponse({'disponivel': False, 'mensagem': 'Este termo é reservado pelo sistema.'})
+        
+    qs = Hotel.objects.filter(slug=slug)
+    if exclude_id and exclude_id != 'None' and exclude_id != '':
+        try:
+            qs = qs.exclude(id=int(exclude_id))
+        except ValueError:
+            pass
+            
+    if qs.exists():
+        return JsonResponse({'disponivel': False, 'mensagem': 'Este subdomínio já está em uso.'})
+        
+    return JsonResponse({'disponivel': True, 'mensagem': 'Subdomínio disponível!'})
+
+
+def quarto_detalhe_subdomain(request, quarto_slug):
+    hotel = getattr(request, 'hotel_atual', None)
+    if not hotel:
+        return redirect('hoteis:home')
+    return quarto_detalhe(request, hotel.id, quarto_slug)
+
+
+def api_buscar_quartos(request, hotel_id):
+    hotel = get_object_or_404(Hotel, id=hotel_id)
+    
+    # 1. Recuperar parâmetros
+    datas_str = request.GET.get('datas', '').strip() # formato: "DD/MM/YYYY - DD/MM/YYYY" ou "DD/MM/YYYY a DD/MM/YYYY"
+    guests_str = request.GET.get('guests', '2').strip()
+    
+    # Defaults
+    guests = 2
+    try:
+        if 'ou mais' in guests_str:
+            guests = 8
+        else:
+            # Pegar apenas o número do texto se necessário
+            import re
+            nums = re.findall(r'\d+', guests_str)
+            if nums:
+                guests = int(nums[0])
+            else:
+                guests = int(guests_str)
+    except ValueError:
+        pass
+        
+    checkin = None
+    checkout = None
+    
+    # Parser de datas flexível
+    if datas_str:
+        parts = []
+        if " - " in datas_str:
+            parts = datas_str.split(" - ")
+        elif " a " in datas_str:
+            parts = datas_str.split(" a ")
+        elif " to " in datas_str:
+            parts = datas_str.split(" to ")
+            
+        if len(parts) == 2:
+            try:
+                checkin = datetime.strptime(parts[0].strip(), '%d/%m/%Y').date()
+                checkout = datetime.strptime(parts[1].strip(), '%d/%m/%Y').date()
+            except ValueError:
+                pass
+                
+    if not checkin or not checkout:
+        return HttpResponse("""
+            <div class="mb-12 pt-4 border-b border-slate-100 pb-10" id="resultados-busca-secao">
+                <div class="max-w-2xl mx-auto bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg>
+                    </div>
+                    <h4 class="text-lg font-black text-slate-800">Selecione o período corretamente</h4>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        Por favor, selecione as datas de entrada (check-in) e saída (checkout) para pesquisar acomodações.
+                    </p>
+                </div>
+            </div>
+        """)
+        
+    # Verificar disponibilidade
+    noites = (checkout - checkin).days
+    if noites <= 0:
+        return HttpResponse("""
+            <div class="mb-12 pt-4 border-b border-slate-100 pb-10" id="resultados-busca-secao">
+                <div class="max-w-2xl mx-auto bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg>
+                    </div>
+                    <h4 class="text-lg font-black text-slate-800">Datas inválidas</h4>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        A data de saída (checkout) deve ser posterior à data de entrada (check-in).
+                    </p>
+                </div>
+            </div>
+        """)
+        
+    quartos_disponiveis = []
+    
+    # 2. Filtrar quartos e checar disponibilidade
+    for q in hotel.quartos.all():
+        # Verifica se comporta a quantidade de hóspedes
+        if q.capacidade_pessoas >= guests:
+            disponivel = checar_disponibilidade_quarto(q, checkin, checkout)
+            if disponivel:
+                quartos_disponiveis.append(q)
+                
+    # Lógica de recomendações se não houver quartos disponíveis
+    quartos_capacidade_alternativa = []
+    quartos_sugeridos = []
+    if not quartos_disponiveis:
+        # Recomendar quartos com capacidade menor na mesma data
+        for q in hotel.quartos.all():
+            if q.capacidade_pessoas < guests:
+                if checar_disponibilidade_quarto(q, checkin, checkout):
+                    quartos_capacidade_alternativa.append(q)
+                    
+        # Recomendar quartos com capacidade solicitada em datas alternativas
+        from .utils import buscar_datas_proximas
+        from datetime import timedelta
+        for q in hotel.quartos.all():
+            if q.capacidade_pessoas >= guests:
+                sugestao_antes, sugestao_depois = buscar_datas_proximas(q, checkin, noites)
+                if sugestao_antes or sugestao_depois:
+                    quartos_sugeridos.append({
+                        'quarto': q,
+                        'sugestao_antes': sugestao_antes,
+                        'sugestao_depois': sugestao_depois,
+                        'sugestao_antes_checkout': (sugestao_antes + timedelta(days=noites)) if sugestao_antes else None,
+                        'sugestao_depois_checkout': (sugestao_depois + timedelta(days=noites)) if sugestao_depois else None,
+                    })
+
+    context = {
+        'hotel': hotel,
+        'quartos_disponiveis': quartos_disponiveis,
+        'quartos_capacidade_alternativa': quartos_capacidade_alternativa,
+        'quartos_sugeridos': quartos_sugeridos,
+        'checkin': checkin,
+        'checkout': checkout,
+        'guests': guests,
+        'noites': noites,
+    }
+    
+    return render(request, 'hoteis/partials/resultados_busca_quartos.html', context)
+
+
+def teste_404(request):
+    return render(request, '404.html')
+
+
 
 
 

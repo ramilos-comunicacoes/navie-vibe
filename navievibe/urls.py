@@ -21,14 +21,18 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sistemadeadministracao/', include('administracao.urls')),
     path('accounts/', include('allauth.urls')),  # Login Social / OAuth
     path('api/', include('api.urls')),
     path('clientes/', include('clientes.urls')),
     path('vouchers/', include('vouchers.urls')),
     path('financeiro/', include('financeiro.urls')),
+    path('analytics/', include('analytics.urls')),
     path('', include('hoteis.urls')),
     path('', include('parceiros.urls')),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+handler404 = 'core.views.handler404'

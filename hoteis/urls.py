@@ -52,6 +52,11 @@ urlpatterns = [
     path('hospedagens/hospedes/pedido/<int:pedido_id>/status/', views.partner_hospedes_atualizar_status, name='partner_hospedes_atualizar_status'),
     path('hospedagens/hospedes/reserva/<uuid:reserva_id>/lancar/', views.partner_hospedes_lancar_consumo, name='partner_hospedes_lancar_consumo'),
     
+    path('cidade/<slug:cidade_slug>/', views.cidade_detalhe, name='cidade_detalhe'),
+    path('api/hotel/verificar-subdominio/', views.api_verificar_subdominio, name='verificar_subdominio'),
+    path('api/hotel/<int:hotel_id>/buscar-quartos/', views.api_buscar_quartos, name='api_buscar_quartos'),
+    path('acomodacao/<slug:quarto_slug>/', views.quarto_detalhe_subdomain, name='quarto_detalhe_subdomain'),
+    path('teste-404/', views.teste_404, name='teste_404'),
     path('<slug:slug>/', views.vanity_url, name='vanity_url'),
 ]
 

@@ -1,0 +1,186 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administração - Naviê Vibe</title>
+    
+    <link rel="stylesheet" href="{% static 'css/inter.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    
+    <style>
+        :root {
+            --b2b-bg: #090d16;
+            --b2b-slate-deep: #080c14;
+            --b2b-surface: #0f172a;
+            --b2b-border: rgba(255, 255, 255, 0.08);
+            --b2b-text: #f8fafc;
+            --b2b-muted: #64748b;
+            --b2b-primary: #2563eb;
+            --b2b-primary-hover: #1d4ed8;
+        }
+        body {
+            background-color: var(--b2b-bg);
+            color: var(--b2b-text);
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0; box-sizing: border-box; overflow-x: hidden;
+        }
+        .split-layout { display: flex; min-height: 100vh; width: 100vw; }
+        .banner-side {
+            background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
+            justify-content: space-between; padding: 4rem 3.5rem; width: 50%;
+            border-right: 1px solid var(--b2b-border); box-sizing: border-box;
+        }
+        .banner-side::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.14) 0%, transparent 45%),
+                              radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 45%);
+            pointer-events: none;
+        }
+        .form-side {
+            background-color: var(--b2b-slate-deep); width: 50%; display: flex;
+            align-items: center; justify-content: center; padding: 3rem 2.5rem;
+            box-sizing: border-box; position: relative; overflow-y: auto;
+        }
+        @media (max-width: 992px) {
+            .banner-side { display: none; }
+            .form-side { width: 100%; padding: 2.5rem 1.5rem; }
+        }
+        .partner-logo-container { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
+        .partner-logo-text { font-family: 'Poppins', sans-serif; font-size: 1.35rem; font-weight: 900; letter-spacing: -0.02em; color: #ffffff; }
+        .partner-logo-highlight { color: #60a5fa; }
+        .partner-slogan-title { font-family: 'Poppins', sans-serif; font-size: 2.5rem; font-weight: 900; line-height: 1.15; color: #ffffff; margin: 0 0 1rem 0; }
+        .partner-slogan-desc { font-size: 1rem; color: #94a3b8; line-height: 1.6; margin: 0 0 2rem 0; }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 18px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.25rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 1.5rem;
+        }
+        .feature-item:hover {
+            background: rgba(255, 255, 255, 0.035); border-color: rgba(37, 99, 235, 0.2);
+            transform: translateX(6px) translateZ(0); box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+        .feature-icon-wrapper { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .icon-bg-blue { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.15); }
+        .feature-item-title { font-size: 14.5px; font-weight: 700; color: #ffffff; margin: 0 0 0.2rem 0; }
+        .feature-item-desc { font-size: 12px; color: #64748b; font-weight: 500; margin: 0; line-height: 1.4; }
+        
+        .partner-form-wrapper { width: 100%; max-width: 420px; margin: 0 auto; box-sizing: border-box; }
+        .partner-form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; width: 100%; box-sizing: border-box; }
+        .partner-label { font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin: 0; }
+        .partner-input-wrapper { position: relative; display: block; width: 100%; box-sizing: border-box; }
+        .partner-input-icon { position: absolute; left: 1.15rem; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #64748b; pointer-events: none; z-index: 10; }
+        .partner-input-field {
+            width: 100% !important; height: 50px !important; padding: 0 1rem 0 3.2rem !important;
+            background-color: rgba(15, 23, 42, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px !important; font-size: 14.5px !important; font-family: inherit !important;
+            color: #f8fafc !important; box-sizing: border-box !important; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .partner-input-field:focus {
+            background-color: rgba(15, 23, 42, 0.9) !important; border-color: var(--b2b-primary) !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2) !important; outline: none !important;
+        }
+        .partner-btn-primary {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
+            width: 100%; height: 52px; background-color: var(--b2b-primary); color: #ffffff;
+            font-family: inherit; font-size: 15.5px; font-weight: 750; border: none; border-radius: 16px;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25); transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .partner-btn-primary:hover { background-color: var(--b2b-primary-hover); transform: translateY(-1.5px); box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35); }
+        .partner-alert { display: flex; align-items: start; gap: 0.85rem; padding: 1.15rem 1.35rem; border-radius: 16px; font-size: 13.5px; font-weight: 600; line-height: 1.4; width: 100%; box-sizing: border-box; margin-bottom: 1.5rem; }
+        .partner-alert-error { background-color: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <div class="banner-side">
+            <div class="partner-logo-container">
+                <img src="{% static 'images/logo.png' %}" alt="Logo Naviê" class="h-10 w-auto object-contain filter brightness-0 invert opacity-90">
+                <span class="partner-logo-text">
+                    <span>Naviê</span> <span class="partner-logo-highlight">Admin</span>
+                </span>
+            </div>
+            <div style="margin: auto 0; width: 100%;">
+                <h1 class="partner-slogan-title">O controle absoluto do marketplace.</h1>
+                <p class="partner-slogan-desc">
+                    Gerencie verticais, aprove parceiros, acompanhe métricas financeiras globais e configure a plataforma em um único lugar seguro.
+                </p>
+                <div class="partner-features-list">
+                    <div class="feature-item">
+                        <div class="feature-icon-wrapper icon-bg-blue">
+                            <i data-lucide="building-2" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-item-title">Gestão de Parceiros</h4>
+                            <p class="feature-item-desc">Aprove hotéis, cinemas, produtoras de eventos e parques.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon-wrapper icon-bg-blue">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-item-title">Segurança Máxima</h4>
+                            <p class="feature-item-desc">Acesso restrito apenas aos donos e diretores do sistema Naviê Vibe.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-500 font-bold flex items-center gap-1.5 pt-4">
+                <i data-lucide="lock" class="w-4 h-4 text-blue-500"></i>
+                <span>Portal Administrativo Exclusivo Naviê Vibe</span>
+            </div>
+        </div>
+
+        <div class="form-side">
+            <div class="partner-form-wrapper">
+                <div style="text-align: center; margin-bottom: 2.5rem;">
+                    <h2 style="font-family: 'Poppins', sans-serif; font-size: 1.75rem; font-weight: 900; color: #ffffff; margin: 0 0 0.5rem 0;">Acesso Administrativo</h2>
+                    <p style="font-size: 0.95rem; color: #94a3b8; margin: 0;">Bem-vindo de volta! Insira suas credenciais mestres.</p>
+                </div>
+
+                {% if error_msg %}
+                    <div class="partner-alert partner-alert-error">
+                        <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+                        <p style="margin:0;">{{ error_msg }}</p>
+                    </div>
+                {% endif %}
+
+                <form action="" method="post" id="login-form">
+                    {% csrf_token %}
+                    <div class="partner-form-group">
+                        <label class="partner-label" for="id_username">Usuário</label>
+                        <div class="partner-input-wrapper">
+                            <i data-lucide="user" class="partner-input-icon"></i>
+                            <input type="text" name="username" id="id_username" class="partner-input-field" placeholder="Digite seu usuário mestre" required autofocus>
+                        </div>
+                    </div>
+                    <div class="partner-form-group" style="margin-bottom: 2rem;">
+                        <label class="partner-label" for="id_password">Senha</label>
+                        <div class="partner-input-wrapper">
+                            <i data-lucide="lock" class="partner-input-icon"></i>
+                            <input type="password" name="password" id="id_password" class="partner-input-field" placeholder="Digite sua senha de acesso" required>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </div>
+                    
+                    <div class="submit-row">
+                        <button type="submit" class="partner-btn-primary">
+                            <i data-lucide="log-in" class="w-5 h-5"></i>
+                            Entrar no Sistema
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

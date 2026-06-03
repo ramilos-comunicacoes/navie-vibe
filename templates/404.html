@@ -1,0 +1,487 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Não Encontrada | Naviê Vibe</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Quicksand:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #090d16 0%, #111827 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        /* Estrelas de Fundo */
+        .bg-stars {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .bg-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #ffffff;
+            border-radius: 50%;
+            opacity: 0.15;
+            animation: blink 4s infinite ease-in-out;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.15; transform: scale(0.8); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* -------------------------------------------------------------
+           GEOMETRIA E RESPONSIVIDADE EXCLUSIVA
+        ------------------------------------------------------------- */
+        
+        /* Centralizador principal */
+        .wrapper {
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Card de Vidro Fosco (Glassmorphism) */
+        .error-card {
+            background: rgba(17, 24, 39, 0.45);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        /* Desktop Geometry (>= 1024px) - Horizontal Flex */
+        @media (min-width: 1024px) {
+            .error-card {
+                max-width: 920px;
+                border-radius: 3rem;
+                padding: 4rem;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 4.5rem;
+            }
+
+            .canvas-side {
+                flex-shrink: 0;
+            }
+
+            .content-side {
+                flex-grow: 1;
+                text-align: left;
+            }
+
+            .error-code {
+                font-size: 5rem;
+                text-align: left;
+            }
+            
+            .error-title {
+                font-size: 1.85rem;
+                text-align: left;
+            }
+        }
+
+        /* Mobile Geometry (< 1024px) - Vertical Stacked */
+        @media (max-width: 1023px) {
+            .error-card {
+                max-width: 480px;
+                border-radius: 2rem;
+                padding: 3rem 1.75rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 2.25rem;
+            }
+
+            .canvas-side {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .content-side {
+                width: 100%;
+                text-align: center;
+            }
+
+            .error-code {
+                font-size: 3.5rem;
+                text-align: center;
+            }
+
+            .error-title {
+                font-size: 1.35rem;
+                text-align: center;
+            }
+        }
+
+        /* -------------------------------------------------------------
+           CANVAS CIRCULAR DO BARQUINHO (DO PAINEL DE PARCEIROS)
+        ------------------------------------------------------------- */
+        .boat-canvas {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.3), 0 15px 35px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Elemento Lua Interno do Canvas */
+        .canvas-moon {
+            position: absolute;
+            top: 15%;
+            right: 18%;
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle, #ffffff 0%, #fffbdf 40%, rgba(255, 251, 223, 0) 80%);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 251, 223, 0.2);
+            z-index: 1;
+        }
+
+        /* Animações Senoidais de Física Fluida */
+        @keyframes floatBoat {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(3deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        @keyframes waveLeft {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-25%); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes waveRight {
+            0% { transform: translateX(-25%); }
+            50% { transform: translateX(0); }
+            100% { transform: translateX(-25%); }
+        }
+
+        .boat-illustrator {
+            position: absolute;
+            bottom: 65px;
+            z-index: 10;
+            color: #2563eb; /* Cor Primária Naviê */
+            animation: floatBoat 4s ease-in-out infinite;
+        }
+
+        .boat-illustrator svg {
+            width: 110px;
+            height: 110px;
+            filter: drop-shadow(0 8px 16px rgba(37, 99, 235, 0.3));
+        }
+
+        /* Ondas Senoidais */
+        .canvas-waves {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 75px;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .animate-wave-1 {
+            animation: waveLeft 12s linear infinite;
+        }
+
+        .animate-wave-2 {
+            animation: waveRight 8s linear infinite;
+        }
+
+        /* -------------------------------------------------------------
+           ESTILO DOS TEXTOS E COMPONENTES
+        ------------------------------------------------------------- */
+        .badge-error {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            background: rgba(37, 99, 235, 0.12);
+            border: 1px solid rgba(37, 99, 235, 0.25);
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #3b82f6;
+            margin-bottom: 1.25rem;
+        }
+
+        .error-code {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.04em;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.85rem;
+            letter-spacing: -0.01em;
+        }
+
+        .error-desc {
+            font-size: 0.875rem;
+            line-height: 1.6;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        /* Box do Temporizador */
+        .timer-box {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
+            padding: 1rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .timer-text {
+            font-size: 0.825rem;
+            font-weight: 500;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        @media (min-width: 1024px) {
+            .timer-text {
+                justify-content: flex-start;
+            }
+        }
+
+        .timer-badge {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #ffffff;
+            background: #2563eb;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Barra de Progresso do Tempo */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 2px;
+            margin-top: 0.75rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+            transform-origin: left;
+            animation: countdown-bar 8s linear forwards;
+        }
+
+        @keyframes countdown-bar {
+            from { transform: scaleX(1); }
+            to { transform: scaleX(0); }
+        }
+
+        /* Botão de Redirecionamento */
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.9rem 2rem;
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.875rem;
+            border: none;
+            border-radius: 1.15rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-home:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-home:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Estrelas cintilantes de fundo -->
+    <div class="bg-stars">
+        <div class="bg-star" style="top: 15%; left: 10%; animation-delay: 0s;"></div>
+        <div class="bg-star" style="top: 45%; left: 22%; animation-delay: 1.2s;"></div>
+        <div class="bg-star" style="top: 25%; left: 78%; animation-delay: 0.6s;"></div>
+        <div class="bg-star" style="top: 75%; left: 88%; animation-delay: 2s;"></div>
+        <div class="bg-star" style="top: 80%; left: 15%; animation-delay: 1.7s;"></div>
+        <div class="bg-star" style="top: 10%; left: 60%; animation-delay: 2.5s;"></div>
+    </div>
+
+    <div class="wrapper">
+        <div class="error-card">
+            
+            <!-- LADO DO CANVAS: O Barquinho e as Ondas -->
+            <div class="canvas-side">
+                <div class="boat-canvas">
+                    <!-- Lua interior -->
+                    <div class="canvas-moon"></div>
+                    
+                    <!-- O Barquinho do Naviê (Vetor Minimalista Altamente Otimizado) -->
+                    <div class="boat-illustrator">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Vela Esquerda -->
+                            <path d="M50 15L50 58L22 58L50 15Z" fill="currentColor" fill-opacity="0.85"/>
+                            <!-- Vela Direita -->
+                            <path d="M52 10L52 58L78 58L52 10Z" fill="currentColor" fill-opacity="0.6"/>
+                            <!-- Casco Traseiro/Esquerdo -->
+                            <path d="M10 60L50 58L42 78L22 78L10 60Z" fill="currentColor" fill-opacity="0.95"/>
+                            <!-- Casco Dianteiro/Direito -->
+                            <path d="M90 60L50 58L58 78L78 78L90 60Z" fill="currentColor" fill-opacity="0.75"/>
+                        </svg>
+                    </div>
+
+                    <!-- Ondas Senoidais com Gradientes Dinâmicos -->
+                    <div class="canvas-waves">
+                        <svg class="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="wave1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.3"/>
+                                    <stop offset="100%" stop-color="#2563eb" stop-opacity="0.75"/>
+                                </linearGradient>
+                                <linearGradient id="wave2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.6"/>
+                                    <stop offset="100%" stop-color="#1d4ed8" stop-opacity="1"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Onda 1 (Fundo) -->
+                            <path class="animate-wave-1" d="M0,60 C150,100 350,20 500,60 C650,100 850,20 1000,60 C1150,100 1300,20 1400,60 L1400,120 L0,120 Z" fill="url(#wave1Grad)"></path>
+                            <!-- Onda 2 (Frente) -->
+                            <path class="animate-wave-2" d="M0,70 C180,30 300,110 480,70 C660,30 780,110 960,70 C1140,30 1260,110 1440,70 L1440,120 L0,120 Z" fill="url(#wave2Grad)"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LADO DO CONTEÚDO: Erro, Descrições e Temporizador -->
+            <div class="content-side">
+                <span class="badge-error">Erro 404</span>
+                
+                <div class="error-code">404</div>
+                <h1 class="error-title">Essa rota navegou para longe!</h1>
+                <p class="error-desc">
+                    O link que você tentou acessar não foi encontrado, ou a pousada correspondente a este subdomínio ainda não foi cadastrada no sistema.
+                </p>
+
+                <!-- Box de Contagem Regressiva -->
+                <div class="timer-box">
+                    <div class="timer-text">
+                        Navegando de volta ao porto seguro em 
+                        <span class="timer-badge" id="countdownNumber">8</span> 
+                        segundos
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Botão de Redirecionamento Direto -->
+                <a href="{% if request.parent_host_url %}{{ request.parent_host_url }}/{% else %}/{% endif %}" class="btn-home" id="btnGoHome">
+                    Voltar para a Página Inicial
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Script de Temporizador e Redirecionamento -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let timeLeft = 8;
+            const timerBadge = document.getElementById('countdownNumber');
+            
+            // Define o porto seguro final de redirecionamento
+            const redirectUrl = "{% if request.parent_host_url %}{{ request.parent_host_url }}/{% else %}/{% endif %}";
+            
+            const timerInterval = setInterval(function() {
+                timeLeft--;
+                if (timerBadge) {
+                    timerBadge.textContent = timeLeft;
+                }
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    window.location.href = redirectUrl;
+                }
+            }, 1000);
+            
+            // Cancela se clicar no botão de voltar antes
+            const btnHome = document.getElementById('btnGoHome');
+            if (btnHome) {
+                btnHome.addEventListener('click', function() {
+                    clearInterval(timerInterval);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

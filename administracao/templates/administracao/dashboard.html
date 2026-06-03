@@ -1,0 +1,144 @@
+{% extends 'administracao/base_admin.html' %}
+
+{% block title %}Dashboard Geral{% endblock %}
+
+{% block page_title %}Dashboard de Controle{% endblock %}
+{% block page_subtitle %}Visão geral das verticais, parceiros e solicitações de cadastro{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- Cards de Métricas Premium -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Pendentes -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-amber-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Solicitações Pendentes</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_solicitacoes_pendentes }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <i data-lucide="clock" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Empresas Aprovadas -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-emerald-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Parceiros Aprovados</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_empresas_aprovadas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Hoteis Ativos -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-blue-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Pousadas/Hotéis</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_hoteis_ativos }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                <i data-lucide="bed-double" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Usuários Totais -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-purple-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Usuários Cadastrados</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_usuarios }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Tabela de Solicitações -->
+    <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
+        
+        <div class="p-6 border-b border-slate-200/50 dark:border-navie-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Solicitações de Parcerias</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Histórico completo de empresas que solicitaram acesso ao Naviê Vibe</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-400 dark:text-slate-400">Total: {{ total_solicitacoes_geral }} registros</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-black/10 border-b border-slate-200/50 dark:border-navie-border">
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Empresa</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Tipo</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Cidade / UF</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Responsável</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Data</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-navie-border/60">
+                    {% for item in solicitacoes %}
+                    <tr class="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="font-bold text-slate-800 dark:text-white text-sm">{{ item.nome_fantasia }}</div>
+                            <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ item.razao_social }} • CNPJ: {{ item.cnpj }}</div>
+                        </td>
+                        <td class="py-4 px-6 whitespace-nowrap">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold text-white uppercase
+                                {% if item.tipo_empresa == 'hotel_pousada' %}bg-blue-600 dark:bg-blue-600
+                                {% elif item.tipo_empresa == 'cinema' %}bg-purple-600 dark:bg-purple-600
+                                {% elif item.tipo_empresa == 'casa_shows' or item.tipo_empresa == 'produtor_eventos' %}bg-pink-600 dark:bg-pink-600
+                                {% elif item.tipo_empresa == 'restaurante' %}bg-emerald-600 dark:bg-emerald-600
+                                {% elif item.tipo_empresa == 'parque_turismo' %}bg-cyan-600 dark:bg-cyan-600
+                                {% else %}bg-slate-500 dark:bg-slate-500{% endif %}">
+                                {{ item.get_tipo_empresa_display }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                            {{ item.cidade }} / {{ item.estado }}
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ item.responsavel_nome }}</div>
+                            <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ item.responsavel_telefone }}</div>
+                        </td>
+                        <td class="py-4 px-6 text-xs text-slate-400 dark:text-slate-400 whitespace-nowrap">
+                            {{ item.data_solicitacao|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                            <span class="px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {% if item.status == 'pendente' %}bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20
+                                {% elif item.status == 'em_contato' %}bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20
+                                {% elif item.status == 'aprovado' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20
+                                {% elif item.status == 'recusado' %}bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20
+                                {% else %}bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20{% endif %}">
+                                {{ item.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <a href="{% url 'administracao:solicitacao_detail' item.pk %}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50/80 hover:bg-blue-100 text-blue-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-8 px-6 text-center text-sm font-semibold text-slate-400 dark:text-slate-400">
+                            Nenhuma solicitação encontrada no momento.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 /* Pastas a serem escaneadas pelo Tailwind v4 */
-@source "../../templates";
-@source "../../hoteis/templates";
-@source "../../clientes/templates";
-@source "../../parceiros/templates";
-@source "../../cinema/templates";
-@source "../../eventos/templates";
-@source "../../parques/templates";
+@source "../../templates/**/*.html";
+@source "../../hoteis/templates/**/*.html";
+@source "../../clientes/templates/**/*.html";
+@source "../../parceiros/templates/**/*.html";
+@source "../../cinema/templates/**/*.html";
+@source "../../eventos/templates/**/*.html";
+@source "../../parques/templates/**/*.html";
+@source "../../administracao/templates/**/*.html";
 
 /* Variáveis de tema */
 @theme {
@@ -41,24 +42,22 @@
 /* ─────────────────────────────────────────────────────────────
    B2B SYSTEMATIC SPACING RULES (DESIGN SYSTEM TOKENS)
    ───────────────────────────────────────────────────────────── */
-@layer utilities {
-  .b2b-section-gap {
-    margin-top: 2.25rem;
-    margin-bottom: 2.25rem;
-  }
-  .b2b-element-gap {
-    margin-bottom: 1.5rem;
-  }
-  .b2b-label-gap {
-    margin-bottom: 0.625rem;
-  }
-  .b2b-text-media-gap {
-    margin-top: 0.875rem;
-  }
-  .b2b-pill-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.625rem;
-  }
+@utility b2b-section-gap {
+  margin-top: 2.25rem;
+  margin-bottom: 2.25rem;
+}
+@utility b2b-element-gap {
+  margin-bottom: 1.5rem;
+}
+@utility b2b-label-gap {
+  margin-bottom: 0.625rem;
+}
+@utility b2b-text-media-gap {
+  margin-top: 0.875rem;
+}
+@utility b2b-pill-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
 }
 

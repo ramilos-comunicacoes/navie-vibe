@@ -47,6 +47,8 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     
     # Configurações & Branding do Site/Sistema
     cor_primaria = models.CharField(max_length=7, default='#f97316', help_text="Cor primária em formato Hexadecimal (ex: #f97316)")
+    cor_secundaria = models.CharField(max_length=7, default='#2563eb', help_text="Cor secundária em formato Hexadecimal (ex: #2563eb)")
+    imagem_compartilhamento = models.ImageField(upload_to='hoteis/compartilhamento/', null=True, blank=True, help_text="Imagem para miniatura de compartilhamento (WhatsApp, Instagram, etc.)")
     whatsapp = models.CharField(max_length=20, blank=True, null=True, help_text="WhatsApp de contato do hotel")
     hero_tipo = models.CharField(
         max_length=10, 
@@ -438,6 +440,40 @@ class HomeSlide(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class Cidade(models.Model):
+    nome = models.CharField("Nome da Cidade", max_length=100, unique=True)
+    slug = models.SlugField("Slug", max_length=120, unique=True)
+    imagem = models.ImageField("Imagem do Card", upload_to='cidades/')
+    banner = models.ImageField("Banner do Hero", upload_to='cidades/banners/', blank=True, null=True)
+    descricao = models.TextField("Descrição / Slogan", blank=True)
+    
+    class Meta:
+        verbose_name = "Cidade"
+        verbose_name_plural = "Cidades"
+        ordering = ['nome']
+        
+    def __str__(self):
+        return self.nome
+
+
+class Restaurante(models.Model):
+    nome = models.CharField("Nome do Restaurante", max_length=255)
+    especialidade = models.CharField("Especialidade Culinária", max_length=150, help_text="Ex: Pizzaria, Massas, Regional")
+    imagem = models.ImageField("Foto Principal", upload_to='restaurantes/')
+    cidade_nome = models.CharField("Nome da Cidade", max_length=100, db_index=True)
+    endereco = models.CharField("Endereço", max_length=255, blank=True)
+    whatsapp = models.CharField("WhatsApp de Contato", max_length=20, blank=True)
+    ativo = models.BooleanField("Ativo", default=True)
+    
+    class Meta:
+        verbose_name = "Restaurante"
+        verbose_name_plural = "Restaurantes"
+        ordering = ['nome']
+        
+    def __str__(self):
+        return self.nome
 
 
 

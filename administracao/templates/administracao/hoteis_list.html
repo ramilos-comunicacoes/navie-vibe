@@ -1,0 +1,155 @@
+{% extends 'administracao/base_admin.html' %}
+
+{% block title %}Gerenciamento de Hotelaria{% endblock %}
+
+{% block page_title %}Hotelaria & Pousadas{% endblock %}
+{% block page_subtitle %}Controle de estabelecimentos cadastrados, branding e contas de parceiros{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'administracao:hotel_create' %}" class="btn-header btn-header-primary">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    Adicionar Hotel
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- Métricas da Hotelaria -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <!-- Total Hoteis -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-blue-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Total de Hotéis</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_hoteis }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                <i data-lucide="bed-double" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Ativos -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-emerald-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Estabelecimentos Ativos</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ hoteis_ativos }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Em Destaque -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-amber-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Hotéis em Destaque</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ hoteis_destaque }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <i data-lucide="star" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+        <!-- Total de Quartos -->
+        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-purple-500">
+            <div class="space-y-1">
+                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Categorias de Quarto</p>
+                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_quartos }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                <i data-lucide="boxes" class="w-6 h-6"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Lista de Estabelecimentos -->
+    <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
+        
+        <div class="p-6 border-b border-slate-200/50 dark:border-navie-border">
+            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Hotéis Cadastrados</h3>
+            <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Gerencie chaves, marcas e credenciais administrativas de cada hospedagem</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-black/10 border-b border-slate-200/50 dark:border-navie-border">
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Logo / Nome</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Empresa CNPJ</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Cidade / UF</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Contato / WhatsApp</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Destaque</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-navie-border/60">
+                    {% for hotel in hoteis %}
+                    <tr class="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="flex items-center gap-3">
+                                {% if hotel.logo %}
+                                    <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-slate-200/50 dark:border-navie-border">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-white/10 text-blue-600 dark:text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                                        {{ hotel.nome|slice:":2"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-white text-sm">{{ hotel.nome }}</div>
+                                    <div class="text-[10px] font-mono text-slate-400 dark:text-slate-400 mt-0.5">/hoteis/{{ hotel.slug }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300">
+                            {% if hotel.empresa %}
+                                <div class="font-semibold">{{ hotel.empresa.razao_social }}</div>
+                                <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ hotel.empresa.cnpj }}</div>
+                            {% else %}
+                                <span class="text-rose-500 font-bold text-xs">Sem Empresa Vinculada</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                            {{ hotel.local.cidade }} / {{ hotel.local.estado }}
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ hotel.whatsapp|default:"-" }}</div>
+                            <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ hotel.empresa.email_contato|default:"-" }}</div>
+                        </td>
+                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                {% if hotel.status == 'ativo' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20
+                                {% else %}bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20{% endif %}">
+                                {{ hotel.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            {% if hotel.destaque %}
+                                <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500 mx-auto"></i>
+                            {% else %}
+                                <i data-lucide="star" class="w-5 h-5 text-slate-300 dark:text-slate-600 mx-auto"></i>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-6 text-right whitespace-nowrap">
+                            <a href="{% url 'administracao:hotel_edit' hotel.pk %}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50/80 hover:bg-blue-100 text-blue-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors" title="Editar Hotel">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="py-8 px-6 text-center text-sm font-semibold text-slate-400 dark:text-slate-400">
+                            Nenhum hotel ou chalé cadastrado no sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

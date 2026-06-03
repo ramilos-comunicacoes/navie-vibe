@@ -1,5 +1,5 @@
 <!-- Airbnb Style Card -->
-<a href="{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}" class="group flex flex-col w-full bg-transparent transition-all duration-300 cursor-pointer"
+<a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}" class="group flex flex-col w-full bg-transparent transition-all duration-300 cursor-pointer"
      data-ai-titulo="{{ quarto.seo_titulo|default:quarto.nome }}"
      data-ai-descricao="{{ quarto.seo_descricao|default:quarto.descricao }}">
     

@@ -508,260 +508,339 @@
             <form id="form-salvar-config" action="{% url 'hoteis:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 {% csrf_token %}
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <!-- Coluna da Esquerda: Configurações Gerais -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="sliders" class="w-5 h-5"></i></span>
-                                <div>
-                                    <h4 class="text-base font-bold text-slate-800 dark:text-white">Branding & Contatos</h4>
-                                    <p class="text-xs text-slate-400">Identidade visual e contatos da sua hospedagem</p>
-                                </div>
+                <div class="space-y-6 w-full">
+                    <!-- Branding & Contatos -->
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="sliders" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Branding & Contatos</h4>
+                                <p class="text-xs text-slate-400">Identidade visual e contatos da sua hospedagem</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 b2b-element-gap">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Nome do Estabelecimento</label>
+                                <input type="text" name="nome" value="{{ hotel.nome }}" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">WhatsApp de Contato</label>
+                                <input type="text" name="whatsapp" value="{{ hotel.whatsapp|default:'' }}" placeholder="Ex: 5588999999999" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none">
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 b2b-element-gap">
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Nome do Estabelecimento</label>
-                                    <input type="text" name="nome" value="{{ hotel.nome }}" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none" required>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">WhatsApp de Contato</label>
-                                    <input type="text" name="whatsapp" value="{{ hotel.whatsapp|default:'' }}" placeholder="Ex: 5588999999999" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none">
-                                </div>
-
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Link da Vitrine (Slug URL)</label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-xs font-mono text-slate-400">/</span>
-                                        <input type="text" name="slug" value="{{ hotel.slug|default:'' }}" placeholder="pousadaramilostiangua" class="w-full h-12 pl-7 pr-4 rounded-2xl input-glass text-sm font-mono focus:outline-none" required
-                                               oninput="this.value = this.value.toLowerCase().replace(/[^a-z0-9-_]/g, '')">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Subdomínio da Pousada (Slug URL)</label>
+                                <div class="relative flex items-center">
+                                    <input type="text" name="slug" value="{{ hotel.slug }}" readonly class="w-full h-12 pl-4 pr-10 rounded-2xl input-glass text-sm font-mono focus:outline-none bg-slate-100/50 dark:bg-white/5 text-slate-500 cursor-not-allowed border border-dashed border-slate-300 dark:border-navie-border/60" required>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center text-slate-400">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="b2b-element-gap">
-                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Descrição Institucional</label>
-                                <textarea name="descricao" rows="3" class="w-full p-4 rounded-2xl input-glass text-sm focus:outline-none" placeholder="Conte mais sobre o diferencial da sua pousada..." required>{{ hotel.descricao }}</textarea>
-                            </div>
-
-                            <!-- Paleta de Cores e Personalização -->
-                            <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border space-y-4 b2b-element-gap">
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Padrão do Sistema & Site</label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="color" id="cor_primaria_picker" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
-                                               class="w-12 h-12 rounded-xl border-0 cursor-pointer overflow-hidden bg-transparent"
-                                               oninput="document.getElementById('cor_primaria_hex').value = this.value">
-                                        <input type="text" name="cor_primaria" id="cor_primaria_hex" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
-                                               placeholder="#f97316" maxlength="7"
-                                               class="w-32 h-12 px-4 rounded-2xl input-glass text-sm font-mono focus:outline-none uppercase"
-                                               oninput="if(this.value.startsWith('#') && this.value.length === 7) document.getElementById('cor_primaria_picker').value = this.value">
-                                        <p class="text-xs text-slate-400 leading-tight">Escolha a cor que pintará os botões, links e menus do seu hotel no marketplace e painel.</p>
-                                    </div>
+                                <div class="flex justify-between items-center px-1 mt-1.5">
+                                    <span class="text-[9px] text-slate-400 dark:text-slate-500">
+                                        Subdomínio ativo: <span class="font-mono text-[10px] text-slate-500 dark:text-slate-300">{{ hotel.slug|default:'pousada' }}.localhost:8060</span>
+                                    </span>
+                                    <span class="text-[9px] font-bold text-slate-400">Alterações via suporte</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Novo Bloco: Identidade & Mídias da Marca (Logomarca & Fundo Glassmorphism) -->
-                        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="palette" class="w-5 h-5"></i></span>
-                                <div>
-                                    <h4 class="text-base font-bold text-slate-800 dark:text-white">Identidade da Marca & Modo Glass</h4>
-                                    <p class="text-xs text-slate-400">Logomarca do cabeçalho e papel de parede do tema Glass</p>
+                        <div class="b2b-element-gap">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Descrição Institucional</label>
+                            <textarea name="descricao" rows="3" class="w-full p-4 rounded-2xl input-glass text-sm focus:outline-none" placeholder="Conte mais sobre o diferencial da sua pousada..." required>{{ hotel.descricao }}</textarea>
+                        </div>
+
+                        <!-- Paleta de Cores e Personalização -->
+                        <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Primária do Sistema & Site</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" id="cor_primaria_picker" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
+                                           class="w-12 h-12 rounded-xl border-0 cursor-pointer overflow-hidden bg-transparent"
+                                           oninput="document.getElementById('cor_primaria_hex').value = this.value">
+                                    <input type="text" name="cor_primaria" id="cor_primaria_hex" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
+                                           placeholder="#f97316" maxlength="7"
+                                           class="w-32 h-12 px-4 rounded-2xl input-glass text-sm font-mono focus:outline-none uppercase"
+                                           oninput="if(this.value.startsWith('#') && this.value.length === 7) document.getElementById('cor_primaria_picker').value = this.value">
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará os botões, links e menus do seu hotel no marketplace e painel.</p>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Logomarca Oficial -->
-                                <div class="space-y-3">
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Logomarca do Cabeçalho</label>
-                                    <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40">
-                                        <input type="file" name="logo" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                               onchange="
-                                                   const file = this.files[0];
-                                                   if (file) {
-                                                       const reader = new FileReader();
-                                                       reader.onload = (e) => {
-                                                           document.getElementById('logo-preview-img').src = e.target.result;
-                                                           document.getElementById('logo-preview-box').classList.remove('hidden');
-                                                       }
-                                                       reader.readAsDataURL(file);
-                                                   }
-                                               ">
-                                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="shield" class="w-6 h-6 text-slate-400 dark:text-navie-textsec mb-1"></i></span>
-                                        <span class="text-[10px] text-slate-500 font-bold dark:text-navie-textsec">Subir Logomarca</span>
-                                    </div>
-                                    
-                                    <!-- Preview da Logomarca -->
-                                    <div id="logo-preview-box" class="{% if not hotel.logo %}hidden{% endif %} relative rounded-2xl overflow-hidden border border-slate-200 dark:border-navie-border h-24 bg-slate-100 dark:bg-white/5 flex items-center justify-center p-4">
-                                        <img id="logo-preview-img" src="{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}" alt="Logo" class="max-h-full max-w-full object-contain">
-                                        <div class="absolute top-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-wider">Miniatura</div>
-                                    </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Secundária (Detalhes)</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="color" id="cor_secundaria_picker" value="{{ hotel.cor_secundaria|default:'#2563eb' }}" 
+                                           class="w-12 h-12 rounded-xl border-0 cursor-pointer overflow-hidden bg-transparent"
+                                           oninput="document.getElementById('cor_secundaria_hex').value = this.value">
+                                    <input type="text" name="cor_secundaria" id="cor_secundaria_hex" value="{{ hotel.cor_secundaria|default:'#2563eb' }}" 
+                                           placeholder="#2563eb" maxlength="7"
+                                           class="w-32 h-12 px-4 rounded-2xl input-glass text-sm font-mono focus:outline-none uppercase"
+                                           oninput="if(this.value.startsWith('#') && this.value.length === 7) document.getElementById('cor_secundaria_picker').value = this.value">
                                 </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará as tags de quartos, amenidades e pequenos detalhes nas páginas.</p>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!-- Imagem de Fundo (Modo Glass) -->
-                                <div class="space-y-3">
-                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Papel de Parede (Glass)</label>
-                                    <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40">
-                                        <input type="file" name="foto_fundo" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                                               onchange="
-                                                   const file = this.files[0];
-                                                   if (file) {
-                                                       const reader = new FileReader();
-                                                       reader.onload = (e) => {
-                                                           document.getElementById('fundo-preview-img').src = e.target.result;
-                                                           document.getElementById('fundo-preview-box').classList.remove('hidden');
-                                                       }
-                                                       reader.readAsDataURL(file);
-                                                   }
-                                               ">
-                                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="image" class="w-6 h-6 text-slate-400 dark:text-navie-textsec mb-1"></i></span>
-                                        <span class="text-[10px] text-slate-500 font-bold dark:text-navie-textsec">Subir Imagem de Fundo</span>
-                                    </div>
-                                    
-                                    <!-- Preview da Foto de Fundo -->
-                                    <div id="fundo-preview-box" class="{% if not hotel.foto_fundo %}hidden{% endif %} relative rounded-2xl overflow-hidden border border-slate-200 dark:border-navie-border h-24">
-                                        <img id="fundo-preview-img" src="{% if hotel.foto_fundo %}{{ hotel.foto_fundo.url }}{% endif %}" alt="Fundo Glass" class="w-full h-full object-cover">
-                                        <div class="absolute top-2 right-2 bg-black/60 px-2 py-0.5 rounded text-[8px] font-black text-white uppercase tracking-wider">Miniatura</div>
-                                    </div>
-                                </div>
+                    <!-- Novo Bloco: Identidade & Mídias da Marca (Logomarca, Fundo & Miniatura de Compartilhamento) -->
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="palette" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Identidade da Marca & Modo Glass</h4>
+                                <p class="text-xs text-slate-400">Logomarca do cabeçalho, papel de parede Glass e miniatura de compartilhamento redes sociais</p>
                             </div>
                         </div>
 
-                        <!-- Mídia de Capa Premium (Hero Background) -->
-                        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5"
-                             x-data="{ tipoMidia: '{{ hotel.hero_tipo|default:'imagem' }}' }">
-                            <div class="flex items-center gap-3 mb-2">
-                                <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="image" class="w-5 h-5"></i></span>
-                                <div>
-                                    <h4 class="text-base font-bold text-slate-800 dark:text-white">Mídia de Entrada (Hero Background)</h4>
-                                    <p class="text-xs text-slate-400">Vídeo em loop ou foto estática de entrada no portal do hóspede</p>
-                                </div>
-                            </div>
-
-                            <!-- Chaveador Dinâmico Alpine -->
-                            <div class="flex gap-2">
-                                <label class="cursor-pointer flex-1">
-                                    <input type="radio" name="hero_tipo" value="imagem" class="peer hidden" x-model="tipoMidia">
-                                    <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
-                                        FOTO ESTÁTICA
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Logomarca Oficial -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Logomarca do Cabeçalho</label>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-file-input').click()">
+                                    
+                                    <input type="file" id="logo-file-input" name="logo" accept="image/*" class="hidden"
+                                           onchange="previewImageUnified(this, 'logo')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="logo-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.logo %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="shield" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Logomarca</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
                                     </div>
-                                </label>
-                                
-                                <label class="cursor-pointer flex-1">
-                                    <input type="radio" name="hero_tipo" value="video" class="peer hidden" x-model="tipoMidia">
-                                    <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
-                                        VÍDEO EM LOOP (8MB MÁX)
-                                    </div>
-                                </label>
-                            </div>
 
-                            <!-- Campo Upload Imagem -->
-                            <div x-show="tipoMidia === 'imagem'" class="space-y-3">
-                                <div class="relative w-full h-48 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40">
-                                    <input type="file" name="banner" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
-                                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i></span>
-                                    <span class="text-xs text-slate-500 font-bold dark:text-navie-textsec">Clique ou arraste para subir a Imagem Banner</span>
-                                    <span class="text-[10px] text-slate-400 mt-1">Recomendado: PNG ou JPG de alta resolução</span>
-                                </div>
-                                {% if hotel.banner %}
-                                <div class="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-navie-border h-32">
-                                    <img src="{{ hotel.banner.url }}" alt="Banner Atual" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                        <span class="text-[10px] font-black text-white bg-black/50 px-3 py-1 rounded-full uppercase tracking-wider">Banner Atual</span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <!-- Campo Upload Vídeo com double mockup -->
-                            <div x-show="tipoMidia === 'video'" class="space-y-4 pt-2" style="display:none;">
-                                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
-                                    <!-- Left Column: Video uploader -->
-                                    <div class="xl:col-span-5 flex flex-col gap-4">
-                                        <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Vídeo de Fundo do Banner (Hero)</label>
-                                        
-                                        <label class="relative rounded-3xl border-2 border-dashed border-slate-300 dark:border-navie-border hover:border-brand dark:hover:border-brand p-6 flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-[1.01] active:scale-99 bg-slate-50/50 dark:bg-black/10 group h-36">
-                                            <span class="flex items-center text-slate-400 dark:text-slate-500 group-hover:text-brand transition-colors"><i data-lucide="video" class="w-8 h-8"></i></span>
-                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300 mt-2">Escolher Vídeo de Entrada</span>
-                                            <span class="text-[10px] text-slate-400 mt-1" id="hero-video-filename-display">
-                                                {% if hotel.hero_video %}
-                                                    {{ hotel.hero_video.name|slice:"14:" }}
-                                                {% else %}
-                                                    MP4, MOV ou WebM de até 30MB
-                                                {% endif %}
-                                            </span>
-                                            <input type="file" name="hero_video" id="upload-hero-video" accept="video/*" class="hidden" onchange="previewLocalHeroVideo(this)">
-                                        </label>
-                                        
-                                        <!-- Controle de remoção de video -->
-                                        <div class="flex items-center justify-between" id="hero-video-removal-control" style="display: {% if hotel.hero_video %}flex{% else %}none{% endif %};">
-                                            <span class="text-[10px] text-slate-400 font-bold">Vídeo ativo carregado</span>
-                                            <button type="button" onclick="clearHeroVideo()" 
-                                                    class="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3.5 py-2 rounded-full text-[10px] font-black transition-all flex items-center gap-1.5 border border-red-500/20 hover:scale-102">
-                                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></span>
-                                                <span>Remover Vídeo</span>
+                                    <!-- Active State -->
+                                    <div id="logo-active-state" class="absolute inset-0 w-full h-full {% if not hotel.logo %}hidden{% endif %}">
+                                        <img id="logo-preview-img" src="{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Logo preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMedia('logo')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
                                             </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
                                         </div>
-                                        <input type="hidden" name="remover_hero_video" id="remover-hero-video-input" value="false">
-                                        <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Faça o upload do tour de vídeo principal do seu estabelecimento. Ele rodará de forma contínua no banner de entrada da sua pousada para os clientes.</p>
+                                    </div>
+                                    <input type="hidden" name="remover_logo" id="remover-logo-input" value="false">
+                                </div>
+                            </div>
+
+                            <!-- Imagem de Fundo (Modo Glass) -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Papel de Parede (Glass)</label>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('foto_fundo-file-input').click()">
+                                    
+                                    <input type="file" id="foto_fundo-file-input" name="foto_fundo" accept="image/*" class="hidden"
+                                           onchange="previewImageUnified(this, 'foto_fundo')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="foto_fundo-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.foto_fundo %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="image" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Imagem de Fundo</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Imagem para o fundo Glass</span>
                                     </div>
 
-                                    <!-- Right Column: Double devices -->
-                                    <div class="xl:col-span-7 flex flex-row items-end justify-center gap-4 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5">
-                                        
-                                        <!-- Desktop Safari Mockup -->
-                                        <div class="flex flex-col gap-2 shrink-0">
-                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Desktop)</span>
-                                            <div class="w-48 sm:w-64 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
-                                                <!-- Browser Header -->
-                                                <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                                                    <div class="h-2.5 w-32 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[5px] text-slate-400 truncate px-1" id="mockup-url-desktop">
-                                                        navievibe.com/{{ hotel.slug|default:'pousadaramilostiangua' }}
-                                                    </div>
-                                                </div>
-                                                <!-- Scaling Iframe Area -->
-                                                <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
-                                                    <iframe id="hero-preview-iframe-desktop" 
-                                                            src="{% if hotel.slug %}/{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
-                                                            class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
-                                                            style="transform: scale(0.20);"></iframe>
-                                                </div>
-                                            </div>
+                                    <!-- Active State -->
+                                    <div id="foto_fundo-active-state" class="absolute inset-0 w-full h-full {% if not hotel.foto_fundo %}hidden{% endif %}">
+                                        <img id="foto_fundo-preview-img" src="{% if hotel.foto_fundo %}{{ hotel.foto_fundo.url }}{% endif %}" class="w-full h-full object-cover" alt="Fundo Glass preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMedia('foto_fundo')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
                                         </div>
-
-                                        <!-- Smartphone Mockup -->
-                                        <div class="flex flex-col gap-2 shrink-0">
-                                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Mobile)</span>
-                                            <div class="w-[85px] h-[150px] rounded-[20px] border-[3px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
-                                                <!-- notch -->
-                                                <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
-                                                <!-- Scaling Iframe Area -->
-                                                <div class="w-full h-full bg-slate-950 relative overflow-hidden">
-                                                    <iframe id="hero-preview-iframe-mobile" 
-                                                            src="{% if hotel.slug %}/{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
-                                                            class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
-                                                            style="transform: scale(0.226);"></iframe>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
                                     </div>
+                                    <input type="hidden" name="remover_foto_fundo" id="remover-foto_fundo-input" value="false">
+                                </div>
+                            </div>
+
+                            <!-- Imagem para Miniatura de Mensagem (OG/WhatsApp) -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Miniatura de Compartilhamento (Redes)</label>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('imagem_compartilhamento-file-input').click()">
+                                    
+                                    <input type="file" id="imagem_compartilhamento-file-input" name="imagem_compartilhamento" accept="image/*" class="hidden"
+                                           onchange="previewImageUnified(this, 'imagem_compartilhamento')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="imagem_compartilhamento-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.imagem_compartilhamento %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="share-2" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Imagem de Compartilhamento</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Usada para miniatura no WhatsApp/Redes</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="imagem_compartilhamento-active-state" class="absolute inset-0 w-full h-full {% if not hotel.imagem_compartilhamento %}hidden{% endif %}">
+                                        <img id="imagem_compartilhamento-preview-img" src="{% if hotel.imagem_compartilhamento %}{{ hotel.imagem_compartilhamento.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="OG preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMedia('imagem_compartilhamento')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_imagem_compartilhamento" id="remover-imagem_compartilhamento-input" value="false">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Coluna da Direita: Localização -->
-                    <div class="space-y-6">
-                        <!-- Mapa de Geolocalização -->
-                        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4">
+                    <!-- Mídia de Capa Premium (Hero Background) -->
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5"
+                         x-data="{ tipoMidia: '{{ hotel.hero_tipo|default:'imagem' }}' }"
+                         @change="setTimeout(updateAllIframes, 50)">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="image" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Mídia de Entrada (Hero Background)</h4>
+                                <p class="text-xs text-slate-400">Vídeo em loop ou foto estática de entrada no portal do hóspede</p>
+                            </div>
+                        </div>
+
+                        <!-- Chaveador Dinâmico Alpine -->
+                        <div class="flex gap-2">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="hero_tipo" value="imagem" class="peer hidden" x-model="tipoMidia">
+                                <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                    FOTO ESTÁTICA
+                                </div>
+                            </label>
+                            
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="hero_tipo" value="video" class="peer hidden" x-model="tipoMidia">
+                                <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                    VÍDEO EM LOOP (8MB MÁX)
+                                </div>
+                            </label>
+                        </div>
+                        <div x-show="tipoMidia === 'imagem'" class="space-y-3">
+                            <div class="relative w-full h-48 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                 onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
+                                
+                                <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
+                                       onchange="previewImageUnified(this, 'banner')">
+                                
+                                <!-- Empty State -->
+                                <div id="banner-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.banner %}hidden{% else %}flex{% endif %}">
+                                    <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Clique ou selecione para subir a Imagem Banner</span>
+                                    <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                </div>
+
+                                <!-- Active State -->
+                                <div id="banner-active-state" class="absolute inset-0 w-full h-full {% if not hotel.banner %}hidden{% endif %}">
+                                    <img id="banner-preview-img" src="{% if hotel.banner %}{{ hotel.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                        <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                onclick="event.stopPropagation(); clearUnifiedMedia('banner')">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            <span>Apagar</span>
+                                        </button>
+                                        <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
+                            </div>
+                        </div>
+
+                        <!-- Campo Upload Vídeo com double mockup -->
+                        <div x-show="tipoMidia === 'video'" class="space-y-4 pt-2" style="display:none;">
+                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
+                                <!-- Left Column: Video uploader -->
+                                <div class="xl:col-span-5 flex flex-col gap-4">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Vídeo de Fundo do Banner (Hero)</label>
+                                    
+                                    <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                         onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('hero_video-file-input').click()">
+                                        
+                                        <input type="file" id="hero_video-file-input" name="hero_video" accept="video/*" class="hidden" onchange="previewLocalHeroVideoUnified(this)">
+                                        
+                                        <!-- Empty State -->
+                                        <div id="hero_video-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.hero_video %}hidden{% else %}flex{% endif %}">
+                                            <i data-lucide="video" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Vídeo de Entrada</span>
+                                            <span class="text-[10px] text-slate-400 mt-1">MP4, MOV ou WebM de até 30MB</span>
+                                        </div>
+
+                                        <!-- Active State -->
+                                        <div id="hero_video-active-state" class="absolute inset-0 w-full h-full {% if not hotel.hero_video %}hidden{% endif %}">
+                                            <video id="hero_video-preview-player" autoplay muted loop playsinline class="w-full h-full object-cover">
+                                                {% if hotel.hero_video %}
+                                                    <source src="{{ hotel.hero_video.url }}" type="video/mp4">
+                                                {% endif %}
+                                            </video>
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                        onclick="event.stopPropagation(); clearHeroVideoUnified()">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Apagar</span>
+                                                </button>
+                                                <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_hero_video" id="remover-hero_video-input" value="false">
+                                    <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Faça o upload do tour de vídeo principal do seu estabelecimento. Ele rodará de forma contínua no banner de entrada da sua pousada para os clientes.</p>
+                                </div>
+
+                                <!-- Right Column: Double devices -->
+                                <div class="xl:col-span-7 flex flex-row items-end justify-center gap-4 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5">
+                                    
+                                    <!-- Desktop Safari Mockup -->
+                                    <div class="flex flex-col gap-2 shrink-0">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Desktop)</span>
+                                        <div class="w-48 sm:w-64 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
+                                            <!-- Browser Header -->
+                                            <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                                <div class="h-2.5 w-32 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[5px] text-slate-400 truncate px-1" id="mockup-url-desktop">
+                                                    {{ hotel.slug|default:'pousadaramilostiangua' }}.navievibe.com
+                                                </div>
+                                            </div>
+                                            <!-- Scaling Iframe Area -->
+                                            <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
+                                                <iframe id="hero-preview-iframe-desktop" 
+                                                        src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
+                                                        class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
+                                                        style="transform: scale(0.20);"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Smartphone Mockup -->
+                                    <div class="flex flex-col gap-2 shrink-0">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Mobile)</span>
+                                        <div class="w-[85px] h-[150px] rounded-[20px] border-[3px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
+                                            <!-- notch -->
+                                            <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
+                                            <!-- Scaling Iframe Area -->
+                                            <div class="w-full h-full bg-slate-950 relative overflow-hidden">
+                                                <iframe id="hero-preview-iframe-mobile" 
+                                                        src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
+                                                        class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
+                                                        style="transform: scale(0.226);"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mapa de Geolocalização (Largura Total na parte inferior) -->
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4 w-full">
+                        <div class="flex items-center justify-between flex-wrap gap-3 mb-2">
                             <div class="flex items-center gap-3">
                                 <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="map-pin" class="w-5 h-5"></i></span>
                                 <div>
@@ -769,28 +848,42 @@
                                     <p class="text-xs text-slate-400">Pinagem exata no mapa</p>
                                 </div>
                             </div>
+                            
+                            <!-- Alternador Mapa / Satélite Customizado -->
+                            <div class="flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200 dark:border-navie-border/60">
+                                <button type="button" 
+                                        id="btn-toggle-satellite"
+                                        class="px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs">
+                                    Satélite
+                                </button>
+                                <button type="button" 
+                                        id="btn-toggle-roadmap"
+                                        class="px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent">
+                                    Mapa Padrão
+                                </button>
+                            </div>
+                        </div>
 
-                            <!-- Inputs Ocultos de Latitude e Longitude -->
-                            <input type="hidden" name="latitude" id="hotel_lat" value="{% if hotel.latitude %}{{ hotel.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
-                            <input type="hidden" name="longitude" id="hotel_lon" value="{% if hotel.longitude %}{{ hotel.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
+                        <!-- Inputs Ocultos de Latitude e Longitude -->
+                        <input type="hidden" name="latitude" id="hotel_lat" value="{% if hotel.latitude %}{{ hotel.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
+                        <input type="hidden" name="longitude" id="hotel_lon" value="{% if hotel.longitude %}{{ hotel.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
 
-                            <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border flex flex-col gap-2">
-                                <!-- Botões de Ações do Mapa -->
-                                <div class="flex justify-between gap-2">
-                                    <button type="button" onclick="geolocalizarHotel()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-brand-600/10">
-                                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="compass" class="w-3.5 h-3.5"></i></span> GPS ATUAL
-                                    </button>
-                                    <button type="button" onclick="centralizarCidade()" class="flex-1 bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5">
-                                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="search" class="w-3.5 h-3.5"></i></span> CENTRO CIDADE
-                                    </button>
-                                </div>
-                                
-                                <!-- Container Físico do Mapa Leaflet -->
-                                <div id="mapaSelector" class="w-full h-48 rounded-xl overflow-hidden border border-slate-200 dark:border-navie-border z-20"></div>
+                        <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border flex flex-col gap-2">
+                            <!-- Botões de Ações do Mapa -->
+                            <div class="flex justify-between gap-2">
+                                <button type="button" id="btn-auto-locate" onclick="geolocalizarHotel()" class="flex-1 bg-brand hover:bg-brand-600 text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 shadow-md shadow-brand/10 border-none cursor-pointer">
+                                    <i data-lucide="locate" class="w-3.5 h-3.5"></i> <span>Achar Minha Localização</span>
+                                </button>
+                                <button type="button" onclick="centralizarCidade()" class="flex-1 bg-slate-200/80 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
+                                    <i data-lucide="search" class="w-3.5 h-3.5"></i> <span>CENTRO CIDADE</span>
+                                </button>
                             </div>
                             
-                            <p class="text-[10px] text-slate-400 leading-tight">Arraste o pin vermelho do mapa ou clique em "GPS Atual" se estiver logado no hotel para ajustar as coordenadas físicas exatas.</p>
+                            <!-- Container Físico do Mapa Leaflet (W-FULL / H-72) -->
+                            <div id="mapaSelector" class="w-full h-72 rounded-xl overflow-hidden border border-slate-200 dark:border-navie-border z-20"></div>
                         </div>
+                        
+                        <p class="text-[10px] text-slate-400 leading-tight">Arraste o pin vermelho do mapa ou clique para marcar a localização exata do hotel.</p>
                     </div>
                 </div>
             </form>
@@ -941,6 +1034,7 @@
             let leafletMap;
             let leafletMarker;
             let camadaSatelite;
+            let camadaRoadmap;
             let redPinIcon;
 
             function inicializarMapa() {
@@ -960,14 +1054,26 @@
                 }
 
                 if (!leafletMap) {
+                    let tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+                    if (document.documentElement.classList.contains('dark')) {
+                        tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                    }
+
+                    camadaRoadmap = L.tileLayer(tileUrl, {
+                        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                        subdomains: 'abcd',
+                        maxZoom: 20
+                    });
+
                     camadaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                        attribution: 'Imagens Esri &mdash; OpenStreetMap'
+                        maxZoom: 19,
+                        attribution: 'Imagens &copy; Esri'
                     });
                     
                     leafletMap = L.map('mapaSelector', {
                         center: [lat, lon],
                         zoom: 16,
-                        layers: [camadaSatelite]
+                        layers: [camadaSatelite] // Satélite padrão
                     });
 
                     leafletMarker = L.marker([lat, lon], {
@@ -988,6 +1094,30 @@
                         inputLat.value = e.latlng.lat.toFixed(6);
                         inputLon.value = e.latlng.lng.toFixed(6);
                     });
+
+                    // Configuração dos botões customizados de alternância de mapa/satélite
+                    const btnToggleSatellite = document.getElementById('btn-toggle-satellite');
+                    const btnToggleRoadmap = document.getElementById('btn-toggle-roadmap');
+
+                    if (btnToggleSatellite && btnToggleRoadmap) {
+                        btnToggleSatellite.addEventListener('click', function() {
+                            leafletMap.removeLayer(camadaRoadmap);
+                            leafletMap.addLayer(camadaSatelite);
+                            
+                            // Atualiza estilos dos botões
+                            btnToggleSatellite.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs";
+                            btnToggleRoadmap.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                        });
+
+                        btnToggleRoadmap.addEventListener('click', function() {
+                            leafletMap.removeLayer(camadaSatelite);
+                            leafletMap.addLayer(camadaRoadmap);
+                            
+                            // Atualiza estilos dos botões
+                            btnToggleRoadmap.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-xs";
+                            btnToggleSatellite.className = "px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                        });
+                    }
                 } else {
                     leafletMap.setView([lat, lon], 16);
                     leafletMarker.setLatLng([lat, lon]);
@@ -1001,8 +1131,17 @@
                     }
                 }, 1000);
                 
-                // Inicialização imediata
-                setTimeout(inicializarMapa, 800);
+                // Inicialização imediata com retry
+                if (typeof L !== 'undefined') {
+                    inicializarMapa();
+                } else {
+                    const checkInterval = setInterval(function() {
+                        if (typeof L !== 'undefined') {
+                            clearInterval(checkInterval);
+                            inicializarMapa();
+                        }
+                    }, 100);
+                }
             }
 
             if (document.readyState === 'complete') {
@@ -1013,6 +1152,12 @@
 
             function geolocalizarHotel() {
                 if (navigator.geolocation) {
+                    const btnAutoLocate = document.getElementById('btn-auto-locate');
+                    const btnText = btnAutoLocate ? btnAutoLocate.querySelector('span') : null;
+                    const originalText = btnText ? btnText.textContent : "Achar Minha Localização";
+                    if (btnText) btnText.textContent = "Obtendo...";
+                    if (btnAutoLocate) btnAutoLocate.disabled = true;
+
                     navigator.geolocation.getCurrentPosition((position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
@@ -1020,8 +1165,13 @@
                         document.getElementById('hotel_lon').value = lon.toFixed(6);
                         leafletMap.setView([lat, lon], 16);
                         leafletMarker.setLatLng([lat, lon]);
+
+                        if (btnText) btnText.textContent = originalText;
+                        if (btnAutoLocate) btnAutoLocate.disabled = false;
                     }, (error) => {
-                        alert("Não foi possível acessar a localização do seu dispositivo.");
+                        alert("Não foi possível acessar a localização do seu dispositivo. Verifique as permissões.");
+                        if (btnText) btnText.textContent = originalText;
+                        if (btnAutoLocate) btnAutoLocate.disabled = false;
                     }, { enableHighAccuracy: true });
                 } else {
                     alert("Seu navegador não suporta geolocalização.");
@@ -1057,6 +1207,8 @@
             // WYSIWYG REAL-TIME IFRAME HYDRATOR & BANNER VIDEO TOUR ENGINE
             // ─────────────────────────────────────────────────────────────
             var activeHeroVideoLocalUrl = null;
+            var activeBannerLocalUrl = null;
+            var activeLogoLocalUrl = null;
 
             function hydrateHeroIframeVideo(iframeId) {
                 const iframe = document.getElementById(iframeId);
@@ -1064,34 +1216,55 @@
                     try {
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         if (doc) {
-                            if (activeHeroVideoLocalUrl) {
-                                const heroVideo = doc.querySelector('.hero-banner-b2c video');
-                                if (heroVideo) {
-                                    heroVideo.src = activeHeroVideoLocalUrl;
-                                    heroVideo.load();
-                                    heroVideo.play().catch(e => console.log('Autoplay blocked in hero preview'));
-                                } else {
-                                    const bannerWrapper = doc.querySelector('.hero-banner-b2c');
-                                    if (bannerWrapper) {
-                                        const bannerImg = bannerWrapper.querySelector('img');
-                                        if (bannerImg) bannerImg.style.display = 'none';
-                                        
-                                        let videoEl = bannerWrapper.querySelector('video');
-                                        if (!videoEl) {
-                                            videoEl = doc.createElement('video');
-                                            videoEl.className = "w-full h-full object-cover opacity-80 absolute inset-0 z-0";
-                                            videoEl.autoplay = true;
-                                            videoEl.loop = true;
-                                            videoEl.muted = true;
-                                            videoEl.playsInline = true;
-                                            bannerWrapper.appendChild(videoEl);
-                                        }
+                            // Update Hero media type (video vs image)
+                            const heroTipoVal = document.querySelector('input[name="hero_tipo"]:checked')?.value || 'imagem';
+                            const videoEl = doc.getElementById('hero-media-video');
+                            const imgEl = doc.getElementById('hero-media-img');
+                            
+                            if (videoEl && imgEl) {
+                                if (heroTipoVal === 'video') {
+                                    videoEl.classList.remove('hidden');
+                                    imgEl.classList.add('hidden');
+                                    
+                                    if (activeHeroVideoLocalUrl) {
                                         videoEl.src = activeHeroVideoLocalUrl;
-                                        videoEl.load();
-                                        videoEl.play().catch(e => console.log('Autoplay blocked in hero preview'));
+                                    } else {
+                                        videoEl.src = "{% if hotel.hero_video %}{{ hotel.hero_video.url }}{% endif %}";
+                                    }
+                                    videoEl.load();
+                                    videoEl.play().catch(e => console.log('Autoplay blocked in hero preview'));
+                                } else {
+                                    videoEl.classList.add('hidden');
+                                    videoEl.pause();
+                                    imgEl.classList.remove('hidden');
+                                    
+                                    if (activeBannerLocalUrl) {
+                                        imgEl.src = activeBannerLocalUrl;
+                                    } else {
+                                        imgEl.src = "{% if hotel.banner %}{{ hotel.banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}";
                                     }
                                 }
                             }
+
+                            // Update logo in preview
+                            const logoImg = doc.getElementById('hero-logo-img');
+                            const logoWrapper = doc.getElementById('hero-logo-wrapper');
+                            if (logoImg && logoWrapper) {
+                                if (activeLogoLocalUrl) {
+                                    logoImg.src = activeLogoLocalUrl;
+                                    logoWrapper.classList.remove('hidden');
+                                } else {
+                                    const hasOrigLogo = "{% if hotel.logo %}true{% endif %}" === "true";
+                                    const logoRemoved = document.getElementById('remover-logo-input')?.value === "true";
+                                    if (hasOrigLogo && !logoRemoved) {
+                                        logoImg.src = "{{ hotel.logo.url }}";
+                                        logoWrapper.classList.remove('hidden');
+                                    } else {
+                                        logoWrapper.classList.add('hidden');
+                                    }
+                                }
+                            }
+
                             syncIframeTexts(doc);
                         }
                     } catch(e) {
@@ -1132,20 +1305,60 @@
 
             function updateAllIframes() {
                 ['hero-preview-iframe-desktop', 'hero-preview-iframe-mobile'].forEach(iframeId => {
-                    const iframe = document.getElementById(iframeId);
-                    if (iframe) {
-                        try {
-                            const doc = iframe.contentDocument || iframe.contentWindow.document;
-                            if (doc) {
-                                syncIframeTexts(doc);
-                            }
-                        } catch(e) {}
-                    }
+                    hydrateHeroIframeVideo(iframeId);
                 });
             }
 
-            // Preview local uploaded video
-            function previewLocalHeroVideo(input) {
+            // Universal Image Upload Preview Handler
+            function previewImageUnified(input, type) {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById(`${type}-preview-img`).src = e.target.result;
+                        document.getElementById(`${type}-empty-state`).classList.add('hidden');
+                        document.getElementById(`${type}-empty-state`).classList.remove('flex');
+                        document.getElementById(`${type}-active-state`).classList.remove('hidden');
+                        
+                        // Set deletion indicator to false
+                        document.getElementById(`remover-${type}-input`).value = 'false';
+
+                        if (type === 'banner') {
+                            activeBannerLocalUrl = e.target.result;
+                            updateAllIframes();
+                        } else if (type === 'logo') {
+                            activeLogoLocalUrl = e.target.result;
+                            updateAllIframes();
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            // Universal Image Clear Handler
+            function clearUnifiedMedia(type) {
+                document.getElementById(`${type}-preview-img`).src = '';
+                document.getElementById(`${type}-active-state`).classList.add('hidden');
+                document.getElementById(`${type}-empty-state`).classList.remove('hidden');
+                document.getElementById(`${type}-empty-state`).classList.add('flex');
+                
+                // Clear input file value
+                document.getElementById(`${type}-file-input`).value = '';
+                
+                // Set deletion indicator to true
+                document.getElementById(`remover-${type}-input`).value = 'true';
+
+                if (type === 'banner') {
+                    activeBannerLocalUrl = null;
+                    updateAllIframes();
+                } else if (type === 'logo') {
+                    activeLogoLocalUrl = null;
+                    updateAllIframes();
+                }
+            }
+
+            // Local Uploaded Video Handler
+            function previewLocalHeroVideoUnified(input) {
                 const file = input.files[0];
                 if (file) {
                     if (file.size > 30 * 1024 * 1024) {
@@ -1153,38 +1366,34 @@
                         input.value = '';
                         return;
                     }
-                    document.getElementById('hero-video-filename-display').textContent = file.name;
                     
                     activeHeroVideoLocalUrl = URL.createObjectURL(file);
                     
-                    const removalControl = document.getElementById('hero-video-removal-control');
-                    const removalInput = document.getElementById('remover-hero-video-input');
-                    removalControl.style.display = 'flex';
-                    removalInput.value = 'false';
+                    const player = document.getElementById('hero_video-preview-player');
+                    player.src = activeHeroVideoLocalUrl;
+                    player.load();
+                    player.play().catch(e => console.log('Autoplay blocked in dashboard thumbnail'));
+
+                    document.getElementById('hero_video-empty-state').classList.add('hidden');
+                    document.getElementById('hero_video-empty-state').classList.remove('flex');
+                    document.getElementById('hero_video-active-state').classList.remove('hidden');
+                    document.getElementById('remover-hero_video-input').value = 'false';
                     
-                    // Force refresh inside iframes
-                    hydrateHeroIframeVideo('hero-preview-iframe-desktop');
-                    hydrateHeroIframeVideo('hero-preview-iframe-mobile');
+                    updateAllIframes();
                 }
             }
 
-            // Remove current hero video
-            function clearHeroVideo() {
+            // Video Clear Handler
+            function clearHeroVideoUnified() {
                 activeHeroVideoLocalUrl = null;
                 
-                const removalControl = document.getElementById('hero-video-removal-control');
-                const removalInput = document.getElementById('remover-hero-video-input');
-                const uploadInput = document.getElementById('upload-hero-video');
+                document.getElementById('hero_video-active-state').classList.add('hidden');
+                document.getElementById('hero_video-empty-state').classList.remove('hidden');
+                document.getElementById('hero_video-empty-state').classList.add('flex');
+                document.getElementById('hero_video-file-input').value = '';
+                document.getElementById('remover-hero_video-input').value = 'true';
                 
-                removalControl.style.display = 'none';
-                removalInput.value = 'true';
-                uploadInput.value = '';
-                
-                // Reload iframes
-                document.getElementById('hero-preview-iframe-desktop').src += '';
-                document.getElementById('hero-preview-iframe-mobile').src += '';
-                
-                document.getElementById('hero-video-filename-display').textContent = "MP4, MOV ou WebM de até 30MB";
+                updateAllIframes();
             }
 
             function setupDashboardListeners() {
@@ -1205,7 +1414,7 @@
                         const slugVal = slugInput.value.toLowerCase().replace(/[^a-z0-9-_]/g, '');
                         const urlText = document.getElementById('mockup-url-desktop');
                         if (urlText) {
-                            urlText.textContent = `navievibe.com/${slugVal || 'pousada'}`;
+                            urlText.textContent = `${slugVal || 'pousada'}.navievibe.com`;
                         }
                     });
                 }

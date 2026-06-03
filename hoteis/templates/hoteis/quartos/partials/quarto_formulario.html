@@ -176,7 +176,7 @@
                         <!-- Scaling Iframe Area -->
                         <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
                             <iframe id="quarto-preview-iframe-desktop" 
-                                    src="{% if hotel.slug %}/{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
+                                    src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
                                     class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
                                     style="transform: scale(0.25);"></iframe>
                         </div>
@@ -192,7 +192,7 @@
                         <!-- Scaling Iframe Area -->
                         <div class="w-full h-full bg-slate-950 relative overflow-hidden">
                             <iframe id="quarto-preview-iframe-mobile" 
-                                    src="{% if hotel.slug %}/{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
+                                    src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1" 
                                     class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
                                     style="transform: scale(0.266);"></iframe>
                         </div>

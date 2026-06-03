@@ -262,7 +262,7 @@
                                 <p class="text-sm font-black text-slate-500 mt-0.5">Sob consulta</p>
                                 {% endif %}
                             </div>
-                            <a href="{% url 'hoteis:detalhe' item.object.id %}" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-extrabold px-5 py-2.5 rounded-xl text-xs transition-all flex items-center gap-1">
+                            <a href="{% if item.object.slug and request.subdomains_supported %}{{ request.scheme }}://{{ item.object.slug }}.{{ request.base_host }}/{% else %}{% url 'hoteis:detalhe' item.object.id %}{% endif %}" class="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-extrabold px-5 py-2.5 rounded-xl text-xs transition-all flex items-center gap-1">
                                 <span>Reservar</span>
                                 <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                             </a>

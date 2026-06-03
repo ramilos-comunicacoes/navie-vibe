@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='hotel',
             name='empresa',
-            field=models.OneToOneField(blank=True, help_text='A entidade comercial dona desta hospedagem', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_hospedagem', to='core.empresa'),
+            field=models.OneToOneField(blank=True, db_constraint=False, help_text='A entidade comercial dona desta hospedagem', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_hospedagem', to='core.empresa'),
         ),
     ]

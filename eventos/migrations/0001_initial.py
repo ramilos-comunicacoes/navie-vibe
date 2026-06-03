@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('especialidade', models.CharField(blank=True, max_length=100)),
-                ('empresa', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='perfil_produtora', to='core.empresa')),
+                ('empresa', models.OneToOneField(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_produtora', to='core.empresa')),
             ],
         ),
         migrations.AddField(

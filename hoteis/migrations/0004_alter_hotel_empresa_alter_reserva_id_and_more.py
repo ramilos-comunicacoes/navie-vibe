@@ -20,11 +20,7 @@ class Migration(migrations.Migration):
             name='empresa',
             field=models.OneToOneField(blank=True, db_constraint=False, help_text='A entidade comercial dona desta hospedagem', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_hospedagem', to='core.empresa'),
         ),
-        migrations.AlterField(
-            model_name='reserva',
-            name='id',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
+
         migrations.AlterField(
             model_name='reserva',
             name='usuario',

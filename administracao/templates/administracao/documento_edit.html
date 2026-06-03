@@ -1,0 +1,65 @@
+{% extends 'administracao/base_admin.html' %}
+
+{% block title %}Editar Documento - {{ documento.titulo }}{% endblock %}
+
+{% block page_title %}Editar Documento{% endblock %}
+{% block page_subtitle %}Modifique as cláusulas ou formatações do texto legal{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Link de Voltar -->
+    <div>
+        <a href="{% url 'administracao:documentos_list' %}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Voltar para a Lista de Documentos
+        </a>
+    </div>
+
+    <!-- Form de Edição -->
+    <div class="glass-card rounded-2xl shadow-sm border border-slate-200/60 dark:border-navie-border p-6 sm:p-8">
+        
+        <form action="" method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <!-- Título -->
+                <div class="sm:col-span-2 space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_titulo">Título do Documento</label>
+                    <input type="text" name="titulo" id="id_titulo" value="{{ documento.titulo }}" required class="w-full h-11 px-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <!-- Slug (Readonly) -->
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_slug">Identificador (Slug)</label>
+                    <input type="text" id="id_slug" value="{{ documento.slug }}" readonly class="w-full h-11 px-4 bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-navie-border/60 rounded-xl text-sm font-bold text-slate-400 dark:text-slate-400 cursor-not-allowed">
+                </div>
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="space-y-1.5">
+                <label class="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider" for="id_conteudo">Conteúdo (HTML)</label>
+                <textarea name="conteudo" id="id_conteudo" rows="18" required class="w-full p-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl text-xs font-mono text-slate-700 dark:text-slate-200 focus:outline-none focus:border-blue-500 leading-relaxed">{{ documento.conteudo }}</textarea>
+                <p class="text-[10px] font-medium text-slate-400 dark:text-slate-400 leading-relaxed mt-1">
+                    <i data-lucide="help-circle" class="w-3.5 h-3.5 inline mr-0.5 align-text-bottom"></i>
+                    Dica: Você pode utilizar tags HTML como <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 font-bold">&lt;h2&gt;</code>, <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 font-bold">&lt;p&gt;</code>, <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 font-bold">&lt;ul&gt;</code>, <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 font-bold">&lt;li&gt;</code> e <code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 font-bold">&lt;strong&gt;</code> para formatar o texto exibido ao usuário final.
+                </p>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t border-slate-200/50 dark:border-navie-border/60">
+                <a href="{% url 'administracao:documentos_list' %}" class="h-11 px-6 bg-slate-100 hover:bg-slate-200/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors flex items-center justify-center gap-1.5 focus:outline-none">
+                    Cancelar
+                </a>
+                <button type="submit" class="h-11 px-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5 focus:outline-none">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+{% endblock %}

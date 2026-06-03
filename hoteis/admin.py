@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Produtor, Local, Hotel, HotelImagem, Quarto, QuartoImagem, UnidadeQuarto, Reserva, BloqueioQuarto, HomeSlide
+from .models import Produtor, Local, Hotel, HotelImagem, Quarto, QuartoImagem, UnidadeQuarto, Reserva, BloqueioQuarto, HomeSlide, Cidade, Restaurante
 
 class HotelImagemInline(admin.TabularInline):
     model = HotelImagem
@@ -42,4 +42,16 @@ class HomeSlideAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'tipo_midia', 'data_texto', 'local_texto', 'ordem', 'ativo')
     list_filter = ('ativo', 'tipo_midia')
     ordering = ('ordem', 'id')
+
+@admin.register(Cidade)
+class CidadeAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'slug', 'descricao')
+    prepopulated_fields = {'slug': ('nome',)}
+    search_fields = ('nome',)
+
+@admin.register(Restaurante)
+class RestauranteAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'especialidade', 'cidade_nome', 'whatsapp', 'ativo')
+    list_filter = ('ativo', 'cidade_nome')
+    search_fields = ('nome', 'especialidade', 'cidade_nome')
 

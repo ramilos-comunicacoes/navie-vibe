@@ -1,0 +1,60 @@
+{% extends 'administracao/base_admin.html' %}
+
+{% block title %}Documentos Legais{% endblock %}
+
+{% block page_title %}Documentos Legais{% endblock %}
+{% block page_subtitle %}Controle dos termos, contratos e políticas públicas do marketplace{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Link de Voltar -->
+    <div>
+        <a href="{% url 'administracao:dashboard' %}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            Voltar para o Dashboard
+        </a>
+    </div>
+
+    <!-- Lista de Documentos -->
+    <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
+        
+        <div class="p-6 border-b border-slate-200/50 dark:border-navie-border">
+            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Documentos Cadastrados</h3>
+            <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Textos exibidos no rodapé do portal e aceites nos formulários de cadastro</p>
+        </div>
+
+        <div class="divide-y divide-slate-100 dark:divide-navie-border/60">
+            {% for doc in documentos %}
+            <div class="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 hover:bg-slate-50/20 dark:hover:bg-white/5 transition-colors">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-white/5 text-blue-600 dark:text-white flex items-center justify-center flex-shrink-0">
+                        <i data-lucide="file-signature" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 dark:text-white text-sm">{{ doc.titulo }}</h4>
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-400 dark:text-slate-400 mt-1 font-semibold">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-white/5 font-mono font-bold">{{ doc.slug }}</span>
+                            <span>•</span>
+                            <span>Atualizado em: {{ doc.atualizado_em|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center sm:justify-end">
+                    <a href="{% url 'administracao:documento_edit' doc.pk %}" class="h-9 px-4 bg-blue-50/80 hover:bg-blue-100 dark:bg-white/5 dark:hover:bg-white/10 text-blue-600 dark:text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center gap-1.5 focus:outline-none">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                        Editar Conteúdo
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-sm font-semibold text-slate-400 dark:text-slate-400">
+                Nenhum documento legal cadastrado no banco de dados.
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

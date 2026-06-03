@@ -8,7 +8,8 @@ module.exports = {
     "./parceiros/templates/**/*.html",
     "./cinema/templates/**/*.html",
     "./eventos/templates/**/*.html",
-    "./parques/templates/**/*.html"
+    "./parques/templates/**/*.html",
+    "./administracao/templates/**/*.html"
   ],
   theme: {
     extend: {

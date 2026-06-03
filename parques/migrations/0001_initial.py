@@ -21,8 +21,8 @@ class Migration(migrations.Migration):
                 ('descricao_parque', models.TextField()),
                 ('horario_abertura', models.TimeField(blank=True, null=True)),
                 ('horario_fechamento', models.TimeField(blank=True, null=True)),
-                ('empresa', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='perfil_parque', to='core.empresa')),
-                ('hospedagens_vinculadas', models.ManyToManyField(blank=True, related_name='parques_donos', to='hoteis.hotel')),
+                ('empresa', models.OneToOneField(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_parque', to='core.empresa')),
+                ('hospedagens_vinculadas', models.ManyToManyField(blank=True, db_constraint=False, related_name='parques_donos', to='hoteis.hotel')),
             ],
         ),
         migrations.CreateModel(

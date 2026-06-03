@@ -40,7 +40,7 @@
         
         <div class="relative w-full h-[400px] flex items-center justify-center overflow-hidden">
             {% for quarto in quartos_destaque %}
-            <a href="{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}"
+            <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
                class="absolute w-[76%] h-[360px] rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-700 ease-out select-none flex flex-col group"
                :style="active === {{ forloop.counter }} 
                        ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1;' 
@@ -97,7 +97,7 @@
     <!-- ── DESKTOP: GRID DE 3 COLUNAS (MD e Superior) ── -->
     <div class="destaques-desktop-grid grid-cols-3 gap-6 lg:gap-8 max-w-[85rem] mx-auto">
         {% for quarto in quartos_destaque %}
-        <a href="{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}"
+        <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
            class="relative rounded-[2.5rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
             
             <!-- Imagem do Quarto -->

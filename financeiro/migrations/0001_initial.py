@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('descricao', models.CharField(help_text="Uma descrição curta explicando a natureza do lançamento (ex: 'Compra de toalhas novas').", max_length=255, verbose_name='Descrição')),
                 ('data', models.DateField(db_index=True, default=datetime.date.today, help_text='A data contábil de competência em que o evento financeiro ocorreu.', verbose_name='Data Competência')),
                 ('criado_em', models.DateTimeField(auto_now_add=True, help_text='Data e hora exata em que o registro físico foi inserido no banco de dados.')),
-                ('criado_por', models.ForeignKey(blank=True, help_text='O atendente, recepcionista ou gerente humano que cadastrou a transação no sistema.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='financeiro_lancamentos', to=settings.AUTH_USER_MODEL)),
+                ('criado_por', models.ForeignKey(blank=True, db_constraint=False, help_text='O atendente, recepcionista ou gerente humano que cadastrou a transação no sistema.', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='financeiro_lancamentos', to=settings.AUTH_USER_MODEL)),
                 ('hotel', models.ForeignKey(help_text='O estabelecimento hoteleiro multitenant proprietário desta transação contábil.', on_delete=django.db.models.deletion.CASCADE, related_name='transacoes_financeiras', to='hoteis.hotel')),
                 ('reserva', models.ForeignKey(blank=True, help_text='Opcional. A reserva de hospedagem associada a este lançamento (útil para auditoria de estadias).', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='transacoes_financeiras', to='hoteis.reserva')),
             ],

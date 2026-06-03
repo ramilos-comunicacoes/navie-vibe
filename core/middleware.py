@@ -1,0 +1,43 @@
+class SubdomainMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        host = request.get_host().split(':')[0].lower()
+        full_host = request.get_host()
+        
+        # Define o base_host padrão
+        request.base_host = full_host
+        request.subdomains_supported = not host.replace('.', '').isdigit()
+        
+        # Ignorar endereços IP diretos
+        if request.subdomains_supported:
+            parts = host.split('.')
+            if len(parts) > 1:
+                # O subdomínio será a primeira parte do host
+                possible_subdomain = parts[0]
+                
+                # Termos reservados que não devem ser interpretados como subdomínios de pousadas
+                reservados = ['www', 'admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media', 'dashboard', 'navievibe']
+                if possible_subdomain not in reservados:
+                    # Constrói o host pai sem o subdomínio de qualquer forma
+                    first_dot = full_host.find('.')
+                    if first_dot != -1:
+                        parent_host = full_host[first_dot + 1:]
+                        request.base_host = parent_host
+                        request.parent_host_url = f"{request.scheme}://{parent_host}"
+
+                    from hoteis.models import Hotel
+                    # Verifica se existe um hotel com o slug igual ao subdomínio
+                    hotel = Hotel.objects.filter(slug=possible_subdomain).first()
+                    if hotel:
+                        request.subdomain = possible_subdomain
+                        request.hotel_atual = hotel
+                    else:
+                        # Se não for uma rota estática, de mídia, api ou admin, levanta 404
+                        if not any(request.path.startswith(prefix) for prefix in ['/static/', '/media/', '/api/', '/sistemadeadministracao/', '/accounts/']):
+                            from django.http import Http404
+                            raise Http404("Pousada não encontrada.")
+        
+        response = self.get_response(request)
+        return response

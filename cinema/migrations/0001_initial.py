@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('possui_bonbonniere', models.BooleanField(default=True)),
                 ('descricao_cinema', models.TextField(blank=True)),
-                ('empresa', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='perfil_cinema', to='core.empresa')),
+                ('empresa', models.OneToOneField(db_constraint=False, on_delete=django.db.models.deletion.CASCADE, related_name='perfil_cinema', to='core.empresa')),
             ],
         ),
         migrations.CreateModel(
