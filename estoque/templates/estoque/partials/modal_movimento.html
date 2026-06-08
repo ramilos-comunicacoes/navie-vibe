@@ -1,0 +1,359 @@
+<div x-data="{ 
+    open: true, 
+    cancelled: false,
+    registering: false,
+    
+    // Tipo de Operação Select
+    tipo: 'saida', 
+    tipoSelectOpen: false, 
+    tipoLabel: 'Saída do Estoque', 
+    tipoSearch: '',
+    
+    // Produto Select
+    produtoSelectOpen: false, 
+    produtoId: '', 
+    produtoLabel: 'Selecione um produto...', 
+    produtoSearch: '', 
+    unidade: 'UN',
+    
+    // Motivo Select
+    motivoSelectOpen: false, 
+    motivo: 'interno', 
+    motivoLabel: 'Consumo Interno (Limpeza / Recepção / Copa)', 
+    motivoSearch: '',
+    
+    quantidade: '',
+    
+    isDecimalUnit() {
+        return ['KG', 'LT', 'MT'].includes(this.unidade);
+    },
+    getPlaceholder() {
+        if (!this.produtoId) return 'Escolha o produto...';
+        return this.isDecimalUnit() ? 'Ex: 1,500' : 'Ex: 5';
+    }
+}" 
+x-show="open" 
+class="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-auto" 
+x-cloak>
+
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity" 
+         @click="if (!registering && !cancelled) { cancelled = true; setTimeout(() => { open = false; }, 600); setTimeout(() => { document.getElementById('modal-container').innerHTML = '' }, 850); }"></div>
+    
+    <!-- Modal Content Card -->
+    <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-white/10 w-full max-w-3xl overflow-hidden relative z-10 p-6 transform transition-all duration-300"
+         x-show="open"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-4 scale-95">
+        
+        <!-- Cancelled Overlay -->
+        <div x-show="cancelled" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="absolute inset-0 bg-white/95 dark:bg-[#121212]/95 z-[150] flex flex-col items-center justify-center p-6 text-center"
+             style="display: none;">
+            <div class="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mb-4 scale-in-center">
+                <svg class="w-8 h-8 stroke-red-500 stroke-[3] fill-none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Movimentação Cancelada</h3>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 font-semibold">Os dados não foram salvos no estoque.</p>
+        </div>
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
+            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+                <span class="flex items-center text-brand" style="pointer-events:none;"><i data-lucide="arrow-left-right" class="w-5 h-5"></i></span>
+                Registrar Movimentação
+            </h3>
+            <button type="button" 
+                    @click="cancelled = true; setTimeout(() => { open = false; }, 600); setTimeout(() => { document.getElementById('modal-container').innerHTML = '' }, 850);" 
+                    class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition-all duration-300 hover:rotate-90 cursor-pointer">
+                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="x" class="w-4 h-4"></i></span>
+            </button>
+        </div>
+        
+        <!-- Form -->
+        <form hx-post="{% url 'estoque:registrar_movimento' %}" 
+              hx-target="#modal-container" 
+              class="space-y-4" 
+              @submit="if(produtoId === '') { alert('Por favor, selecione um produto!'); $event.preventDefault(); } else { registering = true; }">
+            {% csrf_token %}
+            
+            <input type="hidden" name="produto_id" :value="produtoId">
+            <input type="hidden" name="tipo" :value="tipo">
+            <input type="hidden" name="motivo" :value="motivo">
+            
+            <!-- Two-Column Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Left Column (Inputs and Controls) -->
+                <div class="space-y-4">
+                    
+                    <!-- Produto Select -->
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Produto *</label>
+                        <button @click.stop="produtoSelectOpen = !produtoSelectOpen; tipoSelectOpen = false; motivoSelectOpen = false" 
+                                type="button" 
+                                class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-white/5 text-left text-slate-700 dark:text-white">
+                            <span x-text="produtoLabel" class="truncate">Selecione um produto...</span>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-1" :class="produtoSelectOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div x-show="produtoSelectOpen" @click.away="produtoSelectOpen = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute left-0 top-full mt-1.5 z-[120] w-full bg-white dark:bg-[#121212] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden py-1.5"
+                             style="display: none;">
+                             
+                            <!-- Search Input -->
+                            <div class="px-3 pb-2 border-b border-slate-100 dark:border-white/5">
+                                <div class="relative">
+                                    <input type="text" x-model="produtoSearch" placeholder="Pesquisar produto ou categoria..." 
+                                           class="w-full bg-slate-50 dark:bg-white/5 text-xs font-bold rounded-xl pl-8 pr-3 py-2 outline-none border border-slate-200/50 dark:border-white/5 text-slate-800 dark:text-white">
+                                    <i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Product List -->
+                            <div class="max-h-40 overflow-y-auto pt-1.5 space-y-0.5 scrollbar-thin">
+                                {% for p in produtos %}
+                                <button type="button" 
+                                        x-show="produtoSearch === '' || '{{ p.nome|lower|escapejs }}'.includes(produtoSearch.toLowerCase()) || '{{ p.categoria.nome|lower|escapejs }}'.includes(produtoSearch.toLowerCase())"
+                                        @click="
+                                            produtoId = '{{ p.id }}'; 
+                                            produtoLabel = '{{ p.nome|escapejs }}'; 
+                                            unidade = '{{ p.unidade_medida|escapejs }}';
+                                            produtoSelectOpen = false;
+                                        " 
+                                        class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                    <span>{{ p.nome }} <span class="text-[10px] text-slate-400 font-medium ml-1">({{ p.categoria.nome }})</span></span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 font-black">
+                                        {{ p.estoque_atual|floatformat:1 }} {{ p.unidade_medida }}
+                                    </span>
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Row: Tipo de Operação & Quantidade -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Tipo de Operação Select -->
+                        <div class="relative">
+                            <label class="block text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Operação *</label>
+                            <button @click.stop="tipoSelectOpen = !tipoSelectOpen; produtoSelectOpen = false; motivoSelectOpen = false" 
+                                    type="button" 
+                                    class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-white/5 text-left text-slate-700 dark:text-white">
+                                <span x-text="tipoLabel" class="truncate">Saída do Estoque</span>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-1" :class="tipoSelectOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div x-show="tipoSelectOpen" @click.away="tipoSelectOpen = false"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="opacity-0 scale-95"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="opacity-100 scale-100"
+                                 x-transition:leave-end="opacity-0 scale-95"
+                                 class="absolute left-0 top-full mt-1.5 z-[120] w-full bg-white dark:bg-[#121212] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden py-1.5"
+                                 style="display: none;">
+                                 
+                                <!-- Search Input -->
+                                <div class="px-3 pb-2 border-b border-slate-100 dark:border-white/5">
+                                    <div class="relative">
+                                        <input type="text" x-model="tipoSearch" placeholder="Pesquisar operação..." 
+                                               class="w-full bg-slate-50 dark:bg-white/5 text-xs font-bold rounded-xl pl-8 pr-3 py-2 outline-none border border-slate-200/50 dark:border-white/5 text-slate-800 dark:text-white">
+                                        <i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Options List -->
+                                <div class="max-h-32 overflow-y-auto pt-1.5 space-y-0.5 scrollbar-thin">
+                                    <button type="button" 
+                                            x-show="tipoSearch === '' || 'saída do estoque'.includes(tipoSearch.toLowerCase()) || 'saida'.includes(tipoSearch.toLowerCase())"
+                                            @click="tipo = 'saida'; tipoLabel = 'Saída do Estoque'; tipoSelectOpen = false;"
+                                            class="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                        <span>Saída do Estoque</span>
+                                        <span x-show="tipo === 'saida'" class="text-brand flex items-center">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                        </span>
+                                    </button>
+                                    <button type="button" 
+                                            x-show="tipoSearch === '' || 'ajuste físico inventário'.includes(tipoSearch.toLowerCase()) || 'ajuste'.includes(tipoSearch.toLowerCase())"
+                                            @click="tipo = 'ajuste'; tipoLabel = 'Ajuste Físico (Inventário)'; tipoSelectOpen = false;"
+                                            class="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                        <span>Ajuste Físico (Inventário)</span>
+                                        <span x-show="tipo === 'ajuste'" class="text-brand flex items-center">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quantidade Input -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Quantidade *</label>
+                            <div class="relative flex items-center">
+                                <input type="text" 
+                                       inputmode="decimal" 
+                                       name="quantidade" 
+                                       required 
+                                       x-model="quantidade"
+                                       @input="quantidade = quantidade.replace(/[^0-9,.]/g, '')"
+                                       class="w-full input-glass rounded-2xl pl-4 pr-14 py-3 text-sm font-bold shadow-sm outline-none text-left border border-slate-200/50 dark:border-white/5" 
+                                       :placeholder="getPlaceholder()">
+                                <span class="absolute right-4 text-xs font-black text-slate-400 dark:text-slate-500 uppercase select-none pointer-events-none" x-text="unidade"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Motivo da Saída Dropdown (Dropup: opens UPWARDS) -->
+                    <div class="relative" x-show="tipo === 'saida'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Motivo da Saída *</label>
+                        <button @click.stop="motivoSelectOpen = !motivoSelectOpen; produtoSelectOpen = false; tipoSelectOpen = false" 
+                                type="button" 
+                                class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-white/5 text-left text-slate-700 dark:text-white">
+                            <span x-text="motivoLabel" class="truncate">Consumo Interno...</span>
+                            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-1" :class="motivoSelectOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropup Menu (opens bottom-full mb-1.5) -->
+                        <div x-show="motivoSelectOpen" @click.away="motivoSelectOpen = false"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute left-0 bottom-full mb-1.5 z-[120] w-full bg-white dark:bg-[#121212] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden py-1.5"
+                             style="display: none;">
+                             
+                            <!-- Search Input -->
+                            <div class="px-3 pb-2 border-b border-slate-100 dark:border-white/5">
+                                <div class="relative">
+                                    <input type="text" x-model="motivoSearch" placeholder="Pesquisar motivo..." 
+                                           class="w-full bg-slate-50 dark:bg-white/5 text-xs font-bold rounded-xl pl-8 pr-3 py-2 outline-none border border-slate-200/50 dark:border-white/5 text-slate-800 dark:text-white">
+                                    <i data-lucide="search" class="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Options List -->
+                            <div class="max-h-36 overflow-y-auto pt-1.5 space-y-0.5 scrollbar-thin">
+                                <button type="button" 
+                                        x-show="motivoSearch === '' || 'consumo interno limpeza recepção copa'.includes(motivoSearch.toLowerCase())"
+                                        @click="motivo = 'interno'; motivoLabel = 'Consumo Interno (Limpeza / Recepção / Copa)'; motivoSelectOpen = false;"
+                                        class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                    <span>Consumo Interno</span>
+                                    <span x-show="motivo === 'interno'" class="text-brand flex items-center">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    </span>
+                                </button>
+                                <button type="button" 
+                                        x-show="motivoSearch === '' || 'venda de balcão avulsa direta'.includes(motivoSearch.toLowerCase())"
+                                        @click="motivo = 'venda'; motivoLabel = 'Venda de Balcão (Avulsa / Direta)'; motivoSelectOpen = false;"
+                                        class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                    <span>Venda de Balcão</span>
+                                    <span x-show="motivo === 'venda'" class="text-brand flex items-center">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    </span>
+                                </button>
+                                <button type="button" 
+                                        x-show="motivoSearch === '' || 'descarte quebra perda validade vencida'.includes(motivoSearch.toLowerCase())"
+                                        @click="motivo = 'quebra'; motivoLabel = 'Descarte / Quebra / Perda'; motivoSelectOpen = false;"
+                                        class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex items-center justify-between">
+                                    <span>Descarte / Quebra / Perda</span>
+                                    <span x-show="motivo === 'quebra'" class="text-brand flex items-center">
+                                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column (Reference / Description TextArea) -->
+                <div class="flex flex-col h-full justify-between">
+                    <div class="flex-1 flex flex-col">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Referência / Justificativa</label>
+                        <textarea name="referencia" 
+                                  class="w-full flex-grow input-glass rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm outline-none resize-none min-h-[160px] dark:text-white dark:bg-white/5 border border-slate-200/50 dark:border-white/5" 
+                                  placeholder="Ex: Retirado por camareira para quarto 105, descarte de lote vencido, etc. Descreva detalhadamente a motivação desta movimentação para auditoria interna."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions Footer -->
+            <div class="flex gap-4 pt-3 border-t border-slate-100 dark:border-white/5">
+                <button type="button" 
+                        :class="{ 'opacity-50 pointer-events-none': cancelled || registering }"
+                        @click="cancelled = true; setTimeout(() => { open = false; }, 600); setTimeout(() => { document.getElementById('modal-container').innerHTML = '' }, 850);" 
+                        class="flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                    <span x-show="!cancelled">Cancelar</span>
+                    <span x-show="cancelled">Cancelando...</span>
+                </button>
+                <button type="submit" 
+                        :class="{ 'opacity-50 pointer-events-none': cancelled || registering }"
+                        class="flex-1 py-3 rounded-2xl bg-brand hover:bg-brand/90 text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <span x-show="!registering">Registrar</span>
+                    <span x-show="registering" class="flex items-center gap-1">
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Registrando...
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Scale in center checkmark animation */
+    .scale-in-center {
+        animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    }
+    @keyframes scale-in-center {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 4px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 2px;
+    }
+    .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+</style>
+
+<script>
+    if(typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>

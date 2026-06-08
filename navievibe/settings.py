@@ -246,6 +246,12 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+FIXTURE_DIRS = [
+    BASE_DIR / 'data_dumps',
+]
+
 # Media files (Uploads of Logos, Banners, Videos)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -257,5 +263,8 @@ GOOGLE_API_KEY = "AIzaSyDnaMUm_EFwesiaLTYw823UaN-IbXoLo5k"
 # Integração Oficial Mercado Pago (Checkout Transparente)
 MERCADOPAGO_PUBLIC_KEY = 'APP_USR-358bd3a8-e2f0-4e9d-b2fd-9e4a673b09a2'
 MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-4287188570193981-052909-e4fdb78128da8bdc840b1d95a9e9d141-3435684980'
+
+# Evita colisão de sessão quando rodando outros projetos Django em localhost em portas diferentes
+SESSION_COOKIE_NAME = 'navievibe_sessionid'
 
 

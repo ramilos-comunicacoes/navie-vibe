@@ -1,43 +1,62 @@
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 overflow-hidden">
     <!-- Descrição Institucional -->
-    <div class="space-y-5">
-        <h3 class="text-3xl font-black font-display tracking-tight">Sobre a Hospedagem</h3>
-        <p class="leading-relaxed text-base opacity-90 font-medium">{{ hotel.descricao|linebreaksbr }}</p>
+    <div class="space-y-6 scroll-animate-left">
+        <div class="flex items-center gap-3.5">
+            <div class="p-3 rounded-2xl brand-section-icon-container flex items-center justify-center">
+                <i data-lucide="info" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-2xl sm:text-3xl font-bold font-display tracking-tight brand-section-title">Sobre a Hospedagem</h3>
+        </div>
+        <div class="leading-relaxed text-sm sm:text-base font-medium space-y-4 brand-section-text">
+            {{ hotel.descricao|safe }}
+        </div>
     </div>
 
     <!-- Localização e Endereço -->
-    <div class="space-y-5">
+    <div class="space-y-6 scroll-animate-right">
         <div class="flex items-center justify-between gap-3 flex-wrap">
-            <h3 class="text-3xl font-black font-display tracking-tight">Como Chegar</h3>
+            <div class="flex items-center gap-3.5">
+                <div class="p-3 rounded-2xl brand-section-icon-container flex items-center justify-center">
+                    <i data-lucide="map-pin" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-2xl sm:text-3xl font-bold font-display tracking-tight brand-section-title">Como Chegar</h3>
+            </div>
             
             <!-- Alternador Mapa / Satélite Customizado B2C -->
             <div class="flex items-center map-toggle-container p-0.5 rounded-xl">
                 <button type="button" 
                         id="btn-b2c-satellite"
-                        class="map-toggle-btn active px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold">
+                        class="map-toggle-btn active px-3 py-1.5 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold">
                     Satélite
                 </button>
                 <button type="button" 
                         id="btn-b2c-roadmap"
-                        class="map-toggle-btn px-3 py-1 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold">
+                        class="map-toggle-btn px-3 py-1.5 text-[10px] rounded-lg border-none transition-all cursor-pointer font-bold">
                     Mapa Padrão
                 </button>
             </div>
         </div>
-        <p class="leading-relaxed text-base font-medium opacity-90">{{ hotel.local.endereco }}, {{ hotel.local.cidade }} - {{ hotel.local.estado }}</p>
+        
+        <p class="leading-relaxed text-sm sm:text-base font-semibold brand-section-text flex items-start gap-2.5">
+            <i data-lucide="navigation" class="w-4 h-4 mt-1 shrink-0 brand-section-text-muted"></i>
+            <span>{{ hotel.local.endereco }}, {{ hotel.local.cidade }} - {{ hotel.local.estado }}</span>
+        </p>
         
         <!-- Leaflet Map para visualização rápida no B2C -->
-        <div id="mapaB2C" class="w-full h-72 rounded-2xl overflow-hidden z-20 mt-6 shadow-lg border"></div>
+        <div id="mapaB2C" class="w-full h-72 rounded-2xl overflow-hidden z-20 mt-6 shadow-md border brand-section-border-color"></div>
     </div>
 </div>
 
 <!-- Galeria de Imagens Carrossel -->
 {% if imagens %}
-<div class="mt-16 md:mt-20 pt-12 border-t border-t-brand-sep">
-    <div class="flex items-center gap-3 mb-6">
-        <h3 class="text-3xl font-black font-display tracking-tight">Galeria de Fotos</h3>
+<div class="mt-16 md:mt-20 pt-12 border-t brand-section-border-color scroll-animate-left">
+    <div class="flex items-center gap-3.5 mb-6">
+        <div class="p-3 rounded-2xl brand-section-icon-container flex items-center justify-center">
+            <i data-lucide="images" class="w-5 h-5"></i>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-bold font-display tracking-tight brand-section-title">Galeria de Fotos</h3>
     </div>
-    <div class="swiper hotel-swiper h-64 md:h-[450px] w-full rounded-[2.5rem] overflow-hidden bg-black/10 z-0 shadow-xl border border-white/5">
+    <div class="swiper hotel-swiper h-64 md:h-[450px] w-full rounded-[2.5rem] overflow-hidden bg-black/10 z-0 shadow-xl border brand-section-border-color">
         <div class="swiper-wrapper">
             {% for img in imagens %}
             <div class="swiper-slide">

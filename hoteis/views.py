@@ -605,6 +605,30 @@ def partner_dashboard(request):
     pedidos_ativos = PedidoServico.objects.filter(hotel=hotel).order_by('-criado_em')
     produtos_consumo = ProdutoConsumo.objects.filter(hotel=hotel, disponivel=True)
 
+    # === SISTEMA DE ESTOQUE & ALMOXARIFADO ===
+    from django.db.models import Sum
+    from estoque.models import Produto, CategoriaProduto, Fornecedor, Compra, MovimentoEstoque
+    produtos_estoque = Produto.objects.filter(hotel=hotel, ativo=True).select_related('categoria')
+    categorias_estoque = CategoriaProduto.objects.filter(hotel=hotel)
+    fornecedores_estoque = Fornecedor.objects.filter(hotel=hotel, ativo=True)
+    compras_estoque = Compra.objects.filter(hotel=hotel).select_related('fornecedor').prefetch_related('itens__produto').order_by('-data_compra', '-criado_em')
+    movimentos_estoque = MovimentoEstoque.objects.filter(hotel=hotel).select_related('produto').order_by('-criado_em')
+
+    total_produtos = produtos_estoque.count()
+    total_baixo_estoque = sum(1 for p in produtos_estoque if p.precisa_reposicao)
+    total_venda = produtos_estoque.filter(finalidade__in=['venda', 'ambos']).count()
+    total_interno = produtos_estoque.filter(finalidade__in=['interno', 'ambos']).count()
+
+    total_compras = compras_estoque.count()
+    total_compras_pendentes = compras_estoque.filter(status='pendente').count()
+    total_compras_recebidas = compras_estoque.filter(status='recebida').count()
+    valor_compras_mes = Compra.objects.filter(
+        hotel=hotel, 
+        status='recebida', 
+        data_compra__month=hoje.month, 
+        data_compra__year=hoje.year
+    ).aggregate(total=Sum('valor_total'))['total'] or 0
+
     # === SISTEMA DE RESERVAS & PMS GRID (CABANAS) ===
     # 1. Categoria selecionada (Quarto)
     quarto_id = request.GET.get('quarto_id')
@@ -836,6 +860,21 @@ def partner_dashboard(request):
         'hospedes_ativos': hospedes_ativos,
         'pedidos_ativos': pedidos_ativos,
         'produtos_consumo': produtos_consumo,
+        
+        # Módulo de Estoque e Almoxarifado B2B:
+        'produtos_estoque': produtos_estoque,
+        'categorias_estoque': categorias_estoque,
+        'fornecedores_estoque': fornecedores_estoque,
+        'compras_estoque': compras_estoque,
+        'movimentos_estoque': movimentos_estoque,
+        'total_produtos': total_produtos,
+        'total_baixo_estoque': total_baixo_estoque,
+        'total_venda': total_venda,
+        'total_interno': total_interno,
+        'total_compras': total_compras,
+        'total_compras_pendentes': total_compras_pendentes,
+        'total_compras_recebidas': total_compras_recebidas,
+        'valor_compras_mes': valor_compras_mes,
     }
     
     is_htmx = request.headers.get('HX-Request') == 'true'
@@ -2808,6 +2847,38 @@ def partner_hospedes_lancar_consumo(request, reserva_id):
     # Adicionar o consumo ao valor total da reserva
     reserva.valor_total += valor_total
     reserva.save()
+    
+    # Deduzir do estoque físico se estiver vinculado a um produto do almoxarifado e lançar no financeiro
+    if produto.estoque_produto:
+        from decimal import Decimal
+        from estoque.models import MovimentoEstoque
+        from financeiro.models import TransacaoFinanceira
+        
+        estoque_prod = produto.estoque_produto
+        estoque_prod.estoque_atual -= Decimal(str(quantidade))
+        estoque_prod.save()
+        
+        # Registrar movimento de estoque (Saída)
+        MovimentoEstoque.objects.create(
+            hotel=hotel,
+            produto=estoque_prod,
+            tipo='saida',
+            quantidade=Decimal(str(quantidade)),
+            referencia=f"Consumo Reserva #{str(reserva.id)[:8]} (Quarto {reserva.unidade.identificador})",
+            criado_por=request.user if request.user.is_authenticated else None
+        )
+        
+        # Lançar automaticamente no financeiro
+        TransacaoFinanceira.objects.create(
+            hotel=hotel,
+            tipo='receita',
+            categoria='frigobar',
+            valor=valor_total,
+            descricao=f"Consumo: {quantidade}x {produto.nome} (Reserva: {str(reserva.id)[:8]} - Quarto {reserva.unidade.identificador})",
+            data_vencimento=date.today(),
+            data_pagamento=date.today(),
+            criado_por=request.user if request.user.is_authenticated else None
+        )
     
     # Registrar consumo unificado no analytics
     try:

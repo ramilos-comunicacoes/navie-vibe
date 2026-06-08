@@ -48,6 +48,56 @@
         document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
         document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
         
+        // Novas variáveis inteligentes de contraste para a seção B2C (Sobre / Como Chegar)
+        let sectionBg = brandColor;
+        let sectionText = "#ffffff";
+        let sectionTitle = "#ffffff";
+        let sectionTextMuted = "rgba(255, 255, 255, 0.75)";
+        let iconBg = "rgba(255, 255, 255, 0.12)";
+        let iconColor = "#ffffff";
+        let toggleBg = "rgba(255, 255, 255, 0.15)";
+        let borderCol = "rgba(255, 255, 255, 0.12)";
+        let toggleBtnActiveBg = "#ffffff";
+        let toggleBtnActiveColor = "#0f172a";
+        let toggleBtnInactiveColor = "rgba(255, 255, 255, 0.6)";
+
+        if (yiq >= 170) { // Fundo claro (ex: amarelo) -> textos escuros obrigatórios
+            sectionText = "#2d3748"; // Gray 800
+            sectionTitle = "#0f172a"; // Gray 900
+            sectionTextMuted = "#4a5568"; // Gray 600
+            iconBg = "rgba(0, 0, 0, 0.05)";
+            iconColor = brandColorBurned; // Usa a cor queimada da marca para os ícones
+            toggleBg = "rgba(0, 0, 0, 0.06)";
+            borderCol = "rgba(0, 0, 0, 0.08)";
+            toggleBtnActiveBg = "#0f172a"; // Botão escuro de alto contraste
+            toggleBtnActiveColor = "#ffffff";
+            toggleBtnInactiveColor = "rgba(15, 23, 42, 0.5)";
+        } else {
+            // Fundo escuro -> textos claros
+            sectionText = "#f7fafc";
+            sectionTitle = "#ffffff";
+            sectionTextMuted = "#e2e8f0";
+            iconBg = "rgba(255, 255, 255, 0.15)";
+            iconColor = "#ffffff";
+            toggleBg = "rgba(255, 255, 255, 0.15)";
+            borderCol = "rgba(255, 255, 255, 0.12)";
+            toggleBtnActiveBg = "#ffffff";
+            toggleBtnActiveColor = "#0f172a";
+            toggleBtnInactiveColor = "rgba(255, 255, 255, 0.6)";
+        }
+
+        document.documentElement.style.setProperty('--brand-section-bg', sectionBg);
+        document.documentElement.style.setProperty('--brand-section-text', sectionText);
+        document.documentElement.style.setProperty('--brand-section-title', sectionTitle);
+        document.documentElement.style.setProperty('--brand-section-text-muted', sectionTextMuted);
+        document.documentElement.style.setProperty('--brand-section-icon-bg', iconBg);
+        document.documentElement.style.setProperty('--brand-section-icon-color', iconColor);
+        document.documentElement.style.setProperty('--brand-section-toggle-bg', toggleBg);
+        document.documentElement.style.setProperty('--brand-section-border', borderCol);
+        document.documentElement.style.setProperty('--brand-section-toggle-btn-active-bg', toggleBtnActiveBg);
+        document.documentElement.style.setProperty('--brand-section-toggle-btn-active-color', toggleBtnActiveColor);
+        document.documentElement.style.setProperty('--brand-section-toggle-btn-inactive-color', toggleBtnInactiveColor);
+
         // Cor Secundária (Detalhes)
         const rawSecColor = "{{ hotel.cor_secundaria|default:'#2563eb' }}";
         let hexSec = rawSecColor.replace('#', '');
@@ -66,72 +116,59 @@
     })();
 </script>
 <style>
-    /* Estilos dinâmicos adaptativos para a Seção Inteira sobre/como chegar */
-    .hotel-brand-section {
-        background-color: var(--brand-color) !important;
-        transition: all 0.3s ease;
+    /* Scroll Animation Styles */
+    .scroll-animate-left {
+        opacity: 0;
+        transform: translateX(-50px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
-    
-    /* Quando a cor da marca é CLARA */
-    .brand-light-mode .hotel-brand-section {
-        color: #0f172a !important; /* Texto Escuro */
-        border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    .scroll-animate-right {
+        opacity: 0;
+        transform: translateX(50px);
+        transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
     }
-    .brand-light-mode .hotel-brand-section h3 {
-        color: #0f172a !important;
-    }
-    .brand-light-mode .hotel-brand-section p {
-        color: #334155 !important;
-    }
-    .brand-light-mode .hotel-brand-section .map-toggle-container {
-        background-color: rgba(0, 0, 0, 0.05) !important;
-        border: 1px solid rgba(0, 0, 0, 0.08) !important;
-    }
-    .brand-light-mode .hotel-brand-section .map-toggle-btn {
-        color: rgba(15, 23, 42, 0.6) !important;
-        background-color: transparent !important;
-    }
-    .brand-light-mode .hotel-brand-section .map-toggle-btn.active {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05) !important;
-    }
-    .brand-light-mode .hotel-brand-section .border-t-brand-sep {
-        border-top-color: rgba(0, 0, 0, 0.08) !important;
-    }
-    .brand-light-mode .hotel-brand-section #mapaB2C {
-        border-color: rgba(0, 0, 0, 0.08) !important;
+    .scroll-animate-left.show-animate,
+    .scroll-animate-right.show-animate {
+        opacity: 1;
+        transform: translateX(0);
     }
 
-    /* Quando a cor da marca é ESCURA */
-    .brand-dark-mode .hotel-brand-section {
-        color: #ffffff !important; /* Texto Branco */
-        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* Estilos dinâmicos adaptativos para a Seção Inteira sobre/como chegar */
+    .hotel-brand-section {
+        background-color: var(--brand-section-bg) !important;
+        color: var(--brand-section-text) !important;
+        transition: all 0.3s ease;
     }
-    .brand-dark-mode .hotel-brand-section h3 {
-        color: #ffffff !important;
+    .brand-section-title {
+        color: var(--brand-section-title) !important;
     }
-    .brand-dark-mode .hotel-brand-section p {
-        color: rgba(255, 255, 255, 0.85) !important;
+    .brand-section-text {
+        color: var(--brand-section-text) !important;
     }
-    .brand-dark-mode .hotel-brand-section .map-toggle-container {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    .brand-section-text-muted {
+        color: var(--brand-section-text-muted) !important;
     }
-    .brand-dark-mode .hotel-brand-section .map-toggle-btn {
-        color: rgba(255, 255, 255, 0.6) !important;
+    .brand-section-icon-container {
+        background-color: var(--brand-section-icon-bg) !important;
+        border: 1px solid var(--brand-section-border) !important;
+    }
+    .brand-section-icon-container i, .brand-section-icon-container svg {
+        color: var(--brand-section-icon-color) !important;
+    }
+    .hotel-brand-section .map-toggle-container {
+        background-color: var(--brand-section-toggle-bg) !important;
+        border: 1px solid var(--brand-section-border) !important;
+    }
+    .hotel-brand-section .map-toggle-btn {
+        color: var(--brand-section-toggle-btn-inactive-color) !important;
         background-color: transparent !important;
     }
-    .brand-dark-mode .hotel-brand-section .map-toggle-btn.active {
-        background-color: #ffffff !important;
-        color: #0f172a !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+    .hotel-brand-section .map-toggle-btn.active {
+        background-color: var(--brand-section-toggle-btn-active-bg) !important;
+        color: var(--brand-section-toggle-btn-active-color) !important;
     }
-    .brand-dark-mode .hotel-brand-section .border-t-brand-sep {
-        border-top-color: rgba(255, 255, 255, 0.1) !important;
-    }
-    .brand-dark-mode .hotel-brand-section #mapaB2C {
-        border-color: rgba(255, 255, 255, 0.1) !important;
+    .brand-section-border-color {
+        border-color: var(--brand-section-border) !important;
     }
 
     /* Ocultar barra de rolagem da página inteira */
@@ -707,6 +744,25 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         lucide.createIcons();
+
+        // On-Scroll Slide Animations for About/Location sections
+        const observerOptions = {
+            root: null,
+            threshold: 0.1
+        };
+
+        const scrollObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show-animate');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-animate-left, .scroll-animate-right').forEach(el => {
+            scrollObserver.observe(el);
+        });
 
         // Lucide icons are initialized below
         

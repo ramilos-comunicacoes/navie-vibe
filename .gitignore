@@ -47,3 +47,4 @@ $RECYCLE.BIN/
 # Ignore Tailwind binary if downloaded, keep only CSS
 tailwindcss-windows-x64.exe
 node_modules/
+scratch/

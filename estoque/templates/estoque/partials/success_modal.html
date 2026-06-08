@@ -1,0 +1,54 @@
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-auto" x-data="{ open: true }" x-show="open" x-cloak>
+    <!-- Backdrop Blur -->
+    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity"></div>
+    
+    <!-- Modal Content Card -->
+    <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] p-8 border border-slate-200/50 dark:border-white/10 w-full max-w-sm text-center relative z-10 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+        
+        <!-- Circular Success Checkmark Animation -->
+        <div class="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 scale-in-center">
+            <svg class="w-10 h-10 stroke-emerald-500 stroke-[3] fill-none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" class="checkmark-path" />
+            </svg>
+        </div>
+        
+        <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ titulo|default:"Sucesso!" }}</h3>
+        <p class="text-xs text-slate-400 dark:text-slate-500 mt-2 font-semibold">{{ mensagem|default:"O item foi processado com sucesso." }}</p>
+        
+        <style>
+            .scale-in-center {
+                animation: scale-in-center 0.4s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+            }
+            @keyframes scale-in-center {
+                0% { transform: scale(0); opacity: 0; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            .checkmark-path {
+                stroke-dasharray: 48;
+                stroke-dashoffset: 48;
+                animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.2s forwards;
+            }
+            @keyframes stroke {
+                100% { stroke-dashoffset: 0; }
+            }
+        </style>
+        
+        <script>
+            // Limpa o cache local da compra do localStorage em caso de sucesso
+            if ('{{ request.path }}'.includes('compra')) {
+                localStorage.removeItem('partner_compras_mode');
+                localStorage.removeItem('partner_compras_form_tab');
+                localStorage.removeItem('partner_compra_fornecedor_id');
+                localStorage.removeItem('partner_compra_fornecedor_label');
+                localStorage.removeItem('partner_compra_data');
+                localStorage.removeItem('partner_compra_observacao');
+                localStorage.removeItem('partner_compra_itens');
+            }
+            localStorage.removeItem('partner_open_modal_url');
+
+            setTimeout(() => {
+                window.location.href = "{% url 'hoteis:partner_dashboard' %}";
+            }, 1200);
+        </script>
+    </div>
+</div>

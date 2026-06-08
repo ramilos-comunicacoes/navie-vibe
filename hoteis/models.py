@@ -356,6 +356,7 @@ class ProdutoConsumo(models.Model):
         ('cortesia', 'Cortesia/Apoio'),
     ]
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='cardapio_consumo')
+    estoque_produto = models.ForeignKey('estoque.Produto', on_delete=models.SET_NULL, null=True, blank=True, related_name='produtos_consumo_vinculados', help_text="Vincular ao estoque físico para dedução automática ao consumir.")
     nome = models.CharField(max_length=150)
     descricao = models.TextField(blank=True, null=True)
     preco = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)

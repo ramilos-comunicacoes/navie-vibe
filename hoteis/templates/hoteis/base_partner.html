@@ -9,6 +9,98 @@ x-data="{
     activeTab: localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
     viewMode: localStorage.getItem('partner_view_mode') || 'kanban',
     configTab: localStorage.getItem('partner_config_tab') || 'site',
+    estoqueTab: localStorage.getItem('partner_estoque_tab') || 'inventario',
+    comprasMode: localStorage.getItem('partner_compras_mode') || 'list',
+    comprasFormTab: localStorage.getItem('partner_compras_form_tab') || 'itens',
+    compraFornecedorId: localStorage.getItem('partner_compra_fornecedor_id') || '',
+    compraFornecedorLabel: localStorage.getItem('partner_compra_fornecedor_label') || 'Selecione um fornecedor...',
+    compraData: localStorage.getItem('partner_compra_data') || '',
+    compraObservacao: localStorage.getItem('partner_compra_observacao') || '',
+    compraItens: (localStorage.getItem('partner_compra_itens') && JSON.parse(localStorage.getItem('partner_compra_itens')).length > 0) ? JSON.parse(localStorage.getItem('partner_compra_itens')) : [{
+        produto_id: '',
+        produto_label: 'Selecione...',
+        produto_select_open: false,
+        produto_search: '',
+        quantidade_raw: '1',
+        valor_total_raw: '0,00',
+        validade: ''
+    }],
+    compraArquivos: [],
+
+    initCompraForm() {
+        this.compraFornecedorId = '';
+        this.compraFornecedorLabel = 'Selecione um fornecedor...';
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        this.compraData = `${yyyy}-${mm}-${dd}`;
+        this.compraObservacao = '';
+        this.compraItens = [{
+            produto_id: '',
+            produto_label: 'Selecione...',
+            produto_select_open: false,
+            produto_search: '',
+            quantidade_raw: '1',
+            valor_total_raw: '0,00',
+            validade: ''
+        }];
+        this.compraArquivos = [];
+        this.comprasFormTab = 'itens';
+    },
+
+    addCompraItem() {
+        this.compraItens.push({
+            produto_id: '',
+            produto_label: 'Selecione...',
+            produto_select_open: false,
+            produto_search: '',
+            quantidade_raw: '1',
+            valor_total_raw: '0,00',
+            validade: ''
+        });
+        this.$nextTick(() => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    },
+
+    removeCompraItem(index) {
+        if (this.compraItens.length > 1) {
+            this.compraItens.splice(index, 1);
+        }
+    },
+
+    parseNumber(val) {
+        if (val === undefined || val === null || val === '') return 0;
+        let clean = val.toString().replace(/\./g, '').replace(',', '.');
+        let parsed = parseFloat(clean);
+        return isNaN(parsed) ? 0 : parsed;
+    },
+
+    formatBRLDisplay(val) {
+        let parsed = this.parseNumber(val);
+        return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+
+    formatQtyDisplay(val) {
+        let parsed = this.parseNumber(val);
+        return parsed.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    },
+
+    getUnitPrice(item) {
+        let qty = this.parseNumber(item.quantidade_raw);
+        let tot = this.parseNumber(item.valor_total_raw);
+        let unit = qty > 0 ? tot / qty : 0;
+        return 'R$ ' + unit.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
+
+    getCompraGrandTotal() {
+        let total = 0;
+        this.compraItens.forEach(item => {
+            total += this.parseNumber(item.valor_total_raw);
+        });
+        return 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    },
     
     updateStatusColor() {
         const meta = document.getElementById('theme-color-meta');
@@ -42,6 +134,50 @@ x-data="{
         this.$watch('configTab', value => {
             localStorage.setItem('partner_config_tab', value);
         });
+
+        // Persistir a sub-aba de estoque
+        this.$watch('estoqueTab', value => {
+            localStorage.setItem('partner_estoque_tab', value);
+        });
+
+        // Garantir que o Lucide seja rodado após o Alpine inicializar o DOM
+        this.$nextTick(() => {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+
+        // Watchers para re-renderizar ícones dinâmicos do Lucide
+        this.$watch('activeTab', () => this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }));
+        this.$watch('estoqueTab', () => this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }));
+        this.$watch('comprasMode', () => this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }));
+        this.$watch('comprasFormTab', () => this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }));
+        this.$watch('compraItens', () => this.$nextTick(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }));
+
+        // Watchers para persistência de dados do formulário de compras
+        this.$watch('comprasMode', value => {
+            localStorage.setItem('partner_compras_mode', value);
+        });
+        this.$watch('comprasFormTab', value => {
+            localStorage.setItem('partner_compras_form_tab', value);
+        });
+        this.$watch('compraFornecedorId', value => {
+            localStorage.setItem('partner_compra_fornecedor_id', value);
+        });
+        this.$watch('compraFornecedorLabel', value => {
+            localStorage.setItem('partner_compra_fornecedor_label', value);
+        });
+        this.$watch('compraData', value => {
+            localStorage.setItem('partner_compra_data', value);
+        });
+        this.$watch('compraObservacao', value => {
+            localStorage.setItem('partner_compra_observacao', value);
+        });
+
+        // Efeito reativo profundo para persistir os itens da compra em tempo real
+        if (typeof Alpine !== 'undefined') {
+            Alpine.effect(() => {
+                localStorage.setItem('partner_compra_itens', JSON.stringify(this.compraItens));
+            });
+        }
     },
     
     toggleTheme() {
@@ -237,6 +373,38 @@ x-data="{
             appearance: textfield !important;
         }
 
+        /* Estilização para selects nativos de forma unificada */
+        select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 1rem center !important;
+            background-size: 1rem !important;
+            padding-right: 2.5rem !important;
+        }
+
+        /* --- Marquee Text (Carousel) --- */
+        @keyframes marquee {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
+        }
+        .marquee-container {
+            max-width: 240px;
+            overflow: hidden;
+            white-space: nowrap;
+            position: relative;
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 20s linear infinite;
+        }
+        .marquee-content:hover {
+            animation-play-state: paused;
+        }
+
         /* --- Classe Mestre: Glassmorphism (Inputs & Cards) --- */
         .input-glass { 
             background: rgba(255, 255, 255, 0.6) !important; 
@@ -333,6 +501,43 @@ x-data="{
             flex-wrap: wrap;
             gap: 0.625rem;
         }
+
+        /* --- Prevenir FOUC da Sidebar --- */
+        .sidebar-aside {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            height: 100dvh;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            width: 288px; /* w-72 */
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+        }
+        .sidebar-spacer {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            .sidebar-aside {
+                transform: translateX(0);
+                width: 70px;
+            }
+            .sidebar-aside:hover {
+                width: 260px;
+            }
+            .sidebar-spacer {
+                display: block;
+                width: 70px;
+                flex-shrink: 0;
+                min-height: 100vh;
+                transition: width 0.3s ease-in-out;
+            }
+            .sidebar-spacer:hover {
+                width: 260px;
+            }
+        }
     </style>
 
     <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Previne tela branca e flicker ao recarregar a página) -->
@@ -388,14 +593,14 @@ x-data="{
     </div>
 
     <!-- Espaçador invisível para empurrar o conteúdo ao lado da Sidebar recolhida -->
-    <div class="hidden md:block w-[70px] hover:w-[260px] transition-all duration-300 min-h-screen flex-shrink-0 z-10 peer"></div>
+    <div class="sidebar-spacer hidden md:block w-[70px] hover:w-[260px] transition-all duration-300 min-h-screen flex-shrink-0 z-10 peer"></div>
 
     <!-- ─────────────────────────────────────────────────────────────────
          SIDEBAR RESPONSIVA LATERAL B2B HOTELEIRA
          ───────────────────────────────────────────────────────────────── -->
     <aside 
         :class="sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full'"
-        class="fixed top-0 left-0 h-[100dvh] bg-white/70 dark:bg-black/40 backdrop-blur-xl dark:backdrop-blur-[20px] border-r border-slate-200/80 dark:border-navie-border transition-all duration-300 ease-in-out z-50 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.04)] md:translate-x-0 w-72 md:w-[70px] hover:w-[260px] overflow-hidden group/sidebar"
+        class="sidebar-aside fixed top-0 left-0 h-[100dvh] bg-white/70 dark:bg-black/40 backdrop-blur-xl dark:backdrop-blur-[20px] border-r border-slate-200/80 dark:border-navie-border transition-all duration-300 ease-in-out z-50 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.04)] md:translate-x-0 w-72 md:w-[70px] hover:w-[260px] overflow-hidden group/sidebar"
     >
         
         <div class="h-20 flex items-center justify-center md:justify-start px-4 border-b border-slate-200/50 dark:border-navie-border flex-shrink-0 whitespace-nowrap transition-all duration-300">
@@ -641,7 +846,16 @@ x-data="{
                         <span x-show="activeTab === 'financeiro'">Financeiro</span>
                         <span x-show="activeTab === 'quartos'">Acomodações & Categorias</span>
                         <span x-show="activeTab === 'reservas'">Aprovações & Reservas</span>
-                        <span x-show="activeTab === 'estoque'">Estoque & Almoxarifado</span>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
+                            <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
+                                Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp; Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp;
+                            </div>
+                        </div>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container">
+                            <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
+                                Compras & Lotes de Almoxarifado &nbsp;&bull;&nbsp; Compras & Lotes de Almoxarifado &nbsp;&bull;&nbsp;
+                            </div>
+                        </div>
                         <span x-show="activeTab === 'atividades'">Cronograma & Atividades da Equipe</span>
                         <span x-show="activeTab === 'equipe'">Colaboradores & Acessos</span>
                         <span x-show="activeTab === 'checkin'">Check-in / Validador</span>
@@ -653,11 +867,20 @@ x-data="{
                         <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'">Plano & Assinatura SaaS</span>
                     </h1>
                     <!-- Subtítulo Dinâmico do Cabeçalho (Ocultado no Mobile para manter respiro) -->
-                    <p class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold hidden sm:block">
+                    <div class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold hidden sm:block">
                         <span x-show="activeTab === 'financeiro'">Histórico financeiro e fluxo de caixa em tempo real</span>
                         <span x-show="activeTab === 'quartos'">Gerenciamento de tarifas e quartos do estabelecimento</span>
                         <span x-show="activeTab === 'reservas'">Histórico de reservas ativas dos clientes</span>
-                        <span x-show="activeTab === 'estoque'">Auditoria física de inventário, reposição de almoxarifado e validade</span>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
+                            <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">
+                                Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp; Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp;
+                            </div>
+                        </div>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container">
+                            <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">
+                                Gerencie compras, dê entrada em mercadorias e lance custos no financeiro &nbsp;&bull;&nbsp; Gerencie compras, dê entrada em mercadorias e lance custos no financeiro &nbsp;&bull;&nbsp;
+                            </div>
+                        </div>
                         <span x-show="activeTab === 'atividades'">Gestão operacional de limpeza, manutenção e recepção B2B</span>
                         <span x-show="activeTab === 'equipe'">Quadro operacional da pousada e níveis de acesso</span>
                         <span x-show="activeTab === 'checkin'">Validador dinâmico de estadias da plataforma Naviê</span>
@@ -666,8 +889,7 @@ x-data="{
                         <span x-show="activeTab === 'limpeza'">Cronograma de limpeza do dia pós check-out</span>
                         <span x-show="activeTab === 'manutencao'">Manutenções preventivas e corretivas dos quartos</span>
                         <span x-show="activeTab === 'configuracoes' && configTab === 'site'">Personalização visual, branding, contatos e geolocalização do seu hotel</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'">Gerencie seu plano de faturamento, limites e upgrade operacional</span>
-                    </p>
+                    </div>
                 </div>
             </div>
 
@@ -794,15 +1016,32 @@ x-data="{
         document.addEventListener('DOMContentLoaded', () => {
             formatMoedas();
             initMascaraMonetaria();
+            if(typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         });
-
-        if(typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
 
         // Configuração CSRF global para requisições HTMX
         document.body.addEventListener('htmx:configRequest', (event) => {
             event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+
+        // Registrar a URL do modal aberto para persistência de fluxo (apenas requisições GET)
+        document.body.addEventListener('htmx:beforeSwap', (event) => {
+            if (event.detail.target.id === 'modal-container') {
+                const config = event.detail.requestConfig;
+                if (config && config.verb === 'get') {
+                    const url = config.path || (event.detail.pathInfo && event.detail.pathInfo.requestPath);
+                    if (url) {
+                        localStorage.setItem('partner_open_modal_url', url);
+                    }
+                }
+            }
+        });
+
+        // Limpar o cache do modal sob qualquer redirecionamento de página
+        document.body.addEventListener('htmx:beforeRedirect', () => {
+            localStorage.removeItem('partner_open_modal_url');
         });
         
         document.body.addEventListener('htmx:afterSwap', (event) => {
@@ -813,6 +1052,27 @@ x-data="{
             }
             formatMoedas();
             initMascaraMonetaria();
+        });
+
+        // MutationObserver para detectar o fechamento do modal e limpar a URL do cache
+        document.addEventListener('DOMContentLoaded', () => {
+            const modalContainer = document.getElementById('modal-container');
+            if (modalContainer) {
+                const observer = new MutationObserver(() => {
+                    if (modalContainer.innerHTML.trim() === '') {
+                        localStorage.removeItem('partner_open_modal_url');
+                    }
+                });
+                observer.observe(modalContainer, { childList: true });
+            }
+
+            // Restaurar o modal se houver URL salva no localStorage
+            const savedModalUrl = localStorage.getItem('partner_open_modal_url');
+            if (savedModalUrl && typeof htmx !== 'undefined') {
+                setTimeout(() => {
+                    htmx.ajax('GET', savedModalUrl, '#modal-container');
+                }, 100);
+            }
         });
 
     </script>
@@ -959,7 +1219,7 @@ x-data="{
                      {% else %}bg-blue-50/95 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300{% endif %}">
                     
                     <div class="shrink-0 p-1.5 rounded-full shadow-sm {% if message.tags == 'success' %}bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200{% elif message.tags == 'error' %}bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200{% else %}bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200{% endif %}">
-                        <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="{% if message.tags == 'success' %}check-circle-2{% elif message.tags == 'error' %}alert-octagon{% else %}info{% endif %}" class="w-5 h-5"></i></span>
+                        <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}alert-circle{% else %}info{% endif %}" class="w-5 h-5"></i></span>
                     </div>
                     
                     <p class="text-sm font-semibold tracking-tight pr-2">{{ message }}</p>
