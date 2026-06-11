@@ -190,6 +190,7 @@ def hotel_create_view(request):
         slug = request.POST.get('slug')
         cor_primaria = request.POST.get('cor_primaria', '#f97316')
         destaque = request.POST.get('destaque') == 'on'
+        venda_online = 'venda_online' in request.POST
         status = request.POST.get('status', 'ativo')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
@@ -266,6 +267,7 @@ def hotel_create_view(request):
                     slug=slug,
                     status=status,
                     destaque=destaque,
+                    venda_online=venda_online,
                     latitude=latitude or None,
                     longitude=longitude or None
                 )
@@ -331,6 +333,7 @@ def hotel_edit_view(request, pk):
         slug = request.POST.get('slug')
         cor_primaria = request.POST.get('cor_primaria', '#f97316')
         destaque = request.POST.get('destaque') == 'on'
+        venda_online = 'venda_online' in request.POST
         status = request.POST.get('status', 'ativo')
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
@@ -422,6 +425,7 @@ def hotel_edit_view(request, pk):
                 hotel.slug = slug
                 hotel.status = status
                 hotel.destaque = destaque
+                hotel.venda_online = venda_online
                 hotel.latitude = latitude or None
                 hotel.longitude = longitude or None
                 

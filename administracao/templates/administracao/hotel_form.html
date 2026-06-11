@@ -37,6 +37,15 @@
 {% endblock %}
 
 {% block header_actions %}
+    <!-- Toggle Venda Online (SaaS Admin Controller) -->
+    <div class="flex items-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-navie-border/60 rounded-xl px-3.5 py-2 mr-2">
+        <span class="text-[10px] font-black text-slate-500 dark:text-slate-300 uppercase tracking-widest">Venda Online</span>
+        <label class="relative inline-flex items-center cursor-pointer select-none">
+            <input type="checkbox" name="venda_online" value="true" form="hotel-form-main" class="sr-only peer" {% if action == 'create' or hotel.venda_online %}checked{% endif %}>
+            <div class="w-9 h-5 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+        </label>
+    </div>
+
     <a href="{% url 'administracao:hoteis_list' %}" class="btn-header btn-header-secondary">
         <i data-lucide="arrow-left" class="w-4 h-4"></i>
         Voltar

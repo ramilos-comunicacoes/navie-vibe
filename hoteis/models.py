@@ -63,6 +63,7 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
     visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página do hotel")
+    venda_online = models.BooleanField(default=True, help_text="Se ativado, permite reservas e pagamentos online pelo site. Se desativado, o botão de reserva direciona para contato via WhatsApp.")
 
 
     
