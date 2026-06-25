@@ -8,6 +8,7 @@ x-data="{
     notificationsOpen: false,
     activeTab: localStorage.getItem('client_active_tab') || 'hospedagens', 
     welcomeBannerVisible: (localStorage.getItem('client_active_tab') || 'hospedagens') === 'hospedagens', 
+    hospedagemFilter: 'todos', 
     
     updateStatusColor() {
         const meta = document.getElementById('theme-color-meta');
@@ -165,6 +166,22 @@ x-data="{
         aside.translate-x-0 .typing-active {
             animation: typingText 1s steps(10, end) forwards, blinkCaret 0.75s step-end infinite;
         }
+
+        /* Loader and Cartoon Sailing Boat Animations */
+        .navie-boat-float {
+            animation: navieBoatFloat 2.2s ease-in-out infinite;
+        }
+        @keyframes navieBoatFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(2.5deg); }
+        }
+        .loader-hand-waving {
+            animation: navieWaveHand 0.12s ease-in-out infinite alternate;
+        }
+        @keyframes navieWaveHand {
+            0% { transform: translate(146px, 75px) rotate(-15deg) scale(1.3); }
+            100% { transform: translate(146px, 75px) rotate(20deg) scale(1.3); }
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
@@ -193,7 +210,7 @@ x-data="{
         
         <!-- Header da Sidebar: Logo Naviê Vibe -->
         <div class="h-20 flex items-center justify-center md:justify-start px-4 border-b border-slate-200/50 dark:border-navie-border flex-shrink-0 whitespace-nowrap transition-all duration-300">
-            <a href="{% url 'hoteis:home' %}" class="w-full h-full flex items-center justify-center md:justify-start gap-2.5 focus:outline-none" title="Voltar para a Página Inicial">
+            <a href="{% if request.parent_host_url %}{{ request.parent_host_url }}{% else %}/{% endif %}" class="w-full h-full flex items-center justify-center md:justify-start gap-2.5 focus:outline-none" title="Voltar para a Página Inicial">
                 <!-- EXPANDIDO (Aberto ou no Hover) -->
                 <div :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="items-center gap-2.5 w-full animate-in fade-in zoom-in duration-300 px-1">
                     <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-7 w-auto object-contain transition-transform duration-300 hover:rotate-6">
@@ -249,6 +266,17 @@ x-data="{
                                 <i data-lucide="utensils" class="w-5 h-5"></i>
                             </div>
                             <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Restaurantes</span>
+                        </button>
+                    </li>
+
+
+
+                    <li>
+                        <button type="button" @click="activeTab = 'configuracoes'; sidebarMobileOpen = false;" :class="activeTab === 'configuracoes' ? 'text-blue-600 dark:text-white bg-blue-50/80 dark:bg-white/10 font-bold' : 'text-slate-500 dark:text-navie-textsec hover:text-blue-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-colors overflow-hidden whitespace-nowrap group/link focus:outline-none">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="settings" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Ajustes & Conta</span>
                         </button>
                     </li>
                 </ul>
@@ -316,12 +344,16 @@ x-data="{
                         <span x-show="activeTab === 'shows'">Shows & Ingressos</span>
                         <span x-show="activeTab === 'cinema'">Bilhetes de Cinema</span>
                         <span x-show="activeTab === 'restaurantes'">Reservas em Restaurantes</span>
+                        <span x-show="activeTab === 'feed'">Momentos Naviê</span>
+                        <span x-show="activeTab === 'configuracoes'">Minha Conta & Ajustes</span>
                     </h1>
                     <p class="text-[9px] font-black text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight tracking-wider uppercase hidden sm:block">
                         <span x-show="activeTab === 'hospedagens'">Seus vouchers, estadias e check-ins em pousadas e hotéis</span>
                         <span x-show="activeTab === 'shows'">Seus ingressos digitais e reservas de shows, festas e eventos</span>
                         <span x-show="activeTab === 'cinema'">Seus bilhetes, sessões e assentos de cinema comprados</span>
                         <span x-show="activeTab === 'restaurantes'">Seu histórico de mesas e reservas gastronômicas</span>
+                        <span x-show="activeTab === 'feed'">Explore e compartilhe momentos e experiências reais dos viajantes</span>
+                        <span x-show="activeTab === 'configuracoes'">Gerencie seus dados pessoais, endereço e preferências do sistema</span>
                     </p>
                 </div>
             </div>
@@ -350,9 +382,9 @@ x-data="{
                 <!-- HOSPEDAGENS SUB-HEADER -->
                 <div x-show="activeTab === 'hospedagens'" class="flex items-center gap-2 animate-in fade-in slide-in-from-left duration-300 w-full">
                     <span class="flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[10px] uppercase font-black tracking-wider"><i data-lucide="filter" class="w-3 h-3"></i> Filtros:</span>
-                    <button class="bg-white text-blue-900 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm transition-transform active:scale-95">Todos</button>
-                    <button class="bg-white/10 hover:bg-white/25 text-white px-3 py-1 rounded-full text-[10px] font-medium transition-all active:scale-95">Ativos</button>
-                    <button class="bg-white/10 hover:bg-white/25 text-white px-3 py-1 rounded-full text-[10px] font-medium transition-all active:scale-95">Concluídos</button>
+                    <button @click="hospedagemFilter = 'todos'" :class="hospedagemFilter === 'todos' ? 'bg-white text-blue-900 font-bold' : 'bg-white/10 hover:bg-white/25 text-white font-medium'" class="px-3 py-1 rounded-full text-[10px] shadow-sm transition-transform active:scale-95">Todos</button>
+                    <button @click="hospedagemFilter = 'ativos'" :class="hospedagemFilter === 'ativos' ? 'bg-white text-blue-900 font-bold' : 'bg-white/10 hover:bg-white/25 text-white font-medium'" class="px-3 py-1 rounded-full text-[10px] shadow-sm transition-transform active:scale-95">Ativos</button>
+                    <button @click="hospedagemFilter = 'concluidos'" :class="hospedagemFilter === 'concluidos' ? 'bg-white text-blue-900 font-bold' : 'bg-white/10 hover:bg-white/25 text-white font-medium'" class="px-3 py-1 rounded-full text-[10px] shadow-sm transition-transform active:scale-95">Concluídos</button>
                 </div>
 
                 <!-- SHOWS SUB-HEADER -->
@@ -384,13 +416,103 @@ x-data="{
         </div>
     </main>
 
-    <!-- Script de Inicialização de Ícones Lucide -->
+    <!-- Script de Inicialização de Ícones Lucide e Loader Global -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             if (window.lucide) {
                 lucide.createIcons();
             }
         });
+
+        // Global loader helper functions
+        window.showNavieLoader = function() {
+            if (document.getElementById('navie-global-loader')) return;
+            
+            const loader = document.createElement('div');
+            loader.id = 'navie-global-loader';
+            loader.className = 'fixed inset-0 z-[999999] flex items-center justify-center bg-slate-50/40 dark:bg-slate-950/40 backdrop-blur-md transition-opacity duration-300 opacity-0';
+            
+            loader.innerHTML = `
+                <!-- Solid Water Body and Waves (Centered Vertically but extends to bottom) -->
+                <div class="absolute top-[50%] bottom-0 left-0 w-screen bg-[rgba(59,130,246,0.35)] dark:bg-[rgba(30,58,138,0.5)]">
+                    <!-- Ocean Waves -->
+                    <svg class="absolute top-[-24px] left-0 w-screen h-12 text-blue-500/20 dark:text-blue-400/20" preserveAspectRatio="none" viewBox="0 0 200 40">
+                        <path class="wave-back" d="M 0,20 Q 25,10 50,20 T 100,20 T 150,20 T 200,20 T 250,20 T 300,20 V 40 H 0 Z" fill="currentColor">
+                            <animateTransform attributeName="transform" type="translate" from="0,0" to="-100,0" dur="4s" repeatCount="indefinite" />
+                        </path>
+                        <path class="wave-front" d="M 0,22 Q 25,12 50,22 T 100,22 T 150,22 T 200,22 T 250,22 T 300,22 V 40 H 0 Z" fill="rgba(59, 130, 246, 0.35)">
+                            <animateTransform attributeName="transform" type="translate" from="0,0" to="-100,0" dur="2.5s" repeatCount="indefinite" />
+                        </path>
+                    </svg>
+                </div>
+
+                <!-- Veleiro Loader -->
+                <div class="absolute bottom-[50%] left-1/2 -translate-x-1/2 w-36 h-36 navie-boat-float" style="transform-origin: center bottom; margin-bottom: -20px;">
+                        <svg viewBox="0 0 200 200" class="w-full h-full overflow-visible">
+                            <!-- Wooden Mast -->
+                            <rect x="97" y="15" width="6" height="117" rx="3" fill="#64748b" />
+                            
+                            <!-- Sails -->
+                            <path d="M 94,22 Q 62,72 42,122 L 94,122 Z" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+                            <path d="M 106,32 Q 138,78 158,122 L 106,122 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" />
+
+                            <!-- Sailor -->
+                            <g id="loader-sailor">
+                                <!-- Sailor Cap -->
+                                <path d="M 90,66 Q 100,56 110,66 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="2.5" />
+                                <rect x="91" y="66" width="18" height="4" fill="#1d4ed8" rx="1" />
+                                
+                                <!-- Sailor Head -->
+                                <circle cx="100" cy="82" r="12" fill="#ffffff" stroke="#1d4ed8" stroke-width="3" />
+                                <path d="M 97,84 Q 100,88 103,84" fill="none" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round" />
+                                <circle cx="96" cy="80" r="1.5" fill="#1d4ed8" />
+                                <circle cx="104" cy="80" r="1.5" fill="#1d4ed8" />
+                                
+                                <!-- Sailor Body -->
+                                <path d="M 86,130 L 114,130 L 111,96 L 89,96 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="3" />
+                                <line x1="90" y1="104" x2="110" y2="104" stroke="#1d4ed8" stroke-width="2.5" />
+                                <line x1="88" y1="112" x2="112" y2="112" stroke="#1d4ed8" stroke-width="2.5" />
+                                <line x1="87" y1="120" x2="113" y2="120" stroke="#1d4ed8" stroke-width="2.5" />
+
+                                <!-- Stretchy Arm -->
+                                <path d="M 111,102 Q 130,65 146,75" fill="none" stroke="#1d4ed8" stroke-width="4.5" stroke-linecap="round" />
+                                
+                                <!-- Waving Hand -->
+                                <g class="loader-hand-waving" transform="translate(146, 75)" style="transform-origin: 0px 0px;">
+                                    <path d="M -6,-6 C -6,-10 -2,-12 2,-10 C 5,-9 7,-6 6,-3 C 5,0 1,2 -2,1 C -5,0 -6,-3 -6,-6 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="2.5" />
+                                    <path d="M -2,-10 C -2,-13 1,-15 4,-13 C 6,-11 6,-8 4,-6" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" />
+                                    <path d="M 2,-9 C 3,-12 6,-13 8,-11 C 9,-9 8,-6 6,-5" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" />
+                                </g>
+                            </g>
+                            
+                            <!-- Hull -->
+                            <path d="M 16,132 L 184,132 L 154,166 L 46,166 Z" fill="#1d4ed8" stroke="#172554" stroke-width="3" stroke-linejoin="round" />
+                            <path d="M 24,140 L 176,140 L 168,149 L 32,149 Z" fill="#3b82f6" />
+                        </svg>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(loader);
+            
+            // Force reflow
+            loader.offsetHeight;
+            loader.classList.add('opacity-100');
+        };
+        
+        window.hideNavieLoader = function() {
+            const loader = document.getElementById('navie-global-loader');
+            if (!loader) return;
+            
+            loader.classList.remove('opacity-100');
+            loader.classList.add('opacity-0');
+            
+            setTimeout(() => {
+                if (loader.parentNode) {
+                    loader.parentNode.removeChild(loader);
+                }
+            }, 300);
+        };
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

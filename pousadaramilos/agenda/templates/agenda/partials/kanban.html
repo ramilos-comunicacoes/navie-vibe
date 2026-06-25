@@ -1,0 +1,154 @@
+{% load static %}
+
+{% if is_htmx %}
+<!-- Out-Of-Band Swap para o subcabeçalho (Filtros e Contagem) -->
+<div id="agenda-subheader" hx-swap-oob="true">
+    {% include 'agenda/partials/subheader.html' %}
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1 min-h-0 overflow-y-auto md:overflow-visible pb-8">
+    
+    <!-- COLUNA 1: ATRASADAS -->
+    <div class="flex flex-col h-full min-h-[250px]">
+        <div class="flex items-center justify-between px-3 py-2.5 mb-2 bg-rose-500/10 border border-rose-500/20 rounded-xl">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                <h3 class="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-wider">Atrasadas</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-black bg-rose-500 text-white rounded-lg">{{ atrasadas.count }}</span>
+        </div>
+        
+        <div class="kanban-column-list flex-1 flex flex-col gap-3 p-2 rounded-2xl min-h-[150px] md:max-h-[calc(100vh-250px)] md:overflow-y-auto no-scrollbar bg-rose-500/5 border border-rose-500/10"
+             data-status="todo"
+             id="col-atrasadas">
+            {% for atividade in atrasadas %}
+                {% include 'agenda/partials/card_tarefa.html' with atividade=atividade %}
+            {% empty %}
+                <div class="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-rose-500/20 rounded-xl text-center opacity-65">
+                    <i data-lucide="check-circle-2" class="w-6 h-6 text-rose-400 dark:text-rose-500 mb-2"></i>
+                    <p class="text-[10px] font-bold text-rose-500/70">Nenhuma tarefa atrasada!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- COLUNA 2: A FAZER -->
+    <div class="flex flex-col h-full min-h-[250px]">
+        <div class="flex items-center justify-between px-3 py-2.5 mb-2 bg-slate-500/10 border border-slate-500/20 rounded-xl">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                <h3 class="text-xs font-black text-slate-600 dark:text-slate-400 uppercase tracking-wider">A Fazer</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-black bg-slate-500 text-white rounded-lg">{{ todo.count }}</span>
+        </div>
+        
+        <div class="kanban-column-list flex-1 flex flex-col gap-3 p-2 rounded-2xl min-h-[150px] md:max-h-[calc(100vh-250px)] md:overflow-y-auto no-scrollbar bg-slate-500/5 border border-slate-500/10"
+             data-status="todo"
+             id="col-todo">
+            {% for atividade in todo %}
+                {% include 'agenda/partials/card_tarefa.html' with atividade=atividade %}
+            {% empty %}
+                <div class="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-slate-300/30 dark:border-white/5 rounded-xl text-center opacity-50">
+                    <i data-lucide="list-todo" class="w-6 h-6 text-slate-400 mb-2"></i>
+                    <p class="text-[10px] font-bold">Sem tarefas a fazer.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- COLUNA 3: EM ANDAMENTO -->
+    <div class="flex flex-col h-full min-h-[250px]">
+        <div class="flex items-center justify-between px-3 py-2.5 mb-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <h3 class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Em Progresso</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-black bg-amber-500 text-white rounded-lg">{{ doing.count }}</span>
+        </div>
+        
+        <div class="kanban-column-list flex-1 flex flex-col gap-3 p-2 rounded-2xl min-h-[150px] md:max-h-[calc(100vh-250px)] md:overflow-y-auto no-scrollbar bg-amber-500/5 border border-amber-500/10"
+             data-status="doing"
+             id="col-doing">
+            {% for atividade in doing %}
+                {% include 'agenda/partials/card_tarefa.html' with atividade=atividade %}
+            {% empty %}
+                <div class="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-amber-500/20 rounded-xl text-center opacity-50">
+                    <i data-lucide="play-circle" class="w-6 h-6 text-amber-400 mb-2"></i>
+                    <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500/70">Nenhuma tarefa iniciada.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- COLUNA 4: CONCLUÍDAS -->
+    <div class="flex flex-col h-full min-h-[250px]">
+        <div class="flex items-center justify-between px-3 py-2.5 mb-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <h3 class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Concluído</h3>
+            </div>
+            <span class="px-2 py-0.5 text-[10px] font-black bg-emerald-500 text-white rounded-lg">{{ done.count }}</span>
+        </div>
+        
+        <div class="kanban-column-list flex-1 flex flex-col gap-3 p-2 rounded-2xl min-h-[150px] md:max-h-[calc(100vh-250px)] md:overflow-y-auto no-scrollbar bg-emerald-500/5 border border-emerald-500/10"
+             data-status="done"
+             id="col-done">
+            {% for atividade in done %}
+                {% include 'agenda/partials/card_tarefa.html' with atividade=atividade %}
+            {% empty %}
+                <div class="flex flex-col items-center justify-center py-8 px-4 border border-dashed border-emerald-500/20 rounded-xl text-center opacity-50">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-emerald-400 mb-2"></i>
+                    <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500/70">Nenhuma tarefa concluída ainda.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const columns = document.querySelectorAll('.kanban-column-list');
+        columns.forEach(col => {
+            new Sortable(col, {
+                group: 'kanban',
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                handle: '.card-drag-handle',
+                onEnd: function (evt) {
+                    const itemEl = evt.item;
+                    const toEl = evt.to;
+                    const fromEl = evt.from;
+                    const newStatus = toEl.dataset.status;
+                    const id = itemEl.dataset.id;
+                    
+                    // Se mudou de coluna de verdade
+                    if (toEl !== fromEl && newStatus && id) {
+                        const formData = new FormData();
+                        formData.append('status', newStatus);
+                        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                        
+                        fetch(`/sistema/agenda/${id}/status/`, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'HX-Request': 'true'
+                            }
+                        }).then(response => {
+                            if (response.ok) {
+                                // O cabeçalho HX-Trigger fará o HTMX recarregar
+                                document.body.dispatchEvent(new CustomEvent('tarefaModificada'));
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    })();
+</script>

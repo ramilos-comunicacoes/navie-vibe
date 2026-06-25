@@ -1,0 +1,318 @@
+{% load static %}
+
+<div id="modalTarefaFormulario" 
+     x-data="{}" 
+     @tarefamodificada.window="document.getElementById('modal-container').innerHTML = '';"
+     class="fixed inset-0 flex items-center justify-center p-4 z-[99999]">
+    
+    <!-- Background Overlay -->
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto" 
+         onclick="document.getElementById('modal-container').innerHTML = '';"></div>
+    
+    <!-- Modal Panel (max-w-3xl, h-[90vh] for taller/higher screen vertical usage) -->
+    <div class="relative bg-white dark:bg-slate-900 w-full max-w-3xl h-[90vh] max-h-[96vh] rounded-3xl shadow-2xl flex flex-col mx-4 border border-slate-200/50 dark:border-white/10 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto overflow-hidden md:overflow-visible">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/30 rounded-t-3xl shrink-0 flex justify-between items-center z-10">
+            <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <span class="text-brand"><i data-lucide="calendar-check" class="w-4 h-4"></i></span>
+                <span>{% if atividade %}Editar Atividade{% else %}Nova Atividade{% endif %}</span>
+            </h3>
+            <button type="button" 
+                    onclick="document.getElementById('modal-container').innerHTML = '';" 
+                    class="p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form {% if atividade %}
+                  hx-post="{% url 'agenda:editar_tarefa' atividade.id %}"
+              {% else %}
+                  hx-post="{% url 'agenda:nova_tarefa' %}"
+              {% endif %}
+              hx-target="#modal-container"
+              hx-swap="innerHTML"
+              class="flex flex-col flex-1 overflow-hidden md:overflow-visible">
+            {% csrf_token %}
+
+            <!-- Form Body (Taller padding-bottom and overflow hierarchy fixes) -->
+            <div class="p-6 pb-20 overflow-y-auto md:overflow-visible flex-1 text-left">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Left Column: Core task details -->
+                    <div class="space-y-4">
+                        <!-- Title Field -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1">
+                                Título da Atividade <span class="text-red-500">*</span>
+                            </label>
+                            {{ form.titulo }}
+                            {% if form.titulo.errors %}
+                                <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.titulo.errors.as_text }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Description Field -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1">
+                                Descrição / Observações
+                            </label>
+                            {{ form.descricao }}
+                            {% if form.descricao.errors %}
+                                <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.descricao.errors.as_text }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Metadata and assignments -->
+                    <div class="space-y-4">
+                        
+                        <!-- Status & Priority (Custom Alpine Selects) -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Status
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.status.value|default:'todo' }}',
+                                    label: '{% if form.status.value == 'todo' %}A Fazer{% elif form.status.value == 'doing' %}Em Andamento{% elif form.status.value == 'done' %}Concluído{% else %}A Fazer{% endif %}'
+                                }">
+                                    <input type="hidden" name="status" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        <button type="button" @click="val = 'todo'; label = 'A Fazer'; open = false" class="dropdown-item w-full">A Fazer</button>
+                                        <button type="button" @click="val = 'doing'; label = 'Em Andamento'; open = false" class="dropdown-item w-full">Em Andamento</button>
+                                        <button type="button" @click="val = 'done'; label = 'Concluído'; open = false" class="dropdown-item w-full">Concluído</button>
+                                    </div>
+                                </div>
+                                {% if form.status.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.status.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Prioridade
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.prioridade.value|default:'normal' }}',
+                                    label: '{% if form.prioridade.value == 'baixa' %}Baixa{% elif form.prioridade.value == 'normal' %}Normal{% elif form.prioridade.value == 'alta' %}Alta{% else %}Normal{% endif %}'
+                                }">
+                                    <input type="hidden" name="prioridade" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        <button type="button" @click="val = 'baixa'; label = 'Baixa'; open = false" class="dropdown-item w-full">Baixa</button>
+                                        <button type="button" @click="val = 'normal'; label = 'Normal'; open = false" class="dropdown-item w-full">Normal</button>
+                                        <button type="button" @click="val = 'alta'; label = 'Alta'; open = false" class="dropdown-item w-full">Alta</button>
+                                    </div>
+                                </div>
+                                {% if form.prioridade.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.prioridade.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Due Date & Reminder -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Data/Hora Limite
+                                </label>
+                                {{ form.data_vencimento }}
+                                {% if form.data_vencimento.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.data_vencimento.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Lembrete em
+                                </label>
+                                {{ form.lembrete }}
+                                {% if form.lembrete.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.lembrete.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Responsible & Guest (Custom Alpine Selects) -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Responsável <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.usuario.value|default:'' }}',
+                                    label: '{% for u_id, u_label in form.fields.usuario.choices %}{% if u_id|stringformat:'s' == form.usuario.value|stringformat:'s' %}{% if not u_id %}Selecione...{% else %}{{ u_label|escapejs }}{% endif %}{% endif %}{% endfor %}' || 'Selecione...'
+                                }">
+                                    <input type="hidden" name="usuario" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label" class="truncate pr-2"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        {% for u_id, u_label in form.fields.usuario.choices %}
+                                            <button type="button" @click="val = '{{ u_id }}'; label = '{% if not u_id %}Selecione...{% else %}{{ u_label|escapejs }}{% endif %}'; open = false" class="dropdown-item w-full">
+                                                {% if not u_id %}Selecione...{% else %}{{ u_label }}{% endif %}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.usuario.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.usuario.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Hóspede (Opcional)
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.hospede.value|default:'' }}',
+                                    label: '{% for h_id, h_label in form.fields.hospede.choices %}{% if h_id|stringformat:'s' == form.hospede.value|stringformat:'s' %}{% if not h_id %}Selecione...{% else %}{{ h_label|escapejs }}{% endif %}{% endif %}{% endfor %}' || 'Selecione...'
+                                }">
+                                    <input type="hidden" name="hospede" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label" class="truncate pr-2"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        {% for h_id, h_label in form.fields.hospede.choices %}
+                                            <button type="button" @click="val = '{{ h_id }}'; label = '{% if not h_id %}Selecione...{% else %}{{ h_label|escapejs }}{% endif %}'; open = false" class="dropdown-item w-full">
+                                                {% if not h_id %}Selecione...{% else %}{{ h_label }}{% endif %}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.hospede.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.hospede.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Room & Reservation (Custom Alpine Selects) -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Quarto (Opcional)
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.quarto.value|default:'' }}',
+                                    label: '{% for q_id, q_label in form.fields.quarto.choices %}{% if q_id|stringformat:'s' == form.quarto.value|stringformat:'s' %}{% if not q_id %}Selecione...{% else %}{{ q_label|escapejs }}{% endif %}{% endif %}{% endfor %}' || 'Selecione...'
+                                }">
+                                    <input type="hidden" name="quarto" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label" class="truncate pr-2"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        {% for q_id, q_label in form.fields.quarto.choices %}
+                                            <button type="button" @click="val = '{{ q_id }}'; label = '{% if not q_id %}Selecione...{% else %}{{ q_label|escapejs }}{% endif %}'; open = false" class="dropdown-item w-full">
+                                                {% if not q_id %}Selecione...{% else %}{{ q_label }}{% endif %}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.quarto.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.quarto.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5 px-1 font-bold">
+                                    Reserva (Opcional)
+                                </label>
+                                <div class="relative w-full" 
+                                     :class="open ? 'z-30' : 'z-0'"
+                                     x-data="{ 
+                                    open: false, 
+                                    val: '{{ form.reserva.value|default:'' }}',
+                                    label: '{% for r_id, r_label in form.fields.reserva.choices %}{% if r_id|stringformat:'s' == form.reserva.value|stringformat:'s' %}{% if not r_id %}Selecione...{% else %}{{ r_label|escapejs }}{% endif %}{% endif %}{% endfor %}' || 'Selecione...'
+                                }">
+                                    <input type="hidden" name="reserva" :value="val">
+                                    <button type="button" @click="open = !open" @click.outside="open = false"
+                                            class="w-full h-10 modal-input-glass rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none flex items-center justify-between cursor-pointer">
+                                        <span x-text="label" class="truncate pr-2"></span>
+                                        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition.opacity
+                                         class="absolute left-0 mt-1 w-full dropdown-menu z-[100]"
+                                         style="display: none;">
+                                        {% for r_id, r_label in form.fields.reserva.choices %}
+                                            <button type="button" @click="val = '{{ r_id }}'; label = '{% if not r_id %}Selecione...{% else %}{{ r_label|escapejs }}{% endif %}'; open = false" class="dropdown-item w-full">
+                                                {% if not r_id %}Selecione...{% else %}{{ r_label }}{% endif %}
+                                            </button>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if form.reserva.errors %}
+                                    <span class="text-[10px] text-red-500 font-bold mt-1 block">{{ form.reserva.errors.as_text }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer / Actions -->
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/30 rounded-b-3xl shrink-0 flex items-center justify-end gap-3 z-10">
+                <button type="button" 
+                        onclick="document.getElementById('modal-container').innerHTML = '';"
+                        class="h-10 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 text-xs font-black transition-colors cursor-pointer border-none">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="h-10 px-5 rounded-xl bg-brand hover:bg-brand/90 text-brand-text text-xs font-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] cursor-pointer border-none flex items-center justify-center gap-1.5">
+                    <i data-lucide="check" class="w-4 h-4"></i>
+                    <span>Salvar Atividade</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+</script>

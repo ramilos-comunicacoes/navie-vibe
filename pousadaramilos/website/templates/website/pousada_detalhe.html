@@ -1,0 +1,207 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load l10n %}
+
+{% block title %}{{ pousada.nome }} | Nossas Acomodações{% endblock %}
+
+{% block extra_head %}
+<script>
+    (function() {
+        const rawColor = "{{ pousada.cor_primaria_hex|default:'#2563eb' }}";
+        let hex = rawColor.replace('#', '');
+        if (hex.length === 3) { hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; }
+        const r = parseInt(hex.substring(0, 2), 16) || 37;
+        const g = parseInt(hex.substring(2, 4), 16) || 99;
+        const b = parseInt(hex.substring(4, 6), 16) || 235;
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        let brandColor = "#" + hex;
+        let brandTextColor = "#ffffff";
+        let brandColorBurned = brandColor;
+        if (yiq >= 170) {
+            const f = 0.45;
+            brandColorBurned = "#" + ((1 << 24) + (Math.round(r*f) << 16) + (Math.round(g*f) << 8) + Math.round(b*f)).toString(16).slice(1);
+            brandTextColor = brandColorBurned;
+        }
+        document.documentElement.style.setProperty('--brand-color', brandColor);
+        document.documentElement.style.setProperty('--brand-text-color', brandTextColor);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r},${g},${b},0.12)`);
+    })();
+</script>
+<style>
+    .text-action-blue  { color: var(--brand-color-burned) !important; }
+    .bg-action-blue    { background-color: var(--brand-color) !important; color: var(--brand-text-color) !important; }
+    .border-action-blue{ border-color: var(--brand-color-burned) !important; }
+    .tag-pill-display {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 9999px;
+        background-color: var(--brand-color-alpha);
+        color: var(--brand-color-burned);
+        font-size: 10px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        border: 1px solid var(--brand-color-burned, rgba(37,99,235,0.3));
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white min-h-screen pt-20 sm:pt-24">
+
+    <!-- HERO PANORÂMICO DA POUSADA -->
+    <section class="relative h-[40vh] sm:h-[50vh] w-full flex items-center justify-center overflow-hidden select-none">
+        <!-- Imagem de Fundo Premium -->
+        <div class="absolute inset-0 w-full h-full z-0">
+            <div class="absolute inset-0 w-full h-full bg-black/60 z-10"></div>
+            {% if pousada.imagem_destaque %}
+                <img src="{{ pousada.imagem_destaque.url }}" alt="{{ pousada.nome }}" class="w-full h-full object-cover">
+            {% else %}
+                {% if "Serra" in pousada.nome %}
+                    <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80" alt="Ramilos Serra" class="w-full h-full object-cover">
+                {% elif "Sertão" in pousada.nome or "Sertao" in pousada.nome %}
+                    <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=80" alt="Ramilos Sertão" class="w-full h-full object-cover">
+                {% elif "Praia" in pousada.nome or "Correia" in pousada.nome %}
+                    <img src="https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=1200&q=80" alt="Ramilos Praia" class="w-full h-full object-cover">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt="Pousada" class="w-full h-full object-cover">
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Conteúdo do Hero -->
+        <div class="relative z-20 max-w-4xl mx-auto px-6 text-center text-white space-y-4">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 text-white border border-white/30 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-ramiros-yellow"></i>
+                {% if "Serra" in pousada.nome %}
+                    Tianguá - CE
+                {% elif "Sertão" in pousada.nome or "Sertao" in pousada.nome %}
+                    Tianguá - CE
+                {% elif "Praia" in pousada.nome or "Correia" in pousada.nome %}
+                    Luís Correia - PI
+                {% else %}
+                    Pousadas Ramilos
+                {% endif %}
+            </span>
+            <h1 class="text-3xl sm:text-5xl font-black font-poppins tracking-tight leading-none text-white">
+                {{ pousada.nome }}
+            </h1>
+            <p class="text-xs sm:text-sm text-white/80 font-medium max-w-lg mx-auto leading-relaxed">
+                {% if "Serra" in pousada.nome %}
+                    Lareira a lenha, vinhos nobres e o clima de montanha europeu para dias aconchegantes.
+                {% elif "Sertão" in pousada.nome or "Sertao" in pousada.nome %}
+                    Pôr do sol deslumbrante, culinária típica rústica e trilhas ecológicas em contato direto com a natureza.
+                {% elif "Praia" in pousada.nome or "Correia" in pousada.nome %}
+                    Areias brancas mornas, coqueirais deslumbrantes e piscinas naturais para revigorar as energias.
+                {% else %}
+                    Simplicidade, aconchego e hospitalidade de alto padrão em um ambiente sob medida.
+                {% endif %}
+            </p>
+        </div>
+    </section>
+
+    <!-- LISTAGEM DE QUARTOS DESTA UNIDADE -->
+    <section class="py-16 bg-slate-50 border-t border-slate-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            <div class="text-left space-y-2">
+                <span class="tag-pill-display"><i data-lucide="home" class="w-3.5 h-3.5"></i>Nossas Acomodações</span>
+                <h2 class="text-2xl font-black text-gray-900 font-poppins">Quartos Livres na Unidade</h2>
+                <p class="text-xs text-gray-500 font-bold max-w-xl">Confira as acomodações operacionais e disponíveis para sua reserva nesta pousada física. Selecione o seu período preferido e aproveite.</p>
+            </div>
+
+            <!-- Inclusão da Vitrine Reutilizável de Quartos (2x2 no Mobile) -->
+            <div id="pousada-room-list">
+                {% include 'website/partials/room_list.html' %}
+            </div>
+        </div>
+    </section>
+
+    {% if pousada.mapa_latitude and pousada.mapa_longitude %}
+    <!-- SEÇÃO DE LOCALIZAÇÃO E MAPA -->
+    <section class="py-16 bg-white border-t border-slate-200/50" x-data="{ mapMode: 'satellite' }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <!-- Info text and Button -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="tag-pill-display"><i data-lucide="map" class="w-3.5 h-3.5"></i>Localização</span>
+                            
+                            <!-- Seletor de Modo de Mapa -->
+                            <div class="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg shrink-0 border border-slate-200/50">
+                                <button type="button" @click="mapMode = 'roadmap'"
+                                        :class="mapMode === 'roadmap' ? 'bg-white text-slate-800 shadow-xs font-black' : 'text-slate-400 hover:text-slate-700 font-bold'"
+                                        class="px-2 py-1 text-[8px] rounded-md border-none transition-all cursor-pointer uppercase tracking-wider">
+                                    Mapa
+                                </button>
+                                <button type="button" @click="mapMode = 'satellite'"
+                                        :class="mapMode === 'satellite' ? 'bg-white text-slate-800 shadow-xs font-black' : 'text-slate-400 hover:text-slate-700 font-bold'"
+                                        class="px-2 py-1 text-[8px] rounded-md border-none transition-all cursor-pointer uppercase tracking-wider">
+                                    Satélite
+                                </button>
+                            </div>
+                        </div>
+                        <h2 class="text-2xl font-black text-gray-900 font-poppins">Como nos encontrar</h2>
+                        <p class="text-xs text-gray-500 font-bold leading-relaxed">
+                            Nossa pousada está perfeitamente integrada à natureza local. Veja nossa localização exata por satélite e trace a melhor rota para sua viagem.
+                        </p>
+                    </div>
+                    <div class="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl space-y-3">
+                        <div class="flex items-center gap-3">
+                            <div class="h-9 w-9 rounded-xl bg-action-blue/10 flex items-center justify-center text-action-blue">
+                                <i data-lucide="map-pin" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Endereço</span>
+                                <span class="text-xs font-black text-slate-800">{{ pousada.endereco }}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="h-9 w-9 rounded-xl bg-action-blue/10 flex items-center justify-center text-action-blue">
+                                <i data-lucide="compass" class="w-5 h-5"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Coordenadas GPS</span>
+                                <span class="text-xs font-mono font-bold text-slate-700">{{ pousada.mapa_latitude }}, {{ pousada.mapa_longitude }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ pousada.mapa_latitude|unlocalize }},{{ pousada.mapa_longitude|unlocalize }}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       style="background-color: var(--brand-color) !important; color: var(--brand-text-color) !important;"
+                       class="inline-flex items-center justify-center gap-2 w-full py-3.5 hover:bg-opacity-90 text-xs font-black rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-[0.98] border-none text-center cursor-pointer">
+                        <i data-lucide="navigation" class="w-4 h-4"></i>
+                        <span>ABRIR NO GOOGLE MAPS / GPS</span>
+                    </a>
+                </div>
+                
+                <!-- Google Maps Embed Satellite Frame -->
+                <div class="lg:col-span-2 relative group">
+                    <!-- Glass effect frame overlay border -->
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-[var(--brand-color)] to-amber-500 rounded-3xl blur opacity-15 group-hover:opacity-30 transition duration-1000"></div>
+                    <div class="relative w-full h-[380px] rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-slate-100">
+                        <iframe 
+                            :src="'https://maps.google.com/maps?q={{ pousada.mapa_latitude|unlocalize }},{{ pousada.mapa_longitude|unlocalize }}' + (mapMode === 'satellite' ? '&t=h' : '') + '&z=17&output=embed'"
+                            class="w-full h-full border-none"
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+
+<div class="hidden">
+    {% csrf_token %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.lucide) { lucide.createIcons(); }
+    });
+</script>
+{% endblock %}

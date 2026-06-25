@@ -8,12 +8,56 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime, date, timedelta
 from django.db import models
-from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tarefa, HospedeReserva, VeiculoReserva, ReservaLog, ProdutoConsumo, PedidoServico, ItemPedidoServico
+from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tarefa, HospedeReserva, VeiculoReserva, ReservaLog, ProdutoConsumo, PedidoServico, ItemPedidoServico, HotelSecao, HotelSecaoItem, HotelImagem
 from .utils import checar_disponibilidade_quarto, buscar_datas_proximas
 from decimal import Decimal
 
+class UnifiedPortalWrapper:
+    def __init__(self, empresa, first_hotel):
+        self.empresa = empresa
+        self.first_hotel = first_hotel
+        self.id = first_hotel.id # Resolves B2C detail redirect safely
+        self.nome = empresa.nome_fantasia
+        self.descricao = getattr(empresa, 'descricao_portal', '') or "Rede de Pousadas e Hospedagens."
+        if not self.descricao:
+            self.descricao = f"Conheça as acomodações do {empresa.nome_fantasia}."
+        self.banner = empresa.banner or first_hotel.banner
+        self.logo = empresa.logo or first_hotel.logo
+        self.slug = empresa.slug
+        self.sorting_id = first_hotel.id
+        self.is_rede = True
+        
+        # Represent multiple locations
+        hotéis = empresa.hoteis.filter(status='ativo')
+        cidades = list(set(h.local.cidade for h in hotéis if h.local))
+        estados = list(set(h.local.estado for h in hotéis if h.local))
+        
+        class LocalMock:
+            def __init__(self, cidade, estado):
+                self.nome = "Vários Destinos"
+                self.cidade = cidade
+                self.estado = estado
+                self.endereco = "Vários Endereços"
+        
+        cidade_str = ", ".join(cidades) if cidades else "Serra da Ibiapaba"
+        estado_str = ", ".join(estados) if estados else "CE"
+        self.local = LocalMock(cidade_str, estado_str)
+
+    @property
+    def imagens(self):
+        class AllMock:
+            def all(self):
+                return []
+        return AllMock()
+
+
 def home(request):
-    # Se acessado via subdomínio, exibe a vitrine B2C diretamente
+    # Se acessado via subdomínio de rede unificada, exibe o portal do grupo
+    empresa_atual = getattr(request, 'empresa_atual', None)
+    if empresa_atual:
+        return portal_grupo(request)
+
+    # Se acessado via subdomínio de hotel individual, exibe a vitrine B2C diretamente
     hotel_atual = getattr(request, 'hotel_atual', None)
     if hotel_atual:
         return vanity_url(request, slug=hotel_atual.slug)
@@ -132,7 +176,36 @@ def home(request):
         ]
 
     destaque = Hotel.objects.filter(destaque=True, status='ativo').first()
-    proximos = Hotel.objects.filter(status='ativo').order_by('id')[:6]
+    
+    # Agrupa hotéis com portal unificado em um único card de rede/empresa
+    from core.models import Empresa
+    from django.db.models import Q
+    
+    empresas_unificadas = Empresa.objects.filter(modalidade_portal='unificado', ativa=True)
+    
+    # Decoplar relação cruzada para evitar cross-database join
+    empresas_individuais_ids = list(Empresa.objects.filter(
+        Q(modalidade_portal='individual') | Q(modalidade_portal__isnull=True)
+    ).values_list('id', flat=True))
+    
+    hoteis_individuais = Hotel.objects.filter(
+        status='ativo'
+    ).filter(
+        Q(empresa_id__isnull=True) | Q(empresa_id__in=empresas_individuais_ids)
+    )
+    
+    items = []
+    for empresa in empresas_unificadas:
+        first_hotel = empresa.hoteis.filter(status='ativo').first()
+        if first_hotel:
+            items.append(UnifiedPortalWrapper(empresa, first_hotel))
+            
+    for hotel in hoteis_individuais:
+        items.append(hotel)
+        
+    # Ordena mantendo os itens estáveis com base no ID
+    items.sort(key=lambda x: getattr(x, 'sorting_id', getattr(x, 'id', 0)))
+    proximos = items[:6]
     
     context = {
         'destaque': destaque,
@@ -336,6 +409,7 @@ def cidade_detalhe(request, cidade_slug):
 @xframe_options_exempt
 def detalhe(request, hotel_id):
     hotel = get_object_or_404(Hotel, id=hotel_id)
+    
     hotel.visualizacoes += 1
     hotel.save(update_fields=['visualizacoes'])
     
@@ -346,6 +420,9 @@ def detalhe(request, hotel_id):
     
     quartos = hotel.quartos.all()
     imagens = hotel.imagens.all()
+    
+    # Seção de destaques personalizada
+    destaques_personalizado = hotel.secoes.filter(tipo='destaques', ativa=True).first()
     
     # 3 quartos com mais visualizações (destaque) - Garantir exatamente 3 cards repetindo se houver menos
     quartos_destaque_qs = hotel.quartos.all().order_by('-visualizacoes')
@@ -359,15 +436,23 @@ def detalhe(request, hotel_id):
         'quartos': quartos,
         'quartos_destaque': quartos_destaque,
         'imagens': imagens,
+        'destaques_personalizado': destaques_personalizado,
     }
     return render(request, 'hoteis/detalhe.html', context)
 
 @xframe_options_exempt
 def vanity_url(request, slug):
     """
-    Exibe a vitrine B2C pública do hotel a partir do seu slug customizado (vanity URL).
+    Exibe a vitrine B2C pública do hotel a partir do seu slug customizado (vanity URL),
+    ou o portal de rede unificado se o slug pertencer a uma empresa com portal unificado.
     """
+    from core.models import Empresa
+    empresa = Empresa.objects.filter(slug=slug, modalidade_portal='unificado').first()
+    if empresa:
+        return portal_grupo(request, slug=slug)
+
     hotel = get_object_or_404(Hotel, slug=slug)
+    
     hotel.visualizacoes += 1
     hotel.save(update_fields=['visualizacoes'])
     
@@ -378,6 +463,9 @@ def vanity_url(request, slug):
     
     quartos = hotel.quartos.all()
     imagens = hotel.imagens.all()
+    
+    # Seção de destaques personalizada
+    destaques_personalizado = hotel.secoes.filter(tipo='destaques', ativa=True).first()
     
     # 3 quartos com mais visualizações (destaque) - Garantir exatamente 3 cards repetindo se houver menos
     quartos_destaque_qs = hotel.quartos.all().order_by('-visualizacoes')
@@ -391,6 +479,7 @@ def vanity_url(request, slug):
         'quartos': quartos,
         'quartos_destaque': quartos_destaque,
         'imagens': imagens,
+        'destaques_personalizado': destaques_personalizado,
     }
     return render(request, 'hoteis/detalhe.html', context)
 
@@ -591,6 +680,8 @@ def partner_dashboard(request):
         return redirect('hoteis:partner_login')
         
     hotel = perfil.hotel
+    hotel_imagens = list(hotel.imagens.all()[:10])
+    galeria_slots = [hotel_imagens[i] if i < len(hotel_imagens) else None for i in range(10)]
     hoje = date.today()
     
     # Coleta de dados operacionais
@@ -598,6 +689,10 @@ def partner_dashboard(request):
     equipe = hotel.equipe.all()
     unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
     reservas = Reserva.objects.filter(unidade__quarto__hotel=hotel).order_by('-criado_em')
+    secoes_qs = hotel.secoes.all().prefetch_related('itens')
+    destaques_secao = secoes_qs.filter(tipo='destaques').first()
+    secoes = secoes_qs.exclude(tipo='destaques')
+    tem_destaques_personalizado = destaques_secao is not None
 
     # === CENTRAL DE HÓSPEDES & CONCIERGE ===
     from .models import ProdutoConsumo, PedidoServico
@@ -875,6 +970,10 @@ def partner_dashboard(request):
         'total_compras_pendentes': total_compras_pendentes,
         'total_compras_recebidas': total_compras_recebidas,
         'valor_compras_mes': valor_compras_mes,
+        'secoes': secoes,
+        'destaques_secao': destaques_secao,
+        'tem_destaques_personalizado': tem_destaques_personalizado,
+        'galeria_slots': galeria_slots,
     }
     
     is_htmx = request.headers.get('HX-Request') == 'true'
@@ -907,25 +1006,69 @@ def hotelaria(request):
     busca = request.GET.get('busca', '').strip()
     tipo = request.GET.get('tipo', '').strip()  # 'hotel', 'pousada', 'chale', 'resort'
     
-    # 1. Busca estabelecimentos ativos
-    hoteis_qs = Hotel.objects.filter(status='ativo').select_related('local')
+    from core.models import Empresa
+    from django.db.models import Q
     
-    # 2. Filtro de pesquisa textual (Nome, Cidade ou Descrição)
+    # 1. Filtra as empresas unificadas ativas
+    empresas_qs = Empresa.objects.filter(modalidade_portal='unificado', ativa=True).prefetch_related('hoteis', 'hoteis__quartos')
     if busca:
-        from django.db.models import Q
+        empresas_qs = empresas_qs.filter(
+            Q(nome_fantasia__icontains=busca) | Q(razao_social__icontains=busca)
+        )
+        
+    # 2. Filtra os hotéis individuais ativos (excluindo os que fazem parte de rede unificada)
+    empresas_individuais_ids = list(Empresa.objects.filter(
+        Q(modalidade_portal='individual') | Q(modalidade_portal__isnull=True)
+    ).values_list('id', flat=True))
+    
+    hoteis_qs = Hotel.objects.filter(status='ativo').select_related('local').prefetch_related('imagens', 'quartos')
+    hoteis_qs = hoteis_qs.filter(
+        Q(empresa_id__isnull=True) | Q(empresa_id__in=empresas_individuais_ids)
+    )
+    if busca:
         hoteis_qs = hoteis_qs.filter(
             Q(nome__icontains=busca) | 
             Q(local__cidade__icontains=busca) | 
             Q(descricao__icontains=busca)
         )
         
-    # 3. Classificação dinâmica de tipo e busca por preço mínimo
     hoteis_list = []
+    
+    # Adiciona as redes unificadas
+    for empresa in empresas_qs:
+        first_hotel = empresa.hoteis.filter(status='ativo').first()
+        if not first_hotel:
+            continue
+            
+        wrapper = UnifiedPortalWrapper(empresa, first_hotel)
+        
+        # Encontra a menor diária da rede
+        preco_minimo = None
+        all_quartos = []
+        for h in empresa.hoteis.filter(status='ativo'):
+            all_quartos.extend(list(h.quartos.all()))
+        if all_quartos:
+            preco_minimo = min(q.preco for q in all_quartos)
+            
+        # Classifica redes como pousada por padrão para corresponder a filtros comuns
+        h_type = 'pousada'
+        h_type_label = 'Rede'
+        
+        if tipo and h_type != tipo:
+            continue
+            
+        hoteis_list.append({
+            'object': wrapper,
+            'tipo': h_type,
+            'tipo_label': h_type_label,
+            'preco_minimo': preco_minimo,
+        })
+        
+    # Adiciona os hotéis individuais
     for hotel in hoteis_qs:
         name_lower = hotel.nome.lower()
         desc_lower = hotel.descricao.lower()
         
-        # Classificação por heurística textual de alta precisão
         if 'pousada' in name_lower or 'pousada' in desc_lower:
             h_type = 'pousada'
             h_type_label = 'Pousada'
@@ -939,11 +1082,9 @@ def hotelaria(request):
             h_type = 'hotel'
             h_type_label = 'Hotel'
             
-        # Filtro de tipo por parâmetro de URL
         if tipo and h_type != tipo:
             continue
             
-        # Encontra a menor diária cadastrada para este hotel
         preco_minimo = None
         quartos = hotel.quartos.all()
         if quartos.exists():
@@ -1458,7 +1599,13 @@ def partner_salvar_configuracoes(request):
     # Atualização dos campos de texto e branding
     hotel.nome = request.POST.get('nome', hotel.nome)
     hotel.descricao = request.POST.get('descricao', hotel.descricao)
-    hotel.whatsapp = request.POST.get('whatsapp', hotel.whatsapp)
+    
+    raw_whatsapp = request.POST.get('whatsapp', '')
+    cleaned_whatsapp = ''.join(c for c in raw_whatsapp if c.isdigit())
+    if len(cleaned_whatsapp) in [10, 11]:
+        cleaned_whatsapp = '55' + cleaned_whatsapp
+    hotel.whatsapp = cleaned_whatsapp
+    
     hotel.cor_primaria = request.POST.get('cor_primaria', hotel.cor_primaria)
     hotel.cor_secundaria = request.POST.get('cor_secundaria', hotel.cor_secundaria)
     hotel.hero_tipo = request.POST.get('hero_tipo', hotel.hero_tipo)
@@ -1476,6 +1623,11 @@ def partner_salvar_configuracoes(request):
             hotel.longitude = float(lon)
         except ValueError:
             pass
+            
+    # Endereço por extenso
+    if hotel.local:
+        hotel.local.endereco = request.POST.get('endereco', hotel.local.endereco).strip()
+        hotel.local.save()
             
     # Upload de arquivos e remoções
     if request.POST.get('remover_banner') == 'true':
@@ -1509,9 +1661,123 @@ def partner_salvar_configuracoes(request):
             return redirect('hoteis:partner_dashboard')
         hotel.hero_video = video_file
         
+    # Processar fotos da galeria (10 slots)
+    for idx in range(10):
+        img_id = request.POST.get(f'galeria_{idx}_id')
+        remover = request.POST.get(f'galeria_{idx}_remover') == 'true'
+        file = request.FILES.get(f'galeria_{idx}_file')
+        
+        if img_id:
+            try:
+                imagem_obj = HotelImagem.objects.get(id=img_id, hotel=hotel)
+                if remover:
+                    try:
+                        imagem_obj.url_imagem.delete(save=False)
+                    except Exception:
+                        pass
+                    imagem_obj.delete()
+                elif file:
+                    try:
+                        imagem_obj.url_imagem.delete(save=False)
+                    except Exception:
+                        pass
+                    imagem_obj.url_imagem = file
+                    imagem_obj.save()
+            except HotelImagem.DoesNotExist:
+                pass
+        elif file and not remover:
+            HotelImagem.objects.create(
+                hotel=hotel,
+                url_imagem=file,
+                ordem=idx
+            )
+         
     hotel.save()
     messages.success(request, "Configurações do estabelecimento gravadas com sucesso!")
-    return redirect('hoteis:partner_dashboard')
+    return redirect('/hospedagens/sistema/?tab=configuracoes&config_tab=site')
+
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_salvar_configuracoes_geral(request):
+    """
+    Grava as configurações gerais do portal de rede unificado (Empresa) associado ao hotel.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        messages.error(request, "Acesso negado.")
+        return redirect('clientes:painel')
+        
+    perfil = request.user.perfil_parceiro
+    if perfil.role not in ['proprietario', 'gerente']:
+        messages.error(request, "Permissão insuficiente para alterar as configurações.")
+        return redirect('hoteis:partner_dashboard')
+        
+    hotel = perfil.hotel
+    empresa = hotel.empresa
+    
+    if not empresa or empresa.modalidade_portal != 'unificado':
+        messages.error(request, "Esta empresa não está configurada como portal unificado.")
+        return redirect('hoteis:partner_dashboard')
+        
+    # Salvar campos textuais
+    empresa.nome_fantasia = request.POST.get('nome_fantasia', empresa.nome_fantasia)
+    empresa.cor_primaria = request.POST.get('cor_primaria', empresa.cor_primaria)
+    empresa.cor_secundaria = request.POST.get('cor_secundaria', empresa.cor_secundaria)
+    empresa.descricao_portal = request.POST.get('descricao_portal', '')
+    empresa.hero_tipo = request.POST.get('hero_tipo', empresa.hero_tipo or 'imagem')
+    
+    # Seção Sobre
+    empresa.sobre_titulo = request.POST.get('sobre_titulo', '')
+    empresa.sobre_texto = request.POST.get('sobre_texto', '')
+    empresa.sobre_midia_tipo = request.POST.get('sobre_midia_tipo', 'imagem')
+    empresa.sobre_cor_fundo = request.POST.get('sobre_cor_fundo', '#f8fafc')
+    empresa.sobre_cor_texto = request.POST.get('sobre_cor_texto', '#0f172a')
+    
+    # Uploads e remoções
+    if request.POST.get('remover_banner') == 'true':
+        empresa.banner = None
+    elif 'banner' in request.FILES:
+        empresa.banner = request.FILES['banner']
+        
+    if request.POST.get('remover_logo') == 'true':
+        empresa.logo = None
+    elif 'logo' in request.FILES:
+        empresa.logo = request.FILES['logo']
+        
+    if request.POST.get('remover_hero_video') == 'true':
+        empresa.hero_video = None
+    elif 'hero_video' in request.FILES:
+        empresa.hero_video = request.FILES['hero_video']
+        
+    if request.POST.get('remover_imagem_compartilhamento') == 'true':
+        empresa.imagem_compartilhamento = None
+    elif 'imagem_compartilhamento' in request.FILES:
+        empresa.imagem_compartilhamento = request.FILES['imagem_compartilhamento']
+        
+    if request.POST.get('remover_sobre_banner') == 'true':
+        empresa.sobre_banner = None
+    elif 'sobre_banner' in request.FILES:
+        empresa.sobre_banner = request.FILES['sobre_banner']
+        
+    if request.POST.get('remover_sobre_video') == 'true':
+        empresa.sobre_video = None
+    elif 'sobre_video' in request.FILES:
+        empresa.sobre_video = request.FILES['sobre_video']
+        
+    # Salvar ordem das pousadas
+    ordem_hoteis = request.POST.get('ordem_hoteis', '').strip()
+    if ordem_hoteis:
+        try:
+            from hoteis.models import Hotel
+            ids = [int(x) for x in ordem_hoteis.split(',') if x.isdigit()]
+            for idx, h_id in enumerate(ids):
+                Hotel.objects.filter(id=h_id, empresa=empresa).update(ordem=idx)
+        except Exception as e:
+            print("Erro ao atualizar ordem das pousadas: ", e)
+            
+    empresa.save()
+    messages.success(request, "Configurações gerais do grupo gravadas com sucesso!")
+    return redirect('/hospedagens/sistema/?tab=configuracoes&config_tab=geral')
 
 
 # ─────────────────────────────────────────────────────────────
@@ -2067,14 +2333,19 @@ def checkout_processar(request):
             'quarto': quarto,
             'noites': noites,
             'financeiro': fin,
+            'checkin_date': checkin,
+            'checkout_date': checkout,
             'mp_public_key': getattr(settings, 'MERCADOPAGO_PUBLIC_KEY', ''),
         }
         return render(request, 'hoteis/checkout_pagamento.html', context)
         
     elif request.method == 'POST':
+        print("POST REQUEST RECEIVED IN CHECKOUT_PROCESSAR!", flush=True)
         try:
             data = json.loads(request.body)
-        except Exception:
+            print("DATA RECEIVED:", data, flush=True)
+        except Exception as e:
+            print("ERROR PARSING JSON:", e, flush=True)
             return JsonResponse({'success': False, 'error': 'Formato de payload inválido.'}, status=400)
             
         forma_pagamento = data.get('forma_pagamento')
@@ -2095,7 +2366,7 @@ def checkout_processar(request):
             return JsonResponse({'success': False, 'error': 'Desculpe, a acomodação escolhida não possui mais vagas físicas disponíveis para este período.'}, status=400)
             
         # 2. Conectar ao Mercado Pago (Checkout Transparente API)
-        url_mp = "https://api.mercadopago.com/v1/payments"
+        url_mp = "https://api.mercadopago.com/v1/orders"
         headers = {
             "Authorization": f"Bearer {settings.MERCADOPAGO_ACCESS_TOKEN}",
             "Content-Type": "application/json",
@@ -2106,8 +2377,15 @@ def checkout_processar(request):
         cpf_limpo = titular_fnrh['cpf'].replace(".", "").replace("-", "").replace(" ", "").strip()
         
         # Estrutura base do payer
+        payer_email = titular_fnrh['email']
+        if settings.DEBUG and not payer_email.endswith('@testuser.com'):
+            # Em ambiente local de desenvolvimento, caso o email inserido não seja de teste,
+            # forçamos o email do Usuário de Teste associado à aplicação para evitar o erro 
+            # "Unauthorized use of live credentials" do Mercado Pago.
+            payer_email = "TESTUSER6095556049045318276@testuser.com"
+
         payer = {
-            "email": titular_fnrh['email'],
+            "email": payer_email,
             "first_name": titular_fnrh['nome'].split()[0],
             "last_name": " ".join(titular_fnrh['nome'].split()[1:]) or "Silva",
             "identification": {
@@ -2116,11 +2394,8 @@ def checkout_processar(request):
             }
         }
         
-        payload_mp = {
-            "transaction_amount": float(fin['total_cliente']),
-            "description": f"Reserva {quarto.nome} - {quarto.hotel.nome}",
-            "payer": payer,
-        }
+        # Estrutura de pagamento segundo a API de Orders do Mercado Pago
+        amount_str = f"{fin['total_cliente']:.2f}"
         
         if forma_pagamento == 'cartao':
             token = data.get('token')
@@ -2130,21 +2405,46 @@ def checkout_processar(request):
             if not token:
                 return JsonResponse({'success': False, 'error': 'Token do cartão de crédito não foi gerado.'}, status=400)
                 
-            payload_mp.update({
-                "token": token,
-                "installments": installments,
-                "payment_method_id": payment_method_id,
-            })
+            payment_data = {
+                "amount": amount_str,
+                "payment_method": {
+                    "id": payment_method_id,
+                    "type": "credit_card",
+                    "token": token,
+                    "installments": installments
+                }
+            }
         elif forma_pagamento == 'pix':
-            payload_mp.update({
-                "payment_method_id": "pix"
-            })
+            payment_data = {
+                "amount": amount_str,
+                "payment_method": {
+                    "id": "pix",
+                    "type": "bank_transfer"
+                }
+            }
+            
+        payload_mp = {
+            "type": "online",
+            "processing_mode": "automatic",
+            "total_amount": amount_str,
+            "external_reference": f"reserva_{quarto.id}",
+            "payer": payer,
+            "transactions": {
+                "payments": [payment_data]
+            }
+        }
             
         try:
             # Em ambiente de teste unitário, podemos mockar ou injetar chamadas simuladas caso a rede falhe
+            print("MERCADO PAGO REQUEST URL:", url_mp, flush=True)
+            print("MERCADO PAGO HEADERS:", headers, flush=True)
+            print("MERCADO PAGO PAYLOAD:", json.dumps(payload_mp, indent=2), flush=True)
             response = requests.post(url_mp, headers=headers, json=payload_mp, timeout=15)
             resp_data = response.json()
+            print("MERCADO PAGO RESPONSE STATUS:", response.status_code, flush=True)
+            print("MERCADO PAGO RESPONSE BODY:", json.dumps(resp_data, indent=2), flush=True)
         except Exception as e:
+            print("MERCADO PAGO EXCEPTION:", e, flush=True)
             return JsonResponse({'success': False, 'error': f'Falha na comunicação com o gateway de pagamento: {str(e)}'}, status=500)
             
         if response.status_code not in [200, 201]:
@@ -2154,8 +2454,16 @@ def checkout_processar(request):
                 error_message = resp_data['cause'][0].get('description', error_message)
             return JsonResponse({'success': False, 'error': f'Pagamento Recusado: {error_message}'}, status=400)
             
-        status_pagamento = resp_data.get('status')
+        status_pagamento_raw = resp_data.get('status')
         status_detail = resp_data.get('status_detail')
+        
+        # Mapeia o status da API /v1/orders para o equivalente da API anterior
+        if status_pagamento_raw == 'processed':
+            status_pagamento = 'approved'
+        elif status_pagamento_raw == 'action_required':
+            status_pagamento = 'pending'
+        else:
+            status_pagamento = status_pagamento_raw
         
         # Pix fica 'pending', cartão deve estar 'approved'
         if forma_pagamento == 'cartao' and status_pagamento != 'approved':
@@ -2190,6 +2498,9 @@ def checkout_processar(request):
         
         # Criar registros de HospedeReserva para todos
         for idx, h in enumerate(hospedes):
+            if idx > 0 and not h.get('nome'):
+                continue
+                
             endereco_completo = h.get('endereco', '')
             if h.get('cep'):
                 endereco_completo = f"{endereco_completo} (CEP: {h['cep']})".strip()
@@ -2282,24 +2593,41 @@ def checkout_processar(request):
         # Inserir payload Pix para o front-end se aplicável
         if forma_pagamento == 'pix':
             try:
-                qr_code = resp_data['point_of_interaction']['transaction_data']['qr_code']
-                qr_code_base64 = resp_data['point_of_interaction']['transaction_data']['qr_code_base64']
+                # Com a API de Orders (/v1/orders), a estrutura do Pix vem sob transactions.payments
+                payment_method_info = resp_data['transactions']['payments'][0]['payment_method']
+                qr_code = payment_method_info['qr_code']
+                qr_code_base64 = payment_method_info['qr_code_base64']
                 ret_data.update({
                     'forma_pagamento': 'pix',
                     'pix_qr_code': qr_code,
                     'pix_qr_code_base64': qr_code_base64
                 })
-            except Exception:
-                pass
+                # Salvar detalhes do Pix na sessão para a página de sucesso
+                request.session['pix_pendente'] = {
+                    'reserva_id': str(reserva.id),
+                    'qr_code': qr_code,
+                    'qr_code_base64': qr_code_base64
+                }
+                request.session.modified = True
+            except Exception as e:
+                print("Erro ao extrair dados do Pix da API de Orders:", e)
                 
         return JsonResponse(ret_data)
 
 @login_required
 def checkout_sucesso(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, usuario=request.user)
+    
+    # Verificar se existem metadados do Pix salvos na sessão para esta reserva
+    pix_data = None
+    session_pix = request.session.get('pix_pendente')
+    if session_pix and session_pix.get('reserva_id') == str(reserva.id):
+        pix_data = session_pix
+        
     return render(request, 'hoteis/checkout_sucesso.html', {
         'reserva': reserva,
-        'hotel': reserva.unidade.quarto.hotel
+        'hotel': reserva.unidade.quarto.hotel,
+        'pix_data': pix_data
     })
 
 @login_required(login_url='hoteis:partner_login')
@@ -2950,7 +3278,12 @@ def api_verificar_subdominio(request):
 def quarto_detalhe_subdomain(request, quarto_slug):
     hotel = getattr(request, 'hotel_atual', None)
     if not hotel:
-        return redirect('hoteis:home')
+        from hoteis.models import Quarto
+        quarto = Quarto.objects.filter(slug=quarto_slug).first()
+        if quarto:
+            hotel = quarto.hotel
+        else:
+            return redirect('hoteis:home')
     return quarto_detalhe(request, hotel.id, quarto_slug)
 
 
@@ -3078,8 +3411,608 @@ def api_buscar_quartos(request, hotel_id):
     return render(request, 'hoteis/partials/resultados_busca_quartos.html', context)
 
 
+def api_buscar_quartos_grupo(request, empresa_id):
+    from core.models import Empresa
+    empresa = get_object_or_404(Empresa, id=empresa_id)
+    
+    # 1. Recuperar parâmetros
+    datas_str = request.GET.get('datas', '').strip()
+    guests_str = request.GET.get('guests', '2').strip()
+    
+    # Defaults
+    guests = 2
+    try:
+        if 'ou mais' in guests_str:
+            guests = 8
+        else:
+            import re
+            nums = re.findall(r'\d+', guests_str)
+            if nums:
+                guests = int(nums[0])
+            else:
+                guests = int(guests_str)
+    except ValueError:
+        pass
+        
+    checkin = None
+    checkout = None
+    
+    # Parser de datas flexível
+    if datas_str:
+        parts = []
+        if " - " in datas_str:
+            parts = datas_str.split(" - ")
+        elif " a " in datas_str:
+            parts = datas_str.split(" a ")
+        elif " to " in datas_str:
+            parts = datas_str.split(" to ")
+            
+        if len(parts) == 2:
+            try:
+                checkin = datetime.strptime(parts[0].strip(), '%d/%m/%Y').date()
+                checkout = datetime.strptime(parts[1].strip(), '%d/%m/%Y').date()
+            except ValueError:
+                pass
+                
+    if not checkin or not checkout:
+        return HttpResponse("""
+            <div class="mb-12 pt-4 border-b border-slate-100 pb-10" id="resultados-busca-secao">
+                <div class="max-w-2xl mx-auto bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg>
+                    </div>
+                    <h4 class="text-lg font-black text-slate-800">Selecione o período corretamente</h4>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        Por favor, selecione as datas de entrada (check-in) e saída (checkout) para pesquisar acomodações.
+                    </p>
+                </div>
+            </div>
+        """)
+        
+    # Verificar disponibilidade
+    noites = (checkout - checkin).days
+    if noites <= 0:
+        return HttpResponse("""
+            <div class="mb-12 pt-4 border-b border-slate-100 pb-10" id="resultados-busca-secao">
+                <div class="max-w-2xl mx-auto bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+                    <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg>
+                    </div>
+                    <h4 class="text-lg font-black text-slate-800">Datas inválidas</h4>
+                    <p class="text-xs text-slate-500 mt-2 leading-relaxed">
+                        A data de saída (checkout) deve ser posterior à data de entrada (check-in).
+                    </p>
+                </div>
+            </div>
+        """)
+        
+    quartos_disponiveis = []
+    
+    # 2. Filtrar quartos e checar disponibilidade de todas as pousadas da empresa
+    pousadas = empresa.hoteis_ativos_ordenados
+    for hotel in pousadas:
+        for q in hotel.quartos.all():
+            if q.capacidade_pessoas >= guests:
+                disponivel = checar_disponibilidade_quarto(q, checkin, checkout)
+                if disponivel:
+                    quartos_disponiveis.append(q)
+                    
+    # Lógica de recomendações se não houver quartos disponíveis
+    quartos_capacidade_alternativa = []
+    quartos_sugeridos = []
+    if not quartos_disponiveis:
+        for hotel in pousadas:
+            # Recomendar quartos com capacidade menor na mesma data
+            for q in hotel.quartos.all():
+                if q.capacidade_pessoas < guests:
+                    if checar_disponibilidade_quarto(q, checkin, checkout):
+                        quartos_capacidade_alternativa.append(q)
+                        
+            # Recomendar quartos com capacidade solicitada em datas alternativas
+            from .utils import buscar_datas_proximas
+            from datetime import timedelta
+            for q in hotel.quartos.all():
+                if q.capacidade_pessoas >= guests:
+                    sugestao_antes, sugestao_depois = buscar_datas_proximas(q, checkin, noites)
+                    if sugestao_antes or sugestao_depois:
+                        quartos_sugeridos.append({
+                            'quarto': q,
+                            'sugestao_antes': sugestao_antes,
+                            'sugestao_depois': sugestao_depois,
+                            'sugestao_antes_checkout': (sugestao_antes + timedelta(days=noites)) if sugestao_antes else None,
+                            'sugestao_depois_checkout': (sugestao_depois + timedelta(days=noites)) if sugestao_depois else None,
+                        })
+
+    # Usamos o primeiro hotel da empresa (se houver) como hotel de contexto principal ou None
+    primeiro_hotel = pousadas[0] if len(pousadas) > 0 else None
+
+    context = {
+        'hotel': primeiro_hotel,
+        'quartos_disponiveis': quartos_disponiveis,
+        'quartos_capacidade_alternativa': quartos_capacidade_alternativa,
+        'quartos_sugeridos': quartos_sugeridos,
+        'checkin': checkin,
+        'checkout': checkout,
+        'guests': guests,
+        'noites': noites,
+    }
+    
+    return render(request, 'hoteis/partials/resultados_busca_quartos.html', context)
+
+
 def teste_404(request):
     return render(request, '404.html')
+
+
+@login_required
+def partner_secao_salvar(request, secao_id=None):
+    """
+    Cria ou edita uma Seção do Hotel. Retorna para a aba de seções.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado.", status=403)
+    
+    perfil = request.user.perfil_parceiro
+    hotel = perfil.hotel
+    
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo', '').strip()
+        subtitulo = request.POST.get('subtitulo', '').strip()
+        tipo = request.POST.get('tipo', 'texto_imagem')
+        texto = request.POST.get('texto', '').strip()
+        video_url = request.POST.get('video_url', '').strip()
+        ordem = int(request.POST.get('ordem', 0) or 0)
+        ativa = request.POST.get('ativa') == 'on' or 'ativa' in request.POST
+        imagem = request.FILES.get('imagem')
+        video = request.FILES.get('video')
+        link_cta = request.POST.get('link_cta', '').strip()
+        preco_raw = request.POST.get('preco', '').strip()
+        
+        if secao_id:
+            secao = get_object_or_404(HotelSecao, id=secao_id, hotel=hotel)
+        else:
+            secao = HotelSecao(hotel=hotel)
+            
+        secao.titulo = titulo
+        secao.subtitulo = subtitulo or None
+        secao.tipo = tipo
+        secao.texto = texto or None
+        secao.video_url = video_url or None
+        secao.ordem = ordem
+        secao.ativa = ativa
+        secao.link_cta = link_cta or None
+        
+        if preco_raw:
+            try:
+                secao.preco = Decimal(preco_raw.replace('R$', '').replace('.', '').replace(',', '.').strip())
+            except Exception:
+                secao.preco = None
+        else:
+            secao.preco = None
+            
+        # Limpeza de mídias e campos obsoletos por tipo de layout
+        if secao.tipo not in ['texto_imagem', 'video']:
+            if secao.imagem:
+                try: secao.imagem.delete(save=False)
+                except Exception: pass
+                secao.imagem = None
+            if secao.video:
+                try: secao.video.delete(save=False)
+                except Exception: pass
+                secao.video = None
+            secao.video_url = None
+            secao.texto = None
+            secao.preco = None
+            secao.link_cta = None
+        else:
+            if imagem:
+                if secao.video:
+                    try: secao.video.delete(save=False)
+                    except Exception: pass
+                    secao.video = None
+                secao.video_url = None
+            elif video or video_url:
+                if secao.imagem:
+                    try: secao.imagem.delete(save=False)
+                    except Exception: pass
+                    secao.imagem = None
+                if secao.tipo == 'video':
+                    secao.texto = None
+
+        if imagem and secao.tipo == 'texto_imagem':
+            if secao.imagem:
+                try: secao.imagem.delete(save=False)
+                except Exception: pass
+            secao.imagem = imagem
+            
+        if video and (secao.tipo == 'texto_imagem' or secao.tipo == 'video'):
+            if secao.video:
+                try: secao.video.delete(save=False)
+                except Exception: pass
+            secao.video = video
+            
+        secao.save()
+        
+        # Processar os 10 cards da galeria / itens secundários
+        for idx in range(10):
+            item_id = request.POST.get(f'item_{idx}_id')
+            item_titulo = request.POST.get(f'item_{idx}_titulo', '').strip()
+            item_media_type = request.POST.get(f'item_{idx}_media_type', 'imagem')
+            item_remover = request.POST.get(f'item_{idx}_remover') == 'true'
+            item_file = request.FILES.get(f'item_{idx}_file')
+            
+            if item_id or item_file or item_titulo:
+                item = None
+                if item_id:
+                    item = HotelSecaoItem.objects.filter(id=item_id, secao=secao).first()
+                if not item:
+                    if item_remover:
+                        continue
+                    item = HotelSecaoItem(secao=secao, ordem=idx)
+                
+                if item_remover:
+                    if item.imagem:
+                        try: item.imagem.delete(save=False)
+                        except Exception: pass
+                    if item.video:
+                        try: item.video.delete(save=False)
+                        except Exception: pass
+                    item.delete()
+                    continue
+                
+                item.titulo = item_titulo or f"Mídia {idx+1}"
+                item.ordem = idx
+                
+                if item_media_type == 'imagem':
+                    if item_file:
+                        if item.imagem:
+                            try: item.imagem.delete(save=False)
+                            except Exception: pass
+                        item.imagem = item_file
+                    if item.video:
+                        try: item.video.delete(save=False)
+                        except Exception: pass
+                        item.video = None
+                elif item_media_type == 'video':
+                    if item_file:
+                        if item.video:
+                            try: item.video.delete(save=False)
+                            except Exception: pass
+                        item.video = item_file
+                    if item.imagem:
+                        try: item.imagem.delete(save=False)
+                        except Exception: pass
+                        item.imagem = None
+                
+                if item.imagem or item.video:
+                    item.save()
+        
+        response = HttpResponse()
+        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        return response
+        
+    return HttpResponse("Método inválido.", status=405)
+
+
+@login_required
+def partner_secao_destaques_salvar(request):
+    """
+    Salva a seção de destaques completa (título, subtítulo e seus 3 cards do Canvas editor)
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado.", status=403)
+        
+    perfil = request.user.perfil_parceiro
+    hotel = perfil.hotel
+    
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo', 'Três experiências inesquecíveis').strip()
+        subtitulo = request.POST.get('subtitulo', '').strip()
+        
+        secao = HotelSecao.objects.filter(hotel=hotel, tipo='destaques').first()
+        if not secao:
+            secao = HotelSecao(hotel=hotel, tipo='destaques', ordem=0, ativa=True)
+        
+        secao.titulo = titulo
+        secao.subtitulo = subtitulo or None
+        secao.save()
+        
+        for idx in range(1, 4):
+            item_id = request.POST.get(f'card_{idx}_id')
+            c_titulo = request.POST.get(f'card_{idx}_titulo', '').strip()
+            c_desc = request.POST.get(f'card_{idx}_descricao', '').strip()
+            c_preco_raw = request.POST.get(f'card_{idx}_preco', '').strip()
+            c_link = request.POST.get(f'card_{idx}_link_cta', '').strip()
+            media_type = request.POST.get(f'card_{idx}_media_type', 'imagem')
+            remover_media = request.POST.get(f'card_{idx}_remover_media') == 'true'
+            
+            c_imagem = request.FILES.get(f'card_{idx}_imagem')
+            c_video = request.FILES.get(f'card_{idx}_video')
+            
+            item = None
+            if item_id:
+                item = HotelSecaoItem.objects.filter(id=item_id, secao=secao).first()
+            if not item:
+                item = HotelSecaoItem(secao=secao, ordem=idx)
+            
+            item.titulo = c_titulo or f"Card {idx}"
+            item.descricao = c_desc or None
+            item.link_cta = c_link or None
+            
+            if c_preco_raw:
+                try:
+                    item.preco = Decimal(c_preco_raw.replace('R$', '').replace('.', '').replace(',', '.').strip())
+                except Exception:
+                    item.preco = None
+            else:
+                item.preco = None
+                
+            if remover_media:
+                if item.imagem:
+                    item.imagem.delete(save=False)
+                    item.imagem = None
+                if item.video:
+                    item.video.delete(save=False)
+                    item.video = None
+            
+            if media_type == 'video':
+                if c_video:
+                    if item.video:
+                        item.video.delete(save=False)
+                    item.video = c_video
+                if item.imagem:
+                    item.imagem.delete(save=False)
+                    item.imagem = None
+            else:
+                if c_imagem:
+                    if item.imagem:
+                        item.imagem.delete(save=False)
+                    item.imagem = c_imagem
+                if item.video:
+                    item.video.delete(save=False)
+                    item.video = None
+                    
+            item.save()
+            
+        response = HttpResponse()
+        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        return response
+        
+    return HttpResponse("Método inválido.", status=405)
+
+
+@login_required
+@require_POST
+def partner_secao_deletar(request, secao_id):
+    """
+    Deleta uma Seção do Hotel.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado.", status=403)
+        
+    perfil = request.user.perfil_parceiro
+    secao = get_object_or_404(HotelSecao, id=secao_id, hotel=perfil.hotel)
+    secao.delete()
+    
+    response = HttpResponse()
+    response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+    return response
+
+
+@login_required
+def partner_secao_item_salvar(request, item_id=None):
+    """
+    Cria ou edita um item (atração/imagem) dentro de uma seção.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado.", status=403)
+        
+    perfil = request.user.perfil_parceiro
+    hotel = perfil.hotel
+    
+    if request.method == 'POST':
+        secao_id = request.POST.get('secao_id')
+        secao = get_object_or_404(HotelSecao, id=secao_id, hotel=hotel)
+        
+        titulo = request.POST.get('titulo', '').strip()
+        descricao = request.POST.get('descricao', '').strip()
+        preco_str = request.POST.get('preco', '').strip()
+        link_cta = request.POST.get('link_cta', '').strip()
+        media_type = request.POST.get('media_type', 'imagem')
+        imagem = request.FILES.get('imagem')
+        video = request.FILES.get('video')
+        ordem = int(request.POST.get('ordem', 0) or 0)
+        
+        preco = None
+        if preco_str:
+            try:
+                preco = Decimal(preco_str.replace(',', '.'))
+            except Exception:
+                pass
+                
+        if item_id:
+            item = get_object_or_404(HotelSecaoItem, id=item_id, secao__hotel=hotel)
+        else:
+            item = HotelSecaoItem(secao=secao)
+            
+        item.titulo = titulo
+        item.descricao = descricao or None
+        item.preco = preco
+        item.link_cta = link_cta or None
+        item.ordem = ordem
+        
+        if media_type == 'imagem':
+            if imagem:
+                if item.imagem:
+                    try:
+                        item.imagem.delete(save=False)
+                    except Exception:
+                        pass
+                item.imagem = imagem
+            if item.video:
+                try:
+                    item.video.delete(save=False)
+                except Exception:
+                    pass
+                item.video = None
+        elif media_type == 'video':
+            if video:
+                if item.video:
+                    try:
+                        item.video.delete(save=False)
+                    except Exception:
+                        pass
+                item.video = video
+            if item.imagem:
+                try:
+                    item.imagem.delete(save=False)
+                except Exception:
+                    pass
+                item.imagem = None
+            
+        item.save()
+        
+        response = HttpResponse()
+        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        return response
+        
+    return HttpResponse("Método inválido.", status=405)
+
+
+@login_required
+@require_POST
+def partner_secao_item_deletar(request, item_id):
+    """
+    Deleta um item da seção.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Acesso negado.", status=403)
+        
+    perfil = request.user.perfil_parceiro
+    item = get_object_or_404(HotelSecaoItem, id=item_id, secao__hotel=perfil.hotel)
+    item.delete()
+    
+    response = HttpResponse()
+    response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+    return response
+
+
+def portal_grupo(request, slug=None):
+    from core.models import Empresa
+    from hoteis.models import Hotel
+    import re
+    
+    # 1. Resolve a Empresa pelo slug (da URL ou do middleware)
+    empresa_atual = getattr(request, 'empresa_atual', None)
+    if not empresa_atual and slug:
+        empresa_atual = get_object_or_404(Empresa, slug=slug, modalidade_portal='unificado')
+        
+    if not empresa_atual:
+        # Se não houver empresa, redireciona para a home do marketplace
+        return redirect('hoteis:home')
+        
+    empresa_atual.visualizacoes += 1
+    empresa_atual.save(update_fields=['visualizacoes'])
+    
+    # 2. Busca todas as pousadas ativas da empresa ordenadas
+    pousadas = empresa_atual.hoteis_ativos_ordenados
+    
+    # 3. Busca disponibilidade se datas forem fornecidas na busca
+    datas_str = request.GET.get('datas', '').strip()
+    guests_str = request.GET.get('guests', '2 Hóspedes').strip()
+    
+    # Resolver hóspedes
+    guests = 2
+    try:
+        nums = re.findall(r'\d+', guests_str)
+        if nums:
+            guests = int(nums[0])
+    except Exception:
+        pass
+        
+    filtros_ativos = False
+    checkin = None
+    checkout = None
+    
+    if datas_str:
+        try:
+            # Formatos suportados: "DD/MM/YYYY - DD/MM/YYYY" ou "DD/MM/YYYY a DD/MM/YYYY"
+            parts = re.split(r'\s+-\s+|\s+a\s+', datas_str)
+            if len(parts) == 2:
+                from datetime import datetime
+                checkin = datetime.strptime(parts[0].strip(), '%d/%m/%Y').date()
+                checkout = datetime.strptime(parts[1].strip(), '%d/%m/%Y').date()
+                filtros_ativos = True
+        except Exception:
+            pass
+            
+    # Montar dados estruturados para cada pousada
+    pousadas_data = []
+    for pousada in pousadas:
+        pousada.visualizacoes += 1
+        pousada.save(update_fields=['visualizacoes'])
+        
+        # Filtra quartos da pousada
+        quartos_qs = pousada.quartos.all()
+        
+        # Filtrar quartos disponíveis caso datas tenham sido especificadas
+        quartos_disponiveis = []
+        for quarto in quartos_qs:
+            # Validar capacidade de hóspedes
+            if quarto.capacidade_pessoas < guests:
+                continue
+                
+            if filtros_ativos and checkin and checkout:
+                # Verificar se o quarto possui unidades físicas disponíveis para o período
+                disponivel = False
+                unidades = quarto.unidades.all()
+                for unidade in unidades:
+                    # Verifica se a unidade tem conflito de reservas
+                    conflito = unidade.reservas.filter(
+                        status__in=['confirmado', 'checkin', 'checkout'],
+                        data_checkin__lt=checkout,
+                        data_checkout__gt=checkin
+                    ).exists()
+                    # Verifica bloqueios manuais
+                    bloqueado = unidade.bloqueios.filter(
+                        data_inicio__lt=checkout,
+                        data_fim__gt=checkin
+                    ).exists()
+                    
+                    if not conflito and not bloqueado:
+                        disponivel = True
+                        break
+                        
+                if disponivel:
+                    quartos_disponiveis.append(quarto)
+            else:
+                # Sem filtro de data
+                quartos_disponiveis.append(quarto)
+                
+        preco_minimo = min((q.preco for q in quartos_disponiveis), default=None)
+        pousadas_data.append({
+            'hotel': pousada,
+            'quartos': quartos_disponiveis,
+            'tem_quartos': len(quartos_disponiveis) > 0,
+            'preco_minimo': preco_minimo,
+        })
+        
+    todos_quartos = []
+    for item in pousadas_data:
+        for q in item['quartos']:
+            todos_quartos.append(q)
+            
+    context = {
+        'empresa': empresa_atual,
+        'pousadas_data': pousadas_data,
+        'todos_quartos': todos_quartos,
+        'datas_str': datas_str,
+        'guests_str': guests_str,
+        'filtros_ativos': filtros_ativos
+    }
+    return render(request, 'hoteis/portal_grupo.html', context)
+
+
 
 
 

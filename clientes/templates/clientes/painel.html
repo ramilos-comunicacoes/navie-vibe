@@ -25,36 +25,74 @@
     .dark .badge-confirmada { background: rgba(34,197,94,0.15); color: #4ade80; border-color: rgba(34,197,94,0.3); }
     .dark .badge-pendente { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
     .dark .badge-cancelada { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+
+    /* CSS para o Barquinho de Boas-vindas */
+    #welcome-boat {
+        left: -180px;
+        transition: left 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+        width: 112px;
+        height: 112px;
+    }
+    #welcome-boat.sail-center {
+        left: calc(50% - 56px);
+    }
+    #welcome-boat.sail-out {
+        left: 100%;
+        transition: left 0.8s cubic-bezier(0.55, 0, 1, 0.45);
+    }
+    @media (min-width: 640px) {
+        #welcome-boat {
+            width: 144px;
+            height: 144px;
+        }
+        #welcome-boat.sail-center {
+            left: calc(50% - 72px);
+        }
+    }
+    
+    #welcome-sailor {
+        transform: translateY(35px);
+        opacity: 0;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    }
+    #welcome-sailor.sailor-visible {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    #welcome-sailor.hand-waving #sailor-hand {
+        animation: waveHand 0.12s ease-in-out infinite alternate;
+    }
+    @keyframes waveHand {
+        0% { transform: rotate(-15deg) scale(1.3); }
+        100% { transform: rotate(20deg) scale(1.3); }
+    }
+
+    /* Close button animation */
+    .close-btn-animate {
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    }
+    .close-btn-animate:hover {
+        transform: rotate(90deg) scale(1.15) !important;
+        background-color: #ef4444 !important;
+        color: white !important;
+    }
+    .close-btn-animate:active {
+        transform: rotate(180deg) scale(0.85) !important;
+        transition: all 0.1s !important;
+    }
+    .dark .close-btn-animate:hover {
+        background-color: #dc2626 !important;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto">
 
-    <!-- ─────────────────────────────────────────────────────────────────
-         GREETING BANNER (Luxo e Elevação)
-         ───────────────────────────────────────────────────────────────── -->
-    <section 
-        x-show="welcomeBannerVisible" 
-        x-transition:leave="transition ease-in duration-300"
-        x-transition:leave-start="opacity-100 scale-100"
-        x-transition:leave-end="opacity-0 scale-95"
-        class="mb-8 rounded-3xl p-6 text-white relative overflow-hidden shadow-lg shadow-blue-500/10" 
-        style="background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);"
-    >
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_-20%,rgba(255,255,255,0.12),transparent_60%)] pointer-events-none"></div>
-        <p class="text-[9px] font-black text-blue-100 uppercase tracking-widest mb-1.5">Painel do Cliente</p>
-        <h1 class="text-xl sm:text-2xl font-black tracking-tight mb-1">
-            Olá, {{ request.user.first_name|default:request.user.username }}! 👋
-        </h1>
-        <p class="text-xs sm:text-sm text-blue-100/90 font-medium">
-            Seja bem-vindo de volta! Aqui estão todas as suas reservas, ingressos e bilhetes comprados na platforma Naviê Vibe.
-        </p>
-    </section>
+    <!-- Welcome banner replaced by cartoon animation -->
 
-    <!-- ─────────────────────────────────────────────────────────────────
-         TAB 1: HOSPEDAGENS (Controlada por AlpineJS activeTab)
-         ───────────────────────────────────────────────────────────────── -->
+    <!-- TAB 1: HOSPEDAGENS -->
     <section 
         x-show="activeTab === 'hospedagens'" 
         x-transition:enter="transition ease-out duration-300 transform" 
@@ -62,9 +100,12 @@
         x-transition:enter-end="translate-x-0 opacity-100" 
         class="space-y-6"
     >
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {% for item in hospedagens %}
-            <div class="glass-card rounded-3xl p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
+            <div x-show="hospedagemFilter === 'todos' || 
+                         (hospedagemFilter === 'ativos' && ['confirmada', 'pendente', 'hospedado'].includes($el.dataset.statusSlug)) || 
+                         (hospedagemFilter === 'concluidos' && ['concluido', 'cancelada'].includes($el.dataset.statusSlug))"
+                 class="glass-card rounded-3xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
                  onclick="openDetailModal(this, 'hospedagem')"
                  data-id="{{ item.id }}"
                  data-real="{{ item.real|yesno:'true,false' }}"
@@ -75,7 +116,8 @@
                  data-price="{{ item.preco_formatado }}"
                  data-status="{{ item.status }}"
                  data-status-slug="{{ item.status_slug }}"
-                 data-qr="{{ item.qr_payload }}">
+                 data-qr="{{ item.qr_payload }}"
+                 data-logo="{{ item.logo_url|default:'' }}">
 
                 <div>
                     <div class="flex items-center gap-2 flex-wrap mb-3.5">
@@ -84,26 +126,26 @@
                         <span class="badge badge-demo">Demo</span>
                         {% endif %}
                     </div>
-                    <h3 class="font-bold text-slate-800 dark:text-white text-sm mb-1 leading-tight truncate" title="{{ item.estabelecimento }}">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm mb-1 leading-tight truncate" title="{{ item.estabelecimento }}">
                         {{ item.estabelecimento }}
                     </h3>
-                    <p class="text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
-                        <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0 text-slate-400"></i>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
+                        <i data-lucide="map-pin" class="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0 text-slate-400"></i>
                         <span>{{ item.localizacao }}</span>
                     </p>
                 </div>
 
-                <div class="flex items-center justify-between gap-4 pt-3.5 mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
+                <div class="flex items-center justify-between gap-2 sm:gap-4 pt-2.5 sm:pt-3.5 mt-2.5 sm:mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
                     <div class="min-w-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Período</span>
-                        <span class="text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1.5 mt-1 truncate">
-                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
+                        <span class="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1 mt-1 truncate">
+                            <i data-lucide="calendar" class="w-3 h-3 text-blue-500 shrink-0"></i>
                             <span class="truncate">{{ item.periodo }}</span>
                         </span>
                     </div>
                     <div class="text-right shrink-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Total</span>
-                        <span class="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1 block">{{ item.preco_formatado }}</span>
+                        <span class="text-xs sm:text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1 block">{{ item.preco_formatado }}</span>
                     </div>
                 </div>
             </div>
@@ -119,9 +161,7 @@
         </div>
     </section>
 
-    <!-- ─────────────────────────────────────────────────────────────────
-         TAB 2: SHOWS & EVENTOS (Controlada por AlpineJS activeTab)
-         ───────────────────────────────────────────────────────────────── -->
+    <!-- TAB 2: SHOWS & EVENTOS -->
     <section 
         x-show="activeTab === 'shows'" 
         x-transition:enter="transition ease-out duration-300 transform" 
@@ -130,9 +170,9 @@
         class="space-y-6" 
         style="display: none;"
     >
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {% for item in shows %}
-            <div class="glass-card rounded-3xl p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
+            <div class="glass-card rounded-3xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
                  onclick="openDetailModal(this, 'show')"
                  data-id="{{ item.id }}"
                  data-title="{{ item.titulo }}"
@@ -148,26 +188,26 @@
                     <div class="flex items-center gap-2 flex-wrap mb-3.5">
                         <span class="badge badge-{{ item.status_slug }}">{{ item.status }}</span>
                     </div>
-                    <h3 class="font-bold text-slate-800 dark:text-white text-sm mb-1 leading-tight truncate" title="{{ item.titulo }}">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm mb-1 leading-tight truncate" title="{{ item.titulo }}">
                         {{ item.titulo }}
                     </h3>
-                    <p class="text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
-                        <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0 text-slate-400"></i>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
+                        <i data-lucide="map-pin" class="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0 text-slate-400"></i>
                         <span>{{ item.local }}</span>
                     </p>
                 </div>
 
-                <div class="flex items-center justify-between gap-4 pt-3.5 mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
+                <div class="flex items-center justify-between gap-2 sm:gap-4 pt-2.5 sm:pt-3.5 mt-2.5 sm:mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
                     <div class="min-w-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Data</span>
-                        <span class="text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1.5 mt-1 truncate">
-                            <i data-lucide="music" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
+                        <span class="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1 mt-1 truncate">
+                            <i data-lucide="music" class="w-3 h-3 text-blue-500 shrink-0"></i>
                             <span class="truncate">{{ item.data }}</span>
                         </span>
                     </div>
-                    <div class="text-right shrink-0">
+                    <div class="text-right shrink-0 min-w-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Setor</span>
-                        <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400 mt-1 block truncate max-w-[90px]">{{ item.setor }}</span>
+                        <span class="text-[10px] sm:text-xs font-extrabold text-blue-600 dark:text-blue-400 mt-1 block truncate max-w-[80px] sm:max-w-[100px]" title="{{ item.setor }}">{{ item.setor }}</span>
                     </div>
                 </div>
             </div>
@@ -183,9 +223,7 @@
         </div>
     </section>
 
-    <!-- ─────────────────────────────────────────────────────────────────
-         TAB 3: CINEMA (Controlada por AlpineJS activeTab)
-         ───────────────────────────────────────────────────────────────── -->
+    <!-- TAB 3: CINEMA -->
     <section 
         x-show="activeTab === 'cinema'" 
         x-transition:enter="transition ease-out duration-300 transform" 
@@ -194,9 +232,9 @@
         class="space-y-6" 
         style="display: none;"
     >
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {% for item in cinema %}
-            <div class="glass-card rounded-3xl p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
+            <div class="glass-card rounded-3xl p-3.5 sm:p-5 flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-500/30 min-h-[175px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]"
                  onclick="openDetailModal(this, 'cinema')"
                  data-id="{{ item.id }}"
                  data-title="{{ item.filme }}"
@@ -212,26 +250,26 @@
                     <div class="flex items-center gap-2 flex-wrap mb-3.5">
                         <span class="badge badge-{{ item.status_slug }}">{{ item.status }}</span>
                     </div>
-                    <h3 class="font-bold text-slate-800 dark:text-white text-sm mb-1 leading-tight truncate" title="{{ item.filme }}">
+                    <h3 class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm mb-1 leading-tight truncate" title="{{ item.filme }}">
                         {{ item.filme }}
                     </h3>
-                    <p class="text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
-                        <i data-lucide="film" class="w-3.5 h-3.5 shrink-0 text-slate-400"></i>
+                    <p class="text-[10px] sm:text-[11px] text-slate-400 dark:text-navie-textsec flex items-center gap-1.5 truncate">
+                        <i data-lucide="film" class="w-3 sm:w-3.5 h-3 sm:h-3.5 shrink-0 text-slate-400"></i>
                         <span>{{ item.cinema }}</span>
                     </p>
                 </div>
 
-                <div class="flex items-center justify-between gap-4 pt-3.5 mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
+                <div class="flex items-center justify-between gap-2 sm:gap-4 pt-2.5 sm:pt-3.5 mt-2.5 sm:mt-3.5 border-t border-dashed border-slate-200 dark:border-navie-border">
                     <div class="min-w-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Sessão</span>
-                        <span class="text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1.5 mt-1 truncate">
-                            <i data-lucide="clapperboard" class="w-3.5 h-3.5 text-blue-500 shrink-0"></i>
+                        <span class="text-[10px] sm:text-xs font-bold text-slate-700 dark:text-white flex items-center gap-1 mt-1 truncate">
+                            <i data-lucide="clapperboard" class="w-3 h-3 text-blue-500 shrink-0"></i>
                             <span class="truncate">{{ item.sessao }}</span>
                         </span>
                     </div>
-                    <div class="text-right shrink-0">
+                    <div class="text-right shrink-0 min-w-0">
                         <span class="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Assento</span>
-                        <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400 mt-1 block truncate">{{ item.assento }}</span>
+                        <span class="text-[10px] sm:text-xs font-extrabold text-blue-600 dark:text-blue-400 mt-1 block truncate max-w-[80px]" title="{{ item.assento }}">{{ item.assento }}</span>
                     </div>
                 </div>
             </div>
@@ -247,9 +285,7 @@
         </div>
     </section>
 
-    <!-- ─────────────────────────────────────────────────────────────────
-         TAB 4: RESTAURANTES (Controlada por AlpineJS activeTab)
-         ───────────────────────────────────────────────────────────────── -->
+    <!-- TAB 4: RESTAURANTES -->
     <section 
         x-show="activeTab === 'restaurantes'" 
         x-transition:enter="transition ease-out duration-300 transform" 
@@ -269,88 +305,504 @@
         </div>
     </section>
 
-</div>
-
-<!-- ─────────────────────────────────────────────────────────────────
-     MODAL DE LUXO: TICKET DETAIL & DYNAMIC QR CODE
-     ───────────────────────────────────────────────────────────────── -->
-<div id="detail-modal" style="display:none; position:fixed; inset:0; z-index:100; overflow-y:auto;">
-    <!-- Backdrop com Blur -->
-    <div onclick="closeDetailModal()" style="position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);"></div>
-
-    <!-- Content Card -->
-    <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1.25rem;">
-        <div class="glass-card" style="position:relative; border-radius:24px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); max-width:400px; width:100%; padding:1.75rem; z-index:101;">
-
-            <!-- Header: ID & Close -->
-            <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:1rem; border-b:1px solid rgba(226, 232, 240, 0.4); margin-bottom:1.25rem;">
-                <span style="font-size:11px; font-family: monospace; font-weight:800; color: #94a3b8;" id="modal-tkt-id">RES-0000</span>
-                <button onclick="closeDetailModal()" style="background:none; border:none; cursor:pointer; color:#94a3b8; padding:4px; border-radius:9999px; transition:all 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+    <!-- TAB 5: FEED SOCIAL (MOMENTOS) -->
+    <section 
+        x-show="activeTab === 'feed'" 
+        x-transition:enter="transition ease-out duration-300 transform" 
+        x-transition:enter-start="-translate-x-4 opacity-0" 
+        x-transition:enter-end="translate-x-0 opacity-100" 
+        class="space-y-6 max-w-2xl mx-auto"
+        style="display: none;"
+    >
+        <!-- Card de Criar Post -->
+        <div x-data="{ showForm: false }" class="glass-card rounded-3xl p-5 shadow-sm border border-slate-200/60 dark:border-navie-border/60 transition-all duration-300">
+            <div class="flex items-center gap-3" x-show="!showForm">
+                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-white text-blue-700 dark:text-navie-bg flex items-center justify-center font-bold text-sm shrink-0">
+                    {{ request.user.first_name|default:request.user.username|slice:":1"|upper }}
+                </div>
+                <button @click="showForm = true" class="flex-1 text-left bg-slate-100/70 hover:bg-slate-100 dark:bg-white/5 dark:hover:bg-white/10 px-4 py-2.5 rounded-full text-xs text-slate-450 dark:text-navie-textsec font-medium transition-all focus:outline-none">
+                    Como foi sua última experiência? Compartilhe aqui...
                 </button>
             </div>
 
-            <!-- QR Code Box -->
-            <div class="bg-slate-50/50 dark:bg-black/30" style="padding:1rem; border-radius:20px; border:1px dashed rgba(226,232,240,0.4); display:flex; align-items:center; justify-content:center; margin-bottom:1.25rem; position:relative; min-height:190px;">
-                <img id="modal-qr-img" src="" alt="QR Code de Validação" style="width:170px; height:170px; object-fit:contain;">
-                <!-- Loading spinner -->
-                <div id="qr-loading" style="position:absolute; inset:0; background:rgba(255,255,255,0.9); border-radius:20px; display:flex; align-items:center; justify-content:center;">
-                    <i data-lucide="loader" class="w-7 h-7 animate-spin text-blue-600"></i>
+            <!-- Form de Criação -->
+            <form x-show="showForm" action="{% url 'clientes:criar_post' %}" method="POST" enctype="multipart/form-data" class="space-y-4 animate-in fade-in duration-300" style="display: none;">
+                {% csrf_token %}
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-navie-border/40 pb-3">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Novo Momento</h3>
+                    <button type="button" @click="showForm = false" class="text-slate-400 hover:text-red-500 transition-colors">
+                        <i class="w-4 h-4" data-lucide="x"></i>
+                    </button>
                 </div>
-            </div>
 
-            <p style="text-align:center; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#94a3b8; margin-bottom:1.25rem;">
-                Apresente na entrada para validação
-            </p>
-
-            <!-- Detalhes do Voucher -->
-            <div class="bg-slate-50/50 dark:bg-black/30" style="border:1px solid rgba(226, 232, 240, 0.3); border-radius:20px; padding:1.25rem; margin-bottom:1.5rem; display:flex; flex-direction:column; gap:12px;">
+                <!-- Escolher Reserva Vinculada (Voucher Real) -->
                 <div>
-                    <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Atração / Estabelecimento</span>
-                    <span style="font-weight:900; color:inherit; font-size:0.95rem;" id="modal-tkt-title">Nome da Experiência</span>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Vincular a uma Reserva / Ingresso:</label>
+                    <select name="reserva_id" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                        <option value="none">Nenhum (Marcar local manualmente abaixo)</option>
+                        {% for item in hospedagens %}
+                            {% if item.real %}
+                            <option value="{{ item.id }}">{{ item.estabelecimento }} ({{ item.detalhe }})</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
                 </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div>
-                        <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;" id="modal-date-label">Período</span>
-                        <span style="font-weight:700; color:inherit; font-size:12px;" id="modal-tkt-date">01/01/2026</span>
-                    </div>
-                    <div>
-                        <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Localização</span>
-                        <span style="font-weight:700; color:inherit; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block;" id="modal-tkt-location">Cidade</span>
-                    </div>
-                </div>
-                <div>
-                    <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Especificações</span>
-                    <span style="font-weight:700; color:inherit; font-size:12px;" id="modal-tkt-detail">Detalhe</span>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px dashed rgba(226, 232, 240, 0.4);">
-                    <div>
-                        <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8;">Status</span>
-                        <span id="modal-tkt-status" style="font-weight:800; font-size:12px;">Confirmada</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8;">Total Pago</span>
-                        <span id="modal-tkt-price" style="font-weight:900; color:#2563eb; font-size:1.1rem;">R$ 0,00</span>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Print Button (Cápsula de Destaque) -->
-            <button type="button" id="modal-btn-print"
-                    class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full transition-all duration-300"
-                    style="padding:12px 20px; font-weight:800; font-size:13px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow: 0 4px 15px rgba(37,99,235,0.2);">
-                <i data-lucide="printer" class="w-4.5 h-4.5"></i>
-                <span>Baixar Comprovante (PDF)</span>
-            </button>
+                <!-- Nome do Estabelecimento (Manual) -->
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Ou digite o nome do local visitado:</label>
+                    <input type="text" name="estabelecimento_nome" placeholder="Ex: Pousada Ramilos Tianguá, Point da Serra..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                </div>
+
+                <!-- Avaliação em Estrelas -->
+                <div x-data="{ rating: 5 }">
+                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Sua Nota:</label>
+                    <input type="hidden" name="avaliacao" :value="rating">
+                    <div class="flex items-center gap-1">
+                        <template x-for="i in 5">
+                            <button type="button" @click="rating = i" class="focus:outline-none transition-transform active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" :class="i <= rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-650'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Relato Text -->
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Relato da Experiência:</label>
+                    <textarea name="texto" rows="3" required placeholder="Como foi o quarto? O show estava animado? Conte detalhes..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-2xl p-3 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white resize-none"></textarea>
+                </div>
+
+                <!-- Foto do Momento -->
+                <div>
+                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Adicionar Foto (Opcional):</label>
+                    <div class="flex items-center justify-center w-full">
+                        <label class="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 dark:border-navie-border border-dashed rounded-2xl cursor-pointer hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all">
+                            <div class="flex flex-col items-center justify-center pt-4 pb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <p class="pt-1 text-[10px] text-slate-400 dark:text-navie-textsec font-bold uppercase tracking-wider">Clique para anexar foto</p>
+                            </div>
+                            <input type="file" name="imagem" accept="image/*" class="hidden" />
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2.5 pt-2">
+                    <button type="button" @click="showForm = false" class="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 transition-all">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-5 py-2 text-xs font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/10 active:scale-95">Publicar no Feed</button>
+                </div>
+            </form>
         </div>
-    </div>
+
+        <!-- Lista de Posts do Feed -->
+        <div class="space-y-6">
+            {% for post in feed_posts %}
+            <div class="glass-card rounded-[28px] overflow-hidden border border-slate-200/60 dark:border-navie-border/60 shadow-sm transition-all duration-300 hover:shadow-md">
+                <!-- Header do Post -->
+                <div class="p-4 flex items-center justify-between border-b border-slate-100/50 dark:border-navie-border/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full bg-blue-100 dark:bg-white text-blue-700 dark:text-navie-bg flex items-center justify-center font-bold text-xs shrink-0">
+                            {{ post.usuario|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-extrabold text-xs text-slate-800 dark:text-white leading-tight">{{ post.usuario }}</span>
+                                <span class="text-[9px] text-slate-400 dark:text-navie-textsec">@{{ post.usuario_username }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                <span class="text-[9px] text-slate-400 dark:text-navie-textsec font-medium">{{ post.criado_em }}</span>
+                                {% if post.estabelecimento %}
+                                <span class="text-[9px] text-slate-400 dark:text-navie-textsec">•</span>
+                                <span class="text-[9px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-0.5">
+                                    <i class="w-2.5 h-2.5" data-lucide="map-pin"></i>
+                                    {{ post.estabelecimento }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if post.reserva_confirmada %}
+                    <span class="flex items-center gap-1 bg-green-550/10 text-green-600 dark:text-green-400 text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border border-green-500/20 shrink-0" title="Compra confirmada e validada pelo Naviê Vibe">
+                        <i class="w-3 h-3" data-lucide="shield-check"></i> Confirmado
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Legenda do Post -->
+                <div class="p-4 pt-3 pb-3">
+                    <!-- Estrelas -->
+                    <div class="flex items-center gap-0.5 mb-2">
+                        {% for i in "12345" %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 {% if forloop.counter <= post.avaliacao %}fill-amber-400 text-amber-400{% else %}text-slate-300 dark:text-slate-700{% endif %}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">{{ post.texto }}</p>
+                </div>
+
+                <!-- Imagem do Post -->
+                {% if post.imagem %}
+                <div class="w-full relative overflow-hidden bg-slate-900/10 dark:bg-black/10 border-y border-slate-100 dark:border-navie-border/20">
+                    <img src="{{ post.imagem }}" alt="Momento do viajante" class="w-full h-auto object-cover max-h-[420px] transition-transform duration-500 hover:scale-102">
+                </div>
+                {% endif %}
+
+                <!-- Ações do Post (Likes & Comments Count) -->
+                <div class="px-4 py-3 flex items-center gap-5 border-b border-slate-100/50 dark:border-navie-border/20 bg-slate-50/20 dark:bg-black/10">
+                    <!-- Like Button (HTMX reativo) -->
+                    <button hx-post="{% url 'clientes:like_post' post.id %}" 
+                            hx-swap="outerHTML" 
+                            class="flex items-center gap-1.5 focus:outline-none transition-all duration-300 transform active:scale-90 {% if post.liked_by_me %}fill-red-500 text-red-500 scale-110{% else %}text-slate-400 dark:text-navie-textsec hover:text-red-500 hover:scale-110{% endif %}">
+                        <i class="w-4.5 h-4.5" data-lucide="heart"></i>
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-navie-textsec">{{ post.likes_count }}</span>
+                    </button>
+
+                    <!-- Comentários Icon -->
+                    <div class="flex items-center gap-1.5 text-slate-400 dark:text-navie-textsec">
+                        <i class="w-4.5 h-4.5" data-lucide="message-circle"></i>
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-navie-textsec">{{ post.comentarios|length }}</span>
+                    </div>
+                </div>
+
+                <!-- Seção de Comentários -->
+                <div x-data="{ open: false }" class="bg-slate-50/45 dark:bg-black/15">
+                    <!-- Botão expansor -->
+                    {% if post.comentarios %}
+                    <button @click="open = !open" class="w-full px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-450 dark:text-navie-textsec hover:text-blue-600 transition-colors text-left flex items-center justify-between border-b border-slate-100/20 dark:border-navie-border/10">
+                        <span x-text="open ? 'Ocultar Comentários' : 'Ver todos os ' + '{{ post.comentarios|length }}' + ' comentários'"></span>
+                        <i class="w-3.5 h-3.5 transition-transform" data-lucide="chevron-down" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    {% endif %}
+
+                    <!-- Lista de Comentários -->
+                    <div x-show="open || '{{ post.comentarios|length }}' === '0'" class="p-4 space-y-3" :class="open ? 'block' : 'hidden'">
+                        {% for comment in post.comentarios %}
+                        <div class="flex items-start gap-2.5 text-xs">
+                            <div class="w-6.5 h-6.5 rounded-full bg-blue-100 dark:bg-white text-blue-700 dark:text-navie-bg flex items-center justify-center font-bold text-[9px] shrink-0">
+                                {{ comment.usuario|slice:":1"|upper }}
+                            </div>
+                            <div class="flex-1 bg-white/70 dark:bg-slate-900/60 p-2.5 rounded-2xl border border-slate-200/40 dark:border-navie-border/30">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <span class="font-extrabold text-[10.5px] text-slate-800 dark:text-white leading-tight">{{ comment.usuario }} <span class="font-normal text-[9px] text-slate-450 dark:text-navie-textsec">@{{ comment.usuario_username }}</span></span>
+                                    <span class="text-[8.5px] text-slate-400 dark:text-navie-textsec">{{ comment.criado_em }}</span>
+                                </div>
+                                <p class="text-slate-650 dark:text-slate-200 leading-relaxed text-[11px] font-medium whitespace-pre-wrap">{{ comment.texto }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Escrever Comentário Form -->
+                    <form action="{% url 'clientes:comentar_post' post.id %}" method="POST" class="p-3 border-t border-slate-100/50 dark:border-navie-border/20 flex gap-2">
+                        {% csrf_token %}
+                        <input type="text" name="texto" required placeholder="Escreva um comentário..." class="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-1.5 text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-3 py-1.5 flex items-center justify-center shadow-sm active:scale-95 transition-all">
+                            <i class="w-3.5 h-3.5" data-lucide="send"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- TAB 6: CONFIGURAÇÕES & AJUSTES -->
+    <section 
+        x-show="activeTab === 'configuracoes'" 
+        x-transition:enter="transition ease-out duration-300 transform" 
+        x-transition:enter-start="-translate-x-4 opacity-0" 
+        x-transition:enter-end="translate-x-0 opacity-100" 
+        class="space-y-6 max-w-2xl mx-auto"
+        style="display: none;"
+    >
+        <!-- Card Conta -->
+        <div class="glass-card rounded-[28px] p-6 shadow-sm border border-slate-200/60 dark:border-navie-border/60">
+            <h3 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5">Dados do Perfil</h3>
+            
+            <form action="{% url 'clientes:editar_perfil' %}" method="POST" class="space-y-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Nome</label>
+                        <input type="text" name="first_name" value="{{ request.user.first_name }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Sobrenome</label>
+                        <input type="text" name="last_name" value="{{ request.user.last_name }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">E-mail</label>
+                    <input type="email" name="email" value="{{ request.user.email }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">WhatsApp / Celular</label>
+                        <input type="text" name="telefone" value="{{ perfil.telefone|default:'' }}" placeholder="(00) 00000-0000" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">CEP</label>
+                        <input type="text" name="cep" value="{{ perfil.cep|default:'' }}" placeholder="00000-000" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Endereço (Rua/Avenida)</label>
+                    <input type="text" name="endereco" value="{{ perfil.endereco|default:'' }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-1">
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Número</label>
+                        <input type="text" name="numero" value="{{ perfil.numero|default:'' }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Bairro</label>
+                        <input type="text" name="bairro" value="{{ perfil.bairro|default:'' }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-3">
+                    <div class="col-span-3">
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Cidade</label>
+                        <input type="text" name="cidade" value="{{ perfil.cidade|default:'' }}" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">UF</label>
+                        <input type="text" name="estado" value="{{ perfil.estado|default:'' }}" placeholder="CE" maxlength="2" class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3.5 py-2.5 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white text-center uppercase">
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-3">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/10 active:scale-95">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Card Personalização de Tema -->
+        <div class="glass-card rounded-[28px] p-6 shadow-sm border border-slate-200/60 dark:border-navie-border/60">
+            <h3 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5">Tema & Estilo</h3>
+            
+            <div class="flex items-center justify-between">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 dark:text-white leading-tight">Visual do Sistema</h4>
+                    <p class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5">Alterne entre o visual padrão e o modo translúcido</p>
+                </div>
+                <button @click="toggleTheme()" class="bg-blue-50/80 dark:bg-white/10 text-blue-600 dark:text-white px-4 py-2.5 rounded-xl border border-blue-200/40 dark:border-navie-border text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <span x-show="theme === 'light'" class="flex items-center gap-2"><i class="w-4 h-4" data-lucide="moon"></i> Glassmorphism</span>
+                    <span x-show="theme === 'glass'" class="flex items-center gap-2" style="display: none;"><i class="w-4 h-4" data-lucide="sun"></i> Modo Padrão</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Logout Card (Apenas para Mobile para fácil acesso) -->
+        <div class="glass-card rounded-[28px] p-6 shadow-sm border border-slate-200/60 dark:border-navie-border/60 md:hidden">
+            <h3 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4">Sessão</h3>
+            
+            <a href="{% url 'clientes:logout' %}" class="w-full bg-red-600 hover:bg-red-500 text-white rounded-xl py-3 px-4 text-xs font-black uppercase tracking-widest transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-2 border-none">
+                <i class="w-4 h-4" data-lucide="log-out"></i>
+                <span>Sair da Conta</span>
+            </a>
+        </div>
+    </section>
+
 </div>
+
 {% endblock %}
 
 {% block extra_scripts %}
+<!-- ─────────────────────────────────────────────────────────────────
+     WELCOME ANIMATION OVERLAY (Sailing boat, waves, sailor and stretchy arm)
+     ───────────────────────────────────────────────────────────────── -->
+<div id="welcome-animation-overlay" class="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-50/20 dark:bg-slate-950/20 backdrop-blur-md transition-opacity duration-500">
+    <!-- Close / Skip Button -->
+    <button onclick="skipWelcomeAnimation()" class="absolute top-6 right-6 bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-500 dark:text-slate-350 px-3.5 py-1.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-sm cursor-pointer z-[1000000] hover:scale-105 active:scale-95">
+        Pular
+    </button>
+
+    <!-- Solid Water Body and Waves (Centered Vertically but extends to bottom) -->
+    <div class="absolute top-[50%] bottom-0 left-0 w-screen bg-[rgba(59,130,246,0.35)] dark:bg-[rgba(30,58,138,0.5)]">
+        <!-- Ocean Waves (Perfect Geometry) -->
+        <svg class="absolute top-[-24px] left-0 w-screen h-12 text-blue-500/20 dark:text-blue-400/20" preserveAspectRatio="none" viewBox="0 0 200 40">
+            <!-- Wave 1 (Back wave, slightly offset/slower) -->
+            <path d="M 0,20 Q 25,10 50,20 T 100,20 T 150,20 T 200,20 T 250,20 T 300,20 V 40 H 0 Z" fill="currentColor">
+                <animateTransform attributeName="transform" type="translate" from="0,0" to="-100,0" dur="4s" repeatCount="indefinite" />
+            </path>
+            <!-- Wave 2 (Front wave) -->
+            <path d="M 0,22 Q 25,12 50,22 T 100,22 T 150,22 T 200,22 T 250,22 T 300,22 V 40 H 0 Z" fill="rgba(59, 130, 246, 0.35)">
+                <animateTransform attributeName="transform" type="translate" from="0,0" to="-100,0" dur="2.5s" repeatCount="indefinite" />
+            </path>
+        </svg>
+    </div>
+
+    <!-- Dynamic Sailing Boat -->
+    <div id="welcome-boat" class="absolute bottom-[50%] left-[-160px] w-28 sm:w-36 h-28 sm:h-36 transition-all duration-300" style="transform-origin: center bottom; margin-bottom: -16px;">
+            <svg viewBox="0 0 200 200" class="w-full h-full overflow-visible">
+                <!-- Wooden Mast -->
+                <rect x="97" y="15" width="6" height="117" rx="3" fill="#64748b" />
+                
+                <!-- Main Sail (White) -->
+                <path d="M 94,22 Q 62,72 42,122 L 94,122 Z" fill="#ffffff" stroke="#64748b" stroke-width="1.5" />
+                
+                <!-- Jib Sail (Gelo) -->
+                <path d="M 106,32 Q 138,78 158,122 L 106,122 Z" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" />
+
+                <!-- Sailor (Pops up dynamically - placed in front of sails but behind hull) -->
+                <g id="welcome-sailor">
+                    <!-- Sailor Cap (White cap, blue ribbon) -->
+                    <path d="M 90,66 Q 100,56 110,66 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="2.5" />
+                    <rect x="91" y="66" width="18" height="4" fill="#1d4ed8" rx="1" />
+                    
+                    <!-- Sailor Head -->
+                    <circle cx="100" cy="82" r="12" fill="#ffffff" stroke="#1d4ed8" stroke-width="3" />
+                    <!-- Sailor Smiley Face -->
+                    <path d="M 97,84 Q 100,88 103,84" fill="none" stroke="#1d4ed8" stroke-width="2.5" stroke-linecap="round" />
+                    <circle cx="96" cy="80" r="1.5" fill="#1d4ed8" />
+                    <circle cx="104" cy="80" r="1.5" fill="#1d4ed8" />
+                    
+                    <!-- Sailor Body (Classic stripes) -->
+                    <path d="M 86,130 L 114,130 L 111,96 L 89,96 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="3" />
+                    <line x1="90" y1="104" x2="110" y2="104" stroke="#1d4ed8" stroke-width="2.5" />
+                    <line x1="88" y1="112" x2="112" y2="112" stroke="#1d4ed8" stroke-width="2.5" />
+                    <line x1="87" y1="120" x2="113" y2="120" stroke="#1d4ed8" stroke-width="2.5" />
+
+                    <!-- Stretchy Arm (Rubber Hose cartoon style) -->
+                    <path id="sailor-arm" d="M 111,102 Q 115,100 120,98" fill="none" stroke="#1d4ed8" stroke-width="4.5" stroke-linecap="round">
+                        <animate id="stretch-anim" attributeName="d" from="M 111,102 Q 115,100 120,98" to="M 111,102 Q 130,65 146,75" dur="0.4s" begin="indefinite" fill="freeze" />
+                        <animate id="retract-anim" attributeName="d" from="M 111,102 Q 130,65 146,75" to="M 111,102 Q 115,100 120,98" dur="0.4s" begin="indefinite" fill="freeze" />
+                    </path>
+                    
+                    <!-- Waving Hand -->
+                    <g id="sailor-hand-parent" transform="translate(120, 98)">
+                        <animateTransform id="hand-stretch" attributeName="transform" type="translate" from="120,98" to="146,75" dur="0.4s" begin="indefinite" fill="freeze" />
+                        <animateTransform id="hand-retract" attributeName="transform" type="translate" from="146,75" to="120,98" dur="0.4s" begin="indefinite" fill="freeze" />
+                        
+                        <g id="sailor-hand" style="transform-origin: 0px 0px;">
+                            <path d="M -6,-6 C -6,-10 -2,-12 2,-10 C 5,-9 7,-6 6,-3 C 5,0 1,2 -2,1 C -5,0 -6,-3 -6,-6 Z" fill="#ffffff" stroke="#1d4ed8" stroke-width="2.5" />
+                            <path d="M -2,-10 C -2,-13 1,-15 4,-13 C 6,-11 6,-8 4,-6" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" />
+                            <path d="M 2,-9 C 3,-12 6,-13 8,-11 C 9,-9 8,-6 6,-5" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linecap="round" />
+                        </g>
+                    </g>
+                </g>
+
+                <!-- Symmetrical Hull (Azul Naviê) -->
+                <path d="M 16,132 L 184,132 L 154,166 L 46,166 Z" fill="#1d4ed8" stroke="#172554" stroke-width="3" stroke-linejoin="round" />
+                <path d="M 24,140 L 176,140 L 168,149 L 32,149 Z" fill="#3b82f6" />
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────
+     MODAL DE LUXO: TICKET DETAIL & DYNAMIC QR CODE (Renders directly under body to fix z-index stacking context)
+     ───────────────────────────────────────────────────────────────── -->
+<div id="detail-modal" style="display:none; position:fixed; inset:0; z-index:999999 !important; overflow-y:auto; opacity:0; transition: opacity 0.4s ease-out;">
+    <!-- Backdrop: Solid dark overlay on mobile to prevent glitches, blurred on desktop -->
+    <div onclick="closeDetailModal()" class="fixed inset-0 bg-slate-950/70 md:bg-slate-950/45 md:backdrop-blur-[6px] transition-opacity duration-300"></div>
+
+    <!-- Content Card (Center Container) -->
+    <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:1.25rem;">
+        <!-- Card Container: Without overflow-hidden so perforation cutouts can sit on the edge -->
+        <div id="modal-card-container" class="glass-card w-full max-w-[380px] md:max-w-3xl relative bg-white dark:bg-slate-900 border border-blue-950/15 dark:border-slate-800 rounded-[28px] z-[1000000] p-0 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.2)]" style="font-family: 'Outfit', 'Inter', sans-serif; transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease; transform-origin: center center;">
+            
+            <!-- Import Google Fonts: Outfit inside the modal to ensure it is loaded -->
+            <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+            <!-- Botão de Fechar Absoluto (Sempre no topo-direito do card inteiro) -->
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 bg-slate-100/90 dark:bg-slate-850/90 text-slate-400 p-2 rounded-full border-none cursor-pointer focus:outline-none flex items-center justify-center close-btn-animate z-[1000005]" title="Fechar">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Responsive Grid: Stacked on Mobile, Side-by-Side on Desktop -->
+            <div class="flex flex-col md:flex-row min-h-0 relative">
+                
+                <!-- Left Column (Mobile: Top Portion) - width 42% on desktop, rounded top corners -->
+                <div class="w-full md:w-[42%] p-6 sm:p-8 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-black/10 rounded-t-[28px] md:rounded-tr-none md:rounded-l-[28px]">
+                    <!-- QR Code Box -->
+                    <div class="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center relative w-[180px] h-[180px]">
+                        <img id="modal-qr-img" src="" alt="QR Code de Validação" class="w-full h-full object-contain">
+                        <!-- Loading spinner -->
+                        <div id="qr-loading" class="absolute inset-0 bg-white/95 dark:bg-slate-900/95 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="loader" class="w-7 h-7 animate-spin text-blue-600"></i>
+                        </div>
+                    </div>
+                    
+                    <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest mt-4 leading-normal max-w-[180px]">
+                        Apresente na entrada para validação
+                    </p>
+                </div>
+
+                <!-- Ticket Divider -->
+                <div class="relative flex items-center justify-center md:h-auto">
+                    <!-- Horizontal line on mobile, Vertical line on desktop -->
+                    <div class="w-full h-[1px] border-t border-dashed border-slate-200 dark:border-slate-800 md:w-[1px] md:h-full md:border-l md:border-t-0"></div>
+                </div>
+
+                <!-- Right Column (Mobile: Bottom Portion) - width 58% on desktop, rounded bottom corners -->
+                <div class="w-full md:w-[58%] p-6 sm:p-8 flex flex-col justify-between rounded-b-[28px] md:rounded-bl-none md:rounded-r-[28px]">
+                    
+                    <!-- Ticket Header: ID -->
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-[9px] font-extrabold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Comprovante de Reserva</p>
+                            <span class="text-[11px] font-extrabold font-mono text-blue-600 dark:text-blue-400 mt-0.5 block" id="modal-tkt-id">RES-0000</span>
+                        </div>
+                    </div>
+
+                    <!-- Voucher Details -->
+                    <div class="bg-slate-50/60 dark:bg-black/20 border border-slate-200/40 dark:border-slate-800 rounded-2xl p-4 flex flex-col gap-3.5 mb-5">
+                        <div>
+                            <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Atração / Estabelecimento</span>
+                            <span class="font-extrabold text-slate-850 dark:text-white text-[13px] block leading-snug" id="modal-tkt-title">Nome da Experiência</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;" id="modal-date-label">Período</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px] block leading-tight" id="modal-tkt-date">01/01/2026</span>
+                            </div>
+                            <div>
+                                <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Localização</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px] block truncate leading-tight" id="modal-tkt-location">Tianguá - CE</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8; margin-bottom:2px;">Especificações</span>
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-[11px] block leading-snug" id="modal-tkt-detail">Quarto/Chalé: 78 (Suíte de casal premium)</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center pt-3 border-t border-dashed border-slate-200/80 dark:border-slate-800">
+                            <div>
+                                <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8;">Status</span>
+                                <span id="modal-tkt-status" class="font-extrabold text-[11.5px] tracking-wide">Confirmada</span>
+                            </div>
+                            <div class="text-right">
+                                <span style="display:block; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#94a3b8;">Total Pago</span>
+                                <span id="modal-tkt-price" class="font-black text-blue-600 dark:text-blue-400 text-sm">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Download Button -->
+                    <button type="button" id="modal-btn-print"
+                            class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-3 px-4 text-[10px] font-black uppercase tracking-widest transition-all shadow-md shadow-blue-500/10 active:scale-95 cursor-pointer flex items-center justify-center gap-2 border-none">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>Baixar Comprovante (PDF)</span>
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // ─── Modal Controller ────────────────────────────────────────
     let currentActiveTktData = null;
+    let clickedCardElement = null;
 
     function openDetailModal(cardElement, type) {
         const data = {
@@ -362,11 +814,13 @@
             price: cardElement.getAttribute('data-price'),
             status: cardElement.getAttribute('data-status'),
             statusSlug: cardElement.getAttribute('data-status-slug'),
-            qr: cardElement.getAttribute('data-qr')
+            qr: cardElement.getAttribute('data-qr'),
+            logo: cardElement.getAttribute('data-logo')
         };
 
         currentActiveTktData = data;
         currentActiveTktData.type = type;
+        clickedCardElement = cardElement;
 
         document.getElementById('modal-tkt-id').textContent = data.id;
         document.getElementById('modal-tkt-title').textContent = data.title;
@@ -412,88 +866,577 @@
             printThermalReceipt(data);
         };
 
-        document.getElementById('detail-modal').style.display = 'block';
+        const modal = document.getElementById('detail-modal');
+        const cardContainer = document.getElementById('modal-card-container');
+
+        // Lock background scroll
+        document.body.classList.add('overflow-hidden');
+        document.documentElement.classList.add('overflow-hidden');
+
+        // FLIP Animation: First
+        const firstRect = cardElement.getBoundingClientRect();
+
+        // Setup display state (hidden opacity, reset transform to measure final state)
+        modal.style.display = 'block';
+        modal.style.opacity = '0';
+        cardContainer.style.opacity = '0';
+        cardContainer.style.transform = 'none';
+
+        // FLIP Animation: Last
+        requestAnimationFrame(() => {
+            const lastRect = cardContainer.getBoundingClientRect();
+
+            // Calculate scale & offset
+            const dx = firstRect.left + (firstRect.width / 2) - (lastRect.left + lastRect.width / 2);
+            const dy = firstRect.top + (firstRect.height / 2) - (lastRect.top + lastRect.height / 2);
+            const sx = firstRect.width / lastRect.width;
+            const sy = firstRect.height / lastRect.height;
+
+            // FLIP Animation: Invert
+            cardContainer.style.transition = 'none';
+            cardContainer.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+            cardContainer.style.borderRadius = '24px';
+            cardContainer.style.opacity = '0.3';
+
+            // FLIP Animation: Play
+            requestAnimationFrame(() => {
+                modal.style.transition = 'opacity 0.5s ease-out';
+                modal.style.opacity = '1';
+
+                cardContainer.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, border-radius 0.6s ease';
+                cardContainer.style.transform = 'translate(0, 0) scale(1)';
+                cardContainer.style.opacity = '1';
+                cardContainer.style.borderRadius = '28px';
+            });
+        });
+
         if (window.lucide) lucide.createIcons();
     }
 
     function closeDetailModal() {
-        document.getElementById('detail-modal').style.display = 'none';
-        currentActiveTktData = null;
+        const modal = document.getElementById('detail-modal');
+        const cardContainer = document.getElementById('modal-card-container');
+
+        if (clickedCardElement && document.body.contains(clickedCardElement)) {
+            const firstRect = clickedCardElement.getBoundingClientRect();
+            const lastRect = cardContainer.getBoundingClientRect();
+
+            const dx = firstRect.left + (firstRect.width / 2) - (lastRect.left + lastRect.width / 2);
+            const dy = firstRect.top + (firstRect.height / 2) - (lastRect.top + lastRect.height / 2);
+            const sx = firstRect.width / lastRect.width;
+            const sy = firstRect.height / lastRect.height;
+
+            modal.style.transition = 'opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+            modal.style.opacity = '0';
+
+            cardContainer.style.transition = 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.5s cubic-bezier(0.5, 0, 0.7, 0.2), border-radius 0.6s ease';
+            cardContainer.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+            cardContainer.style.borderRadius = '24px';
+            cardContainer.style.opacity = '0';
+        } else {
+            modal.style.transition = 'opacity 0.4s ease';
+            modal.style.opacity = '0';
+            cardContainer.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+            cardContainer.style.transform = 'scale(0.85)';
+            cardContainer.style.opacity = '0';
+        }
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            document.body.classList.remove('overflow-hidden');
+            document.documentElement.classList.remove('overflow-hidden');
+            currentActiveTktData = null;
+            clickedCardElement = null;
+        }, 600);
     }
 
-    // ─── Thermal Receipt Printer ─────────────────────────────────
+    // ─── Vintage Landscape Ticket Printer ─────────────────────────
     function printThermalReceipt(d) {
-        const printWindow = window.open('', '_blank', 'width=450,height=700,status=no,toolbar=no,menubar=no');
+        const printWindow = window.open('', '_blank', 'width=840,height=360,status=no,toolbar=no,menubar=no');
+        
+        // Resolve absolute URL for the logo image
+        const rawLogo = document.querySelector('aside img')?.getAttribute('src') || document.querySelector('header img')?.getAttribute('src') || '/static/images/logo.png';
+        const logoSrc = new URL(rawLogo, window.location.origin).href;
+        
+        const clientName = "{{ request.user.get_full_name|default:request.user.username }}";
+
+        let typeText = "EXPERIÊNCIA";
+        let holderLabel = "Titular";
+        let theme = {
+            bgLeft: "#eae3d2",
+            bgMiddle: "#fdfcf7",
+            textDark: "#3d230e",
+            bgRight: "#3d230e",
+            accent: "#c29b53",
+            border: "#c8bca6",
+            logoFilter: "none" // Keep official logo blue brand color
+        };
+
+        if (d.type === 'hospedagem') {
+            typeText = "HOSPEDAGEM";
+            holderLabel = "Hóspede";
+            theme = {
+                bgLeft: "#eae3d2",
+                bgMiddle: "#fdfcf7",
+                textDark: "#3d230e",
+                bgRight: "#3d230e",
+                accent: "#c29b53",
+                border: "#c8bca6",
+                logoFilter: "none"
+            };
+        } else if (d.type === 'show') {
+            typeText = "SHOW / EVENTO";
+            holderLabel = "Participante";
+            theme = {
+                bgLeft: "#fecdd3",
+                bgMiddle: "#fff1f2",
+                textDark: "#881337",
+                bgRight: "#881337",
+                accent: "#e11d48",
+                border: "#fda4af",
+                logoFilter: "none"
+            };
+        } else if (d.type === 'cinema') {
+            typeText = "BILHETE DE CINEMA";
+            holderLabel = "Espectador";
+            theme = {
+                bgLeft: "#dbeafe",
+                bgMiddle: "#f8fafc",
+                textDark: "#1e3a8a",
+                bgRight: "#1e3a8a",
+                accent: "#2563eb",
+                border: "#bfdbfe",
+                logoFilter: "none"
+            };
+        }
+
         const printHtml = `
         <!DOCTYPE html>
         <html lang="pt-br">
         <head>
             <meta charset="UTF-8">
-            <title>Naviê Vibe - Recibo #${d.id}</title>
+            <title>Naviê Vibe - Ingresso #${d.id}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,800;1,600&display=swap" rel="stylesheet">
             <style>
+                * {
+                    box-sizing: border-box;
+                    margin: 0;
+                    padding: 0;
+                }
                 body {
-                    font-family: 'Courier New', Courier, monospace;
                     background-color: #ffffff;
-                    color: #000000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
                     padding: 20px;
-                    width: 320px;
-                    margin: 0 auto;
-                    font-size: 12px;
+                    font-family: 'Outfit', sans-serif;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
                 }
-                .ticket-header {
+                .ticket-container {
+                    position: relative;
+                    width: 780px;
+                    height: 260px;
+                }
+                .ticket {
+                    width: 780px;
+                    height: 260px;
+                    display: flex;
+                    background-color: ${theme.bgMiddle};
+                    border: 1.5px solid ${theme.border};
+                    border-radius: 0px; /* Perfectly square borders for easy cutting */
+                    position: relative;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+                    overflow: hidden;
+                }
+                /* Left Stamp Column */
+                .ticket-left {
+                    width: 130px;
+                    flex-shrink: 0;
+                    background-color: ${theme.bgLeft};
+                    border-right: 1.5px dashed ${theme.border};
+                    border-top-left-radius: 0px;
+                    border-bottom-left-radius: 0px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 15px 10px;
                     text-align: center;
-                    border-bottom: 2px dashed #000;
-                    padding-bottom: 12px;
-                    margin-bottom: 15px;
                 }
-                .ticket-logo { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
-                .ticket-subtitle { font-size: 9px; margin-top: 4px; color: #555; }
-                .detail-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-                .detail-label { font-weight: bold; }
-                .detail-value { text-align: right; max-width: 180px; word-wrap: break-word; }
-                .border-dashed { border-top: 1px dashed #000; margin: 12px 0; }
-                .qr-container { text-align: center; margin: 20px 0; }
-                .qr-image { width: 160px; height: 160px; }
-                .footer { text-align: center; font-size: 9px; margin-top: 15px; border-top: 2px dashed #000; padding-top: 12px; }
-                @media print { body { width: 100%; padding: 0; margin: 0; } }
+                .stamp-circle {
+                    border: 2px dashed ${theme.border};
+                    border-radius: 50%;
+                    padding: 8px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 92px;
+                    height: 92px;
+                    background-color: rgba(255,255,255,0.15);
+                }
+                .stamp-logo-img {
+                    width: 68px;
+                    height: 68px;
+                    object-fit: contain;
+                    filter: ${theme.logoFilter};
+                }
+                .stamp-text {
+                    font-family: 'Playfair Display', serif;
+                    font-size: 11px;
+                    font-weight: 800;
+                    color: ${theme.textDark};
+                    letter-spacing: 1.5px;
+                    text-transform: uppercase;
+                    margin-top: 14px;
+                    opacity: 0.85;
+                }
+                /* Middle Content Column */
+                .ticket-middle {
+                    width: 412px;
+                    flex-grow: 1;
+                    background-color: ${theme.bgMiddle};
+                    padding: 20px 24px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                }
+                .ticket-brand {
+                    font-size: 8.5px;
+                    font-weight: 900;
+                    letter-spacing: 3px;
+                    color: ${theme.accent};
+                    text-transform: uppercase;
+                }
+                .ticket-category {
+                    font-family: 'Playfair Display', serif;
+                    font-size: 11px;
+                    font-style: italic;
+                    color: ${theme.accent};
+                    margin-top: 1px;
+                    opacity: 0.8;
+                }
+                .ticket-title {
+                    font-family: 'Playfair Display', serif;
+                    font-size: 18px;
+                    font-weight: 800;
+                    color: ${theme.textDark};
+                    margin-top: 4px;
+                    line-height: 1.25;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                }
+                .ticket-details-grid {
+                    margin-top: 10px;
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 3.5px;
+                }
+                .detail-item {
+                    font-size: 10px;
+                    color: ${theme.textDark};
+                    opacity: 0.85;
+                    line-height: 1.3;
+                }
+                .detail-item strong {
+                    color: ${theme.textDark};
+                    font-weight: 700;
+                }
+                /* Meta boxes */
+                .ticket-meta-table {
+                    display: flex;
+                    border-top: 1.5px solid ${theme.border};
+                    margin-top: 10px;
+                    padding-top: 8px;
+                    gap: 12px;
+                }
+                .meta-box {
+                    flex: 1;
+                }
+                .meta-label {
+                    font-size: 7.5px;
+                    font-weight: 800;
+                    color: ${theme.textDark};
+                    opacity: 0.6;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .meta-value {
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: ${theme.textDark};
+                    margin-top: 2px;
+                    font-family: monospace;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                /* Divider line */
+                .ticket-divider-line {
+                    width: 2px;
+                    border-left: 2px dashed ${theme.border};
+                    height: 100%;
+                }
+                /* Right Stub Column */
+                .ticket-right {
+                    width: 238px;
+                    flex-shrink: 0;
+                    background-color: ${theme.bgRight};
+                    border-top-right-radius: 0px;
+                    border-bottom-right-radius: 0px;
+                    display: flex;
+                    color: #ffffff;
+                    padding: 12px 14px;
+                    position: relative;
+                }
+                .stub-left {
+                    width: 24px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .stub-vertical-text {
+                    writing-mode: vertical-rl;
+                    transform: rotate(180deg);
+                    font-size: 8px;
+                    font-weight: 800;
+                    letter-spacing: 2.5px;
+                    color: rgba(255, 255, 255, 0.4);
+                    text-transform: uppercase;
+                    white-space: nowrap;
+                }
+                .stub-right {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center; /* Center elements vertically now that barcode is gone */
+                    gap: 16px;
+                }
+                .stub-qr-container {
+                    background-color: #ffffff;
+                    padding: 6px;
+                    border-radius: 4px; /* Slightly squared border radius for the QR code frame */
+                    width: 150px; /* Enlarged QR code */
+                    height: 150px; /* Enlarged QR code */
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                }
+                .stub-qr-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: contain;
+                }
+                .stub-info {
+                    text-align: center;
+                    margin-top: 2px;
+                }
+                .stub-id {
+                    font-size: 11px;
+                    font-weight: 800;
+                    font-family: monospace;
+                    color: #fdfcf7;
+                    letter-spacing: 0.5px;
+                }
+                .stub-status {
+                    font-size: 7px;
+                    font-weight: 900;
+                    text-transform: uppercase;
+                    letter-spacing: 1.5px;
+                    color: ${theme.accent};
+                    margin-top: 1px;
+                }
+                @media print {
+                    @page {
+                        margin: 0; /* Clear default browser print margins/headers */
+                    }
+                    body {
+                        background: #ffffff;
+                        padding: 0;
+                        margin: 0;
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: flex-start;
+                        width: 100%;
+                    }
+                    .ticket-container {
+                        box-shadow: none !important;
+                        margin: 0 !important; /* Align ticket flush to page edges */
+                        width: 100% !important;
+                        page-break-inside: avoid;
+                    }
+                    .ticket {
+                        width: 100% !important;
+                        border-left: none !important;
+                        border-right: none !important;
+                    }
+                    .ticket-middle {
+                        flex: 1 !important;
+                        width: auto !important;
+                    }
+                }
             </style>
         </head>
         <body>
-            <div class="ticket-header">
-                <div class="ticket-logo">NAVIÊ VIBE</div>
-                <div class="ticket-subtitle">O Marketplace de Experiências da Ibiapaba</div>
-                <div style="font-size: 9px; margin-top: 8px;">COMPROVANTE OFICIAL DE RESERVA</div>
+            <div class="ticket-container">
+                <div class="ticket">
+                    <!-- Left Column (Stamp/Logo) -->
+                    <div class="ticket-left">
+                        <div class="stamp-circle">
+                            <img class="stamp-logo-img" src="${logoSrc}" alt="Logo">
+                        </div>
+                        <div class="stamp-text">Naviê Vibe</div>
+                    </div>
+
+                    <!-- Middle Column (Details) -->
+                    <div class="ticket-middle">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; width: 100%;">
+                            <div>
+                                <div class="ticket-brand">Naviê Vibe</div>
+                                <div class="ticket-category">Comprovante de Reserva</div>
+                                <div class="ticket-title">${d.title}</div>
+                            </div>
+                            ${d.logo ? `
+                            <div style="flex-shrink: 0; margin-top: 4px;">
+                                <img src="${new URL(d.logo, window.location.origin).href}" alt="Logo" style="max-height: 48px; max-width: 90px; object-fit: contain; border-radius: 4px; filter: brightness(0) saturate(100%) invert(15%) sepia(85%) saturate(1454%) hue-rotate(18deg) brightness(95%) contrast(102%);">
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="ticket-details-grid">
+                            <div class="detail-item"><strong>${holderLabel}:</strong> ${clientName}</div>
+                            <div class="detail-item"><strong>Local:</strong> ${d.location}</div>
+                            <div class="detail-item"><strong>Agenda/Período:</strong> ${d.date}</div>
+                            <div class="detail-item"><strong>Especificação:</strong> ${d.detail}</div>
+                        </div>
+
+                        <div class="ticket-meta-table">
+                            <div class="meta-box">
+                                <div class="meta-label">Tipo</div>
+                                <div class="meta-value">${typeText}</div>
+                            </div>
+                            <div class="meta-box">
+                                <div class="meta-label">Código</div>
+                                <div class="meta-value">${d.id}</div>
+                            </div>
+                            <div class="meta-box">
+                                <div class="meta-label">Emissão</div>
+                                <div class="meta-value">${new Date().toLocaleDateString('pt-BR')}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Separator dashed line -->
+                    <div class="ticket-divider-line"></div>
+
+                    <!-- Right Column (Stub/Canhoto) -->
+                    <div class="ticket-right">
+                        <div class="stub-left">
+                            <div class="stub-vertical-text">Comprovante Oficial • Admit One</div>
+                        </div>
+                        <div class="stub-right">
+                            <div class="stub-qr-container">
+                                <img class="stub-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(d.qr)}" alt="QR Code">
+                            </div>
+                            <div class="stub-info">
+                                <div class="stub-client" style="font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: rgba(255,255,255,0.95); margin-bottom: 3.5px; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; letter-spacing: 0.5px;" title="${clientName}">${clientName}</div>
+                                <div class="stub-id">${d.id}</div>
+                                <div class="stub-status">${d.status}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div>
-                <div class="detail-row"><span class="detail-label">Recibo ID:</span><span class="detail-value">${d.id}</span></div>
-                <div class="detail-row"><span class="detail-label">Data Emissão:</span><span class="detail-value">${new Date().toLocaleString('pt-BR')}</span></div>
-                <div class="detail-row"><span class="detail-label">Status:</span><span class="detail-value" style="text-transform:uppercase;">${d.status}</span></div>
-            </div>
-            <div class="border-dashed"></div>
-            <div>
-                <div class="detail-row"><span class="detail-label">Atração/Local:</span><span class="detail-value" style="font-weight:bold;">${d.title}</span></div>
-                <div class="detail-row"><span class="detail-label">Cidade:</span><span class="detail-value">${d.location}</span></div>
-                <div class="detail-row"><span class="detail-label">Agenda/Período:</span><span class="detail-value">${d.date}</span></div>
-                <div class="detail-row"><span class="detail-label">Especificação:</span><span class="detail-value">${d.detail}</span></div>
-            </div>
-            <div class="border-dashed"></div>
-            <div class="detail-row" style="font-size:14px; font-weight:bold;"><span>VALOR TOTAL:</span><span>${d.price}</span></div>
-            <div class="border-dashed"></div>
-            <div class="qr-container">
-                <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(d.qr)}" alt="QR Code">
-                <div style="font-size:8px; margin-top:6px; font-family:monospace; word-break:break-all;">HASH: ${d.qr}</div>
-            </div>
-            <div class="footer">
-                <p>Obrigado pela preferência!</p>
-                <p>Naviê Vibe Intermediação de Serviços Ltda.</p>
-                <p>Tianguá, Ceará - Serra da Ibiapaba</p>
-                <p style="font-size:7px; color:#444; margin-top:8px;">Este recibo é gerado por assinatura eletrônica e serve como credencial válida para check-in no estabelecimento.</p>
-            </div>
-            <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}<\/script>
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 800);
+                }
+            <\/script>
         </body>
         </html>`;
         printWindow.document.write(printHtml);
         printWindow.document.close();
+    }
+
+    // ─── Welcome Cartoon Animation Controller ───────────────────────
+    document.addEventListener("DOMContentLoaded", function() {
+        startWelcomeAnimation();
+    });
+
+    function startWelcomeAnimation() {
+        const overlay = document.getElementById('welcome-animation-overlay');
+        const boat = document.getElementById('welcome-boat');
+        const sailor = document.getElementById('welcome-sailor');
+        
+        if (!overlay || !boat || !sailor) return;
+        
+        // 1. Boat sails in
+        setTimeout(() => {
+            boat.classList.add('sail-center');
+            boat.classList.add('navie-boat-float');
+        }, 100);
+        
+        // 2. Sailor pops up
+        setTimeout(() => {
+            sailor.classList.add('sailor-visible');
+        }, 1000);
+        
+        // 3. Stretchy Arm Waves
+        setTimeout(() => {
+            const stretchAnim = document.getElementById('stretch-anim');
+            const handStretch = document.getElementById('hand-stretch');
+            if (stretchAnim) stretchAnim.beginElement();
+            if (handStretch) handStretch.beginElement();
+            sailor.classList.add('hand-waving');
+        }, 1500);
+        
+        // 4. Retract arm
+        setTimeout(() => {
+            sailor.classList.remove('hand-waving');
+            const retractAnim = document.getElementById('retract-anim');
+            const handRetract = document.getElementById('hand-retract');
+            if (retractAnim) retractAnim.beginElement();
+            if (handRetract) handRetract.beginElement();
+        }, 2300);
+        
+        // 5. Sailor pops down
+        setTimeout(() => {
+            sailor.classList.remove('sailor-visible');
+        }, 2700);
+        
+        // 6. Boat sails away
+        setTimeout(() => {
+            boat.classList.remove('sail-center');
+            boat.classList.add('sail-out');
+        }, 3000);
+        
+        // 7. Fade out overlay
+        setTimeout(() => {
+            overlay.classList.add('opacity-0');
+        }, 3800);
+        
+        // 8. Hide overlay from DOM
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 4300);
+    }
+
+    function skipWelcomeAnimation() {
+        const overlay = document.getElementById('welcome-animation-overlay');
+        if (overlay) {
+            overlay.classList.add('opacity-0');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+        }
     }
 </script>
 {% endblock %}

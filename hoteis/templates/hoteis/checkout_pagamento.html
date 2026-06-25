@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static l10n %}
 
 {% block title %}Pagamento Seguro | Naviê Vibe{% endblock %}
 
@@ -16,10 +16,6 @@
         display: flex !important;
         gap: 8px !important;
         width: 100% !important;
-    }
-    .dark .comutador-container {
-        background: #0f172a !important;
-        border-color: #1e293b !important;
     }
     .comutador-btn {
         flex: 1 !important;
@@ -60,18 +56,9 @@
         border: 1px solid #e2e8f0 !important;
         outline: none !important;
     }
-    .dark .comutador-btn-inactive {
-        background: #1e293b !important;
-        color: #94a3b8 !important;
-        border-color: #334155 !important;
-    }
     .comutador-btn-inactive:hover {
         background: #f1f5f9 !important;
         color: #0f172a !important;
-    }
-    .dark .comutador-btn-inactive:hover {
-        background: #334155 !important;
-        color: #ffffff !important;
     }
 
     /* Mockup de Cartão Premium com Gradiente Azul e Preto */
@@ -104,17 +91,6 @@
         box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1) !important;
         transform: translateY(-1px) !important;
         outline: none !important;
-    }
-    .dark .select-glass {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #ffffff !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") !important;
-    }
-    .dark .select-glass:focus {
-        background-color: #0f172a !important;
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
     }
 
     /* Flip Card Animation */
@@ -185,9 +161,6 @@
     .total-price-text {
         color: #0f172a !important;
     }
-    .dark .total-price-text {
-        color: #ffffff !important;
-    }
 
     /* Padding to avoid touching footer */
     .checkout-desktop-left, .checkout-desktop-right {
@@ -214,11 +187,6 @@
         border-bottom-left-radius: 2rem !important;
         border-bottom-right-radius: 2rem !important;
     }
-    .dark .mobile-action-bar-sticky {
-        background: #0f172a !important;
-        border-top-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
     /* Garantia de proporção para o mockup do cartão black premium */
     .credit-card-inner-container {
         aspect-ratio: 1.58 / 1 !important;
@@ -228,6 +196,83 @@
         margin-right: auto !important;
         position: relative !important;
     }
+    
+    @keyframes draw-stroke {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+    .draw-icon {
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        animation: draw-stroke 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    
+    @keyframes wiggle {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-8deg); }
+        75% { transform: rotate(8deg); }
+    }
+    .animate-wiggle {
+        animation: wiggle 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-4px); }
+        40%, 80% { transform: translateX(4px); }
+    }
+    .animate-shake {
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes scaleUp {
+        0% { transform: scale(0.8); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-scaleUp {
+        animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* Custom Input Validation Styles (Premium & Friendly) */
+    .input-val-default {
+        border: 1px solid #e2e8f0 !important;
+        background-color: #f8fafc !important;
+        box-shadow: none !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .input-val-default:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08) !important;
+        outline: none !important;
+        background-color: #ffffff !important;
+    }
+
+    .input-val-invalid {
+        border: 1px solid #f87171 !important; /* Thin friendly red */
+        background-color: #f8fafc !important; /* Default background */
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.06) !important; /* Extremely soft red shadow */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .input-val-invalid:focus {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08), 0 0 10px rgba(239, 68, 68, 0.12) !important;
+        outline: none !important;
+        background-color: #ffffff !important;
+    }
+
+    .input-val-valid {
+        border: 1px solid #34d399 !important; /* Thin friendly green */
+        background-color: #f8fafc !important; /* Default background */
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.06) !important; /* Extremely soft green shadow */
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .input-val-valid:focus {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08), 0 0 10px rgba(16, 185, 129, 0.12) !important;
+        outline: none !important;
+        background-color: #ffffff !important;
+    }
 </style>
 
 <!-- Carregar SDK Mercado Pago v2 -->
@@ -235,14 +280,14 @@
 <!-- CDN do Alpine.js para reatividade do checkout -->
 <script defer src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js"></script>
 
-<div class="min-h-screen bg-slate-50/50 dark:bg-slate-950 pt-28 pb-32 px-4 md:px-8 flex flex-col justify-start items-center"
+<div class="w-full bg-slate-50/50 pt-2 pb-24 px-4 md:px-8 flex flex-col justify-start items-center"
      x-data="checkoutState()"
      x-init="initMercadoPago()">
      
-    <div class="max-w-6xl w-full mx-auto relative mt-6 mb-24">
+    <div class="max-w-6xl w-full mx-auto relative mt-2 mb-12">
         <!-- Glows de Fundo -->
-        <div class="absolute -top-24 -left-20 w-72 h-72 bg-blue-500/5 dark:bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="absolute -bottom-24 -right-20 w-72 h-72 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -top-24 -left-20 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-20 w-72 h-72 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
         <!-- Subcabeçalho de Forma de Pagamento (Comutador Premium) -->
         <div class="comutador-container mb-8 relative z-20">
@@ -269,7 +314,7 @@
                 <!-- Background image layer with premium overlay -->
                 <div class="absolute inset-0 z-0">
                     {% if quarto.imagens.exists %}
-                        <img src="{{ quarto.imagens.first.url_imagem.url }}" class="w-full h-full object-cover brightness-[0.5] dark:brightness-[0.4]">
+                        <img src="{{ quarto.imagens.first.url_imagem.url }}" class="w-full h-full object-cover brightness-[0.5]">
                     {% else %}
                         <div class="w-full h-full bg-slate-900 brightness-[0.5]"></div>
                     {% endif %}
@@ -305,11 +350,11 @@
                     <div class="grid grid-cols-2 gap-3 bg-black/30 backdrop-blur-md rounded-xl p-3 border border-white/5">
                         <div>
                             <span class="block text-[8px] font-black text-white/50 uppercase tracking-wider">Entrada</span>
-                            <span class="font-bold text-white mt-0.5 block text-[10px]">{{ carrinho.checkin }}</span>
+                            <span class="font-bold text-white mt-0.5 block text-[10px]">{{ checkin_date|date:"d/m/Y" }}</span>
                         </div>
                         <div>
                             <span class="block text-[8px] font-black text-white/50 uppercase tracking-wider">Saída</span>
-                            <span class="font-bold text-white mt-0.5 block text-[10px]">{{ carrinho.checkout }}</span>
+                            <span class="font-bold text-white mt-0.5 block text-[10px]">{{ checkout_date|date:"d/m/Y" }}</span>
                         </div>
                         <div>
                             <span class="block text-[8px] font-black text-white/50 uppercase tracking-wider">Diárias</span>
@@ -341,57 +386,92 @@
                 <div x-show="formaPagamento === 'cartao'" class="space-y-4">
                     <!-- Detalhes do Cartão Simplificados -->
                     <div>
-                        <label class="block text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">Número do Cartão</label>
+                        <label class="block text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Número do Cartão</label>
                         <input type="text" 
                                placeholder="0000 0000 0000 0000" 
-                               class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-sm font-bold"
+                               class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-sm font-bold border transition-all duration-300"
+                               :class="getValidationClass('number')"
                                x-model="cardNumber"
                                @input="formatCardNumber($event)"
                                @focus="isFlipped = false"
+                               @blur="cardNumberTouched = true"
                                id="cardNumberMobile">
                     </div>
                     <div>
-                        <label class="block text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">Nome impresso no Cartão</label>
+                        <label class="block text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Nome impresso no Cartão</label>
                         <input type="text" 
                                placeholder="Nome Completo" 
-                               class="w-full px-4 py-3.5 rounded-2xl input-glass text-xs font-bold"
+                               class="w-full px-4 py-3.5 rounded-2xl input-glass text-xs font-bold border transition-all duration-300"
+                               :class="getValidationClass('name')"
                                x-model="cardName"
                                @input="formatCardholderName($event)"
                                @focus="isFlipped = false"
+                               @blur="cardNameTouched = true"
                                id="cardholderNameMobile">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">Validade</label>
+                            <label class="block text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Validade</label>
                             <input type="text" 
                                    placeholder="MM/AA" 
-                                   class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-xs font-bold text-center"
+                                   class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-xs font-bold text-center border transition-all duration-300"
+                                   :class="getValidationClass('expiry')"
                                    x-model="cardExpiry"
                                    @input="formatCardExpiry($event)"
                                    @focus="isFlipped = false"
+                                   @blur="cardExpiryTouched = true"
                                    id="cardExpirationMobile">
                         </div>
                         <div>
-                            <label class="block text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">CVV</label>
+                            <label class="block text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1.5">CVV</label>
                             <input type="password" 
                                    placeholder="000" 
                                    maxlength="4"
-                                   class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-xs font-bold text-center"
+                                   class="w-full px-4 py-3.5 rounded-2xl input-glass font-poppins text-xs font-bold text-center border transition-all duration-300"
+                                   :class="getValidationClass('cvv')"
                                    x-model="cardCvv"
                                    @focus="isFlipped = true"
-                                   @blur="isFlipped = false"
+                                   @blur="cardCvvTouched = true; isFlipped = false"
                                    id="securityCodeMobile">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[8px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-1.5">Parcelas</label>
-                        <select class="w-full select-glass text-xs font-bold"
-                                x-model="installments"
-                                id="installmentsMobile">
-                            <option value="1">1x de R$ {{ financeiro.total_cliente|floatformat:2 }} (Sem juros)</option>
-                            <option value="2">2x de R$ {{ financeiro.total_cliente|floatformat:2 }}</option>
-                            <option value="3">3x de R$ {{ financeiro.total_cliente|floatformat:2 }}</option>
-                        </select>
+                        <label class="block text-[8px] font-black uppercase text-slate-400 tracking-wider mb-1.5">Parcelas</label>
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                            <button type="button"
+                                    @click="open = !open"
+                                    class="w-full flex items-center justify-between px-4 py-3 border border-slate-200 bg-slate-50 font-poppins text-xs font-bold text-slate-800 focus:outline-none transition-all duration-300 hover:bg-slate-100 rounded-2xl"
+                                    id="installmentsBtnMobile">
+                                <span x-text="getInstallmentLabel(installments)"></span>
+                                <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                 class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden p-1.5"
+                                 style="display: none;">
+                                <template x-for="opt in getInstallmentOptions()">
+                                    <button type="button"
+                                            @click="installments = opt.value; open = false"
+                                            class="w-full my-0.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold font-poppins flex items-center justify-between transition-all duration-200"
+                                            :class="installments === opt.value ? 'bg-blue-600/10 text-blue-600 font-black scale-[0.98]' : 'text-slate-700 hover:bg-slate-100/50 hover:translate-x-1'">
+                                        <span x-text="opt.label"></span>
+                                        <span x-show="installments === opt.value" class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                    </button>
+                                </template>
+                            </div>
+                            <select class="hidden" x-model="installments" id="installmentsMobile">
+                                <option value="1">1x</option>
+                                <option value="2">2x</option>
+                                <option value="3">3x</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -408,7 +488,7 @@
                             </p>
                             <!-- Pix Copia e Cola -->
                             <div class="max-w-xs mx-auto flex gap-2">
-                                <input type="text" readonly :value="pixQrCode" class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 dark:bg-white/5 text-[9px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                <input type="text" readonly :value="pixQrCode" class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 text-[9px] font-semibold text-slate-500 truncate">
                                 <button type="button" @click="copyPixCode()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-2xl text-[9px] font-black uppercase tracking-wider cursor-pointer transition-all">
                                     <span x-text="pixCopied ? 'Copiado!' : 'Copiar'"></span>
                                 </button>
@@ -417,10 +497,10 @@
                     </template>
                     <template x-if="!pixGenerated">
                         <div class="py-12 space-y-4">
-                            <div class="w-12 h-12 rounded-full bg-blue-50 dark:bg-white/5 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto animate-bounce">
-                                <i data-lucide="pix" class="w-6 h-6"></i>
+                            <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-bounce">
+                                <i data-lucide="info" class="w-6 h-6"></i>
                             </div>
-                            <h5 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Pague via PIX com Desconto e Liberação Imediata</h5>
+                            <h5 class="text-xs font-black text-slate-800 uppercase tracking-wider">Pague via PIX com Desconto e Liberação Imediata</h5>
                             <p class="text-[10px] text-slate-400 max-w-xs mx-auto font-medium">O código PIX e o QR Code serão gerados assim que você clicar em "Confirmar Pagamento" no rodapé.</p>
                         </div>
                     </template>
@@ -436,7 +516,7 @@
                 <button type="button"
                         @click="processPayment()"
                         :disabled="processing"
-                        class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-white/10 disabled:text-slate-400 text-white font-black text-[10px] uppercase tracking-widest px-6 py-4 rounded-full shadow-lg shadow-blue-500/10 cursor-pointer flex items-center gap-1.5">
+                        class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-black text-[10px] uppercase tracking-widest px-6 py-4 rounded-full shadow-lg shadow-blue-500/10 cursor-pointer flex items-center gap-1.5">
                     <template x-if="processing">
                         <span class="flex items-center gap-1"><i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Processando...</span>
                     </template>
@@ -461,7 +541,7 @@
                     <!-- Background image layer -->
                     <div class="absolute inset-0 z-0">
                         {% if quarto.imagens.exists %}
-                            <img src="{{ quarto.imagens.first.url_imagem.url }}" class="w-full h-full object-cover brightness-[0.6] dark:brightness-[0.4]">
+                            <img src="{{ quarto.imagens.first.url_imagem.url }}" class="w-full h-full object-cover brightness-[0.6]">
                         {% else %}
                             <div class="w-full h-full bg-slate-900 brightness-[0.6]"></div>
                         {% endif %}
@@ -486,11 +566,11 @@
                         <div class="grid grid-cols-2 gap-4 bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10 text-xs">
                             <div>
                                 <span class="block text-[8px] font-black text-white/60 uppercase tracking-wider">Entrada (Check-in)</span>
-                                <span class="font-bold text-white mt-0.5 block">{{ carrinho.checkin }}</span>
+                                <span class="font-bold text-white mt-0.5 block">{{ checkin_date|date:"d/m/Y" }}</span>
                             </div>
                             <div>
                                 <span class="block text-[8px] font-black text-white/60 uppercase tracking-wider">Saída (Checkout)</span>
-                                <span class="font-bold text-white mt-0.5 block">{{ carrinho.checkout }}</span>
+                                <span class="font-bold text-white mt-0.5 block">{{ checkout_date|date:"d/m/Y" }}</span>
                             </div>
                             <div>
                                 <span class="block text-[8px] font-black text-white/60 uppercase tracking-wider">Diárias</span>
@@ -506,21 +586,21 @@
 
                 <!-- Tabela de Preços e Fechamento -->
                 <div class="glass-card rounded-[2rem] shadow-sm p-6 space-y-3 text-xs">
-                    <h3 class="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2 flex items-center gap-1.5">
+                    <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-wider mb-2 flex items-center gap-1.5">
                         <i data-lucide="receipt" class="w-4 h-4"></i> Demonstrativo de Valores
                     </h3>
-                    <div class="flex justify-between text-slate-500 dark:text-slate-400 font-semibold">
+                    <div class="flex justify-between text-slate-500 font-semibold">
                         <span>Valor das Diárias</span>
                         <span>R$ {{ financeiro.subtotal|floatformat:2 }}</span>
                     </div>
-                    <div class="flex justify-between text-slate-500 dark:text-slate-400 font-semibold">
+                    <div class="flex justify-between text-slate-500 font-semibold">
                         <span>Taxa de Serviço Naviê</span>
                         <span>R$ {{ financeiro.taxa_servico|floatformat:2 }}</span>
                     </div>
-                    <div class="border-t border-slate-200/50 dark:border-white/5 my-3"></div>
+                    <div class="border-t border-slate-200/50 my-3"></div>
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">Valor Total</span>
+                            <span class="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Valor Total</span>
                             <span class="text-[10px] text-slate-400 font-semibold">Com taxas inclusas</span>
                         </div>
                         <h4 class="text-3xl font-black total-price-text font-poppins leading-none">
@@ -597,58 +677,93 @@
                     <!-- Formulário Desktop -->
                     <div class="grid grid-cols-2 gap-6">
                         <div class="col-span-2">
-                            <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2">Número do Cartão</label>
-                            <div class="relative">
-                                <input type="text" 
-                                       placeholder="0000 0000 0000 0000" 
-                                       class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-sm font-bold pl-12"
-                                       x-model="cardNumber"
-                                       @input="formatCardNumber($event)"
-                                       @focus="isFlipped = false"
-                                       id="cardNumber">
-                                <i data-lucide="credit-card" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                             <label class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Número do Cartão</label>
+                             <div class="relative">
+                                 <input type="text" 
+                                        placeholder="0000 0000 0000 0000" 
+                                        class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-sm font-bold pl-12 border transition-all duration-300"
+                                        :class="getValidationClass('number')"
+                                        x-model="cardNumber"
+                                        @input="formatCardNumber($event)"
+                                        @focus="isFlipped = false"
+                                        @blur="cardNumberTouched = true"
+                                        id="cardNumber">
+                                 <i data-lucide="credit-card" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                             </div>
+                         </div>
+                         <div class="col-span-2">
+                             <label class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Nome impresso no Cartão</label>
+                             <input type="text" 
+                                    placeholder="NOME COMPLETO DO TITULAR" 
+                                    class="w-full px-4 py-4 rounded-2xl input-glass text-xs font-bold border transition-all duration-300"
+                                    :class="getValidationClass('name')"
+                                    x-model="cardName"
+                                    @input="formatCardholderName($event)"
+                                    @focus="isFlipped = false"
+                                    @blur="cardNameTouched = true"
+                                    id="cardholderName">
+                         </div>
+                         <div>
+                             <label class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Validade</label>
+                             <input type="text" 
+                                    placeholder="MM/AA" 
+                                    class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-xs font-bold text-center border transition-all duration-300"
+                                    :class="getValidationClass('expiry')"
+                                    x-model="cardExpiry"
+                                    @input="formatCardExpiry($event)"
+                                    @focus="isFlipped = false"
+                                    @blur="cardExpiryTouched = true"
+                                    id="cardExpiration">
+                         </div>
+                         <div>
+                             <label class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">CVV (Código de Segurança)</label>
+                             <input type="password" 
+                                    placeholder="000" 
+                                    maxlength="4"
+                                    class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-xs font-bold text-center border transition-all duration-300"
+                                    :class="getValidationClass('cvv')"
+                                    x-model="cardCvv"
+                                    @focus="isFlipped = true"
+                                    @blur="cardCvvTouched = true; isFlipped = false"
+                                    id="securityCode">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-[9px] font-black uppercase text-slate-400 tracking-wider mb-2">Opções de Parcelamento</label>
+                            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                                <button type="button"
+                                        @click="open = !open"
+                                        class="w-full flex items-center justify-between px-4 py-4 border border-slate-200 bg-slate-50 font-poppins text-xs font-bold text-slate-800 focus:outline-none transition-all duration-300 hover:bg-slate-100 rounded-2xl"
+                                        id="installmentsBtn">
+                                    <span x-text="getInstallmentLabel(installments)"></span>
+                                    <svg class="w-4 h-4 text-slate-400 transition-transform duration-300 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-200"
+                                     x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-150"
+                                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                     class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden p-1.5"
+                                     style="display: none;">
+                                    <template x-for="opt in getInstallmentOptions()">
+                                        <button type="button"
+                                                @click="installments = opt.value; open = false"
+                                                class="w-full my-0.5 px-3 py-2.5 rounded-xl text-left text-xs font-bold font-poppins flex items-center justify-between transition-all duration-200"
+                                                :class="installments === opt.value ? 'bg-blue-600/10 text-blue-600 font-black scale-[0.98]' : 'text-slate-700 hover:bg-slate-100/50 hover:translate-x-1'">
+                                            <span x-text="opt.label"></span>
+                                            <span x-show="installments === opt.value" class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <select class="hidden" x-model="installments" id="installments">
+                                    <option value="1">1x</option>
+                                    <option value="2">2x</option>
+                                    <option value="3">3x</option>
+                                </select>
                             </div>
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2">Nome impresso no Cartão</label>
-                            <input type="text" 
-                                   placeholder="NOME COMPLETO DO TITULAR" 
-                                   class="w-full px-4 py-4 rounded-2xl input-glass text-xs font-bold"
-                                   x-model="cardName"
-                                   @input="formatCardholderName($event)"
-                                   @focus="isFlipped = false"
-                                   id="cardholderName">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2">Validade</label>
-                            <input type="text" 
-                                   placeholder="MM/AA" 
-                                   class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-xs font-bold text-center"
-                                   x-model="cardExpiry"
-                                   @input="formatCardExpiry($event)"
-                                   @focus="isFlipped = false"
-                                   id="cardExpiration">
-                        </div>
-                        <div>
-                            <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2">CVV (Código de Segurança)</label>
-                            <input type="password" 
-                                   placeholder="000" 
-                                   maxlength="4"
-                                   class="w-full px-4 py-4 rounded-2xl input-glass font-poppins text-xs font-bold text-center"
-                                   x-model="cardCvv"
-                                   @focus="isFlipped = true"
-                                   @blur="isFlipped = false"
-                                   id="securityCode">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider mb-2">Opções de Parcelamento</label>
-                            <select class="w-full select-glass text-xs font-bold"
-                                    x-model="installments"
-                                    id="installments">
-                                <option value="1">1x de R$ {{ financeiro.total_cliente|floatformat:2 }} (Sem juros)</option>
-                                <option value="2">2x de R$ {{ financeiro.total_cliente|floatformat:2 }}</option>
-                                <option value="3">3x de R$ {{ financeiro.total_cliente|floatformat:2 }}</option>
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -662,14 +777,14 @@
                                 <img :src="'data:image/png;base64,' + pixQrCodeBase64" class="w-full h-full object-contain">
                             </div>
                             <div class="max-w-md mx-auto space-y-2">
-                                <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Aguardando pagamento...</h3>
-                                <p class="text-xs text-slate-400 font-semibold">
-                                    Escaneie o QR Code acima com o aplicativo do seu banco ou copie a chave Pix Copia e Cola abaixo.
+                                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Aguardando pagamento...</h3>
+                                <p class="text-[10px] text-slate-400 font-semibold">
+                                    Escaneie o QR Code acima com o aplicativo do seu banco para pagar instantaneamente.
                                 </p>
                             </div>
                             <!-- Pix Copia e Cola -->
                             <div class="max-w-md mx-auto flex gap-2">
-                                <input type="text" readonly :value="pixQrCode" class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 dark:bg-white/5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                                <input type="text" readonly :value="pixQrCode" class="flex-1 px-4 py-3 rounded-2xl bg-slate-100 text-[10px] font-semibold text-slate-500 truncate">
                                 <button type="button" @click="copyPixCode()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-2xl text-[10px] font-black uppercase tracking-wider cursor-pointer transition-all">
                                     <span x-text="pixCopied ? 'Copiado!' : 'Copiar Código'"></span>
                                 </button>
@@ -678,10 +793,10 @@
                     </template>
                     <template x-if="!pixGenerated">
                         <div class="py-16 space-y-6">
-                            <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-white/5 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto animate-bounce">
-                                <i data-lucide="pix" class="w-8 h-8"></i>
+                            <div class="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto animate-bounce">
+                                <i data-lucide="info" class="w-8 h-8"></i>
                             </div>
-                            <h3 class="text-base font-black text-slate-800 dark:text-white uppercase tracking-wider">Pague via PIX e Confirme Imediatamente</h3>
+                            <h3 class="text-base font-black text-slate-800 uppercase tracking-wider">Pague via PIX e Confirme Imediatamente</h3>
                             <p class="text-xs text-slate-400 max-w-sm mx-auto font-medium leading-relaxed">
                                 A geração do PIX é realizada de forma transparente. Ao clicar no botão "Confirmar Pagamento e Finalizar Reserva", o código e o QR Code serão renderizados instantaneamente para você.
                             </p>
@@ -693,7 +808,7 @@
                 <button type="button"
                         @click="processPayment()"
                         :disabled="processing"
-                        class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-white/10 disabled:text-slate-400 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-3xl shadow-xl shadow-blue-500/10 cursor-pointer transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
+                        class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 disabled:text-slate-400 text-white font-black text-[10px] uppercase tracking-widest py-5 rounded-3xl shadow-xl shadow-blue-500/10 cursor-pointer transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:translate-y-0 active:scale-95">
                     <template x-if="processing">
                         <span class="flex items-center gap-1.5"><i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processando Pagamento...</span>
                     </template>
@@ -707,6 +822,57 @@
             </div>
         </div>
 
+    </div>
+    
+    <!-- Modal de Alerta Temporário & Carismático -->
+    <div x-show="toastShow"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/10"
+         style="display: none;">
+        
+        <div x-show="toastShow"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-90 translate-y-4"
+             class="bg-white/95 backdrop-blur-xl border border-slate-200/50 rounded-[2.5rem] p-8 shadow-2xl max-w-sm w-full text-center relative overflow-hidden flex flex-col items-center justify-center">
+            
+            <!-- Icone Temático Animado -->
+            <template x-if="toastType === 'warning'">
+                <div class="w-16 h-16 rounded-full bg-amber-50 border border-amber-200/80 flex items-center justify-center shadow-inner mb-4 animate-wiggle">
+                    <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="draw-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </template>
+            
+            <template x-if="toastType === 'error'">
+                <div class="w-16 h-16 rounded-full bg-red-50 border border-red-200/80 flex items-center justify-center shadow-inner mb-4 animate-shake">
+                    <svg class="w-9 h-9 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="draw-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+            </template>
+
+            <template x-if="toastType === 'success'">
+                <div class="w-16 h-16 rounded-full bg-green-50 border border-green-200/80 flex items-center justify-center shadow-inner mb-4 animate-scaleUp">
+                    <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path class="draw-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+            </template>
+
+            <!-- Título & Mensagem -->
+            <h4 class="text-base font-black text-slate-800 font-poppins mb-2 tracking-tight" x-text="toastTitle"></h4>
+            <p class="text-xs text-slate-500 font-semibold leading-relaxed" x-text="toastMessage"></p>
+        </div>
     </div>
 </div>
 
@@ -729,11 +895,87 @@
             mp: null,
             mpPublicKey: '{{ mp_public_key }}',
             reservaId: '',
+            toastShow: false,
+            toastTitle: '',
+            toastMessage: '',
+            toastType: 'warning',
+            showValidationErrors: false,
+            cardNumberTouched: false,
+            cardNameTouched: false,
+            cardExpiryTouched: false,
+            cardCvvTouched: false,
+            
+            showToast(title, message, type = 'warning') {
+                this.toastTitle = title;
+                this.toastMessage = message;
+                this.toastType = type;
+                this.toastShow = true;
+                setTimeout(() => {
+                    this.toastShow = false;
+                }, 2000);
+            },
+            isCardNumberValid() {
+                return this.cardNumber.replace(/\s/g, '').length >= 14;
+            },
+            isCardNameValid() {
+                return this.cardName.trim().length >= 3;
+            },
+            isExpiryValid() {
+                return /^\d{2}\/\d{2}$/.test(this.cardExpiry);
+            },
+            isCvvValid() {
+                return this.cardCvv.length >= 3;
+            },
+            getValidationClass(fieldName) {
+                if (fieldName === 'number') {
+                    const isValid = this.isCardNumberValid();
+                    if (isValid) return 'input-val-valid';
+                    if (this.showValidationErrors || (this.cardNumberTouched && !isValid)) return 'input-val-invalid';
+                    return 'input-val-default';
+                }
+                if (fieldName === 'name') {
+                    const isValid = this.isCardNameValid();
+                    if (isValid) return 'input-val-valid';
+                    if (this.showValidationErrors || (this.cardNameTouched && !isValid)) return 'input-val-invalid';
+                    return 'input-val-default';
+                }
+                if (fieldName === 'expiry') {
+                    const isValid = this.isExpiryValid();
+                    if (isValid) return 'input-val-valid';
+                    if (this.showValidationErrors || (this.cardExpiryTouched && !isValid)) return 'input-val-invalid';
+                    return 'input-val-default';
+                }
+                if (fieldName === 'cvv') {
+                    const isValid = this.isCvvValid();
+                    if (isValid) return 'input-val-valid';
+                    if (this.showValidationErrors || (this.cardCvvTouched && !isValid)) return 'input-val-invalid';
+                    return 'input-val-default';
+                }
+                return 'input-val-default';
+            },
+            
+            getInstallmentOptions() {
+                const total = parseFloat("{{ financeiro.total_cliente|unlocalize }}") || 0;
+                return [
+                    { value: '1', label: `1x de R$ ${this.formatMoney(total)} (Sem juros)` },
+                    { value: '2', label: `2x de R$ ${this.formatMoney(total / 2)}` },
+                    { value: '3', label: `3x de R$ ${this.formatMoney(total / 3)}` }
+                ];
+            },
+            formatMoney(value) {
+                return value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            },
+            getInstallmentLabel(val) {
+                const options = this.getInstallmentOptions();
+                const opt = options.find(o => o.value === val);
+                return opt ? opt.label : '';
+            },
 
             initMercadoPago() {
                 if (this.mpPublicKey && typeof MercadoPago !== 'undefined') {
                     try {
-                        this.mp = new MercadoPago(this.mpPublicKey);
+                        window.mpInstance = new MercadoPago(this.mpPublicKey);
+                        this.mp = true;
                     } catch (err) {
                         console.error("Erro ao inicializar Mercado Pago:", err);
                     }
@@ -747,7 +989,7 @@
                 // Bandeira Detection
                 if (v.startsWith('4')) {
                     this.cardBrand = 'Visa';
-                } else if (v.startsWith('51') || v.startsWith('52') || v.startsWith('53') || v.startsWith('54') || v.startsWith('55')) {
+                } else if (v.startsWith('51') || v.startsWith('52') || v.startsWith('53') || v.startsWith('54') || v.startsWith('55') || v.startsWith('50')) {
                     this.cardBrand = 'Mastercard';
                 } else if (v.startsWith('34') || v.startsWith('37')) {
                     this.cardBrand = 'Amex';
@@ -795,8 +1037,9 @@
                 
                 if (this.formaPagamento === 'cartao') {
                     // Validar formulário
-                    if (!this.cardNumber || !this.cardName || !this.cardExpiry || !this.cardCvv) {
-                        alert('Preencha todos os campos do cartão de crédito.');
+                    if (!this.isCardNumberValid() || !this.isCardNameValid() || !this.isExpiryValid() || !this.isCvvValid()) {
+                        this.showValidationErrors = true;
+                        this.showToast('Campos Incorretos', 'Por favor, corrija os campos marcados em vermelho.', 'warning');
                         this.processing = false;
                         return;
                     }
@@ -804,16 +1047,10 @@
                     const numClean = this.cardNumber.replace(/\s/g, '');
                     const expParts = this.cardExpiry.split('/');
                     
-                    if (expParts.length !== 2) {
-                        alert('Validade do cartão deve estar no formato MM/AA.');
-                        this.processing = false;
-                        return;
-                    }
-                    
                     const month = expParts[0];
                     const year = '20' + expParts[1];
                     
-                    if (!this.mp) {
+                    if (!window.mpInstance) {
                         // Sandbox Fallback
                         this.executeBackendPayment('MOCK_CARD_TOKEN', 'visa');
                         return;
@@ -821,7 +1058,7 @@
                     
                     // Tokenizar via Mercado Pago SDK
                     try {
-                        const tokenResponse = await this.mp.createCardToken({
+                        const tokenResponse = await window.mpInstance.createCardToken({
                             cardNumber: numClean,
                             cardholderName: this.cardName,
                             cardExpirationMonth: month,
@@ -832,14 +1069,27 @@
                         });
                         
                         if (tokenResponse.id) {
-                            this.executeBackendPayment(tokenResponse.id, this.cardBrand.toLowerCase() || 'visa');
+                            let brand = this.cardBrand.toLowerCase();
+                            try {
+                                const pmResp = await window.mpInstance.getPaymentMethods({ bin: numClean.substring(0, 8) });
+                                if (pmResp && pmResp.results && pmResp.results.length > 0) {
+                                    brand = pmResp.results[0].id;
+                                }
+                            } catch (e) {
+                                console.error("Erro ao obter bandeira real do cartão:", e);
+                            }
+                            if (!brand) {
+                                brand = 'visa';
+                            }
+                            this.executeBackendPayment(tokenResponse.id, brand);
                         } else {
-                            alert('Não foi possível validar os dados do cartão. Verifique e tente de novo.');
+                            this.showToast('Erro de Validação', 'Não foi possível validar os dados do cartão. Verifique e tente de novo.', 'error');
                             this.processing = false;
                         }
                     } catch (err) {
-                        // Fallback para sandbox se falhar rede externa
-                        this.executeBackendPayment('MOCK_CARD_TOKEN', this.cardBrand.toLowerCase() || 'visa');
+                        console.error("Erro na tokenização do Mercado Pago:", err);
+                        this.showToast('Erro de Comunicação', 'Não foi possível processar o cartão com o Mercado Pago: ' + (err.message || err), 'error');
+                        this.processing = false;
                     }
                 } else if (this.formaPagamento === 'pix') {
                     if (this.pixGenerated) {
@@ -872,26 +1122,13 @@
                     const res = await response.json();
                     
                     if (res.success) {
-                        if (this.formaPagamento === 'pix') {
-                            this.pixGenerated = true;
-                            this.pixQrCode = res.pix_qr_code;
-                            this.pixQrCodeBase64 = res.pix_qr_code_base64;
-                            this.reservaId = res.reserva_id;
-                            this.processing = false;
-                            setTimeout(() => {
-                                if (typeof lucide !== 'undefined') {
-                                    lucide.createIcons();
-                                }
-                            }, 200);
-                        } else {
-                            window.location.href = res.redirect_url;
-                        }
+                        window.location.href = res.redirect_url;
                     } else {
-                        alert(res.error || 'Erro desconhecido ao processar pagamento.');
+                        this.showToast('Pagamento Recusado', res.error || 'Ocorreu um erro ao processar o seu pagamento.', 'error');
                         this.processing = false;
                     }
                 } catch (err) {
-                    alert('Falha na comunicação com o servidor de hospedagem.');
+                    this.showToast('Falha de Rede', 'Falha na comunicação com o servidor de hospedagem.', 'error');
                     this.processing = false;
                 }
             }

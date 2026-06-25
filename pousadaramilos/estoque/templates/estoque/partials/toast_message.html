@@ -1,0 +1,16 @@
+<div id="toast-container" hx-swap-oob="beforeend">
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4500)" 
+         class="flex items-center gap-3 {% if tags == 'error' %}bg-red-50/95 dark:bg-red-900/50 text-red-800 dark:text-red-300 border-red-200/50 dark:border-red-800/30{% else %}bg-green-50/95 dark:bg-green-900/50 text-green-800 dark:text-green-300 border-green-200/50 dark:border-green-800/30{% endif %} px-4 py-3 rounded-2xl shadow-xl border transition-all duration-500 transform translate-y-0 scale-100">
+        <div class="shrink-0 p-1.5 rounded-full shadow-sm {% if tags == 'error' %}bg-red-100 dark:bg-red-800 text-red-600 dark:text-red-200{% else %}bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-200{% endif %}">
+            <span class="flex items-center" style="pointer-events: none;">
+                <i data-lucide="{% if tags == 'error' %}alert-circle{% else %}check-circle{% endif %}" class="w-5 h-5"></i>
+            </span>
+        </div>
+        <p class="text-sm font-semibold tracking-tight pr-2">{{ mensagem }}</p>
+    </div>
+    <script>
+        if(typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
+</div>

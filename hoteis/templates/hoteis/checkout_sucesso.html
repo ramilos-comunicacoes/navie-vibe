@@ -4,110 +4,326 @@
 {% block title %}Reserva Confirmada! | {{ hotel.nome }}{% endblock %}
 
 {% block content %}
+<!-- Import Google Fonts: Outfit -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
-    @keyframes drawCheck {
-        to { stroke-dashoffset: 0; }
+    .checkout-success-body {
+        font-family: 'Outfit', 'Poppins', sans-serif;
     }
-    .success-checkmark path {
-        stroke-dasharray: 50;
-        stroke-dashoffset: 50;
-        animation: drawCheck 0.6s cubic-bezier(0.65, 0, 0.45, 1) 0.2s forwards;
+    
+    /* Premium Checkmark Animation */
+    .checkmark-wrapper {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+    }
+    .checkmark-svg {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 3;
+        stroke: #10b981; /* emerald-500 */
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #10b981;
+        animation: fillCheck 0.4s ease-in-out 0.4s forwards, scaleCheck 0.3s ease-in-out 0.9s both;
+    }
+    .checkmark-circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 3;
+        stroke-miterlimit: 10;
+        stroke: #10b981;
+        fill: none;
+        animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .checkmark-check {
+        transform-origin: 50% 50%;
+        stroke-dasharray: 48;
+        stroke-dashoffset: 48;
+        stroke-width: 4.5;
+        stroke-linecap: round;
+        stroke: #fff;
+        animation: strokeCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+    }
+
+    /* Pix Pending Clock Animation */
+    .pix-loader-svg {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: block;
+        stroke-width: 3;
+        stroke: #2563eb; /* blue-600 */
+        stroke-miterlimit: 10;
+        box-shadow: inset 0px 0px 0px #2563eb;
+        animation: fillPix 0.4s ease-in-out 0.4s forwards, scaleCheck 0.3s ease-in-out 0.9s both;
+    }
+    .pix-loader-circle {
+        stroke-dasharray: 166;
+        stroke-dashoffset: 166;
+        stroke-width: 3;
+        stroke-miterlimit: 10;
+        stroke: #2563eb;
+        fill: none;
+        animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+    .pix-loader-clock {
+        transform-origin: 26px 26px;
+        stroke-dasharray: 40;
+        stroke-dashoffset: 40;
+        stroke-width: 3.5;
+        stroke-linecap: round;
+        stroke: #fff;
+        animation: strokeCheck 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards, spinClock 12s linear infinite 0.9s;
+    }
+
+    @keyframes strokeCircle {
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes strokeCheck {
+        100% { stroke-dashoffset: 0; }
+    }
+    @keyframes fillCheck {
+        100% { box-shadow: inset 0px 0px 0px 40px #10b981; }
+    }
+    @keyframes fillPix {
+        100% { box-shadow: inset 0px 0px 0px 40px #2563eb; }
+    }
+    @keyframes scaleCheck {
+        0%, 100% { transform: none; }
+        50% { transform: scale3d(1.1, 1.1, 1); }
+    }
+    @keyframes spinClock {
+        100% { transform: rotate(360deg); }
     }
 </style>
 
-<div class="min-h-screen bg-slate-50 flex items-center justify-center py-16 px-4">
-    <div class="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-100 w-full max-w-lg p-8 sm:p-10 text-center relative overflow-hidden">
-        <!-- Accent circles -->
-        <div class="absolute -top-10 -left-10 w-40 h-40 bg-emerald-500/5 rounded-full blur-2xl"></div>
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-action-blue/5 rounded-full blur-2xl"></div>
+<!-- pt-28 pb-16 sm:py-20 to clear fixed header and give spacing around card on mobile -->
+<div class="checkout-success-body min-h-screen bg-slate-50/60 flex items-center justify-center pt-28 pb-16 sm:py-20 px-4">
+    <!-- Card container with soft blue-950/10 border instead of grey/black, and extra vertical margin on mobile (my-6 sm:my-0) -->
+    <div class="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-blue-950/10 w-full max-w-4xl p-6 sm:p-10 lg:p-12 my-6 sm:my-0 relative overflow-hidden">
+        <!-- Decorative subtle elements -->
+        <div class="absolute -top-12 -left-12 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-blue-600/5 rounded-full blur-3xl"></div>
 
-        <!-- Success Anim Icon -->
-        <div class="mx-auto w-20 h-20 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-6">
-            <svg class="w-10 h-10 success-checkmark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7"></path>
-            </svg>
-        </div>
-
-        <!-- Headline -->
-        <h1 class="text-2xl font-black text-gray-900 tracking-tight font-poppins leading-tight">
-            Reserva Confirmada!
-        </h1>
-        <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider mt-1.5 flex items-center justify-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Tudo certo para a sua hospedagem
-        </p>
-        <p class="text-xs text-gray-400 font-semibold mt-4">
-            Parabéns! Sua estadia foi agendada e o quarto físico foi alocado com sucesso. Guarde o localizador abaixo:
-        </p>
-
-        <!-- Localizador Box -->
-        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3 my-6 flex justify-between items-center max-w-xs mx-auto">
-            <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider pl-2">Localizador</span>
-            <span class="text-base font-black text-brand-900 tracking-widest bg-white border border-slate-200/60 rounded-xl px-4 py-1.5 shadow-sm">
-                #{{ reserva.id|slice:":8"|upper }}
-            </span>
-        </div>
-
-        <hr class="border-gray-100 my-6">
-
-        <!-- Detalhes da Reserva -->
-        <div class="text-left space-y-4">
-            <h3 class="text-[10px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
-                <i data-lucide="info" class="w-4 h-4 text-slate-400"></i> Detalhes da Estadia
-            </h3>
+        <!-- Two column grid layout for Desktop / Stacked on Mobile -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             
-            <div class="grid grid-cols-2 gap-4 bg-slate-50/50 rounded-2xl p-5 border border-slate-100 text-xs">
-                <div>
-                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Acomodação</span>
-                    <span class="font-bold text-gray-800 mt-0.5 block truncate">{{ reserva.unidade.quarto.nome }}</span>
+            <!-- LEFT COLUMN (Confirmation Message, Ticket, Actions) -->
+            <div class="lg:col-span-7 text-center lg:text-left space-y-6">
+                
+                <!-- Status Icon Animation -->
+                <div class="flex justify-center lg:justify-start">
+                    {% if pix_data %}
+                    <div class="pix-loader-wrapper">
+                        <svg class="pix-loader-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="pix-loader-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="pix-loader-clock" fill="none" d="M26 14v12l8 5"/>
+                        </svg>
+                    </div>
+                    {% else %}
+                    <div class="checkmark-wrapper">
+                        <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                            <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                            <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                        </svg>
+                    </div>
+                    {% endif %}
                 </div>
-                <div>
-                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Quarto Alocado</span>
-                    <span class="font-black text-action-blue mt-0.5 block">{{ reserva.unidade.identificador }}</span>
-                </div>
-                <div>
-                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Entrada (Check-in)</span>
-                    <span class="font-bold text-gray-800 mt-0.5 block">{{ reserva.data_checkin|date:"d/m/Y" }}</span>
-                </div>
-                <div>
-                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Saída (Checkout)</span>
-                    <span class="font-bold text-gray-800 mt-0.5 block">{{ reserva.data_checkout|date:"d/m/Y" }}</span>
-                </div>
-                <div class="col-span-2">
-                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Hóspede Principal</span>
-                    <span class="font-bold text-gray-800 mt-0.5 block truncate">{{ reserva.hospede_nome }} (CPF: {{ reserva.hospede_cpf }})</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Total Pago -->
-        <div class="bg-blue-50/40 border border-blue-100/30 rounded-2xl p-4 my-6 flex justify-between items-center text-xs font-semibold text-left">
-            <div>
-                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Total Estadia</span>
-                <span class="text-[10px] text-slate-400 font-semibold">{{ reserva.noites }} noites (Taxas Inclusas)</span>
-            </div>
-            <h4 class="text-xl font-black text-gray-950 font-poppins leading-none">
-                R$ {{ reserva.valor_total|floatformat:2 }}
-            </h4>
-        </div>
+                <!-- Text Header -->
+                <div class="space-y-2">
+                    {% if pix_data %}
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                        Aguardando Pagamento
+                    </h1>
+                    <p class="text-xs text-blue-600 font-bold uppercase tracking-wider flex items-center justify-center lg:justify-start gap-1.5 leading-none">
+                        <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
+                        Reserva pré-agendada via Pix
+                    </p>
+                    {% else %}
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                        Reserva Confirmada!
+                    </h1>
+                    <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider flex items-center justify-center lg:justify-start gap-1.5 leading-none">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Tudo certo para a sua estadia
+                    </p>
+                    {% endif %}
+                </div>
 
-        <!-- Ações -->
-        <div class="flex flex-col gap-3">
-            <a href="{% url 'hoteis:home' %}" class="w-full py-4 rounded-2xl bg-action-blue hover:bg-action-blue-dark text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-action-blue/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2">
-                <i data-lucide="home" class="w-4 h-4"></i> Voltar ao Portal Naviê
-            </a>
-            <p class="text-[10px] text-slate-400 font-semibold">
-                Um e-mail de confirmação foi enviado para <span class="text-slate-500 font-bold">{{ reserva.hospede_email }}</span>
-            </p>
+                <p class="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed max-w-md mx-auto lg:mx-0">
+                    Parabéns! Sua estadia foi agendada e o quarto físico foi alocado com sucesso. Guarde o seu localizador de reserva:
+                </p>
+
+                <!-- Ticket Locator Container -->
+                <div class="relative bg-slate-50 border border-slate-200/50 rounded-3xl p-5 my-6 max-w-sm mx-auto lg:mx-0 shadow-sm overflow-visible">
+                    <!-- Perforation Cutouts -->
+                    <div class="absolute top-1/2 -left-3 -translate-y-1/2 w-6 h-6 bg-white border border-slate-200/50 rounded-full" style="clip-path: inset(0 0 0 50%); margin-left: 2px;"></div>
+                    <div class="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-6 bg-white border border-slate-200/50 rounded-full" style="clip-path: inset(0 50% 0 0); margin-right: 2px;"></div>
+                    
+                    <!-- Top portion -->
+                    <div class="text-center pb-4 border-b border-dashed border-slate-200/80">
+                        <span class="text-[9px] font-bold uppercase text-slate-400 tracking-widest block mb-1">Localizador</span>
+                        <h2 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-widest font-outfit">
+                            #{{ reserva.id.hex|slice:":8"|upper }}
+                        </h2>
+                        <span class="text-[8px] text-slate-400 font-mono mt-1 block select-all">{{ reserva.id }}</span>
+                    </div>
+                    
+                    <!-- Bottom portion -->
+                    <div class="pt-3 flex justify-center">
+                        <button onclick="copyLocatorToClipboard('{{ reserva.id }}')" id="copyLocatorBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-800 text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm active:scale-95 cursor-pointer">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Localizador
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Web Portal Action Redirect -->
+                <div class="pt-2 flex flex-col gap-3 max-w-sm mx-auto lg:mx-0">
+                    <a href="{% url 'hoteis:home' %}" class="w-full py-4 rounded-2xl bg-action-blue hover:bg-action-blue-dark text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-action-blue/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="home" class="w-4 h-4"></i> Voltar para o Naviê
+                    </a>
+                    <p class="text-[10px] text-slate-400 font-semibold text-center lg:text-left">
+                        Um e-mail de confirmação foi enviado para <span class="text-slate-500 font-bold">{{ reserva.hospede_email }}</span>
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN (Reservation Details, Pix Card) -->
+            <div class="lg:col-span-5 bg-slate-50/50 border border-slate-100 rounded-[2rem] p-6 sm:p-8 space-y-6">
+                
+                <!-- Stay details -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-400"></i> Detalhes da Estadia
+                    </h3>
+                    
+                    <div class="space-y-3.5">
+                        <div class="flex justify-between items-start py-1.5 border-b border-slate-200/50">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Acomodação</span>
+                            <span class="text-xs font-black text-slate-800 text-right truncate max-w-[200px]">{{ reserva.unidade.quarto.nome }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center py-1.5 border-b border-slate-200/50">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quarto Alocado</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-blue-50 text-action-blue text-[10px] font-black">{{ reserva.unidade.identificador }}</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 py-1.5 border-b border-slate-200/50">
+                            <div>
+                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Check-in</span>
+                                <span class="text-xs font-black text-slate-800">{{ reserva.data_checkin|date:"d/m/Y" }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Checkout</span>
+                                <span class="text-xs font-black text-slate-800">{{ reserva.data_checkout|date:"d/m/Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between items-start py-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hóspede</span>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-slate-800 block leading-tight">{{ reserva.hospede_nome }}</span>
+                                <span class="text-[9px] text-slate-400 block mt-0.5">CPF: {{ reserva.hospede_cpf }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pix payment container (if Pix method was used) -->
+                {% if pix_data %}
+                <div class="bg-blue-50/50 border border-blue-100/60 rounded-3xl p-5 text-center space-y-4 shadow-sm">
+                    <h3 class="text-xs font-black uppercase text-blue-600 tracking-wider flex items-center justify-center gap-1.5">
+                        <i data-lucide="qr-code" class="w-4 h-4"></i> Pagamento via Pix
+                    </h3>
+                    
+                    <!-- QR Code -->
+                    <div class="mx-auto w-40 h-40 bg-white p-2.5 rounded-2xl border border-slate-200/60 shadow-sm flex items-center justify-center">
+                        <img src="data:image/png;base64,{{ pix_data.qr_code_base64 }}" class="w-full h-full object-contain" alt="QR Code Pix">
+                    </div>
+                    
+                    <p class="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                        Escaneie o QR Code acima ou copie a chave Pix Copia e Cola para pagar no aplicativo do seu banco:
+                    </p>
+                    
+                    <!-- Copy Key -->
+                    <div class="flex gap-2">
+                        <input type="text" readonly value="{{ pix_data.qr_code }}" id="pixCodeInput" class="flex-1 px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-[9px] font-bold text-slate-500 truncate focus:outline-none">
+                        <button type="button" id="copyPixBtn" onclick="copyPixCodeToClipboard()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer">
+                            Copiar
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Total Amount paid card (Stacked to prevent overlap, with divider and aligned columns) -->
+                <div class="bg-slate-900 text-white rounded-2xl p-5 shadow-md space-y-3.5">
+                    <div class="flex justify-between items-start">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Valor Total</span>
+                        <span class="text-[10px] text-slate-300 font-medium whitespace-nowrap">
+                            {{ reserva.noites }} {% if reserva.noites > 1 %}noites{% else %}noite{% endif %}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-2.5 border-t border-slate-800">
+                        <span class="text-[9px] text-slate-400 font-medium">Taxas Inclusas</span>
+                        <h4 class="text-xl sm:text-2xl font-black tracking-tight text-white leading-none whitespace-nowrap">
+                            R$&nbsp;{{ reserva.valor_total|floatformat:2 }}
+                        </h4>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </div>
 </div>
 
+<!-- Lucide Icons and Clipboard Helpers -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         if(typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
     });
+
+    function copyLocatorToClipboard(uuid) {
+        navigator.clipboard.writeText(uuid);
+        const btn = document.getElementById('copyLocatorBtn');
+        btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copiado!';
+        btn.style.color = '#10b981';
+        btn.style.borderColor = '#10b981';
+        if(typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+        setTimeout(() => {
+            btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Localizador';
+            btn.style.color = '';
+            btn.style.borderColor = '';
+            if(typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }, 2000);
+    }
+
+    {% if pix_data %}
+    function copyPixCodeToClipboard() {
+        const input = document.getElementById('pixCodeInput');
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value);
+        
+        const btn = document.getElementById('copyPixBtn');
+        btn.innerText = 'Copiado!';
+        btn.style.backgroundColor = '#10b981'; // green
+        setTimeout(() => {
+            btn.innerText = 'Copiar';
+            btn.style.backgroundColor = '#2563eb'; // blue
+        }, 2000);
+    }
+    {% endif %}
 </script>
 {% endblock %}

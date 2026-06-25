@@ -1,0 +1,826 @@
+{% load static %}
+
+<div class="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-navie-border rounded-3xl p-6 shadow-md text-left animate-in zoom-in-95 duration-200"
+     x-data="{ 
+        tab: 'dados', 
+        editorOpen: false,
+        isSubmitting: false,
+        hasDiscount: {% if categoria.tem_desconto_multidias %}true{% else %}false{% endif %},
+        seoTitle: '{{ categoria.seo_titulo|default:""|escapejs }}',
+        seoDesc: '{{ categoria.seo_descricao|default:""|escapejs }}',
+        roomName: '{{ categoria.nome|default:""|escapejs }}',
+        roomPrice: '{{ categoria.preco_base|default:"0.00"|escapejs }}',
+        capacity: '{{ categoria.capacidade_adultos|default:"2"|escapejs }}',
+        
+        updateSEO() {
+            const name = this.roomName || 'Nome da Acomodação';
+            const price = this.roomPrice || '0.00';
+            const cap = this.capacity;
+            const title = this.seoTitle || `${name} - Reserva na Pousada`;
+            const desc = this.seoDesc || 'Descrição otimizada contendo as principais comodidades, atrativos locais e diferenciais para buscadores e inteligência artificial.';
+            
+            // Atualiza visualização Google
+            document.getElementById('google-preview-title').textContent = title.substring(0, 60);
+            document.getElementById('google-preview-desc').textContent = desc.substring(0, 155);
+            
+            // Atualiza simulação Gemini AI
+            document.getElementById('gemini-preview-response').innerHTML = `
+                <span class='font-bold text-violet-600 dark:text-cyan-400'>Gemini:</span> 
+                Recomendo fortemente a categoria <span class='font-bold text-slate-800 dark:text-white'>${name}</span> na <b>${active_pousada.nome}</b>. 
+                Ela é perfeita para até <span class='font-bold text-slate-800 dark:text-white'>${cap} hóspedes</span> 
+                com diária sugerida de <span class='font-bold text-brand'>R$ ${parseFloat(price).toFixed(2)}</span>. 
+                Destaque indexado: <i>'${desc.substring(0, 110)}...'</i>
+            `;
+            
+            // Atualiza Schema.org JSON-LD estruturado
+            const schema = {
+                '@context': 'https://schema.org',
+                '@type': 'HotelRoom',
+                'name': name,
+                'description': desc,
+                'occupancy': {
+                    '@type': 'QuantitativeValue',
+                    'value': parseInt(cap)
+                },
+                'offers': {
+                    '@type': 'Offer',
+                    'price': parseFloat(price),
+                    'priceCurrency': 'BRL'
+                }
+            };
+            document.getElementById('schema-preview-code').textContent = JSON.stringify(schema, null, 2);
+        }
+     }"
+     x-init="updateSEO()">
+
+    <!-- Navegação de Abas (Sub-cabeçalho Azul Premium) -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-700/80 dark:to-indigo-900/80 rounded-2xl p-1.5 shadow-md flex items-center gap-1 overflow-x-auto no-scrollbar shrink-0 mb-6 select-none">
+        <button type="button" @click="tab = 'dados'" :class="tab === 'dados' ? 'bg-white text-blue-700 shadow-sm font-black' : 'text-white/80 hover:text-white hover:bg-white/10 font-bold'" class="px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap">Dados Gerais</button>
+        <button type="button" @click="tab = 'unidades'" :class="tab === 'unidades' ? 'bg-white text-blue-700 shadow-sm font-black' : 'text-white/80 hover:text-white hover:bg-white/10 font-bold'" class="px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap">Quartos Físicos ({% if categoria %}{{ categoria.quartos.count }}{% else %}1{% endif %})</button>
+        <button type="button" @click="tab = 'galeria'" :class="tab === 'galeria' ? 'bg-white text-blue-700 shadow-sm font-black' : 'text-white/80 hover:text-white hover:bg-white/10 font-bold'" class="px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap">Fotos & Galeria</button>
+        <button type="button" @click="tab = 'seo'" :class="tab === 'seo' ? 'bg-white text-blue-700 shadow-sm font-black' : 'text-white/80 hover:text-white hover:bg-white/10 font-bold'" class="px-4 py-2.5 rounded-xl text-xs transition-all cursor-pointer whitespace-nowrap">SEO & Assistente IA</button>
+    </div>
+
+    <!-- FORMULÁRIO PRINCIPAL (Submissão Multipart com Validação Dinâmica de Abas) -->
+    <form id="categoria-quarto-form" 
+          novalidate
+          @submit.prevent="
+              if (roomName.trim() === '') {
+                  alert('Por favor, preencha o Nome da Categoria na aba Dados Gerais.');
+                  tab = 'dados';
+                  isSubmitting = false;
+                  return;
+              }
+              if (parseFloat(roomPrice) <= 0 || isNaN(parseFloat(roomPrice))) {
+                  alert('Por favor, preencha um Preço de Diária válido na aba Dados Gerais.');
+                  tab = 'dados';
+                  isSubmitting = false;
+                  return;
+              }
+              isSubmitting = true;
+              
+              // Previne duplo clique desabilitando o botão e alterando o estado visual imediatamente
+              const submitBtn = document.getElementById('categoria-quarto-submit-btn');
+              if (submitBtn) {
+                  submitBtn.disabled = true;
+                  submitBtn.classList.add('opacity-50', 'pointer-events-none');
+                  
+                  const icon = document.getElementById('submit-btn-icon');
+                  const spinner = document.getElementById('submit-btn-spinner');
+                  const text = document.getElementById('submit-btn-text');
+                  
+                  if (icon) icon.classList.add('hidden');
+                  if (spinner) spinner.classList.remove('hidden');
+                  if (text) text.classList.add('hidden');
+              }
+              
+              htmx.trigger($el, 'submit-validated');
+          "
+          hx-post="{% url 'sistema:partner_quarto_salvar' %}" 
+          hx-trigger="submit-validated"
+          hx-target="#quartos-container" 
+          hx-swap="innerHTML" 
+          enctype="multipart/form-data" 
+          class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- ID do Quarto se for edição -->
+        {% if categoria %}
+            <input type="hidden" name="quarto_id" value="{{ categoria.id }}">
+        {% endif %}
+
+        <!-- =====================================================================
+            ABA 1: DADOS GERAIS
+        ===================================================================== -->
+        <div x-show="tab === 'dados'" class="space-y-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Nome -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Nome da Categoria</label>
+                    <input type="text" name="nome" required x-model="roomName" @input="updateSEO()" placeholder="Ex: Suíte Presidencial, Chalé Família" 
+                           class="w-full h-12 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand">
+                </div>
+
+                <!-- Preço Base da Diária -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Preço da Diária Base (R$)</label>
+                    <input type="text" name="preco" required x-model="roomPrice" @input="updateSEO()" placeholder="Ex: 450.00" 
+                           class="w-full h-12 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand">
+                </div>
+            </div>
+
+            <!-- Descrição -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Descrição Detalhada (Venda)</label>
+                <textarea name="descricao" rows="4" placeholder="Descreva os principais confortos e diferenciais da acomodação para encantar o hóspede..." 
+                          class="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand leading-relaxed">{{ categoria.descricao }}</textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Capacidade Máxima (Dropdown Customizado com Alpine) -->
+                <div class="flex flex-col gap-1.5" x-data="{ openCap: false }">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Capacidade Máxima (Pessoas)</label>
+                    <div class="relative w-full">
+                        <button type="button" @click="openCap = !openCap" @click.outside="openCap = false"
+                                class="w-full h-12 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand transition-all flex items-center justify-between cursor-pointer">
+                            <span x-text="capacity + (capacity == 1 ? ' hóspede' : ' hóspedes')"></span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="openCap ? 'rotate-180' : ''"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu Padronizado do Base -->
+                        <div x-show="openCap"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                             class="absolute left-0 mt-2 w-full dropdown-menu animate-in fade-in zoom-in-95 duration-200"
+                             style="display: none;">
+                            
+                            {% for cap in capacidades %}
+                                <div @click="capacity = '{{ cap }}'; openCap = false; updateSEO()"
+                                     class="dropdown-item {% if cap == categoria.capacidade_adultos %}text-brand bg-brand/5{% endif %}">
+                                    <span>{{ cap }} hóspede{{ cap|pluralize }}</span>
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-brand animate-pulse" x-show="capacity == '{{ cap }}'"></i>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <input type="hidden" name="capacidade_pessoas" :value="capacity">
+                </div>
+
+                <!-- Info Capacidade -->
+                <div class="flex flex-col gap-1.5 justify-center">
+                    <span class="text-[10px] text-slate-400 dark:text-slate-500 italic">Defina a capacidade máxima da acomodação para que a busca inteligente no site e os cálculos de estadias funcionem adequadamente.</span>
+                </div>
+            </div>
+
+            <!-- DIFERENCIAIS E AMENITIES (Checkboxes Geométricos) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-navie-border/60">
+                <!-- Comodidades Disponíveis -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Diferenciais / Comodidades</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                        {% for comodidade in comodidades_disponiveis %}
+                            <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-black/15 border border-slate-200/50 dark:border-white/5 rounded-xl cursor-pointer select-none hover:bg-slate-100">
+                                <input type="checkbox" name="comodidades" value="{{ comodidade }}" {% if comodidade in categoria_comodidades %}checked{% endif %} class="rounded border-slate-300 text-brand focus:ring-brand">
+                                <span class="text-slate-700 dark:text-slate-300 truncate">{{ comodidade }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Tags de Busca IA -->
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Tags de Indexação (Busca por IA)</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                        {% for tag in tags_disponiveis %}
+                            <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-black/15 border border-slate-200/50 dark:border-white/5 rounded-xl cursor-pointer select-none hover:bg-slate-100">
+                                <input type="checkbox" name="tags" value="{{ tag }}" {% if tag in categoria_tags %}checked{% endif %} class="rounded border-slate-300 text-brand focus:ring-brand">
+                                <span class="text-slate-700 dark:text-slate-300 truncate">{{ tag }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESCONTO PROGRESSIVO MULTIDIAS (Switch e Campos Ocultos) -->
+            <div class="pt-4 border-t border-slate-100 dark:border-navie-border/60 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex flex-col text-left">
+                        <span class="text-xs font-bold text-slate-800 dark:text-white">Desconto Progressivo para Longa Permanência</span>
+                        <span class="text-[10px] text-slate-450">Conceda um desconto percentual automático caso o hóspede fique mais noites.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" @change="hasDiscount = !hasDiscount" class="sr-only peer" :checked="hasDiscount">
+                        <input type="hidden" name="tem_desconto_multidias" :value="hasDiscount ? 'true' : 'false'">
+                        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand"></div>
+                    </label>
+                </div>
+
+                <!-- Campos de Desconto (Slide Down via AlpineJS) -->
+                <div x-show="hasDiscount" x-transition class="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-black/15 p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 animate-in slide-in-from-top-3 duration-200">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Noites Mínimas para Desconto</label>
+                        <input type="number" name="dias_minimos_desconto" value="{{ categoria.dias_minimos_desconto|default:'3' }}" 
+                               class="w-full h-11 bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Desconto Percentual (%)</label>
+                        <input type="text" name="percentual_desconto" value="{{ categoria.percentual_desconto|default:'0.00' }}" placeholder="Ex: 10.00 para 10%" 
+                               class="w-full h-11 bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =====================================================================
+            ABA 2: QUARTOS FÍSICOS (Sincronização Avançada Naviê)
+        ===================================================================== -->
+        <div x-show="tab === 'unidades'" class="space-y-4" style="display: none;">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-navie-border/60 pb-3 flex-shrink-0">
+                <div class="flex flex-col text-left">
+                    <span class="text-xs font-bold text-slate-800 dark:text-white">Inventário de Quartos Reais</span>
+                    <span class="text-[10px] text-slate-450">Cada caixa representa uma acomodação física real da sua pousada vinculada a esta categoria.</span>
+                </div>
+                <button type="button" id="add-room-unit-btn" onclick="addRoomUnit()"
+                        class="px-3.5 py-2 bg-brand/10 hover:bg-brand/20 text-brand text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Sincronizar Novo Quarto</span>
+                </button>
+            </div>
+
+            <!-- Grade Horizontal de Unidades Cadastradas -->
+            <div id="room-units-container" class="flex flex-wrap gap-3 overflow-x-auto py-2 no-scrollbar">
+                {% if categoria and categoria.quartos.all %}
+                    {% for room in categoria.quartos.all %}
+                        <div class="room-unit-card w-28 sm:w-32 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-3 flex flex-col gap-1.5 relative shrink-0">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider room-unit-label">Quarto {{ forloop.counter }}</span>
+                                <button type="button" class="text-slate-400 hover:text-red-500 transition-colors remove-room-btn flex items-center justify-center p-0.5" onclick="removeRoomUnit(this)">
+                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                            <!-- ID Físico do Quarto no banco -->
+                            <input type="hidden" name="unidades_ids" value="{{ room.id }}">
+                            <input type="text" name="unidades_identificadores" required value="{{ room.numero }}" placeholder="Ex: 101"
+                                   class="w-full bg-white dark:bg-black/30 border border-slate-200 dark:border-white/5 rounded-xl px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-brand transition-colors font-bold text-center">
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Caso seja novo, cria a primeira por padrão -->
+                    <div class="room-unit-card w-28 sm:w-32 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-3 flex flex-col gap-1.5 relative shrink-0">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider room-unit-label">Quarto 1</span>
+                        </div>
+                        <input type="hidden" name="unidades_ids" value="new">
+                        <input type="text" name="unidades_identificadores" required value="101" placeholder="Ex: 101"
+                               class="w-full bg-white dark:bg-black/30 border border-slate-200 dark:border-white/5 rounded-xl px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-brand transition-colors font-bold text-center">
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- =====================================================================
+            ABA 3: GALERIA DE MÍDIAS (Fidelidade Premium do Naviê)
+        ===================================================================== -->
+        <div x-show="tab === 'galeria'" class="space-y-6" style="display: none;">
+            
+            <!-- Seção de Fotos -->
+            <div class="space-y-3">
+                <div class="flex flex-col text-left">
+                    <span class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Galeria de Fotos (10 Slots Individuais)</span>
+                </div>
+
+                <!-- Grade de Cards de Mídias (Fotos por Slot) -->
+                <div class="flex flex-wrap gap-4 pt-1 items-center" id="photos-media-grid">
+                    {% for img in imagens_slots %}
+                        {% with i=forloop.counter0 %}
+                            <div class="photo-slot-wrapper shrink-0" id="photo-slot-{{ i }}" data-slot="{{ i }}">
+                                {% if img %}
+                                    <!-- Foto Existente no Banco de Dados -->
+                                    <div class="photo-card w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] bg-slate-50 dark:bg-black/20 border {% if i == 0 %}border-amber-400 ring-2 ring-amber-400/20{% else %}border-slate-200 dark:border-white/10{% endif %} relative shadow-sm shrink-0 transition-all duration-300 select-none group" data-saved="true">
+                                        <img src="{{ img.url_imagem.url }}" class="w-full h-full object-cover rounded-[18px]">
+                                        <!-- Botão Excluir Imagem (HTMX) -->
+                                        <button type="button" 
+                                                hx-delete="{% url 'sistema:partner_quarto_deletar_imagem' img.id %}"
+                                                hx-confirm="Deseja remover esta foto da galeria permanentemente?"
+                                                hx-swap="none"
+                                                hx-on::after-request="if(event.detail.successful) resetSlotToDashed({{ i }})"
+                                                class="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-500 hover:bg-red-650 text-white flex items-center justify-center shadow-md transition-colors cursor-pointer z-25 border border-white/10"
+                                                title="Excluir Imagem">
+                                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        
+                                        <!-- Detalhes Específicos do Slot -->
+                                        {% if i == 0 %}
+                                            <!-- Gold crown badge top-left -->
+                                            <div class="crown-icon absolute top-2 left-2 bg-amber-455 dark:bg-amber-400 text-slate-900 rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-md z-15 select-none">
+                                                <i data-lucide="crown" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950"></i>
+                                            </div>
+                                            <!-- Solid gold "Principal" badge bottom-right -->
+                                            <span class="principal-badge absolute bottom-2 right-2 bg-amber-455 dark:bg-amber-400 text-slate-950 font-black text-[8px] sm:text-[9px] uppercase px-2 py-0.5 rounded-lg shadow-sm z-15 select-none">Principal</span>
+                                        {% else %}
+                                            <!-- Badge "Salva" -->
+                                            <span class="absolute bottom-2 left-2 bg-black/60 text-white font-bold text-[9px] px-2 py-0.5 rounded-lg backdrop-blur-[2px] z-10 border border-white/5">Salva</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <!-- Slot Vazio (Dashed Card) -->
+                                    <label id="dashed-slot-{{ i }}" for="photo-input-{{ i }}"
+                                           class="w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] border-2 border-dashed {% if i == 0 %}border-amber-400/60 hover:border-amber-400 bg-amber-400/3 hover:bg-amber-400/5{% else %}border-slate-300 dark:border-white/15 hover:border-amber-400 hover:bg-amber-400/5{% endif %} flex flex-col items-center justify-center cursor-pointer transition-all gap-1 group shrink-0 relative">
+                                        {% if i == 0 %}
+                                            <!-- Indicativo visual de Capa mesmo vazio -->
+                                            <div class="absolute top-1.5 left-1.5 text-amber-500/60 dark:text-amber-400/40">
+                                                <i data-lucide="crown" class="w-3 h-3"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="h-8 w-8 rounded-full bg-amber-400/10 dark:bg-amber-400/5 text-amber-500 dark:text-amber-400 flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105">
+                                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                                        </div>
+                                        <span class="text-[10px] font-black text-amber-500 dark:text-amber-400 tracking-wide">{% if i == 0 %}Add Capa{% else %}Add Foto{% endif %}</span>
+                                    </label>
+                                    <input type="file" name="imagem_{{ i }}" id="photo-input-{{ i }}" accept="image/*" class="hidden" onchange="handleSlotPhotoSelect(this, {{ i }})">
+                                {% endif %}
+                            </div>
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+
+                <!-- Helper Text -->
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 leading-normal mt-2 select-none">
+                    O primeiro card (borda destacada com coroa) é a imagem de capa da pousada no site. Selecione as fotos nos slots correspondentes.
+                </p>
+            </div>
+
+            <!-- Seção de Vídeo Tour -->
+            <div class="pt-6 border-t border-slate-200/50 dark:border-navie-border/60 space-y-4">
+                <div class="flex flex-col text-left">
+                    <span class="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Vídeo Tour da Acomodação (Máximo 1 Vídeo)</span>
+                </div>
+
+                <!-- Hidden native video input -->
+                <input type="file" name="video_arquivo" id="video-native-input" accept="video/*" class="hidden" onchange="previewLocalVideo(this)">
+                <input type="hidden" name="remover_video" id="remover-video-input" value="false">
+
+                <div class="flex flex-col md:flex-row md:items-center gap-6">
+                    <!-- Slot para o Card do Vídeo Tour -->
+                    <div id="video-card-slot" class="shrink-0">
+                        {% if categoria and categoria.video_arquivo %}
+                            <div class="video-card w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 relative shadow-sm shrink-0 overflow-hidden group select-none">
+                                <video src="{{ categoria.video_arquivo.url }}" autoplay loop muted playsinline class="w-full h-full object-cover rounded-[18px]"></video>
+                                <!-- Badge "Vídeo Tour" -->
+                                <span class="absolute bottom-2 left-2 bg-red-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-lg shadow-sm z-10 border border-red-500/20">Vídeo Tour</span>
+                                <!-- Hover deletion overlay -->
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-15">
+                                    <button type="button" onclick="clearVideoTour()" 
+                                            class="h-8 w-8 rounded-full bg-red-500 hover:bg-red-650 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer border border-white/10"
+                                            title="Excluir Vídeo">
+                                        <i data-lucide="x" class="w-4.5 h-4.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% else %}
+                            <label id="add-video-dashed" for="video-native-input"
+                                   class="w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-amber-400 hover:bg-amber-400/5 dark:hover:bg-amber-400/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 group shrink-0">
+                                <div class="h-8 w-8 rounded-full bg-amber-400/10 dark:bg-amber-400/5 text-amber-500 dark:text-amber-400 flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105">
+                                    <i data-lucide="video" class="w-4 h-4"></i>
+                                </div>
+                                <span class="text-[10px] font-black text-amber-500 dark:text-amber-400 tracking-wide">Add Vídeo</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <!-- Link de Vídeo Externo Opcional -->
+                    <div class="flex-1 flex flex-col gap-1.5 text-left">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Link de Tour em Vídeo Externo (Opcional)</label>
+                        <input type="text" name="video_url" value="{{ categoria.video_url|default:'' }}" placeholder="Ex: Link para MP4 externo ou YouTube" 
+                               class="w-full h-11 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =====================================================================
+            ABA 4: CONFIGURAÇÕES DE SEO & ASSISTENTE DE IA (Google & Gemini)
+        ===================================================================== -->
+        <div x-show="tab === 'seo'" class="space-y-6" style="display: none;">
+            <div class="flex flex-col text-left">
+                <span class="text-xs font-bold text-slate-800 dark:text-white">Otimização para Mecanismos de Busca & IA</span>
+                <span class="text-[10px] text-slate-450">Estruture metadados para que sua acomodação seja rankeada no Google e recomendada em assistentes como ChatGPT e Gemini.</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Título SEO -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Título Otimizado (SEO Title)</label>
+                    <input type="text" name="seo_titulo" id="seo-title-input" x-model="seoTitle" @input="updateSEO()" placeholder="Ex: Suíte Presidencial de Luxo na Pousada Ramiros" 
+                           class="w-full h-11 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                </div>
+
+                <!-- Descrição SEO -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Descrição Otimizada (Meta Description)</label>
+                    <textarea name="seo_descricao" id="seo-desc-input" x-model="seoDesc" @input="updateSEO()" rows="2" placeholder="Ex: Reserve a melhor Suíte de Gramado com banheira, varanda e amenities exclusivos..." 
+                              class="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <!-- SIMULAÇÃO VISUAL EM TEMPO REAL -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100 dark:border-navie-border/60 text-left select-none">
+                <!-- Simulação de Resultados do Google -->
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-450 uppercase tracking-widest block">Simulação Visual: Google Search</label>
+                    <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm flex flex-col font-sans">
+                        <span class="text-[10px] text-[#202124] flex items-center gap-1.5">
+                            <span class="bg-[#f1f3f4] h-4 w-4 rounded-full flex items-center justify-center text-[#5f6368] font-bold text-[8px]">R</span>
+                            <span>{{ request.META.HTTP_HOST|default:"ramirospousada.com.br" }}</span>
+                        </span>
+                        <h4 class="text-[15px] text-[#1a0dab] hover:underline cursor-pointer font-medium leading-tight pt-1 truncate" id="google-preview-title">Título do Google</h4>
+                        <p class="text-[11px] text-[#4d5156] leading-relaxed pt-1.5 break-all" id="google-preview-desc">Descrição do Google...</p>
+                    </div>
+                </div>
+
+                <!-- Simulação de Recomendação de IA (Gemini API) -->
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-450 uppercase tracking-widest block">Simulação Visual: Recomendação IA (Gemini)</label>
+                    <div class="bg-violet-950/5 border border-violet-800/10 dark:bg-violet-950/20 dark:border-violet-500/20 rounded-3xl p-4 shadow-sm text-xs leading-relaxed text-slate-600 dark:text-slate-300 font-medium">
+                        <p id="gemini-preview-response">Gemini simulado...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Double Iframe Mockups (Safari & Smartphone) -->
+            <div class="space-y-3 pt-4 border-t border-slate-100 dark:border-navie-border/60 text-left">
+                <label class="text-[9px] font-black text-slate-450 uppercase tracking-widest block">Pré-visualização em Tempo Real (Dispositivos / B2C Website)</label>
+                <div class="flex flex-col md:flex-row items-center justify-center gap-6 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5 shadow-inner">
+                    <!-- Desktop Safari Mockup -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Visualização Desktop (Resolução Escalonada)</span>
+                        <div class="w-60 sm:w-80 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
+                            <!-- Browser Bar -->
+                            <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10 select-none">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                <div class="h-2.5 w-40 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[6px] text-slate-400 truncate px-1 font-mono">
+                                    pousadaramiros.com.br/
+                                </div>
+                            </div>
+                            <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
+                                <iframe id="quarto-preview-iframe-desktop" 
+                                        src="{% url 'website:home' %}?preview=1" 
+                                        class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
+                                        style="transform: scale(0.25);"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Smartphone Mockup -->
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Visualização Mobile</span>
+                        <div class="w-[90px] h-[160px] rounded-[20px] border-[4px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
+                            <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
+                            <div class="w-full h-full bg-slate-950 relative overflow-hidden">
+                                <iframe id="quarto-preview-iframe-mobile" 
+                                        src="{% url 'website:home' %}?preview=1" 
+                                        class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
+                                        style="transform: scale(0.24);"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schema.org JSON-LD Visualizer -->
+            <div class="space-y-2 text-left">
+                <label class="text-[9px] font-black text-slate-450 uppercase tracking-widest block">Código Estruturado Gerado (Schema.org JSON-LD)</label>
+                <pre class="bg-slate-900 text-cyan-300 font-mono text-[9px] rounded-3xl p-4 overflow-x-auto leading-relaxed border border-slate-800 no-scrollbar select-all" id="schema-preview-code"></pre>
+            </div>
+        </div>
+
+        <!-- Botões de Ação do Formulário Geral -->
+        <div class="flex items-center gap-3 border-t border-slate-100 dark:border-navie-border/60 pt-6 flex-shrink-0">
+            <button type="button" hx-get="{% url 'sistema:quarto_list' %}" hx-target="#quartos-container" hx-swap="innerHTML"
+                    class="w-full h-12 border border-slate-200 dark:border-navie-border hover:bg-slate-55 dark:hover:bg-white/5 rounded-2xl text-xs font-black text-slate-500 dark:text-slate-350 cursor-pointer select-none transition-all">
+                Cancelar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Scripts JS Dinâmicos Locais para Manipulação do DOM de Unidades Físicas -->
+<script>
+    // Inicializa o Lucide na injeção assíncrona
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
+    let roomUnitCount = document.querySelectorAll('.room-unit-card').length;
+
+    function addRoomUnit() {
+        roomUnitCount++;
+        const container = document.getElementById('room-units-container');
+        const trigger = document.getElementById('add-room-unit-btn');
+        
+        const card = document.createElement('div');
+        card.className = "room-unit-card w-28 sm:w-32 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-3 flex flex-col gap-1.5 relative shrink-0 animate-in zoom-in-95 duration-200";
+        card.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider room-unit-label">Quarto ${roomUnitCount}</span>
+                <button type="button" class="text-slate-400 hover:text-red-500 transition-colors remove-room-btn flex items-center justify-center p-0.5" onclick="removeRoomUnit(this)">
+                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+            <input type="hidden" name="unidades_ids" value="new">
+            <input type="text" name="unidades_identificadores" required value="" placeholder="Ex: 101"
+                   class="w-full bg-white dark:bg-black/30 border border-slate-200 dark:border-white/5 rounded-xl px-2 py-1.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-brand transition-colors font-bold text-center">
+        `;
+        
+        container.appendChild(card);
+        lucide.createIcons();
+    }
+
+    function removeRoomUnit(btn) {
+        const card = btn.closest('.room-unit-card');
+        card.classList.add('animate-out', 'fade-out', 'zoom-out-95', 'duration-200');
+        setTimeout(() => {
+            card.remove();
+            // Re-ordena as labels visuais na tela
+            document.querySelectorAll('.room-unit-card').forEach((c, idx) => {
+                c.querySelector('.room-unit-label').textContent = `Quarto ${idx + 1}`;
+            });
+            roomUnitCount = document.querySelectorAll('.room-unit-card').length;
+        }, 200);
+    }
+
+    // ─── Local Photo Cumulative Selection & Preview Logic ───
+    // Helper function to compress high-res images asynchronously using Canvas
+    function compressImageAsync(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function (event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    // Proportional downscale if exceeding 2048px to keep a standard large format
+                    const MAX_SIZE = 2048;
+                    if (width > MAX_SIZE || height > MAX_SIZE) {
+                        if (width > height) {
+                            height = Math.round((height * MAX_SIZE) / width);
+                            width = MAX_SIZE;
+                        } else {
+                            width = Math.round((width * MAX_SIZE) / height);
+                            height = MAX_SIZE;
+                        }
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Compress to high-fidelity JPEG (0.8 quality factor)
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // Retain name but swap extension to .jpg for jpeg blobs
+                            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+                            const compressedFile = new File([blob], nameWithoutExt + "_comp.jpg", {
+                                type: "image/jpeg",
+                                lastModified: Date.now()
+                            });
+                            console.log(`[Compressor] "${file.name}": ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+                            resolve(compressedFile);
+                        } else {
+                            resolve(file);
+                        }
+                    }, 'image/jpeg', 0.8);
+                };
+                img.onerror = function () {
+                    resolve(file); // Fallback to original on load error
+                };
+            };
+            reader.onerror = function () {
+                resolve(file); // Fallback to original on read error
+            };
+        });
+    }
+
+    // ─── Local Photo Independent Slot-based Logic ───
+    async function handleSlotPhotoSelect(input, slotIndex) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Validate size (15MB limit)
+        if (file.size > 15 * 1024 * 1024) {
+            alert(`A imagem "${file.name}" excede o limite máximo de 15MB.`);
+            input.value = '';
+            return;
+        }
+        
+        let fileToPush = file;
+        // Compress if larger than 1.5MB and is an image
+        if (file.type.startsWith('image/') && file.size > 1.5 * 1024 * 1024) {
+            const dashedLabel = document.querySelector(`#dashed-slot-${slotIndex} span`);
+            if (dashedLabel) dashedLabel.textContent = "Comprimindo...";
+            
+            fileToPush = await compressImageAsync(file);
+            
+            if (dashedLabel) dashedLabel.textContent = (slotIndex === 0) ? "Add Capa" : "Add Foto";
+        }
+        
+        // Update input files with compressed file so it gets submitted on form POST
+        const dt = new DataTransfer();
+        dt.items.add(fileToPush);
+        input.files = dt.files;
+        
+        // Create Object URL for preview
+        const url = URL.createObjectURL(fileToPush);
+        
+        // Replace Slot wrapper content with the new photo card preview
+        const slotWrapper = document.getElementById(`photo-slot-${slotIndex}`);
+        if (slotWrapper) {
+            slotWrapper.innerHTML = `
+                <div class="photo-card w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] bg-slate-50 dark:bg-black/20 border ${slotIndex === 0 ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-slate-200 dark:border-white/10'} relative shadow-sm shrink-0 transition-all duration-300 select-none group animate-in zoom-in-95 duration-200" data-saved="false" id="card-photo-${slotIndex}">
+                    <img src="${url}" class="w-full h-full object-cover rounded-[18px]">
+                    <button type="button" onclick="clearSlotLocalPhoto(${slotIndex})"
+                            class="absolute top-2 right-2 h-6 w-6 rounded-full bg-red-500 hover:bg-red-650 text-white flex items-center justify-center shadow-md transition-colors cursor-pointer z-25 border border-white/10"
+                            title="Remover Foto">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                    ${slotIndex === 0 ? `
+                        <!-- Gold crown badge top-left -->
+                        <div class="crown-icon absolute top-2 left-2 bg-amber-455 dark:bg-amber-400 text-slate-900 rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-md z-15 select-none">
+                            <i data-lucide="crown" class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-950"></i>
+                        </div>
+                        <!-- Solid gold "Principal" badge bottom-right -->
+                        <span class="principal-badge absolute bottom-2 right-2 bg-amber-455 dark:bg-amber-400 text-slate-950 font-black text-[8px] sm:text-[9px] uppercase px-2 py-0.5 rounded-lg shadow-sm z-15 select-none">Principal</span>
+                    ` : ''}
+                </div>
+            `;
+            
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    }
+
+    function clearSlotLocalPhoto(slotIndex) {
+        // Reset slot back to empty dashed card in the DOM
+        resetSlotToDashed(slotIndex);
+    }
+
+    function resetSlotToDashed(slotIndex) {
+        const slotWrapper = document.getElementById(`photo-slot-${slotIndex}`);
+        if (slotWrapper) {
+            slotWrapper.innerHTML = `
+                <!-- Slot Vazio (Dashed Card) -->
+                <label id="dashed-slot-${slotIndex}" for="photo-input-${slotIndex}"
+                       class="w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] border-2 border-dashed ${slotIndex === 0 ? 'border-amber-400/60 hover:border-amber-400 bg-amber-400/3 hover:bg-amber-400/5' : 'border-slate-300 dark:border-white/15 hover:border-amber-400 hover:bg-amber-400/5'} flex flex-col items-center justify-center cursor-pointer transition-all gap-1 group shrink-0 relative animate-in fade-in duration-200">
+                    ${slotIndex === 0 ? `
+                        <!-- Indicativo visual de Capa mesmo vazio -->
+                        <div class="absolute top-1.5 left-1.5 text-amber-500/60 dark:text-amber-400/40">
+                            <i data-lucide="crown" class="w-3 h-3"></i>
+                        </div>
+                    ` : ''}
+                    <div class="h-8 w-8 rounded-full bg-amber-400/10 dark:bg-amber-400/5 text-amber-500 dark:text-amber-400 flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105">
+                        <i data-lucide="image-plus" class="w-4 h-4"></i>
+                    </div>
+                    <span class="text-[10px] font-black text-amber-500 dark:text-amber-400 tracking-wide">${slotIndex === 0 ? 'Add Capa' : 'Add Foto'}</span>
+                </label>
+                <input type="file" name="imagem_${slotIndex}" id="photo-input-${slotIndex}" accept="image/*" class="hidden" onchange="handleSlotPhotoSelect(this, ${slotIndex})">
+            `;
+            
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    }
+
+    // ─── Local Video Tour Logic ───
+    function previewLocalVideo(input) {
+        const file = input.files[0];
+        if (file) {
+            // Validate size (30MB per video limit)
+            if (file.size > 30 * 1024 * 1024) {
+                alert("O vídeo excede o limite máximo de 30MB.");
+                input.value = '';
+                return;
+            }
+            
+            const url = URL.createObjectURL(file);
+            const slot = document.getElementById('video-card-slot');
+            slot.innerHTML = `
+                <div class="video-card w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 relative shadow-sm shrink-0 overflow-hidden group select-none animate-in zoom-in-95 duration-200">
+                    <video src="${url}" autoplay loop muted playsinline class="w-full h-full object-cover rounded-[18px]"></video>
+                    <span class="absolute bottom-2 left-2 bg-red-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-lg shadow-sm z-10 border border-red-500/20">Vídeo Tour</span>
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-15">
+                        <button type="button" onclick="clearVideoTour()" 
+                                class="h-8 w-8 rounded-full bg-red-500 hover:bg-red-650 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 cursor-pointer border border-white/10"
+                                title="Remover Vídeo">
+                            <i data-lucide="x" class="w-4.5 h-4.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const removerInput = document.getElementById('remover-video-input');
+            if (removerInput) removerInput.value = 'false';
+            
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    }
+
+    function clearVideoTour() {
+        // Reset file input
+        const nativeInput = document.getElementById('video-native-input');
+        if (nativeInput) nativeInput.value = '';
+        
+        // Restore dashed add button
+        const slot = document.getElementById('video-card-slot');
+        slot.innerHTML = `
+            <label id="add-video-dashed" for="video-native-input"
+                   class="w-24 h-24 sm:w-28 sm:h-28 rounded-[20px] border-2 border-dashed border-slate-300 dark:border-white/15 hover:border-amber-400 hover:bg-amber-400/5 dark:hover:bg-amber-400/5 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 group shrink-0 animate-in fade-in duration-200">
+                <div class="h-8 w-8 rounded-full bg-amber-400/10 dark:bg-amber-400/5 text-amber-500 dark:text-amber-400 flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105">
+                    <i data-lucide="video" class="w-4 h-4"></i>
+                </div>
+                <span class="text-[10px] font-black text-amber-500 dark:text-amber-400 tracking-wide">Add Vídeo</span>
+            </label>
+        `;
+        
+        // Mark video for deletion on the server side
+        const removerInput = document.getElementById('remover-video-input');
+        if (removerInput) removerInput.value = 'true';
+        
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    // Run initial Capa check on first page load
+    setTimeout(recalculateMainPhotoOutline, 100);
+
+    // Clean up and register HTMX error listeners to restore the header submit button if the request fails
+    if (window.restoreSubmitButton) {
+        document.body.removeEventListener('htmx:responseError', window.restoreSubmitButton);
+        document.body.removeEventListener('htmx:sendError', window.restoreSubmitButton);
+    }
+    
+    window.restoreSubmitButton = function() {
+        const submitBtn = document.getElementById('categoria-quarto-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'pointer-events-none');
+            
+            const icon = document.getElementById('submit-btn-icon');
+            const spinner = document.getElementById('submit-btn-spinner');
+            const text = document.getElementById('submit-btn-text');
+            
+            if (icon) icon.classList.remove('hidden');
+            if (spinner) spinner.classList.add('hidden');
+            if (text) text.classList.remove('hidden');
+        }
+    };
+
+    document.body.addEventListener('htmx:responseError', window.restoreSubmitButton);
+    document.body.addEventListener('htmx:sendError', window.restoreSubmitButton);
+</script>
+
+<!-- Troca fora de fluxo (HTMX Out-of-Band) para injetar o título com botão voltar no cabeçalho B2B -->
+<div style="display: none;" hx-swap-oob="innerHTML:#header_title_area">
+    <div class="flex items-center gap-3 animate-in fade-in duration-300">
+        <button hx-get="{% url 'sistema:quarto_list' %}" hx-target="#quartos-container" hx-swap="innerHTML"
+                class="h-8 w-8 rounded-xl border border-slate-250 hover:bg-slate-100 dark:border-navie-border dark:hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-brand transition-colors cursor-pointer shrink-0">
+            <i data-lucide="arrow-left" class="w-4.5 h-4.5"></i>
+        </button>
+        <div class="flex flex-col justify-center">
+            <h1 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white tracking-tight uppercase leading-none">
+                {% if categoria %}Editar Acomodação{% else %}Nova Categoria{% endif %}
+            </h1>
+            <span class="text-[9px] font-bold text-slate-400 dark:text-navie-textsec tracking-widest uppercase mt-0.5">{{ active_pousada.nome }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Troca fora de fluxo (HTMX Out-of-Band) para injetar o botão Salvar no cabeçalho -->
+<div style="display: none;" hx-swap-oob="innerHTML:#header_actions_area">
+    <div class="flex items-center gap-3 animate-in fade-in duration-300">
+        <button type="submit" 
+                form="categoria-quarto-form"
+                id="categoria-quarto-submit-btn"
+                class="bg-brand text-brand-text px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md flex items-center justify-center gap-1.5 select-none hover:scale-[1.02] active:scale-98 cursor-pointer">
+            <i data-lucide="check" class="w-4 h-4" id="submit-btn-icon"></i>
+            <span id="submit-btn-spinner" class="hidden animate-pulse">Salvando...</span>
+            <span id="submit-btn-text">Salvar</span>
+        </button>
+    </div>
+</div>

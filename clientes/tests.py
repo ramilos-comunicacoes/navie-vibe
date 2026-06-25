@@ -302,3 +302,186 @@ class ClientesDashboardViewTest(TestCase):
         self.assertContains(response, 'Ibiapaba Rock Festival 2026')
         self.assertContains(response, 'Batman: O Retorno do Cavaleiro')
         self.assertContains(response, 'Pousada da Serra')
+
+
+class ClientesSocialFeedAndProfileTest(TestCase):
+    databases = {'default', 'hospedagem'}
+
+    def setUp(self):
+        self.client = Client()
+        
+        # Create user 1
+        self.user1 = User.objects.create_user(
+            username='111.111.111-11',
+            email='user1@test.com',
+            password='password123',
+            first_name='Pedro',
+            last_name='Alvares'
+        )
+        self.profile1 = ClientePerfil.objects.create(
+            user=self.user1,
+            cpf='111.111.111-11',
+            telefone='(88) 91111-1111',
+            cep='62320-000',
+            endereco='Rua Um',
+            numero='10',
+            bairro='Centro',
+            cidade='Tianguá',
+            estado='CE',
+            aceite_termos=True,
+            data_aceite_termos=timezone.now()
+        )
+
+        # Create user 2
+        self.user2 = User.objects.create_user(
+            username='222.222.222-22',
+            email='user2@test.com',
+            password='password123',
+            first_name='Ana',
+            last_name='Silva'
+        )
+        self.profile2 = ClientePerfil.objects.create(
+            user=self.user2,
+            cpf='222.222.222-22',
+            telefone='(88) 92222-2222',
+            cep='62320-000',
+            endereco='Rua Dois',
+            numero='20',
+            bairro='Centro',
+            cidade='Tianguá',
+            estado='CE',
+            aceite_termos=True,
+            data_aceite_termos=timezone.now()
+        )
+
+        # Create hotel / reservation setup for user 2
+        from hoteis.models import Local, Hotel, Quarto, UnidadeQuarto, Reserva
+        from datetime import date, timedelta
+        
+        self.local = Local.objects.create(nome='Serra de Ibiapaba', endereco='Estrada da Confiança', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(nome='Pousada Ramilos Tianguá', descricao='Melhor pousada da serra', local=self.local)
+        self.quarto = Quarto.objects.create(hotel=self.hotel, nome='Chalé Standard', preco=150.00)
+        self.unidade = UnidadeQuarto.objects.create(quarto=self.quarto, identificador='Ch-10')
+        self.reserva = Reserva.objects.create(
+            usuario=self.user2,
+            unidade=self.unidade,
+            data_checkin=date.today(),
+            data_checkout=date.today() + timedelta(days=2),
+            subtotal=300.00,
+            valor_total=300.00,
+            status='confirmada'
+        )
+
+    def test_link_post_to_own_reservation(self):
+        """
+        Verify that a user can create a post linked to their own reservation,
+        and it automatically sets the establishment name.
+        """
+        from clientes.models import PostMomento
+        
+        self.client.login(username='222.222.222-22', password='password123')
+        
+        reserva_payload_id = f"RES-{self.reserva.id.hex}"
+        response = self.client.post(reverse('clientes:criar_post'), {
+            'reserva_id': reserva_payload_id,
+            'texto': 'Hospedagem excelente! Adorei tudo.',
+            'avaliacao': 5
+        })
+        self.assertEqual(response.status_code, 302) # Redirects to painel
+        
+        post = PostMomento.objects.filter(usuario=self.user2).first()
+        self.assertIsNotNone(post)
+        self.assertEqual(post.reserva, self.reserva)
+        self.assertEqual(post.estabelecimento_nome, 'Pousada Ramilos Tianguá')
+        self.assertEqual(post.avaliacao, 5)
+
+    def test_link_post_to_other_user_reservation_fails_silently(self):
+        """
+        Verify that if a user attempts to link a post to someone else's reservation,
+        the post is created but not linked (reserva is None).
+        """
+        from clientes.models import PostMomento
+        
+        self.client.login(username='111.111.111-11', password='password123')
+        
+        reserva_payload_id = f"RES-{self.reserva.id.hex}"
+        response = self.client.post(reverse('clientes:criar_post'), {
+            'reserva_id': reserva_payload_id,
+            'texto': 'Tentando burlar vinculando a outra reserva...',
+            'avaliacao': 4
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        post = PostMomento.objects.filter(usuario=self.user1).first()
+        self.assertIsNotNone(post)
+        self.assertIsNone(post.reserva) # Should not be linked!
+
+    def test_like_and_comment_on_posts(self):
+        """
+        Verify liking and commenting on database posts works correctly.
+        """
+        from clientes.models import PostMomento, ComentarioMomento
+        
+        # Create a post
+        post = PostMomento.objects.create(
+            usuario=self.user2,
+            texto='Post inicial',
+            avaliacao=5
+        )
+        
+        self.client.login(username='111.111.111-11', password='password123')
+        
+        # Like
+        response = self.client.post(reverse('clientes:like_post', args=[post.id.hex]))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text-slate-500', response.content.decode('utf-8')) # HTML check
+        self.assertTrue(post.likes.filter(id=self.user1.id).exists())
+        
+        # Unlike
+        response = self.client.post(reverse('clientes:like_post', args=[post.id.hex]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(post.likes.filter(id=self.user1.id).exists())
+        
+        # Comment
+        response = self.client.post(reverse('clientes:comentar_post', args=[post.id.hex]), {
+            'texto': 'Comentário legal!'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        comment = ComentarioMomento.objects.filter(post=post).first()
+        self.assertIsNotNone(comment)
+        self.assertEqual(comment.usuario, self.user1)
+        self.assertEqual(comment.texto, 'Comentário legal!')
+
+    def test_editar_perfil_and_theme(self):
+        """
+        Verify that posting to profile edit updates user and profile details.
+        """
+        self.client.login(username='111.111.111-11', password='password123')
+        
+        response = self.client.post(reverse('clientes:editar_perfil'), {
+            'first_name': 'Pedro Novo',
+            'last_name': 'Alvares Novo',
+            'email': 'pedro.novo@test.com',
+            'telefone': '(88) 98888-7777',
+            'cep': '62320-001',
+            'endereco': 'Rua Nova',
+            'numero': '15',
+            'bairro': 'Bairro Novo',
+            'cidade': 'Ubajara',
+            'estado': 'CE'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        # Refresh from DB
+        self.user1.refresh_from_db()
+        self.profile1.refresh_from_db()
+        
+        self.assertEqual(self.user1.first_name, 'Pedro Novo')
+        self.assertEqual(self.user1.last_name, 'Alvares Novo')
+        self.assertEqual(self.user1.email, 'pedro.novo@test.com')
+        self.assertEqual(self.profile1.telefone, '(88) 98888-7777')
+        self.assertEqual(self.profile1.cep, '62320-001')
+        self.assertEqual(self.profile1.endereco, 'Rua Nova')
+        self.assertEqual(self.profile1.cidade, 'Ubajara')
+

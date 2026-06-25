@@ -1,0 +1,825 @@
+{% extends 'base_public.html' %}
+{% load static %}
+{% load l10n %}
+
+{% block title %}Pousadas Ramilos | Seu refúgio ideal{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+<style>
+    /* Swiper Carrossel de Pousadas */
+    .pousadas-swiper {
+        width: 100%;
+        overflow: visible !important;
+    }
+    .pousadas-swiper .swiper-slide {
+        opacity: 0.55;
+        transform: scale(0.92);
+        transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        justify-content: center;
+        width: 290px;
+        max-width: 85vw;
+    }
+    @media (min-width: 768px) {
+        .pousadas-swiper .swiper-slide {
+            width: 420px;
+        }
+    }
+    .pousadas-swiper .swiper-slide-active {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div x-data="{
+    // Controle global do Modal de Reserva Rápida (Estilo Airbnb / 3 Passos)
+    bookingModalOpen: false,
+    selectedRoom: null,
+    selectedCategoryName: '',
+    selectedPousadaName: '',
+    selectedPousadaWhatsapp: '',
+    selectedPrice: 0,
+    
+    // Dados do formulário de reserva
+    checkin: '',
+    checkout: '',
+    guestName: '',
+    guestPhone: '',
+    guestEmail: '',
+    totalNights: 0,
+    totalPrice: 0,
+    
+    // Abre o modal de reserva e preenche dados iniciais
+    openBooking(roomNum, catName, pousadaName, whatsapp, price) {
+        this.selectedRoom = roomNum;
+        this.selectedCategoryName = catName;
+        this.selectedPousadaName = pousadaName;
+        this.selectedPousadaWhatsapp = whatsapp;
+        this.selectedPrice = parseFloat(price);
+        this.bookingModalOpen = true;
+        
+        // Reinicializa datas e faturamento
+        this.checkin = '';
+        this.checkout = '';
+        this.totalNights = 0;
+        this.totalPrice = 0;
+        
+        // Re-inicia o flatpickr no modal
+        setTimeout(() => {
+            flatpickr('#modal-dates', {
+                mode: 'range',
+                minDate: 'today',
+                dateFormat: 'Y-m-d',
+                locale: 'pt',
+                onChange: (selectedDates) => {
+                    if (selectedDates.length === 2) {
+                        const start = selectedDates[0];
+                        const end = selectedDates[1];
+                        const diffTime = Math.abs(end - start);
+                        this.totalNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        this.totalPrice = this.totalNights * this.selectedPrice;
+                        
+                        // Formata as datas para o WhatsApp
+                        const pad = (n) => n.toString().padStart(2, '0');
+                        this.checkin = `${pad(start.getDate())}/${pad(start.getMonth()+1)}/${start.getFullYear()}`;
+                        this.checkout = `${pad(end.getDate())}/${pad(end.getMonth()+1)}/${end.getFullYear()}`;
+                    }
+                }
+            });
+        }, 150);
+    },
+    
+    // Dispara a mensagem de WhatsApp pré-preenchida
+    sendWhatsApp() {
+        if (!this.guestName || !this.guestPhone || !this.checkin || !this.checkout) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+        
+        const message = `Olá! Gostaria de realizar uma reserva nas Pousadas Ramilos.\n\n` + 
+                        `🏨 Unidade: ${this.selectedPousadaName}\n` +
+                        `🛏️ Acomodação: ${this.selectedCategoryName} (Quarto ${this.selectedRoom})\n` +
+                        `📅 Período: ${this.checkin} até ${this.checkout} (${this.totalNights} noites)\n` +
+                        `👤 Hóspede: ${this.guestName}\n` +
+                        `📱 WhatsApp: ${this.guestPhone}\n` +
+                        `💰 Valor Total: R$ ${this.totalPrice.toFixed(2)}\n\n` +
+                        `Aguardando confirmação!`;
+                        
+        const encodedText = encodeURIComponent(message);
+        const waUrl = `https://wa.me/${this.selectedPousadaWhatsapp}?text=${encodedText}`;
+        window.open(waUrl, '_blank');
+        this.bookingModalOpen = false;
+    }
+}">
+
+    <!-- SEÇÃO HERO COM VÍDEO CINEMÁTICO EM LOOP -->
+    <section class="relative h-[75vh] md:h-[95vh] w-full flex items-center justify-center overflow-visible select-none">
+        <!-- Vídeo de Fundo Premium Loop -->
+        <div class="absolute inset-0 w-full h-full z-0 overflow-hidden">
+            <div class="absolute inset-0 w-full h-full bg-black/60 z-10"></div>
+            <video autoplay loop muted playsinline class="w-full h-full object-cover">
+                {% if config.hero_video_arquivo %}
+                    <source src="{{ config.hero_video_arquivo.url }}" type="video/mp4">
+                {% elif config.hero_video_url %}
+                    <source src="{{ config.hero_video_url }}" type="video/mp4">
+                {% else %}
+                    <source src="/media/pousadas/hero_landscape.mp4" type="video/mp4">
+                {% endif %}
+            </video>
+        </div>
+
+        <!-- Conteúdo Textual do Hero -->
+        <div class="relative z-30 max-w-4xl mx-auto px-6 text-center text-white space-y-6 pt-12">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-ramiros-yellow/20 text-ramiros-yellow border border-ramiros-yellow/30 rounded-full text-[10px] font-black uppercase tracking-widest">
+                Rede Pousadas Ramilos
+            </span>
+            <h1 class="text-4xl sm:text-6xl font-black font-poppins tracking-tight leading-[1.05]">
+                {{ config.hero_titulo|linebreaksbr }}
+            </h1>
+            <p class="text-sm sm:text-base text-white/80 font-medium max-w-xl mx-auto leading-relaxed">
+                {{ config.hero_subtitulo }}
+            </p>
+
+            <!-- BARRA DE BUSCA FLUTUANTE (AlpineJS + Flatpickr) -->
+            <div class="pt-8" x-data="{
+                openDest: false,
+                selected: 'todas',
+                selectedLabel: 'Todas as Unidades',
+                options: [
+                    { value: 'todas', label: 'Todas as Unidades' },
+                    {% for p in pousadas %}
+                    { value: '{{ p.id }}', label: '{{ p.nome }}' }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                choose(option) {
+                    this.selected = option.value;
+                    this.selectedLabel = option.label;
+                    this.openDest = false;
+                },
+                openGuests: false,
+                guests: 2,
+                guestOptions: [1, 2, 3, 4, 5, 6, 7, 8],
+                chooseGuests(num) {
+                    this.guests = num;
+                    this.openGuests = false;
+                }
+            }" @click.outside="openDest = false; openGuests = false">
+
+                <div class="bg-white rounded-3xl sm:rounded-full shadow-2xl p-4 sm:py-2.5 sm:px-6 max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 items-center gap-4 text-ramiros-brown border border-slate-200">
+                    
+                    <!-- Campo 1: Destino (Dropdown Alpine Customizado) -->
+                    <div class="flex flex-col text-left px-2 border-b sm:border-b-0 sm:border-r border-slate-100 pb-2 sm:pb-0">
+                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400 select-none">Escolha o Destino</label>
+                        
+                        <!-- Botão disparador -->
+                        <button type="button"
+                                @click="openDest = !openDest; openGuests = false;"
+                                class="flex items-center justify-between gap-2 pt-0.5 text-xs font-extrabold text-ramiros-brown cursor-pointer bg-transparent border-none outline-none w-full select-none">
+                            <span x-text="selectedLabel" class="truncate"></span>
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
+                               :class="openDest ? 'rotate-180' : ''"></i>
+                        </button>
+
+                        <!-- Input oculto para filtro HTMX -->
+                        <input type="hidden" id="search-pousada" :value="selected">
+                    </div>
+
+                    <!-- Campo 2: Período de Estadia (Triggers Modal de Disponibilidade) -->
+                    <div class="flex flex-col text-left px-2 border-b sm:border-b-0 sm:border-r border-slate-100 pb-2 sm:pb-0">
+                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400">Período / Datas</label>
+                        <input type="text" id="search-dates" placeholder="Selecione as datas" readonly 
+                               onclick="openAvailabilityModal()"
+                               class="text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-ramiros-brown cursor-pointer placeholder-slate-400"
+                               style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;">
+                    </div>
+
+                    <!-- Campo 3: Ação / Filtrar (Dropdown Hóspedes) -->
+                    <div class="flex items-center justify-between pl-2 relative">
+                        <div class="flex flex-col text-left cursor-pointer select-none" @click="openGuests = !openGuests; openDest = false;">
+                            <label class="text-[9px] font-black uppercase tracking-widest text-slate-400 select-none">Hóspedes</label>
+                            <button type="button" class="flex items-center gap-1 pt-0.5 text-xs font-extrabold text-ramiros-brown cursor-pointer bg-transparent border-none outline-none text-left select-none">
+                                <span x-text="guests + (guests === 1 ? ' Hóspede' : ' Hóspedes')"></span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="openGuests ? 'rotate-180' : ''"></i>
+                            </button>
+                        </div>
+                        <button 
+                            @click="document.getElementById('quartos').scrollIntoView({ behavior: 'smooth' })"
+                            class="h-11 w-11 rounded-full bg-ramiros-yellow hover:bg-ramiros-yellow-hover text-ramiros-brown flex items-center justify-center shadow-md transition-all border-none shrink-0 cursor-pointer">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Painel Dropdown Destinos Customizado -->
+                <div x-show="openDest"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                     class="max-w-xs mx-auto mt-2 bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto no-scrollbar"
+                     style="display: none;">
+                    <template x-for="option in options" :key="option.value">
+                        <button type="button"
+                                @click="choose(option)"
+                                :class="selected === option.value
+                                    ? 'bg-amber-50 text-ramiros-brown font-black'
+                                    : 'text-ramiros-brown/80 hover:bg-slate-50 font-bold'"
+                                class="w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between gap-3 cursor-pointer border-none bg-transparent focus:outline-none rounded-xl">
+                            <span x-text="option.label"></span>
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500 shrink-0"
+                               x-show="selected === option.value"></i>
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Painel Dropdown Hóspedes Customizado -->
+                <div x-show="openGuests"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                     class="max-w-xs mx-auto mt-2 bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto no-scrollbar"
+                     style="display: none;">
+                    <template x-for="num in guestOptions" :key="num">
+                        <button type="button"
+                                @click="chooseGuests(num)"
+                                :class="guests === num
+                                    ? 'bg-amber-50 text-ramiros-brown font-black'
+                                    : 'text-ramiros-brown/80 hover:bg-slate-50 font-bold'"
+                                class="w-full text-left px-5 py-3 text-sm transition-colors flex items-center justify-between gap-3 cursor-pointer border-none bg-transparent focus:outline-none rounded-xl">
+                            <span x-text="num + (num === 1 ? ' Hóspede' : ' Hóspedes')"></span>
+                            <i data-lucide="check" class="w-4 h-4 text-amber-500 shrink-0"
+                               x-show="guests === num"></i>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- VITRINE DE EXPERIÊNCIAS RAMILOS -->
+    <div class="relative z-20 mt-0 sm:-mt-6 bg-[#fefdfb] rounded-t-xl sm:rounded-t-2xl w-full">
+        <section id="experiencias" class="pt-16 pb-6 sm:pt-20 sm:pb-8 max-w-7xl mx-auto px-6 space-y-12 select-none">
+        <div class="text-center max-w-xl mx-auto space-y-3">
+            <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Nossos Destinos</span>
+            <h2 class="text-3xl font-black font-poppins text-ramiros-brown tracking-tight leading-none">Três experiências inesquecíveis</h2>
+            <p class="text-xs text-ramiros-brown-light leading-relaxed">Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.</p>
+        </div>
+
+        <!-- CARROSSEL DE POUSADAS: Apenas no Mobile (Custom AlpineJS Centered Carousel) -->
+        <div 
+            class="block md:hidden relative -mx-6 overflow-hidden select-none h-[28rem] pb-10"
+            x-data="{
+                activeIndex: 0,
+                autoplayInterval: null,
+                touchStartX: 0,
+                
+                init() {
+                    this.startAutoplay();
+                },
+                startAutoplay() {
+                    this.stopAutoplay();
+                    this.autoplayInterval = setInterval(() => {
+                        this.next();
+                    }, 3000);
+                },
+                stopAutoplay() {
+                    if (this.autoplayInterval) {
+                        clearInterval(this.autoplayInterval);
+                    }
+                },
+                next() {
+                    this.activeIndex = (this.activeIndex + 1) % 3;
+                },
+                prev() {
+                    this.activeIndex = (this.activeIndex - 1 + 3) % 3;
+                },
+                select(index) {
+                    this.activeIndex = index;
+                    this.startAutoplay();
+                },
+                handleTouchStart(e) {
+                    this.touchStartX = e.touches[0].clientX;
+                    this.stopAutoplay();
+                },
+                handleTouchEnd(e) {
+                    const touchEndX = e.changedTouches[0].clientX;
+                    const diffX = touchEndX - this.touchStartX;
+                    if (diffX > 50) {
+                        this.prev();
+                    } else if (diffX < -50) {
+                        this.next();
+                    }
+                    this.startAutoplay();
+                }
+            }"
+            @touchstart="handleTouchStart($event)"
+            @touchend="handleTouchEnd($event)"
+        >
+            <!-- Slides Container -->
+            <div class="relative w-full h-[26rem] mt-2">
+                {% for p in pousadas %}
+                {% with index=forloop.counter0 %}
+                <div 
+                    @click="if (activeIndex === {{ index }}) { window.location.href='{% url 'website:pousada_detalhe' p.id %}' } else { select({{ index }}) }"
+                    :style="(index - activeIndex + 3) % 3 === 0 
+                        ? 'transform: translate3d(-50%, 0, 0) scale(1); opacity: 1; z-index: 30;' 
+                        : ((index - activeIndex + 3) % 3 === 1 
+                            ? 'transform: translate3d(calc(-50% + 130px), 0, 0) scale(0.85); opacity: 0.55; z-index: 20;' 
+                            : 'transform: translate3d(calc(-50% - 130px), 0, 0) scale(0.85); opacity: 0.55; z-index: 20;')"
+                    class="absolute left-1/2 top-0 w-[240px] xs:w-[280px] h-[26rem] rounded-3xl overflow-hidden shadow-xl transition-all duration-500 ease-in-out cursor-pointer group"
+                    x-data="{ index: {{ index }} }"
+                >
+                    <!-- Imagem da Pousada Baseada no Nome ou Destaque -->
+                    {% if p.imagem_destaque %}
+                        <img src="{{ p.imagem_destaque.url }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% else %}
+                        {% if "Serra" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% elif "Sertão" in p.nome or "Sertao" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% elif "Praia" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent z-10"></div>
+                    <div class="absolute bottom-6 left-6 right-6 z-20 text-white space-y-2 text-left">
+                        {% if "Serra" in p.nome %}
+                            <span class="px-3 py-1 bg-violet-600/30 text-violet-300 border border-violet-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Aconchego</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Lareira a lenha, vinhos nobres e o clima de montanha europeu em Tinguá.</p>
+                        {% elif "Sertão" in p.nome or "Sertao" in p.nome %}
+                            <span class="px-3 py-1 bg-amber-600/30 text-amber-300 border border-amber-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">História</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Pôr do sol deslumbrante, trilhas ecológicas e culinária típica rústica em Tinguá.</p>
+                        {% elif "Praia" in p.nome %}
+                            <span class="px-3 py-1 bg-emerald-600/30 text-emerald-300 border border-emerald-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Paraíso</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Piscinas naturais, coqueirais e areias brancas mornas em Pedro II.</p>
+                        {% else %}
+                            <span class="px-3 py-1 bg-slate-600/30 text-slate-300 border border-slate-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Hospedagem</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Conforto e qualidade premium em sua estadia.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+            <!-- Dots Indicators -->
+            <div class="flex justify-center gap-2 mt-4">
+                <template x-for="i in [0, 1, 2]">
+                    <button 
+                        @click="select(i)"
+                        class="h-1.5 rounded-full transition-all duration-300 border-none cursor-pointer"
+                        :class="activeIndex === i ? 'w-5 bg-amber-500' : 'w-1.5 bg-slate-300'"
+                    ></button>
+                </template>
+            </div>
+        </div>
+
+        <!-- GRADE ESTÁTICA DE POUSADAS: Apenas no Desktop -->
+        <div class="hidden md:grid grid-cols-3 gap-8">
+            {% for p in pousadas %}
+            <div class="cursor-pointer" onclick="window.location.href='{% url 'website:pousada_detalhe' p.id %}'">
+                <div class="relative h-[26rem] w-full rounded-3xl overflow-hidden shadow-md group hover:scale-[1.01] transition-transform duration-300">
+                    <!-- Imagem da Pousada Baseada no Nome ou Destaque -->
+                    {% if p.imagem_destaque %}
+                        <img src="{{ p.imagem_destaque.url }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% else %}
+                        {% if "Serra" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% elif "Sertão" in p.nome or "Sertao" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% elif "Praia" in p.nome %}
+                            <img src="https://images.unsplash.com/photo-1439066615861-d1af74d74000?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent z-10"></div>
+                    <div class="absolute bottom-6 left-6 right-6 z-20 text-white space-y-2 text-left">
+                        {% if "Serra" in p.nome %}
+                            <span class="px-3 py-1 bg-violet-600/30 text-violet-300 border border-violet-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Aconchego</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Lareira a lenha, vinhos nobres e o clima de montanha europeu em Tinguá.</p>
+                        {% elif "Sertão" in p.nome or "Sertao" in p.nome %}
+                            <span class="px-3 py-1 bg-amber-600/30 text-amber-300 border border-amber-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">História</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Pôr do sol deslumbrante, trilhas ecológicas e culinária típica rústica em Tinguá.</p>
+                        {% elif "Praia" in p.nome %}
+                            <span class="px-3 py-1 bg-emerald-600/30 text-emerald-300 border border-emerald-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Paraíso</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Piscinas naturais, coqueirais e areias brancas mornas em Pedro II.</p>
+                        {% else %}
+                            <span class="px-3 py-1 bg-slate-600/30 text-slate-300 border border-slate-400/30 rounded-full text-[9px] font-black uppercase tracking-wider">Hospedagem</span>
+                            <h3 class="text-lg font-black font-poppins">{{ p.nome }}</h3>
+                            <p class="text-[11px] text-white/70 leading-relaxed max-h-16 overflow-hidden">Conforto e qualidade premium em sua estadia.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    </div>
+
+    <!-- VITRINE DE ACOMODAÇÕES (Estilo Airbnb - Mobile Swipeable / Desktop Grid) -->
+    <section id="quartos" class="pt-8 pb-20 sm:pt-10 sm:pb-24 bg-stone-50 border-t border-b border-stone-200/50 relative z-10 select-none">
+        <div class="max-w-7xl mx-auto px-6 space-y-12">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div class="space-y-3 text-left">
+                    <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Nossas Acomodações</span>
+                    <h2 class="text-3xl font-black font-poppins text-ramiros-brown tracking-tight leading-none">Quartos prontos para você</h2>
+                </div>
+                <!-- Filtros Dinâmicos via HTMX -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 sm:pb-0">
+                    <button 
+                        hx-get="{% url 'website:home' %}?pousada=todas" 
+                        hx-target="#room-list-container" 
+                        hx-trigger="click"
+                        class="px-4 py-2 bg-ramiros-yellow text-ramiros-brown font-bold text-xs rounded-full border border-ramiros-yellow shadow-xs transition-colors shrink-0">
+                        Todos
+                    </button>
+                    {% for p in pousadas %}
+                        <button 
+                            hx-get="{% url 'website:home' %}?pousada={{ p.id }}" 
+                            hx-target="#room-list-container" 
+                            hx-trigger="click"
+                            class="px-4 py-2 bg-white text-ramiros-brown hover:bg-slate-50 font-bold text-xs rounded-full border border-slate-200 shadow-xs transition-colors shrink-0">
+                            {{ p.nome }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- CONTAINER DO PRODUTO (Lista dos Quartos - HTMX Injeta Aqui) -->
+            <div id="room-list-container">
+                {% include 'website/partials/room_list.html' %}
+            </div>
+        </div>
+    </section>
+
+    <!-- SEÇÃO INTERATIVA DE MAPAS DAS UNIDADES -->
+    <section class="py-16 sm:py-20 bg-[#fefdfb] border-b border-stone-200/40 select-none"
+             x-data="{
+                 mapMode: 'satellite',
+                 activeTab: 0,
+                 pousadas: [
+                     {% for p in pousadas %}
+                     {% if p.mapa_latitude and p.mapa_longitude %}
+                     {
+                         id: {{ p.id }},
+                         nome: '{{ p.nome }}',
+                         endereco: '{{ p.endereco }}',
+                         whatsapp: '{{ p.telefone_whatsapp }}',
+                         lat: '{{ p.mapa_latitude|unlocalize }}',
+                         lng: '{{ p.mapa_longitude|unlocalize }}',
+                         cor: '{{ p.cor_primaria_hex|default:"#b45309" }}',
+                         urlDetalhe: '{% url 'website:pousada_detalhe' p.id %}'
+                     }{% if not forloop.last %},{% endif %}
+                     {% endif %}
+                     {% endfor %}
+                 ]
+             }"
+             x-show="pousadas.length > 0"
+             x-cloak>
+        
+        <div class="max-w-7xl mx-auto px-6 space-y-12">
+            <!-- Header da Seção -->
+            <div class="text-center max-w-xl mx-auto space-y-3">
+                <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest">Nossa Localização</span>
+                <h2 class="text-3xl font-black font-poppins text-ramiros-brown tracking-tight leading-none">Explore nossas pousadas</h2>
+                <p class="text-xs text-ramiros-brown-light leading-relaxed">
+                    Localize nossas unidades físicas diretamente no mapa de satélite e encontre o caminho ideal para o seu descanso.
+                </p>
+            </div>
+
+            <!-- Seletores (Tabs) -->
+            <div class="flex justify-center gap-3 flex-wrap">
+                <template x-for="(p, index) in pousadas" :key="p.id">
+                    <button 
+                        @click="activeTab = index"
+                        class="px-5 py-2.5 rounded-full text-xs font-black tracking-wide border transition-all cursor-pointer flex items-center gap-2 shadow-sm"
+                        :class="activeTab === index 
+                            ? 'bg-amber-900 border-amber-900 text-white font-black scale-[1.03]' 
+                            : 'bg-white hover:bg-slate-50 border-stone-200 text-ramiros-brown font-bold'"
+                        :style="activeTab === index ? 'background-color: ' + p.cor + '; border-color: ' + p.cor + ';' : ''"
+                    >
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0"></i>
+                        <span x-text="p.nome"></span>
+                    </button>
+                </template>
+            </div>
+
+            <!-- Container de Exibição do Mapa e Infos -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch mt-8">
+                
+                <!-- Info Box da Pousada Ativa -->
+                <div class="lg:col-span-1 bg-white border border-stone-200/65 rounded-3xl p-6 shadow-xs flex flex-col justify-between space-y-6">
+                    <div class="space-y-5">
+                        <div class="flex items-start justify-between gap-3 border-b border-stone-100 pb-3">
+                            <div class="space-y-1 text-left">
+                                <span class="text-[9px] font-black text-amber-600 uppercase tracking-widest leading-none">Unidade Selecionada</span>
+                                <h3 class="text-base font-black font-poppins text-ramiros-brown leading-tight" x-text="pousadas[activeTab].nome"></h3>
+                            </div>
+                            <!-- Seletor de Modo de Mapa -->
+                            <div class="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg shrink-0 border border-stone-200/50">
+                                <button type="button" @click="mapMode = 'roadmap'"
+                                        :class="mapMode === 'roadmap' ? 'bg-white text-ramiros-brown shadow-xs font-black' : 'text-slate-400 hover:text-ramiros-brown font-bold'"
+                                        class="px-2 py-1 text-[8px] rounded-md border-none transition-all cursor-pointer uppercase tracking-wider">
+                                    Mapa
+                                </button>
+                                <button type="button" @click="mapMode = 'satellite'"
+                                        :class="mapMode === 'satellite' ? 'bg-white text-ramiros-brown shadow-xs font-black' : 'text-slate-400 hover:text-ramiros-brown font-bold'"
+                                        class="px-2 py-1 text-[8px] rounded-md border-none transition-all cursor-pointer uppercase tracking-wider">
+                                    Satélite
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-left">
+                            <!-- Endereço -->
+                            <div class="flex items-start gap-3">
+                                <div class="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0"
+                                     :style="'background-color: ' + pousadas[activeTab].cor + '15; color: ' + pousadas[activeTab].cor">
+                                    <i data-lucide="map-pin" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Endereço</span>
+                                    <span class="text-xs font-bold text-ramiros-brown" x-text="pousadas[activeTab].endereco"></span>
+                                </div>
+                            </div>
+
+                            <!-- Coordenadas -->
+                            <div class="flex items-start gap-3">
+                                <div class="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0"
+                                     :style="'background-color: ' + pousadas[activeTab].cor + '15; color: ' + pousadas[activeTab].cor">
+                                    <i data-lucide="compass" class="w-4.5 h-4.5"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">GPS</span>
+                                    <span class="text-xs font-mono font-bold text-slate-700" x-text="parseFloat(pousadas[activeTab].lat).toFixed(6) + ', ' + parseFloat(pousadas[activeTab].lng).toFixed(6)"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="space-y-2.5">
+                        <a :href="'https://www.google.com/maps/search/?api=1&query=' + pousadas[activeTab].lat + ',' + pousadas[activeTab].lng"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           :style="'background-color: ' + pousadas[activeTab].cor + ';'"
+                           class="inline-flex items-center justify-center gap-2 w-full py-3.5 text-white text-xs font-black rounded-2xl shadow-md hover:shadow-lg transition-all active:scale-[0.98] border-none text-center cursor-pointer">
+                            <i data-lucide="navigation" class="w-4 h-4 text-white"></i>
+                            <span>ABRIR ROTA NO GPS / GOOGLE MAPS</span>
+                        </a>
+                        <a :href="pousadas[activeTab].urlDetalhe"
+                           class="inline-flex items-center justify-center gap-2 w-full py-3 border border-stone-200 hover:bg-stone-50 text-ramiros-brown text-xs font-black rounded-2xl transition-all active:scale-[0.98] text-center cursor-pointer">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                            <span>VER ACOMODAÇÕES</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Google Maps Embed Frame -->
+                <div class="lg:col-span-2 relative group min-h-[350px]">
+                    <!-- Glass effect frame overlay border -->
+                    <div class="absolute -inset-0.5 rounded-3xl blur opacity-15 group-hover:opacity-25 transition duration-1000"
+                         :style="'background-image: linear-gradient(to right, ' + pousadas[activeTab].cor + ', #f59e0b)'"></div>
+                    <div class="relative w-full h-full min-h-[350px] rounded-3xl overflow-hidden shadow-lg border border-stone-200 bg-stone-50">
+                        <iframe 
+                            :src="'https://maps.google.com/maps?q=' + pousadas[activeTab].lat + ',' + pousadas[activeTab].lng + (mapMode === 'satellite' ? '&t=h' : '') + '&z=17&output=embed'"
+                            class="w-full h-full min-h-[350px] border-none"
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL DE CHECKOUT EM 3 PASSOS (AlpineJS) -->
+    <div x-show="bookingModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 select-none" x-cloak>
+        <!-- Overlay -->
+        <div @click="bookingModalOpen = false" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"></div>
+        
+        <!-- Conteúdo do Modal -->
+        <div x-show="bookingModalOpen" x-transition.scale class="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md p-6 overflow-hidden flex flex-col gap-6 z-10 border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header Modal -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-black uppercase text-slate-400 tracking-widest" x-text="selectedPousadaName"></span>
+                    <h3 class="text-base font-extrabold text-ramiros-brown" x-text="selectedCategoryName"></h3>
+                </div>
+                <button @click="bookingModalOpen = false" class="text-slate-400 hover:text-ramiros-brown p-1 rounded-full hover:bg-slate-100 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Abas Operacionais do Checkout 3 Passos (Visão Lógica) -->
+            <div x-data="{ step: 1 }" class="space-y-5">
+                <!-- PASSO 1: Seleção de Período -->
+                <div x-show="step === 1" class="space-y-4">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-amber-600">Passo 1: Selecione o Período</h4>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-black uppercase text-slate-400">Datas de Check-in e Check-out</label>
+                        <div class="relative">
+                            <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-5 h-5 text-slate-400"></i>
+                            <input type="text" id="modal-dates" readonly placeholder="Selecione as noites" 
+                                   class="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 text-xs font-bold text-ramiros-brown focus:ring-1 focus:ring-ramiros-yellow focus:border-ramiros-yellow">
+                        </div>
+                    </div>
+
+                    <!-- Faturamento Dinâmico -->
+                    <div x-show="totalNights > 0" class="bg-amber-500/10 rounded-2xl p-4 border border-amber-600/10 space-y-2 flex flex-col">
+                        <div class="flex items-center justify-between text-xs text-ramiros-brown/80">
+                            <span>Diária sugerida:</span>
+                            <span class="font-bold">R$ <span x-text="selectedPrice.toFixed(2)"></span></span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-ramiros-brown/80">
+                            <span>Noites selecionadas:</span>
+                            <span class="font-bold"><span x-text="totalNights"></span> noites</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm font-extrabold text-ramiros-brown pt-2 border-t border-amber-600/10">
+                            <span>Valor Total Estimado:</span>
+                            <span class="text-brand">R$ <span x-text="totalPrice.toFixed(2)"></span></span>
+                        </div>
+                    </div>
+
+                    <button @click="if(totalNights > 0) step = 2; else alert('Escolha o período no calendário para prosseguir.')" 
+                            class="w-full h-12 bg-ramiros-yellow text-ramiros-brown font-black text-xs uppercase tracking-wider rounded-2xl shadow-md hover:bg-ramiros-yellow-hover transition-all flex items-center justify-center gap-2">
+                        <span>Avançar para Meus Dados</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- PASSO 2: Dados do Cliente -->
+                <div x-show="step === 2" class="space-y-4" style="display: none;">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-amber-600">Passo 2: Insira Seus Contatos</h4>
+                    
+                    <div class="space-y-3">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400">Nome Completo</label>
+                            <input type="text" x-model="guestName" placeholder="Ex: Mateus Silva" required
+                                   class="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-xs font-bold text-ramiros-brown focus:ring-1 focus:ring-ramiros-yellow">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400">WhatsApp de Contato</label>
+                            <input type="text" x-model="guestPhone" placeholder="Ex: 5511999999999" required
+                                   class="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-xs font-bold text-ramiros-brown focus:ring-1 focus:ring-ramiros-yellow">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] font-black uppercase text-slate-400">E-mail</label>
+                            <input type="email" x-model="guestEmail" placeholder="seuemail@exemplo.com" required
+                                   class="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-xs font-bold text-ramiros-brown focus:ring-1 focus:ring-ramiros-yellow">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button @click="step = 1" class="w-1/3 h-12 border border-slate-300 rounded-2xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all">Voltar</button>
+                        <button @click="if(guestName && guestPhone && guestEmail) step = 3; else alert('Por favor, preencha todos os campos.')" 
+                                class="w-2/3 h-12 bg-ramiros-yellow text-ramiros-brown font-black text-xs uppercase tracking-wider rounded-2xl shadow-md hover:bg-ramiros-yellow-hover transition-all flex items-center justify-center gap-2">
+                            <span>Avançar para Resumo</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASSO 3: Resumo & Confirmação no WhatsApp -->
+                <div x-show="step === 3" class="space-y-4" style="display: none;">
+                    <h4 class="text-xs font-black uppercase tracking-wider text-amber-600">Passo 3: Resumo da Reserva</h4>
+                    
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-3xl text-xs text-ramiros-brown space-y-3">
+                        <p class="flex justify-between"><span>🏨 Unidade:</span><span class="font-bold text-right" x-text="selectedPousadaName"></span></p>
+                        <p class="flex justify-between"><span>🛏️ Quarto:</span><span class="font-bold text-right" x-text="selectedCategoryName + ' (Q. ' + selectedRoom + ')'"></span></p>
+                        <p class="flex justify-between"><span>📅 Período:</span><span class="font-bold text-right" x-text="checkin + ' a ' + checkout"></span></p>
+                        <p class="flex justify-between"><span>👤 Hóspede:</span><span class="font-bold text-right" x-text="guestName"></span></p>
+                        <p class="flex justify-between pt-2 border-t border-slate-200 text-sm font-extrabold"><span>Valor Final:</span><span class="text-brand">R$ <span x-text="totalPrice.toFixed(2)"></span></span></p>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button @click="step = 2" class="w-1/3 h-12 border border-slate-300 rounded-2xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-all">Voltar</button>
+                        <button @click="sendWhatsApp()" 
+                                class="w-2/3 h-12 bg-green-500 hover:bg-green-600 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="message-square" class="w-4.5 h-4.5"></i>
+                            <span>Confirmar no WhatsApp</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'website/partials/modal_disponibilidade.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<div class="hidden">
+    {% csrf_token %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Inicializa o flatpickr no buscador principal da Home
+        flatpickr('#search-dates', {
+            mode: 'range',
+            minDate: 'today',
+            dateFormat: 'd/m/Y',
+            locale: 'pt',
+            clickOpens: false
+        });
+
+        // Inicializa o carrossel de pousadas (Experiências)
+        if (document.querySelector('.pousadas-swiper')) {
+            const pousadasSwiper = new Swiper('.pousadas-swiper', {
+                loop: true,
+                centeredSlides: true,
+                slidesPerView: 'auto',
+                spaceBetween: 16,
+                slideToClickedSlide: true,
+                autoplay: {
+                    delay: 2000,
+                    disableOnInteraction: false,
+                },
+                breakpoints: {
+                    768: {
+                        spaceBetween: 24,
+                    }
+                }
+            });
+        }
+
+        // Se o parâmetro ?cart=1 estiver na URL, abre o carrinho automaticamente
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('cart') === '1') {
+            setTimeout(() => {
+                if (typeof toggleNavieCart === 'function') {
+                    toggleNavieCart();
+                    // Limpa o parâmetro da URL sem recarregar a tela
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            }, 300);
+        }
+    });
+
+    function adicionarAoCarrinho(categoriaId) {
+        const datesInput = document.getElementById('search-dates');
+        if (!datesInput) return;
+        const fp = datesInput._flatpickr;
+        if (!fp || fp.selectedDates.length < 2) {
+            alert('Por favor, selecione o período de entrada e saída (check-in e check-out) no buscador no topo da página antes de reservar.');
+            datesInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => { fp.open(); }, 550);
+            return;
+        }
+        
+        // Formata as datas para o formato do banco YYYY-MM-DD
+        const pad = (n) => n.toString().padStart(2, '0');
+        const checkin = `${fp.selectedDates[0].getFullYear()}-${pad(fp.selectedDates[0].getMonth()+1)}-${pad(fp.selectedDates[0].getDate())}`;
+        const checkout = `${fp.selectedDates[1].getFullYear()}-${pad(fp.selectedDates[1].getMonth()+1)}-${pad(fp.selectedDates[1].getDate())}`;
+        
+        const formData = new FormData();
+        formData.append('checkin', checkin);
+        formData.append('checkout', checkout);
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+        
+        fetch(`/carrinho/adicionar/${categoriaId}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Redireciona com ?cart=1 para abrir automaticamente o carrinho overlay
+                window.location.href = window.location.pathname + '?cart=1';
+            } else {
+                alert(data.error || 'Erro ao adicionar acomodação ao carrinho.');
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão ao processar reserva.');
+        });
+    }
+</script>
+{% endblock %}

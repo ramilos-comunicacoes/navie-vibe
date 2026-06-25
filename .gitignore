@@ -48,3 +48,12 @@ $RECYCLE.BIN/
 tailwindcss-windows-x64.exe
 node_modules/
 scratch/
+
+# Temporary and backup files
+*.bak
+*.bak_curr
+*.zip
+rendered_dashboard.html
+scratch_diff.txt
+scratch_diff_utf8.txt
+scratch_head_dashboard.html

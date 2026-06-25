@@ -6,150 +6,623 @@
 {% block page_subtitle %}Controle de estabelecimentos cadastrados, branding e contas de parceiros{% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'administracao:hotel_create' %}" class="btn-header btn-header-primary">
-    <i data-lucide="plus" class="w-4 h-4"></i>
-    Adicionar Hotel
-</a>
+<div class="flex items-center gap-2">
+    <!-- Adicionar Hotel (apenas em viewMode === 'list') -->
+    <a x-show="viewMode === 'list'" href="{% url 'administracao:hotel_create' %}" class="btn-header btn-header-primary text-xs py-2 px-4 inline-flex items-center gap-1.5">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Adicionar Hotel</span>
+    </a>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-8">
+<div class="max-w-7xl mx-auto" 
+     x-data="{ 
+         viewMode: 'list', 
+         selectedHotel: null,
+         diariaSimulada: 150,
+         taxaFixaMP: 0.40,
+         taxaPercentualMP: 3.99,
+         hoteis: [],
+         activeTab: 'cadastro',
+         addDocUrl: '',
+         addTermoUrl: '',
+         addFaixaUrl: '',
+         termoVersaoInput: '1.0',
+         
+         // Calculadora de Split de Lucro Reativa
+         get valorTotalCliente() {
+             if (!this.selectedHotel) return 0;
+             let diaria = parseFloat(this.diariaSimulada) || 0;
+             let taxaFixa = 0;
+             let taxaPct = 0;
+             
+             if (this.selectedHotel.usar_tarifas_faixa && this.selectedHotel.tarifas_faixa && this.selectedHotel.tarifas_faixa.length > 0) {
+                 // Encontra a faixa que engloba a diária
+                 let match = this.selectedHotel.tarifas_faixa.find(f => diaria >= parseFloat(f.valor_minimo) && diaria <= parseFloat(f.valor_maximo));
+                 if (match) {
+                     taxaFixa = parseFloat(match.taxa_fixa) || 0;
+                     taxaPct = parseFloat(match.taxa_percentual) || 0;
+                 } else {
+                     // Fallback para taxas padrões do hotel
+                     taxaFixa = parseFloat(this.selectedHotel.taxa_fixa_navie) || 0;
+                     taxaPct = parseFloat(this.selectedHotel.taxa_percentual_navie) || 0;
+                 }
+             } else {
+                 taxaFixa = parseFloat(this.selectedHotel.taxa_fixa_navie) || 0;
+                 taxaPct = parseFloat(this.selectedHotel.taxa_percentual_navie) || 0;
+             }
+             return diaria + taxaFixa + (diaria * taxaPct / 100);
+         },
+         
+         get taxaGateway() {
+             let total = this.valorTotalCliente;
+             let pct = parseFloat(this.taxaPercentualMP) || 0;
+             let fixa = parseFloat(this.taxaFixaMP) || 0;
+             return (total * pct / 100) + fixa;
+         },
+         
+         get repasseHotel() {
+             return parseFloat(this.diariaSimulada) || 0;
+         },
+         
+         get lucroLiquidoNavie() {
+             let total = this.valorTotalCliente;
+             let repasse = this.repasseHotel;
+             let gateway = this.taxaGateway;
+             return total - repasse - gateway;
+         },
+         
+         get percentTrafego() {
+             if (!this.selectedHotel) return 0;
+             let limite = parseInt(this.selectedHotel.limite_trafego_gb) || 1;
+             let consumo = parseFloat(this.selectedHotel.consumo_trafego_gb) || 0;
+             return Math.min(100, Math.round(consumo * 100 / limite));
+         },
+
+         selectHotel(hotel) {
+             this.selectedHotel = hotel;
+             this.viewMode = 'detail';
+             this.activeTab = 'cadastro';
+             this.addDocUrl = '/sistemadeadministracao/hoteis/' + hotel.id + '/documentos/adicionar/';
+             this.addTermoUrl = '/sistemadeadministracao/hoteis/' + hotel.id + '/termos/registrar/';
+             this.addFaixaUrl = '/sistemadeadministracao/hoteis/' + hotel.id + '/tarifas-faixa/salvar/';
+             // Default simulated price using first room price if available
+             if (hotel.quartos && hotel.quartos.length > 0) {
+                 this.diariaSimulada = parseFloat(hotel.quartos[0].preco);
+             } else {
+                 this.diariaSimulada = 150;
+             }
+             if (window.lucide) {
+                 setTimeout(() => lucide.createIcons(), 50);
+             }
+             window.dispatchEvent(new CustomEvent('hotel-selected', { detail: hotel }));
+         },
+
+         init() {
+             this.hoteis = window.hoteisData || [];
+             window.addEventListener('go-to-list', () => {
+                 this.viewMode = 'list';
+                 this.selectedHotel = null;
+                 window.dispatchEvent(new CustomEvent('hotel-list'));
+             });
+             window.addEventListener('tab-changed', (e) => {
+                 this.activeTab = e.detail;
+             });
+         }
+     }">
     
-    <!-- Métricas da Hotelaria -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <!-- Total Hoteis -->
-        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-blue-500">
-            <div class="space-y-1">
-                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Total de Hotéis</p>
-                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_hoteis }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                <i data-lucide="bed-double" class="w-6 h-6"></i>
-            </div>
+    <!-- SUB-CABEÇALHO COMPACTO E FIXO DE MÉTRICAS -->
+    <div x-show="viewMode === 'list'" class="glass-card rounded-2xl p-4 px-6 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold border border-slate-200/50 dark:border-navie-border/60 shadow-sm mb-6 sticky top-0 z-30">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Total de Hotéis:</span>
+            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ total_hoteis }}</span>
         </div>
-
-        <!-- Ativos -->
-        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-emerald-500">
-            <div class="space-y-1">
-                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Estabelecimentos Ativos</p>
-                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ hoteis_ativos }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                <i data-lucide="shield-check" class="w-6 h-6"></i>
-            </div>
+        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Estabelecimentos Ativos:</span>
+            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ hoteis_ativos }}</span>
         </div>
-
-        <!-- Em Destaque -->
-        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-amber-500">
-            <div class="space-y-1">
-                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Hotéis em Destaque</p>
-                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ hoteis_destaque }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-                <i data-lucide="star" class="w-6 h-6"></i>
-            </div>
+        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Em Destaque:</span>
+            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ hoteis_destaque }}</span>
         </div>
-
-        <!-- Total de Quartos -->
-        <div class="glass-card rounded-2xl p-6 flex items-center justify-between shadow-sm relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border-l-4 border-purple-500">
-            <div class="space-y-1">
-                <p class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">Categorias de Quarto</p>
-                <p class="text-3xl font-black text-slate-800 dark:text-white">{{ total_quartos }}</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
-                <i data-lucide="boxes" class="w-6 h-6"></i>
-            </div>
+        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Categorias de Quarto:</span>
+            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ total_quartos }}</span>
         </div>
-
     </div>
 
-    <!-- Lista de Estabelecimentos -->
-    <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
+    <!-- TELA 1: LISTAGEM DE POUSADAS -->
+    <div x-show="viewMode === 'list'" class="space-y-6 animate-in fade-in duration-300">
         
-        <div class="p-6 border-b border-slate-200/50 dark:border-navie-border">
-            <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Hotéis Cadastrados</h3>
-            <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Gerencie chaves, marcas e credenciais administrativas de cada hospedagem</p>
-        </div>
+        <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
+            <div class="p-6 border-b border-slate-200/50 dark:border-navie-border">
+                <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Hotéis Cadastrados</h3>
+                <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Selecione uma hospedagem para gerenciar subdomínios, taxas do marketplace e tráfego</p>
+            </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50/50 dark:bg-black/10 border-b border-slate-200/50 dark:border-navie-border">
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Logo / Nome</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Empresa CNPJ</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Cidade / UF</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Contato / WhatsApp</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Destaque</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-navie-border/60">
-                    {% for hotel in hoteis %}
-                    <tr class="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3">
-                                {% if hotel.logo %}
-                                    <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-slate-200/50 dark:border-navie-border">
-                                {% else %}
-                                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-white/10 text-blue-600 dark:text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                                        {{ hotel.nome|slice:":2"|upper }}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 dark:bg-black/10 border-b border-slate-200/50 dark:border-navie-border">
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Logo / Nome</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Empresa CNPJ</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Cidade / UF</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Comissão / Taxa Fixa</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Status</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">Destaque</th>
+                            <th class="py-4 px-6 text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-navie-border/60">
+                        <template x-for="h in hoteis" :key="h.id">
+                            <tr class="hover:bg-slate-50/30 dark:hover:bg-white/5 transition-colors cursor-pointer" @click="selectHotel(h)">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <template x-if="h.logo_url">
+                                            <img :src="h.logo_url" :alt="h.nome" class="w-10 h-10 rounded-xl object-cover bg-white shadow-sm border border-slate-200/50 dark:border-navie-border">
+                                        </template>
+                                        <template x-if="!h.logo_url">
+                                            <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-white/10 text-blue-600 dark:text-white flex items-center justify-center font-bold text-sm shadow-sm" x-text="h.nome.slice(0,2).toUpperCase()">
+                                            </div>
+                                        </template>
+                                        <div>
+                                            <div class="font-bold text-slate-800 dark:text-white text-sm" x-text="h.nome"></div>
+                                            <div class="text-[10px] font-mono text-slate-400 dark:text-slate-450 mt-0.5" x-text="'/hoteis/' + h.slug"></div>
+                                        </div>
                                     </div>
-                                {% endif %}
-                                <div>
-                                    <div class="font-bold text-slate-800 dark:text-white text-sm">{{ hotel.nome }}</div>
-                                    <div class="text-[10px] font-mono text-slate-400 dark:text-slate-400 mt-0.5">/hoteis/{{ hotel.slug }}</div>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-350">
+                                    <template x-if="h.cnpj">
+                                        <div>
+                                            <div class="font-semibold" x-text="h.razao_social"></div>
+                                            <div class="text-[11px] text-slate-400 dark:text-slate-450 mt-0.5" x-text="h.cnpj"></div>
+                                        </div>
+                                    </template>
+                                    <template x-if="!h.cnpj">
+                                        <span class="text-rose-500 font-bold text-xs">Sem Empresa Vinculada</span>
+                                    </template>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-350 font-medium" x-text="h.cidade + ' / ' + h.estado">
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="text-xs font-semibold text-slate-800 dark:text-white" x-text="h.taxa_percentual_navie + '%'"></div>
+                                    <div class="text-[10px] text-slate-400 dark:text-slate-450 mt-0.5" x-text="'+ R$ ' + parseFloat(h.taxa_fixa_navie).toFixed(2)"></div>
+                                </td>
+                                <td class="py-4 px-6 text-center whitespace-nowrap" @click.stop>
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                          :class="h.status === 'ativo' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20'"
+                                          x-text="h.status === 'ativo' ? 'Ativo' : 'Inativo'">
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-center" @click.stop>
+                                    <i data-lucide="star" class="w-5 h-5 mx-auto" :class="h.destaque ? 'text-amber-500 fill-amber-500' : 'text-slate-300 dark:text-slate-600'"></i>
+                                </td>
+                                <td class="py-4 px-6 text-right whitespace-nowrap" @click.stop>
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button @click="selectHotel(h)" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50/80 hover:bg-blue-100 text-blue-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors" title="Gerenciar Configurações">
+                                            <i data-lucide="sliders" class="w-4 h-4"></i>
+                                        </button>
+                                        <a :href="h.edit_url" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors" title="Edição Completa">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="hoteis.length === 0">
+                            <tr>
+                                <td colspan="7" class="py-8 px-6 text-center text-sm font-semibold text-slate-400 dark:text-slate-400">
+                                    Nenhum hotel ou chalé cadastrado no sistema.
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TELA 2: DASHBOARD DINÂMICO E COMPLETO DO HOTEL SELECIONADO -->
+    <div x-show="viewMode === 'detail'" class="space-y-6 animate-in fade-in duration-300" style="display: none;">
+
+        <!-- LAYOUT DE PAINÉIS DE ACORDO COM A ABA ATIVA -->
+        <div x-show="selectedHotel">
+            
+            <!-- ABA 1: GERAL & SUBDOMÍNIO -->
+            <div x-show="activeTab === 'cadastro'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
+                <!-- Coluna Esquerda: Geral e Tráfego -->
+                <div class="space-y-6">
+                    <!-- Tráfego -->
+                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-blue-500" data-lucide="activity"></i>
+                            <span>Monitoramento & Tráfego</span>
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl">
+                                <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none">Visualizações Totais</p>
+                                <div class="flex items-baseline gap-2 mt-2">
+                                    <span class="text-2xl font-black text-slate-800 dark:text-white" x-text="selectedHotel.visualizacoes"></span>
                                 </div>
                             </div>
-                        </td>
-                        <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300">
-                            {% if hotel.empresa %}
-                                <div class="font-semibold">{{ hotel.empresa.razao_social }}</div>
-                                <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ hotel.empresa.cnpj }}</div>
-                            {% else %}
-                                <span class="text-rose-500 font-bold text-xs">Sem Empresa Vinculada</span>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-6 text-sm text-slate-600 dark:text-slate-300 font-medium">
-                            {{ hotel.local.cidade }} / {{ hotel.local.estado }}
-                        </td>
-                        <td class="py-4 px-6">
-                            <div class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ hotel.whatsapp|default:"-" }}</div>
-                            <div class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5">{{ hotel.empresa.email_contato|default:"-" }}</div>
-                        </td>
-                        <td class="py-4 px-6 text-center whitespace-nowrap">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                                {% if hotel.status == 'ativo' %}bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20
-                                {% else %}bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20{% endif %}">
-                                {{ hotel.get_status_display }}
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            {% if hotel.destaque %}
-                                <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-500 mx-auto"></i>
-                            {% else %}
-                                <i data-lucide="star" class="w-5 h-5 text-slate-300 dark:text-slate-600 mx-auto"></i>
-                            {% endif %}
-                        </td>
-                        <td class="py-4 px-6 text-right whitespace-nowrap">
-                            <a href="{% url 'administracao:hotel_edit' hotel.pk %}" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50/80 hover:bg-blue-100 text-blue-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors" title="Editar Hotel">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="py-8 px-6 text-center text-sm font-semibold text-slate-400 dark:text-slate-400">
-                            Nenhum hotel ou chalé cadastrado no sistema.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl">
+                                <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none">Subdomínio Ativo</p>
+                                <div class="flex items-center gap-1.5 mt-3">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-white truncate" x-text="selectedHotel.slug + '.navievibe.com'"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2.5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-700 dark:text-slate-250 uppercase tracking-wide">Tráfego de Dados Mensal</span>
+                                <span class="font-extrabold text-blue-600 dark:text-blue-400" x-text="parseFloat(selectedHotel.consumo_trafego_gb).toFixed(2) + ' GB / ' + selectedHotel.limite_trafego_gb + ' GB'"></span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-black/40 rounded-full h-3 border border-slate-200/50 dark:border-navie-border/30 overflow-hidden p-0.5">
+                                <div class="h-2 rounded-full transition-all duration-500" 
+                                     :class="percentTrafego > 90 ? 'bg-rose-500' : (percentTrafego > 75 ? 'bg-amber-500' : 'bg-blue-600')"
+                                     :style="{ width: percentTrafego + '%' }"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[9px] font-bold text-slate-450 uppercase tracking-wider">
+                                <span x-text="percentTrafego + '% consumido'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Coluna Direita: Geral Form, Suporte e Quartos -->
+                <div class="space-y-6">
+                    <!-- Configurações Gerais -->
+                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-purple-500" data-lucide="settings"></i>
+                            <span>Configurações Básicas</span>
+                        </h3>
+                        <form :action="selectedHotel.save_url" method="POST" class="space-y-4">
+                            {% csrf_token %}
+                            <!-- Campos invisíveis para as taxas no aba 1 para não perder no POST -->
+                            <input type="hidden" name="taxa_fixa_navie" :value="selectedHotel.taxa_fixa_navie">
+                            <input type="hidden" name="taxa_percentual_navie" :value="selectedHotel.taxa_percentual_navie">
+                            <input type="hidden" name="limite_trafego_gb" :value="selectedHotel.limite_trafego_gb">
+                            <input type="hidden" name="consumo_trafego_gb" :value="selectedHotel.consumo_trafego_gb">
+                            <input type="hidden" name="usar_tarifas_faixa" :value="selectedHotel.usar_tarifas_faixa ? 'on' : ''">
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Subdomínio (Slug)</label>
+                                    <input type="text" name="slug" :value="selectedHotel.slug" required class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Status da Conta</label>
+                                    <select name="status" x-model="selectedHotel.status" class="w-full">
+                                        <option value="ativo">Ativo</option>
+                                        <option value="inativo">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2.5 py-2">
+                                <input type="checkbox" id="venda_online_detail" name="venda_online" x-model="selectedHotel.venda_online" class="rounded text-blue-600 focus:ring-blue-500 border-slate-350 dark:border-navie-border">
+                                <label for="venda_online_detail" class="text-[10px] font-black text-slate-650 dark:text-slate-250 uppercase tracking-wider cursor-pointer">Permitir Venda Online pelo Site</label>
+                            </div>
+                            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-navie-border/40">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-5 py-2 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-md">Salvar Alterações</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Canais de Atendimento -->
+                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
+                            <i class="w-4 h-4 text-emerald-500" data-lucide="phone-call"></i>
+                            <span>Atendimento Rápido</span>
+                        </h3>
+                        <div class="flex gap-3">
+                            <a :href="'https://wa.me/' + (selectedHotel.whatsapp ? selectedHotel.whatsapp.replace(/\D/g,'') : '') + '?text=' + encodeURIComponent('Olá ' + selectedHotel.nome + ', aqui é a equipe de suporte da plataforma Naviê Vibe.')" 
+                               target="_blank" 
+                               class="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
+                                <i class="w-4 h-4" data-lucide="phone"></i>
+                                <span>WhatsApp</span>
+                            </a>
+                            <a :href="'mailto:' + selectedHotel.email + '?subject=' + encodeURIComponent('Suporte Técnico Naviê Vibe - ' + selectedHotel.nome)" 
+                               class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
+                                <i class="w-4 h-4" data-lucide="mail"></i>
+                                <span>E-mail</span>
+                            </a>
+                        </div>
+                 </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: MÍDIAS (FOTOS/VÍDEOS) -->
+            <div x-show="activeTab === 'midias'" class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60 animate-in fade-in duration-200" style="display: none;">
+                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                    <i class="w-4 h-4 text-purple-500" data-lucide="image"></i>
+                    <span>Galeria de Branding & Fotos</span>
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <!-- Logo Mini -->
+                    <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-3 rounded-2xl text-center">
+                        <span class="block text-[8px] font-black text-slate-450 uppercase tracking-wider mb-2">Logo Oficial</span>
+                        <template x-if="selectedHotel.logo_url">
+                            <img :src="selectedHotel.logo_url" alt="Logo" class="w-20 h-20 object-contain mx-auto bg-white p-1 rounded-xl shadow-xs border border-slate-200/50 dark:border-navie-border">
+                        </template>
+                        <template x-if="!selectedHotel.logo_url">
+                            <div class="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-xl flex items-center justify-center text-slate-350 text-xs font-semibold mx-auto">Vazio</div>
+                        </template>
+                    </div>
+                    <!-- Banner Mini -->
+                    <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-3 rounded-2xl text-center">
+                        <span class="block text-[8px] font-black text-slate-455 uppercase tracking-wider mb-2">Banner Site</span>
+                        <div class="w-full h-20 bg-slate-100 dark:bg-white/5 rounded-xl flex items-center justify-center text-slate-350 text-xs font-semibold mx-auto overflow-hidden">
+                            <span class="text-[10px] font-bold">Preview indisponível</span>
+                        </div>
+                    </div>
+                    <!-- Fotos das acomodações -->
+                    <template x-for="q in selectedHotel.quartos">
+                        <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-3 rounded-2xl text-center">
+                            <span class="block text-[8px] font-black text-slate-455 uppercase tracking-wider mb-1 truncate" x-text="q.nome"></span>
+                            <span class="block text-[9px] font-bold text-blue-600 dark:text-blue-400 mb-2" x-text="'R$ ' + parseFloat(q.preco).toFixed(2)"></span>
+                            <div class="w-20 h-14 bg-blue-100 dark:bg-white/10 text-blue-600 dark:text-white rounded-xl flex items-center justify-center font-bold text-xs mx-auto shadow-xs" x-text="q.nome.slice(0,2).toUpperCase()"></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- ABA 4: DOCUMENTOS -->
+            <div x-show="activeTab === 'documentos'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200" style="display: none;">
+                <!-- Envio de Documentos -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-blue-500" data-lucide="upload-cloud"></i>
+                        <span>Upload de Documento / Contrato</span>
+                    </h3>
+                    <form :action="addDocUrl" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Nome de Identificação</label>
+                            <input type="text" name="nome" required class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Selecionar Arquivo (PDF, Imagens)</label>
+                            <input type="file" name="arquivo" required class="w-full text-xs font-semibold text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-white/10 dark:file:text-white">
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm">Enviar Arquivo</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Arquivos Vinculados -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
+                        <i class="w-4 h-4 text-purple-500" data-lucide="files"></i>
+                        <span>Arquivos e Contratos Ativos</span>
+                    </h3>
+                    <div class="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                        <template x-for="d in selectedHotel.documentos" :key="d.id">
+                            <div class="flex items-center justify-between p-3.5 bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/30 rounded-2xl">
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-white text-xs" x-text="d.nome"></div>
+                                    <div class="text-[9px] text-slate-400 dark:text-slate-450 mt-0.5" x-text="'Enviado em: ' + d.data_upload"></div>
+                                </div>
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a :href="d.url" target="_blank" class="w-7 h-7 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white flex items-center justify-center transition-colors" title="Visualizar/Download">
+                                        <i class="w-4 h-4" data-lucide="external-link"></i>
+                                    </a>
+                                    <a :href="d.delete_url" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center transition-colors" title="Excluir Documento">
+                                        <i class="w-4 h-4" data-lucide="trash-2"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!selectedHotel.documentos || selectedHotel.documentos.length === 0">
+                            <div class="py-8 text-center text-xs font-semibold text-slate-400 dark:text-slate-455 italic">
+                                Nenhum documento ou contrato arquivado.
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 5: TERMOS DE USO -->
+            <div x-show="activeTab === 'termos'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200" style="display: none;">
+                <!-- Registrar Aceite -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-blue-500" data-lucide="check-square"></i>
+                        <span>Registrar Aceite de Termos</span>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-450 mb-4 leading-normal">
+                        Utilize esta ferramenta para registrar manualmente que o proprietário aceitou os termos de uso vigentes da plataforma Naviê Vibe (por exemplo, após assinatura física ou concordância verbal formal).
+                    </p>
+                    <form :action="addTermoUrl" method="POST" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Versão do Termo</label>
+                            <input type="text" name="versao_termo" x-model="termoVersaoInput" required class="w-full bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white">
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm">Registrar Aceite</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Histórico de Aceites -->
+                <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
+                        <i class="w-4 h-4 text-purple-500" data-lucide="clock"></i>
+                        <span>Histórico de Acordos</span>
+                    </h3>
+                    <div class="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                        <template x-for="t in selectedHotel.termos_adesao" :key="t.id">
+                            <div class="p-3 bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/30 rounded-2xl text-xs space-y-1">
+                                <div class="flex justify-between items-center font-bold">
+                                    <span class="text-blue-600 dark:text-blue-400" x-text="'Termos v' + t.versao_termo"></span>
+                                    <span class="text-slate-500 text-[10px]" x-text="t.data_aceite"></span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 dark:text-slate-450">
+                                    <div><strong class="text-slate-650 dark:text-slate-300">IP Origem:</strong> <span x-text="t.ip_origem"></span></div>
+                                    <div><strong class="text-slate-655 dark:text-slate-300">Administrador:</strong> <span x-text="t.usuario"></span></div>
+                                    <div class="truncate"><strong class="text-slate-655 dark:text-slate-300">Navegador:</strong> <span x-text="t.dispositivo"></span></div>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="!selectedHotel.termos_adesao || selectedHotel.termos_adesao.length === 0">
+                            <div class="py-8 text-center text-xs font-semibold text-slate-400 dark:text-slate-455 italic">
+                                Nenhum aceite registrado para este estabelecimento.
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 6: AUDIT LOGS -->
+            <div x-show="activeTab === 'logs'" class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60 animate-in fade-in duration-200" style="display: none;">
+                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
+                    <i class="w-4 h-4 text-purple-500" data-lucide="shield-alert"></i>
+                    <span>Log de Auditoria Administrativa</span>
+                </h3>
+                <div class="overflow-x-auto max-h-[360px] no-scrollbar">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 dark:bg-black/10 border-b border-slate-200/50 dark:border-navie-border">
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Data / Hora</th>
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">Responsável</th>
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Campo</th>
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">De</th>
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Para</th>
+                                <th class="py-2 px-3 font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">IP / Dispositivo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="l in selectedHotel.audit_logs" :key="l.id">
+                                <tr class="border-b border-slate-100 dark:border-navie-border/30 hover:bg-slate-50/20 dark:hover:bg-white/5">
+                                    <td class="py-2.5 px-3 text-slate-500 font-mono whitespace-nowrap" x-text="l.data_alteracao"></td>
+                                    <td class="py-2.5 px-3 text-slate-700 dark:text-white font-bold whitespace-nowrap" x-text="l.usuario"></td>
+                                    <td class="py-2.5 px-3 text-slate-600 dark:text-slate-300 font-bold" x-text="l.campo_alterado"></td>
+                                    <td class="py-2.5 px-3 text-rose-500 line-through" x-text="l.valor_antigo || '-'"></td>
+                                    <td class="py-2.5 px-3 text-emerald-500 font-semibold" x-text="l.valor_novo || '-'"></td>
+                                    <td class="py-2.5 px-3 text-slate-400 text-[10px]" :title="l.dispositivo">
+                                        <div x-text="l.ip_origem"></div>
+                                        <div class="truncate max-w-[150px] mt-0.5" x-text="l.dispositivo"></div>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="!selectedHotel.audit_logs || selectedHotel.audit_logs.length === 0">
+                                <tr>
+                                    <td colspan="6" class="py-8 text-center text-xs font-semibold text-slate-400 dark:text-slate-455 italic">
+                                        Nenhuma alteração registrada em auditoria para este hotel.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Script de dados dos hotéis -->
+    <script>
+        window.hoteisData = [
+            {% for hotel in hoteis %}
+            {
+                id: {{ hotel.pk }},
+                nome: "{{ hotel.nome|escapejs }}",
+                slug: "{{ hotel.slug|escapejs }}",
+                descricao: "{{ hotel.descricao|escapejs }}",
+                cnpj: "{{ hotel.empresa.cnpj|escapejs }}",
+                razao_social: "{{ hotel.empresa.razao_social|escapejs }}",
+                cidade: "{{ hotel.local.cidade|escapejs }}",
+                estado: "{{ hotel.local.estado|escapejs }}",
+                endereco: "{{ hotel.local.endereco|escapejs }}",
+                whatsapp: "{{ hotel.whatsapp|default:''|escapejs }}",
+                status: "{{ hotel.status|escapejs }}",
+                destaque: {{ hotel.destaque|yesno:"true,false" }},
+                venda_online: {{ hotel.venda_online|yesno:"true,false" }},
+                usar_tarifas_faixa: {{ hotel.usar_tarifas_faixa|yesno:"true,false" }},
+                visualizacoes: {{ hotel.visualizacoes }},
+                taxa_fixa_navie: "{{ hotel.taxa_fixa_navie }}",
+                taxa_percentual_navie: "{{ hotel.taxa_percentual_navie }}",
+                limite_trafego_gb: {{ hotel.limite_trafego_gb }},
+                consumo_trafego_gb: "{{ hotel.consumo_trafego_gb }}",
+                email: "{{ hotel.empresa.email_contato|default:''|escapejs }}",
+                logo_url: "{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}",
+                save_url: "{% url 'administracao:hotel_salvar_configuracao_admin' hotel.pk %}",
+                edit_url: "{% url 'administracao:hotel_edit' hotel.pk %}",
+                quartos: [
+                    {% for q in hotel.quartos.all %}
+                    {
+                        nome: "{{ q.nome|escapejs }}",
+                        preco: "{{ q.preco }}",
+                        capacidade: {{ q.capacidade_pessoas }},
+                        comodidades: "{{ q.comodidades|escapejs }}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                tarifas_faixa: [
+                    {% for f in hotel.tarifas_faixa.all %}
+                    {
+                        id: {{ f.pk }},
+                        valor_minimo: "{{ f.valor_minimo }}",
+                        valor_maximo: "{{ f.valor_maximo }}",
+                        taxa_fixa: "{{ f.taxa_fixa }}",
+                        taxa_percentual: "{{ f.taxa_percentual }}",
+                        delete_url: "{% url 'administracao:hotel_tarifa_faixa_excluir' f.pk %}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                documentos: [
+                    {% for d in hotel.documentos.all %}
+                    {
+                        id: {{ d.pk }},
+                        nome: "{{ d.nome|escapejs }}",
+                        url: "{{ d.arquivo.url }}",
+                        data_upload: "{{ d.data_upload|date:'d/m/Y H:i' }}",
+                        delete_url: "{% url 'administracao:hotel_documento_excluir' d.pk %}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                termos_adesao: [
+                    {% for t in hotel.termos_adesao.all %}
+                    {
+                        id: {{ t.pk }},
+                        versao_termo: "{{ t.versao_termo|escapejs }}",
+                        data_aceite: "{{ t.data_aceite|date:'d/m/Y H:i' }}",
+                        ip_origem: "{{ t.ip_origem }}",
+                        dispositivo: "{{ t.dispositivo|escapejs }}",
+                        usuario: "{{ t.usuario.username|default:'Sistema' }}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                audit_logs: [
+                    {% for l in hotel.audit_logs.all %}
+                    {
+                        id: {{ l.pk }},
+                        data_alteracao: "{{ l.data_alteracao|date:'d/m/Y H:i' }}",
+                        campo_alterado: "{{ l.campo_alterado|escapejs }}",
+                        valor_antigo: "{{ l.valor_antigo|escapejs }}",
+                        valor_novo: "{{ l.valor_novo|escapejs }}",
+                        usuario: "{{ l.usuario.username|default:'Sistema' }}",
+                        ip_origem: "{{ l.ip_origem }}",
+                        dispositivo: "{{ l.dispositivo|escapejs }}"
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+    </script>
 
 </div>
 {% endblock %}
+

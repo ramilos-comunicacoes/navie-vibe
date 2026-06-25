@@ -1,0 +1,58 @@
+{% load static %}
+
+<div class="bg-white/80 dark:bg-slate-900/40 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-6 py-3 flex items-center justify-between gap-4 w-full shrink-0 transition-colors">
+    <div class="flex items-center gap-2">
+        <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Período:</span>
+        <div class="flex items-center gap-1.5 bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200/20 dark:border-white/5">
+            <a href="?periodo=hoje"
+               hx-get="{% url 'agenda:painel_atividades' %}?periodo=hoje"
+               hx-target="#kanban-board-container"
+               hx-push-url="true"
+               hx-indicator="#loading-indicator"
+               class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all {% if periodo == 'hoje' %}bg-brand text-brand-text shadow-md shadow-brand/10{% else %}text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white{% endif %}">
+                Hoje
+            </a>
+            <a href="?periodo=semana"
+               hx-get="{% url 'agenda:painel_atividades' %}?periodo=semana"
+               hx-target="#kanban-board-container"
+               hx-push-url="true"
+               hx-indicator="#loading-indicator"
+               class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all {% if periodo == 'semana' %}bg-brand text-brand-text shadow-md shadow-brand/10{% else %}text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white{% endif %}">
+                Semana
+            </a>
+            <a href="?periodo=mes"
+               hx-get="{% url 'agenda:painel_atividades' %}?periodo=mes"
+               hx-target="#kanban-board-container"
+               hx-push-url="true"
+               hx-indicator="#loading-indicator"
+               class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all {% if periodo == 'mes' %}bg-brand text-brand-text shadow-md shadow-brand/10{% else %}text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white{% endif %}">
+                Mês
+            </a>
+            <a href="?periodo=tudo"
+               hx-get="{% url 'agenda:painel_atividades' %}?periodo=tudo"
+               hx-target="#kanban-board-container"
+               hx-push-url="true"
+               hx-indicator="#loading-indicator"
+               class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all {% if periodo == 'tudo' or not periodo %}bg-brand text-brand-text shadow-md shadow-brand/10{% else %}text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white{% endif %}">
+                Tudo
+            </a>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div id="loading-indicator" class="htmx-indicator flex items-center justify-center ml-2">
+            <div class="h-4 w-4 rounded-full border-2 border-brand border-t-transparent animate-spin"></div>
+        </div>
+    </div>
+    
+    <!-- Total Atividades Badge -->
+    <div class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+        <i data-lucide="list-todo" class="w-3.5 h-3.5"></i>
+        <span>Total de Tarefas: <span class="text-slate-700 dark:text-slate-200">{{ total_atividades }}</span></span>
+    </div>
+</div>
+
+<script>
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+</script>

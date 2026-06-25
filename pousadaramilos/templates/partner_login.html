@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso Administrativo | Pousada Ramiros</title>
+    
+    <!-- Estilos de Fontes Locais (Poppins e Inter) -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 300;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-400.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-400.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-500.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-900.woff2' %}") format('woff2');
+        }
+    </style>
+    
+    <!-- Bibliotecas Locais -->
+    <script src="{% static 'vendor/tailwind.js' %}"></script>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'vendor/lucide.min.js' %}"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        :root {
+            --b2b-bg: #070b12;
+            --b2b-slate-deep: #090d16;
+            --b2b-surface: #0f172a;
+            --b2b-border: rgba(255, 255, 255, 0.08);
+            --b2b-text: #f8fafc;
+            --b2b-muted: #64748b;
+            --b2b-primary: #fbbf24;       /* Amarelo Ramiros */
+            --b2b-primary-hover: #f59e0b; /* Amarelo Escuro */
+        }
+        body { 
+            background-color: var(--b2b-bg); 
+            color: var(--b2b-text); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; padding: 0; 
+            box-sizing: border-box; 
+            overflow-x: hidden; 
+        }
+        .split-layout { display: flex; min-height: 100vh; width: 100vw; }
+        .banner-side {
+            background: linear-gradient(135deg, #070b12 0%, #0f172a 100%);
+            position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 4rem 3.5rem; width: 50%; border-right: 1px solid var(--b2b-border); box-sizing: border-box;
+        }
+        .banner-side::before {
+            content: ''; position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 10% 20%, rgba(251, 191, 36, 0.15) 0%, transparent 45%),
+                              radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 45%);
+            pointer-events: none;
+        }
+        .form-side {
+            background-color: var(--b2b-slate-deep); width: 50%; display: flex; align-items: center; justify-content: center;
+            padding: 3rem 2.5rem; box-sizing: border-box; position: relative; overflow-y: auto;
+        }
+        @media (max-width: 992px) {
+            .split-layout { flex-direction: column; }
+            .banner-side { display: none; }
+            .form-side { width: 100%; padding: 2.5rem 1.5rem; min-height: 100vh; }
+        }
+        
+        .partner-logo-container { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; }
+        .partner-logo-text { font-family: 'Poppins', sans-serif; font-size: 1.35rem; font-weight: 900; letter-spacing: -0.02em; color: #ffffff; }
+        .partner-logo-highlight { color: #fbbf24; }
+        .partner-slogan-title { font-family: 'Poppins', sans-serif; font-size: 2.5rem; font-weight: 900; line-height: 1.15; color: #ffffff; margin: 0 0 1rem 0; }
+        .partner-slogan-desc { font-size: 1rem; color: #94a3b8; line-height: 1.6; margin: 0 0 2.5rem 0; }
+        
+        .partner-features-list { display: flex; flex-direction: column; gap: 1.5rem; width: 100%; box-sizing: border-box; }
+        .feature-item {
+            background: rgba(255, 255, 255, 0.015); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 18px;
+            padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.25rem; transition: all 0.25s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .feature-item:hover { background: rgba(255, 255, 255, 0.035); border-color: rgba(37,99,235,0.2); transform: translateX(6px); }
+        .feature-icon-wrapper { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .icon-bg-green { background-color: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16,185,129,0.15); }
+        .icon-bg-purple { background-color: rgba(139, 92, 246, 0.1); color: #a78bfa; border: 1px solid rgba(139,92,246,0.15); }
+        .icon-bg-blue { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.15); }
+        .feature-item-text { display: flex; flex-direction: column; gap: 0.2rem; }
+        .feature-item-title { font-size: 14.5px; font-weight: 700; color: #ffffff; }
+        .feature-item-desc { font-size: 12px; color: #64748b; line-height: 1.4; }
+        .partner-form-wrapper { width: 100%; max-width: 420px; margin: 0 auto; box-sizing: border-box; }
+        .partner-form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+        .partner-label { font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; }
+        .partner-input-wrapper { position: relative; display: block; width: 100%; }
+        .partner-input-icon { position: absolute; left: 1.15rem; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; color: #64748b; pointer-events: none; z-index: 10; }
+        .partner-input-field {
+            width: 100% !important; height: 50px !important; padding: 0 1rem 0 3.2rem !important;
+            background-color: rgba(15, 23, 42, 0.65) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 16px !important; font-size: 14.5px !important; color: #f8fafc !important; box-sizing: border-box !important;
+            transition: all 0.2s ease !important;
+        }
+        .partner-input-field:focus { background-color: rgba(15, 23, 42, 0.9) !important; border-color: var(--b2b-primary) !important; box-shadow: 0 0 0 3px rgba(37,99,235,0.2) !important; outline: none !important; }
+        .partner-btn-primary {
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; width: 100%; height: 52px;
+            background-color: var(--b2b-primary); color: #451a03; font-size: 15.5px; font-weight: 800; border: none; border-radius: 16px;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2); transition: all 0.22s ease;
+        }
+        .partner-btn-primary:hover { background-color: var(--b2b-primary-hover); color: #451a03; transform: translateY(-1.5px); box-shadow: 0 8px 22px rgba(251, 191, 36, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="split-layout">
+        <!-- LADO ESQUERDO: BANNER DE LUXO B2B -->
+        <div class="banner-side">
+            <div class="partner-logo-container">
+                <span class="partner-logo-text">
+                    <span>Pousada</span> <span class="partner-logo-highlight">Ramiros</span>
+                </span>
+            </div>
+            <div style="margin: auto 0; width: 100%;">
+                <h1 class="partner-slogan-title">O controle absoluto das suas pousadas.</h1>
+                <p class="partner-slogan-desc">Acesso seguro ao portal operacional unificado para gerentes, recepcionistas, camareiras e técnicos.</p>
+                <div class="partner-features-list">
+                    <!-- Feature 1: Multi-Pousada -->
+                    <div class="feature-item">
+                        <div class="feature-icon-wrapper icon-bg-blue"><i data-lucide="building" class="w-5 h-5"></i></div>
+                        <div class="feature-item-text">
+                            <h4 class="feature-item-title">Operação Multi-Unidade</h4>
+                            <p class="feature-item-desc">Gerencie as 3 pousadas Ramiros sob o mesmo teto.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 2: Controle Operacional -->
+                    <div class="feature-item">
+                        <div class="feature-icon-wrapper icon-bg-green"><i data-lucide="line-chart" class="w-5 h-5"></i></div>
+                        <div class="feature-item-text">
+                            <h4 class="feature-item-title">Financeiro & Caixa</h4>
+                            <p class="feature-item-desc">Lançamento de diárias, consumos e despesas por pousada.</p>
+                        </div>
+                    </div>
+                    <!-- Feature 3: Equipes Organizadas -->
+                    <div class="feature-item">
+                        <div class="feature-icon-wrapper icon-bg-purple"><i data-lucide="users" class="w-5 h-5"></i></div>
+                        <div class="feature-item-text">
+                            <h4 class="feature-item-title">Cargos Especializados</h4>
+                            <p class="feature-item-desc">Telas sob medida para camareiras e manutenção.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-500 font-bold flex items-center gap-1.5 pt-4">
+                <i data-lucide="lock" class="w-4 h-4 text-amber-500"></i>
+                <span>Plataforma de gestão integrada certificada</span>
+            </div>
+        </div>
+
+        <!-- LADO DIREITO: FORMULÁRIO DE LOGIN -->
+        <div class="form-side">
+            <div class="partner-form-wrapper">
+                <div class="text-center md:text-left mb-8">
+                    <h2 class="text-2xl font-extrabold tracking-tight text-white mb-2">Entrar no painel</h2>
+                    <p class="text-sm text-slate-400">Insira suas credenciais operacionais abaixo</p>
+                </div>
+                
+                <!-- Exibição de Mensagens de Erro -->
+                {% if messages %}
+                    <div class="mb-6 space-y-2">
+                        {% for message in messages %}
+                            <div class="p-4 rounded-xl text-xs font-semibold bg-red-950/40 border border-red-800 text-red-400 flex items-center gap-2">
+                                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <form action="{% url 'sistema:login' %}" method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <!-- Campo Usuário -->
+                    <div class="partner-form-group">
+                        <label class="partner-label">Usuário ou E-mail</label>
+                        <div class="partner-input-wrapper">
+                            <i data-lucide="user" class="partner-input-icon"></i>
+                            <input type="text" name="username" required placeholder="Ex: administrador" class="partner-input-field" autocomplete="username">
+                        </div>
+                    </div>
+                    
+                    <!-- Campo Senha -->
+                    <div class="partner-form-group">
+                        <label class="partner-label">Senha secreta</label>
+                        <div class="partner-input-wrapper">
+                            <i data-lucide="lock" class="partner-input-icon"></i>
+                            <input type="password" name="password" required placeholder="••••••••" class="partner-input-field" autocomplete="current-password">
+                        </div>
+                    </div>
+                    
+                    <!-- Botão de Ação -->
+                    <button type="submit" class="partner-btn-primary">
+                        <span>Acessar o Painel</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

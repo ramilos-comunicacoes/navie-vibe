@@ -1,0 +1,79 @@
+{% load static %}
+
+{% if quartos_disponiveis %}
+    <!-- Grid responsivo estilo Airbnb (2-por-2 no Mobile, 3-por-linha no Desktop) -->
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
+        {% for q in quartos_disponiveis %}
+            <div class="bg-white rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/50 hover:shadow-xl transition-all duration-300 flex flex-col group/card relative">
+                
+                <!-- Badge de Pousada Flutuante -->
+                <span class="absolute top-2 left-2 sm:top-4 sm:left-4 z-20 text-[7px] sm:text-[9px] font-black uppercase tracking-widest px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-full shadow-sm text-white"
+                      style="background-color: {{ q.pousada.cor_primaria_hex }};">
+                    {{ q.pousada.nome|slice:"16:"|default:q.pousada.nome }}
+                </span>
+
+                <!-- Imagem do Quarto (Panorâmica Proporcional) -->
+                <a href="{% url 'website:quarto_detalhe' q.categoria.slug %}" class="relative h-28 sm:h-60 w-full overflow-hidden flex-shrink-0 block">
+                    <div class="absolute inset-0 bg-black/10 group-hover/card:bg-black/0 transition-colors duration-300 z-10"></div>
+                    {% if "Master" in q.categoria.nome %}
+                        <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&w=600&q=80" alt="Suíte Master Casal" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                    {% elif "Standard" in q.categoria.nome %}
+                        <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80" alt="Quarto Standard Casal" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                    {% elif "Família" in q.categoria.nome %}
+                        <img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=600&q=80" alt="Cabana Luxo Família" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80" alt="Quarto" class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                    {% endif %}
+                </a>
+
+                <!-- Conteúdo do Cartão -->
+                <div class="p-2 sm:p-6 flex-grow flex flex-col justify-between gap-2 sm:gap-5 text-left">
+                    <div class="space-y-1 sm:space-y-2">
+                        <div class="flex items-center justify-between gap-1">
+                            <a href="{% url 'website:quarto_detalhe' q.categoria.slug %}" class="hover:underline transition-all block flex-grow overflow-hidden">
+                                <h3 class="text-[10px] sm:text-base font-extrabold text-ramiros-brown font-poppins line-clamp-1 truncate">{{ q.categoria.nome }}</h3>
+                            </a>
+                            <span class="text-[8px] sm:text-xs font-black text-slate-400 shrink-0">Q. {{ q.numero }}</span>
+                        </div>
+                        <p class="text-[9px] sm:text-[11px] text-slate-500 leading-normal sm:leading-relaxed line-clamp-2 sm:line-clamp-3">
+                            {{ q.categoria.descricao }}
+                        </p>
+                    </div>
+
+                    <!-- Comodidades / Capacidade -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-t border-slate-100 pt-2 sm:pt-4 flex-shrink-0 text-[8px] sm:text-xs font-bold text-slate-400 gap-1 sm:gap-0">
+                        <span class="flex items-center gap-1"><i data-lucide="users" class="w-3 h-3 sm:w-4 sm:h-4 text-amber-500"></i> Até {{ q.capacidade_maxima }} p.</span>
+                        <span class="flex items-center gap-1"><i data-lucide="wifi" class="w-3 h-3 sm:w-4 sm:h-4 text-amber-500"></i> Wi-Fi</span>
+                    </div>
+
+                    <!-- Rodapé do Cartão (Preço + Reservar) -->
+                    <div class="flex items-center justify-between pt-1 sm:pt-2 flex-shrink-0 select-none">
+                        <div class="flex flex-col text-left">
+                            <span class="text-[7px] sm:text-[9px] font-black uppercase text-slate-400 leading-none">Noite</span>
+                            <span class="text-xs sm:text-base font-black text-ramiros-brown mt-0.5">R$ {{ q.categoria.preco_base }}</span>
+                        </div>
+                        
+                        <!-- Ao clicar, adiciona a acomodação (categoria) ao carrinho -->
+                        <button 
+                            type="button"
+                            onclick="handleReservarClick('{{ q.categoria.id }}', '{{ q.categoria.slug }}')"
+                            class="px-2.5 sm:px-5 py-1.5 sm:py-2.5 bg-ramiros-yellow hover:bg-ramiros-yellow-hover text-ramiros-brown font-black text-[9px] sm:text-xs uppercase tracking-wider rounded-lg sm:rounded-xl shadow-xs transition-all duration-200 cursor-pointer border-none leading-none">
+                            Reservar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Estado Vazio -->
+    <div class="py-24 text-center space-y-4">
+        <div class="h-16 w-16 rounded-3xl bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto">
+            <i data-lucide="alert-circle" class="w-8 h-8"></i>
+        </div>
+        <div class="space-y-1">
+            <p class="text-base font-extrabold text-ramiros-brown">Sem acomodações livres no momento</p>
+            <p class="text-xs text-slate-500">Infelizmente todos os quartos desta unidade estão ocupados para as datas de hoje.</p>
+        </div>
+    </div>
+{% endif %}

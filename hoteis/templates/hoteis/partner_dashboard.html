@@ -33,24 +33,19 @@
 
     <!-- Controles das Configurações no Cabeçalho -->
     <div x-show="activeTab === 'configuracoes'" class="flex items-center gap-2.5 sm:gap-3" x-transition.opacity>
-        <!-- Alternador Site / Assinatura (Desktop apenas) -->
-        <div class="hidden md:flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner">
-            <button type="button" @click="configTab = 'site'"
-                    :class="configTab === 'site' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold' : 'text-slate-500 dark:text-navie-textsec'" 
-                    class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 font-bold">
-                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="monitor" class="w-3.5 h-3.5"></i></span> Vitrine / Site
-            </button>
-            <button type="button" @click="configTab = 'assinatura'"
-                    :class="configTab === 'assinatura' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold' : 'text-slate-500 dark:text-navie-textsec'" 
-                    class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 font-bold">
-                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i></span> Plano / Assinatura
-            </button>
-        </div>
+
+        
+        <!-- Botão Salvar Configurações Gerais -->
+        <button x-show="configTab === 'geral'" type="button" onclick="document.getElementById('form-salvar-config-geral').submit();"
+                class="bg-brand hover:bg-brand/90 text-white px-4 h-9 rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
+            <span class="hidden sm:inline">Salvar Geral</span>
+        </button>
         
         <!-- Botão Salvar Configurações (Apenas na sub-aba 'site') -->
         <button x-show="configTab === 'site'" type="button" onclick="document.getElementById('form-salvar-config').submit();"
-                class="bg-brand hover:bg-brand/90 text-white p-2 sm:px-4 sm:py-2.5 rounded-full sm:rounded-2xl text-xs font-black transition-all shadow-md shadow-brand/25 flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
-            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="check" class="w-4.5 h-4.5"></i></span>
+                class="bg-brand hover:bg-brand/90 text-white px-4 h-9 rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
             <span class="hidden sm:inline">Salvar Alterações</span>
         </button>
     </div>
@@ -197,6 +192,23 @@
 <!-- Sub-cabeçalho Mobile para as abas de Configurações -->
 <div x-show="activeTab === 'configuracoes'" class="md:hidden bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2.5 flex justify-center items-center" style="display: none;" x-transition.opacity>
     <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner w-full max-w-sm justify-between">
+        {% if hotel.empresa and hotel.empresa.modalidade_portal == 'unificado' %}
+        <button @click="configTab = 'geral'"
+                :class="configTab === 'geral' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold w-1/3' : 'text-slate-500 dark:text-navie-textsec w-1/3'" 
+                class="py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 font-bold">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="globe" class="w-3.5 h-3.5"></i></span> Geral
+        </button>
+        <button @click="configTab = 'site'"
+                :class="configTab === 'site' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold w-1/3' : 'text-slate-500 dark:text-navie-textsec w-1/3'" 
+                class="py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 font-bold">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="monitor" class="w-3.5 h-3.5"></i></span> Vitrine
+        </button>
+        <button @click="configTab = 'assinatura'"
+                :class="configTab === 'assinatura' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold w-1/3' : 'text-slate-500 dark:text-navie-textsec w-1/3'" 
+                class="py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 font-bold">
+            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i></span> Plano
+        </button>
+        {% else %}
         <button @click="configTab = 'site'"
                 :class="configTab === 'site' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold w-1/2' : 'text-slate-500 dark:text-navie-textsec w-1/2'" 
                 class="py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 font-bold">
@@ -207,6 +219,7 @@
                 class="py-2 rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 font-bold">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i></span> Plano / Assinatura
         </button>
+        {% endif %}
     </div>
 </div>
 
@@ -1091,6 +1104,792 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
         <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+        <!-- SUB-ABA 0: CONFIGURAÇÃO GERAL DO GRUPO (APENAS SE FOR PORTAL UNIFICADO) -->
+        {% if hotel.empresa and hotel.empresa.modalidade_portal == 'unificado' %}
+        <div x-show="configTab === 'geral'" x-transition:enter="transition ease-out duration-300" class="space-y-6" style="display: none;">
+            <form id="form-salvar-config-geral" action="{% url 'hoteis:partner_salvar_configuracoes_geral' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="space-y-6 w-full">
+                    <!-- Branding & Identidade da Rede -->
+                    <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="globe" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Identidade Visual da Rede</h4>
+                                <p class="text-xs text-slate-400">Branding e configurações gerais do portal unificado do grupo</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Nome da Rede / Grupo</label>
+                                <input type="text" name="nome_fantasia" value="{{ hotel.empresa.nome_fantasia }}" class="w-full h-12 px-4 rounded-2xl input-glass text-sm focus:outline-none" required>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Subdomínio da Rede (Fixo)</label>
+                                <div class="relative flex items-center">
+                                    <input type="text" value="{{ hotel.empresa.slug }}" readonly class="w-full h-12 pl-4 pr-10 rounded-2xl input-glass text-sm font-mono focus:outline-none bg-slate-100/50 dark:bg-white/5 text-slate-500 cursor-not-allowed border border-dashed border-slate-300 dark:border-navie-border/60">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 flex items-center text-slate-400">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="b2b-element-gap">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Slogan / Descrição do Portal Unificado (Hero)</label>
+                            <textarea name="descricao_portal" rows="3" class="w-full p-4 rounded-2xl input-glass text-sm focus:outline-none" placeholder="Escreva o slogan ou texto descritivo do grupo que aparecerá no topo do portal..." required>{{ hotel.empresa.descricao_portal|default:'' }}</textarea>
+                        </div>
+
+                        <!-- Paleta de Cores da Rede -->
+                        <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
+                            <!-- Cor Primária -->
+                            <div x-data="colorPickerData('{{ hotel.empresa.cor_primaria|default:'#1e3a8a' }}', 'cor_primaria_grupo_hex')" class="relative">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Primária do Portal da Rede</label>
+                                <div class="relative flex items-center max-w-[200px]">
+                                    <!-- Custom Swatch Button prefix -->
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    
+                                    <!-- Hex Text Input -->
+                                    <input type="text" name="cor_primaria" id="cor_primaria_grupo_hex" x-model="color"
+                                           placeholder="#1e3a8a" maxlength="7"
+                                           class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent"
+                                           @input="onHexInput($el.value)">
+                                    
+                                    <!-- Dropper native picker button -->
+                                    <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                    </button>
+                                    
+                                    <!-- Hidden native color input picker -->
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-100 dark:border-navie-border/40 pt-3 space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Ajuste de Tom (HSL)</span>
+                                            <button type="button" @click="triggerNativePicker()" class="text-[9px] font-black text-brand hover:text-brand/80 flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                                <span>Conta-gotas</span>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Matiz (Hue)</span>
+                                                <span x-text="h + '°'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Saturação</span>
+                                                <span x-text="s + '%'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Luminosidade</span>
+                                                <span x-text="l + '%'"></span>
+                                            </div>
+                                            <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará os botões, links e menus do portal da rede.</p>
+                            </div>
+
+                            <!-- Cor Secundária -->
+                            <div x-data="colorPickerData('{{ hotel.empresa.cor_secundaria|default:'#2563eb' }}', 'cor_secundaria_grupo_hex')" class="relative">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Secundária (Detalhes)</label>
+                                <div class="relative flex items-center max-w-[200px]">
+                                    <!-- Custom Swatch Button prefix -->
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    
+                                    <!-- Hex Text Input -->
+                                    <input type="text" name="cor_secundaria" id="cor_secundaria_grupo_hex" x-model="color"
+                                           placeholder="#2563eb" maxlength="7"
+                                           class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent"
+                                           @input="onHexInput($el.value)">
+                                    
+                                    <!-- Dropper native picker button -->
+                                    <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                    </button>
+                                    
+                                    <!-- Hidden native color input picker -->
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-100 dark:border-navie-border/40 pt-3 space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Ajuste de Tom (HSL)</span>
+                                            <button type="button" @click="triggerNativePicker()" class="text-[9px] font-black text-brand hover:text-brand/80 flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                                <span>Conta-gotas</span>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Matiz (Hue)</span>
+                                                <span x-text="h + '°'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Saturação</span>
+                                                <span x-text="s + '%'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Luminosidade</span>
+                                                <span x-text="l + '%'"></span>
+                                            </div>
+                                            <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará as tags de quartos, amenidades e pequenos detalhes nas páginas do portal.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identidade & Mídias da Marca (Logomarca & Compartilhamento 16:9) -->
+                    <div class="relative z-10 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="palette" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Identidade da Marca & Redes Sociais</h4>
+                                <p class="text-xs text-slate-400">Logomarca do cabeçalho do portal e miniatura de compartilhamento nas redes</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
+                            <!-- Logo da Rede -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Logo da Rede (Logomarca do Cabeçalho)</label>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group shrink-0"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-geral-file-input').click()">
+                                    
+                                    <input type="file" id="logo-geral-file-input" name="logo" accept="image/*" class="hidden" 
+                                           onclick="event.stopPropagation()"
+                                           onchange="previewImageUnifiedGeral(this, 'logo-geral')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="logo-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.logo %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="shield" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Logo da Rede</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="logo-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.logo %}hidden{% endif %}">
+                                        <img id="logo-geral-preview-img" src="{% if hotel.empresa.logo %}{{ hotel.empresa.logo.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Logo preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMediaGeral('logo-geral')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_logo" id="remover-logo-input-geral" value="false">
+                                </div>
+                            </div>
+
+                            <!-- Miniatura de Compartilhamento (Redes) -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Miniatura de Compartilhamento (Redes Sociais 16:9)</label>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('imagem_compartilhamento-geral-file-input').click()">
+                                    
+                                    <input type="file" id="imagem_compartilhamento-geral-file-input" name="imagem_compartilhamento" accept="image/*" class="hidden" 
+                                           onclick="event.stopPropagation()"
+                                           onchange="previewImageUnifiedGeral(this, 'imagem_compartilhamento-geral')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="imagem_compartilhamento-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.imagem_compartilhamento %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="share-2" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Imagem de Compartilhamento</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Recomendado: 1200x630px (16:9)</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="imagem_compartilhamento-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.imagem_compartilhamento %}hidden{% endif %}">
+                                        <img id="imagem_compartilhamento-geral-preview-img" src="{% if hotel.empresa.imagem_compartilhamento %}{{ hotel.empresa.imagem_compartilhamento.url }}{% endif %}" class="w-full h-full object-cover" alt="Sharing preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMediaGeral('imagem_compartilhamento-geral')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_imagem_compartilhamento" id="remover-imagem_compartilhamento-input-geral" value="false">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4 w-full"
+                         x-data="{ tipoMidiaGeral: '{{ hotel.empresa.hero_tipo|default:'imagem' }}' }"
+                         @change="setTimeout(updateAllIframesGeral, 50)">
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="video" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Mídia do Hero (Portal)</h4>
+                                <p class="text-xs text-slate-400">Vídeo em loop ou foto estática de entrada no portal unificado do grupo</p>
+                            </div>
+                        </div>
+
+                        <!-- Chaveador Dinâmico Alpine -->
+                        <div class="flex gap-2">
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="hero_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaGeral">
+                                <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                    FOTO ESTÁTICA
+                                </div>
+                            </label>
+                            
+                            <label class="cursor-pointer flex-1">
+                                <input type="radio" name="hero_tipo" value="video" class="peer hidden" x-model="tipoMidiaGeral">
+                                <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                    VÍDEO EM LOOP (8MB MÁX)
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Grid container for media input + double mockup preview -->
+                        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
+                            <!-- Left Column: Image or Video uploader -->
+                            <div class="xl:col-span-5 flex flex-col gap-4">
+                                
+                                <!-- Foto Estática (Banner Geral) -->
+                                <div x-show="tipoMidiaGeral === 'imagem'" class="space-y-3">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Imagem do Banner (Hero Geral)</label>
+                                    <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                         onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-geral-file-input').click()">
+                                        
+                                        <input type="file" id="banner-geral-file-input" name="banner" accept="image/*" class="hidden"
+                                               onclick="event.stopPropagation()"
+                                               onchange="previewImageUnifiedGeral(this, 'banner-geral')">
+                                        
+                                        <!-- Empty State -->
+                                        <div id="banner-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.banner %}hidden{% else %}flex{% endif %}">
+                                            <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Imagem de Entrada do Grupo</span>
+                                            <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                        </div>
+
+                                        <!-- Active State -->
+                                        <div id="banner-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.banner %}hidden{% endif %}">
+                                            <img id="banner-geral-preview-img" src="{% if hotel.empresa.banner %}{{ hotel.empresa.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                        onclick="event.stopPropagation(); clearUnifiedMediaGeral('banner-geral')">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Apagar</span>
+                                                </button>
+                                                <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_banner" id="remover-banner-input-geral" value="false">
+                                    <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Suba uma imagem em alta resolução. Ela será exibida de fundo no banner de entrada do portal da rede.</p>
+                                </div>
+
+                                <!-- Vídeo de Fundo (Hero Geral) -->
+                                <div x-show="tipoMidiaGeral === 'video'" class="space-y-3" style="display:none;">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Vídeo de Fundo do Banner (Hero Geral)</label>
+                                    
+                                    <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                         onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('hero_video-geral-file-input').click()">
+                                        
+                                        <input type="file" id="hero_video-geral-file-input" name="hero_video" accept="video/*" class="hidden" onclick="event.stopPropagation()" onchange="previewLocalHeroVideoUnifiedGeral(this)">
+                                        
+                                        <!-- Empty State -->
+                                        <div id="hero_video-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.hero_video %}hidden{% else %}flex{% endif %}">
+                                            <i data-lucide="video" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Vídeo de Entrada do Grupo</span>
+                                            <span class="text-[10px] text-slate-400 mt-1">MP4, MOV ou WebM de até 30MB</span>
+                                        </div>
+
+                                        <!-- Active State -->
+                                        <div id="hero_video-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.hero_video %}hidden{% endif %}">
+                                            <video id="hero_video-geral-preview-player" autoplay muted loop playsinline class="w-full h-full object-cover">
+                                                {% if hotel.empresa.hero_video %}
+                                                    <source src="{{ hotel.empresa.hero_video.url }}" type="video/mp4">
+                                                {% endif %}
+                                            </video>
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                        onclick="event.stopPropagation(); clearHeroVideoUnifiedGeral()">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Apagar</span>
+                                                </button>
+                                                <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_hero_video" id="remover-hero_video-geral-input" value="false">
+                                    <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Faça o upload do tour de vídeo principal do seu grupo. Ele rodará de forma contínua no banner de entrada do portal da rede.</p>
+                                </div>
+
+                            </div>
+
+                            <!-- Right Column: Double devices -->
+                            <div class="xl:col-span-7 flex flex-row items-end justify-center gap-4 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5">
+                                
+                                <!-- Desktop Safari Mockup -->
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Portal (Desktop)</span>
+                                    <div class="w-48 sm:w-64 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
+                                        <!-- Browser Header -->
+                                        <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                            <div class="h-2.5 w-32 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[5px] text-slate-400 truncate px-1" id="mockup-url-desktop-geral">
+                                                {{ hotel.empresa.slug|default:'pousadasramilos' }}.navievibe.com
+                                            </div>
+                                        </div>
+                                        <!-- Scaling Iframe Area -->
+                                        <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
+                                            <iframe id="hero-preview-iframe-desktop-geral" 
+                                                    src="{% if hotel.empresa.slug %}/{{ hotel.empresa.slug }}/{% else %}/{% endif %}?preview=1"
+                                                    class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
+                                                    style="transform: scale(0.20);"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Smartphone Mockup -->
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Portal (Mobile)</span>
+                                    <div class="w-[85px] h-[150px] rounded-[20px] border-[3px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
+                                        <!-- notch -->
+                                        <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
+                                        <!-- Scaling Iframe Area -->
+                                        <div class="w-full h-full bg-slate-950 relative overflow-hidden">
+                                            <iframe id="hero-preview-iframe-mobile-geral" 
+                                                    src="{% if hotel.empresa.slug %}/{{ hotel.empresa.slug }}/{% else %}/{% endif %}?preview=1"
+                                                    class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
+                                                    style="transform: scale(0.226);"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- Ordenação das Pousadas -->
+                    <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5"
+                         x-data="{
+                             hoteis: [
+                                 {% for h in hotel.empresa.hoteis_ativos_ordenados %}
+                                     { id: {{ h.id }}, nome: '{{ h.nome|escapejs }}', cidade: '{{ h.local.cidade|escapejs }}', estado: '{{ h.local.estado|escapejs }}', banner: '{% if h.banner %}{{ h.banner.url }}{% endif %}' },
+                                 {% endfor %}
+                             ],
+                             draggedIndex: null,
+                             updateOrderInput() {
+                                 const ids = this.hoteis.map(h => h.id).join(',');
+                                 document.getElementById('ordem_hoteis_input').value = ids;
+                             }
+                         }"
+                         x-init="updateOrderInput()">
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="arrow-up-down" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Ordem de Exibição das Pousadas</h4>
+                                <p class="text-xs text-slate-400">Defina a prioridade de exibição dos hotéis no portal unificado do grupo (arraste e ordene)</p>
+                            </div>
+                        </div>
+
+                        <!-- Hidden Input to submit order -->
+                        <input type="hidden" name="ordem_hoteis" id="ordem_hoteis_input" value="">
+
+                        <!-- Drag and Drop List -->
+                        <div class="grid grid-cols-1 gap-3 max-w-2xl">
+                            <template x-for="(h, index) in hoteis" :key="h.id">
+                                <div draggable="true"
+                                     @dragstart="draggedIndex = index; $event.dataTransfer.effectAllowed = 'move';"
+                                     @dragover.prevent=""
+                                     @dragenter="
+                                         if (draggedIndex !== null && draggedIndex !== index) {
+                                             const temp = hoteis[draggedIndex];
+                                             hoteis.splice(draggedIndex, 1);
+                                             hoteis.splice(index, 0, temp);
+                                             draggedIndex = index;
+                                             updateOrderInput();
+                                         }
+                                     "
+                                     @dragend="draggedIndex = null"
+                                     class="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-navie-border bg-slate-50/50 dark:bg-black/10 hover:border-brand/40 dark:hover:border-brand/40 cursor-grab active:cursor-grabbing transition-all select-none group"
+                                     :class="draggedIndex === index ? 'opacity-40 border-brand bg-brand-50/25' : ''">
+                                    
+                                    <div class="flex items-center gap-4">
+                                        <!-- Drag handle icon -->
+                                        <span class="text-slate-400 group-hover:text-brand transition-colors"><i data-lucide="grip-vertical" class="w-4 h-4"></i></span>
+                                        
+                                        <!-- Badge Ordem (1º, 2º, etc) -->
+                                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-brand/10 text-brand text-[10px] font-black" x-text="(index + 1) + 'º'"></span>
+                                        
+                                        <!-- Banner thumbnail (miniature) -->
+                                        <div class="w-12 h-8 rounded-lg overflow-hidden bg-slate-900 border border-slate-200/50 dark:border-white/5 shrink-0">
+                                            <template x-if="h.banner">
+                                                <img :src="h.banner" class="w-full h-full object-cover" alt="Banner">
+                                            </template>
+                                            <template x-if="!h.banner">
+                                                <div class="w-full h-full bg-brand/10 flex items-center justify-center text-brand text-[8px] font-bold">NV</div>
+                                            </template>
+                                        </div>
+
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-bold text-slate-800 dark:text-white" x-text="h.nome"></span>
+                                            <span class="text-[10px] text-slate-400 font-bold" x-text="h.cidade + ' / ' + h.estado"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right side indicators -->
+                                    <div class="flex items-center gap-2">
+                                        <!-- Up Button -->
+                                        <button type="button" 
+                                                @click.stop="
+                                                    if (index > 0) {
+                                                        const temp = hoteis[index];
+                                                        hoteis.splice(index, 1);
+                                                        hoteis.splice(index - 1, 0, temp);
+                                                        updateOrderInput();
+                                                    }
+                                                "
+                                                :disabled="index === 0"
+                                                class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                title="Mover para Cima">
+                                            <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        
+                                        <!-- Down Button -->
+                                        <button type="button" 
+                                                @click.stop="
+                                                    if (index < hoteis.length - 1) {
+                                                        const temp = hoteis[index];
+                                                        hoteis.splice(index, 1);
+                                                        hoteis.splice(index + 1, 0, temp);
+                                                        updateOrderInput();
+                                                    }
+                                                "
+                                                :disabled="index === hoteis.length - 1"
+                                                class="p-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                                title="Mover para Baixo">
+                                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                                        </button>
+
+                                        <span class="w-px h-4 bg-slate-200 dark:bg-navie-border mx-1"></span>
+
+                                        <!-- Helper text -->
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">Arrastar</span>
+                                        <span class="text-slate-400 group-hover:text-brand transition-colors"><i data-lucide="move" class="w-3.5 h-3.5"></i></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Seção Sobre o Grupo -->
+                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5"
+                         x-data="{ tipoMidiaSobre: '{{ hotel.empresa.sobre_midia_tipo|default:'imagem' }}' }"
+                         @change="setTimeout(updateAllIframesGeral, 50)">
+                        
+                        <div class="flex items-center gap-3">
+                            <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="info" class="w-5 h-5"></i></span>
+                            <div>
+                                <h4 class="text-base font-bold text-slate-800 dark:text-white">Sobre a Rede (Seção do Portal)</h4>
+                                <p class="text-xs text-slate-400">Personalize a seção institucional que fica logo após o banner de entrada</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Título da Seção -->
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Título da Seção</label>
+                                <input type="text" name="sobre_titulo" id="sobre_titulo_geral"
+                                       value="{{ hotel.empresa.sobre_titulo|default:'' }}"
+                                       placeholder="Ex: Sobre o Grupo Ramilos"
+                                       class="w-full h-11 px-4 rounded-2xl input-glass text-xs font-bold focus:outline-none border border-slate-200 dark:border-navie-border/60 bg-transparent text-slate-800 dark:text-white">
+                            </div>
+
+                            <!-- Editor de Texto WYSIWYG -->
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Texto da Seção (Biografia / Descrição)</label>
+                                <div class="flex flex-col rounded-2xl border border-slate-200 dark:border-navie-border/60 overflow-hidden bg-slate-50/30 dark:bg-black/5">
+                                    <div class="flex items-center gap-1.5 p-2 bg-slate-100/80 dark:bg-white/5 border-b border-slate-200 dark:border-navie-border/60">
+                                        <button type="button" onclick="formatDoc('bold')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-350 flex items-center justify-center font-extrabold text-xs" title="Negrito">
+                                            B
+                                        </button>
+                                        <button type="button" onclick="formatDoc('italic')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-350 flex items-center justify-center italic text-xs" title="Itálico">
+                                            I
+                                        </button>
+                                        <span class="w-px h-4 bg-slate-200 dark:bg-white/10 mx-1"></span>
+                                        <button type="button" onclick="formatDoc('removeFormat')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 flex items-center justify-center text-xs" title="Limpar Formatação">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-3.5 h-3.5"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+                                        </button>
+                                    </div>
+                                    <div id="wysiwyg-editor-sobre" contenteditable="true" 
+                                         class="min-h-[140px] p-4 bg-transparent text-xs outline-none focus:bg-white dark:focus:bg-black/20 leading-relaxed text-slate-700 dark:text-slate-300"
+                                         oninput="syncWysiwygToInput()"
+                                         placeholder="Escreva sobre o grupo aqui...">{{ hotel.empresa.sobre_texto|safe }}</div>
+                                    <input type="hidden" name="sobre_texto" id="sobre_texto_input" value="{{ hotel.empresa.sobre_texto|default:'' }}">
+                                </div>
+                            </div>
+
+                            <!-- Cores (Fundo e Texto) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border/60">
+                                <!-- Cor de Fundo -->
+                                <div x-data="colorPickerData('{{ hotel.empresa.sobre_cor_fundo|default:'#f8fafc' }}', 'sobre_cor_fundo_hex')" class="relative">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor de Fundo da Seção</label>
+                                    <div class="relative flex items-center max-w-[200px]">
+                                        <button type="button" @click="open = !open"
+                                                :style="'background-color: ' + color"
+                                                class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                        </button>
+                                        <input type="text" name="sobre_cor_fundo" id="sobre_cor_fundo_hex" x-model="color"
+                                               placeholder="#f8fafc" maxlength="7"
+                                               class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent text-slate-800 dark:text-white"
+                                               @input="onHexInput($el.value)">
+                                        <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                        </button>
+                                        <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                    </div>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                         class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                         style="display: none;">
+                                        <div>
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                            <div class="grid grid-cols-6 gap-2">
+                                                <template x-for="preset in presets">
+                                                    <button type="button" @click="setPreset(preset)"
+                                                            :style="'background-color: ' + preset"
+                                                            class="w-6 h-6 rounded-lg border border-black/10 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer focus:outline-none"></button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Matiz (Hue)</span>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, red, yellow, green, cyan, blue, magenta, red);">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Saturação</span>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()" class="w-full h-1 rounded-lg appearance-none cursor-pointer focus:outline-none" :style="'background: linear-gradient(to right, #808080, hsl(' + h + ', 100%, 50%));'">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Luminosidade</span>
+                                            <input type="range" min="0" max="100" x-model="l" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, black, gray, white);">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cor de Texto -->
+                                <div x-data="colorPickerData('{{ hotel.empresa.sobre_cor_texto|default:'#0f172a' }}', 'sobre_cor_texto_hex')" class="relative">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor do Texto</label>
+                                    <div class="relative flex items-center max-w-[200px]">
+                                        <button type="button" @click="open = !open"
+                                                :style="'background-color: ' + color"
+                                                class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                        </button>
+                                        <input type="text" name="sobre_cor_texto" id="sobre_cor_texto_hex" x-model="color"
+                                               placeholder="#0f172a" maxlength="7"
+                                               class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent text-slate-800 dark:text-white"
+                                               @input="onHexInput($el.value)">
+                                        <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                        </button>
+                                        <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                    </div>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                         class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                         style="display: none;">
+                                        <div>
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                            <div class="grid grid-cols-6 gap-2">
+                                                <template x-for="preset in presets">
+                                                    <button type="button" @click="setPreset(preset)"
+                                                            :style="'background-color: ' + preset"
+                                                            class="w-6 h-6 rounded-lg border border-black/10 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer focus:outline-none"></button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Matiz (Hue)</span>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, red, yellow, green, cyan, blue, magenta, red);">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Saturação</span>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()" class="w-full h-1 rounded-lg appearance-none cursor-pointer focus:outline-none" :style="'background: linear-gradient(to right, #808080, hsl(' + h + ', 100%, 50%));'">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Luminosidade</span>
+                                            <input type="range" min="0" max="100" x-model="l" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, black, gray, white);">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Mídia (Foto ou Vídeo) -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Escolha o Tipo de Mídia</label>
+                                <div class="flex gap-2">
+                                    <label class="cursor-pointer flex-1">
+                                        <input type="radio" name="sobre_midia_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaSobre">
+                                        <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                            FOTO ESTÁTICA
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="cursor-pointer flex-1">
+                                        <input type="radio" name="sobre_midia_tipo" value="video" class="peer hidden" x-model="tipoMidiaSobre">
+                                        <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                            VÍDEO EM LOOP (8MB MÁX)
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Foto Estática (Sobre) -->
+                                    <div x-show="tipoMidiaSobre === 'imagem'" class="space-y-3">
+                                        <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Imagem de Destaque da Seção</label>
+                                        <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('sobre_banner-file-input').click()">
+                                            
+                                            <input type="file" id="sobre_banner-file-input" name="sobre_banner" accept="image/*" class="hidden"
+                                                   onclick="event.stopPropagation()"
+                                                   onchange="previewImageUnifiedGeral(this, 'sobre_banner-geral')">
+                                            
+                                            <!-- Empty State -->
+                                            <div id="sobre_banner-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.sobre_banner %}hidden{% else %}flex{% endif %}">
+                                                <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Imagem do Sobre</span>
+                                                <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                            </div>
+
+                                            <!-- Active State -->
+                                            <div id="sobre_banner-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.sobre_banner %}hidden{% endif %}">
+                                                <img id="sobre_banner-geral-preview-img" src="{% if hotel.empresa.sobre_banner %}{{ hotel.empresa.sobre_banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Sobre banner preview">
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                            onclick="event.stopPropagation(); clearUnifiedMediaGeral('sobre_banner-geral')">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Apagar</span>
+                                                    </button>
+                                                    <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="remover_sobre_banner" id="remover-sobre_banner-input-geral" value="false">
+                                    </div>
+
+                                    <!-- Vídeo em Loop (Sobre) -->
+                                    <div x-show="tipoMidiaSobre === 'video'" class="space-y-3" style="display:none;">
+                                        <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Vídeo de Destaque da Seção</label>
+                                        <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('sobre_video-file-input').click()">
+                                            
+                                            <input type="file" id="sobre_video-file-input" name="sobre_video" accept="video/*" class="hidden"
+                                                   onclick="event.stopPropagation()"
+                                                   onchange="previewLocalSobreVideoUnifiedGeral(this)">
+                                            
+                                            <!-- Empty State -->
+                                            <div id="sobre_video-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.sobre_video %}hidden{% else %}flex{% endif %}">
+                                                <i data-lucide="video" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Vídeo do Sobre</span>
+                                                <span class="text-[10px] text-slate-400 mt-1">MP4 de até 8MB</span>
+                                            </div>
+
+                                            <!-- Active State -->
+                                            <div id="sobre_video-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.sobre_video %}hidden{% endif %}">
+                                                <video id="sobre_video-geral-preview-player" autoplay muted loop playsinline class="w-full h-full object-cover">
+                                                    {% if hotel.empresa.sobre_video %}
+                                                        <source src="{{ hotel.empresa.sobre_video.url }}" type="video/mp4">
+                                                    {% endif %}
+                                                </video>
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                            onclick="event.stopPropagation(); clearSobreVideoUnifiedGeral()">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Apagar</span>
+                                                    </button>
+                                                    <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="remover_sobre_video" id="remover-sobre_video-geral-input" value="false">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
         <!-- SUB-ABA 1: VITRINE / SITE -->
         <div x-show="configTab === 'site'" x-transition:enter="transition ease-out duration-300" class="space-y-6">
             <form id="form-salvar-config" action="{% url 'hoteis:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
@@ -1098,7 +1897,7 @@
                 
                 <div class="space-y-6 w-full">
                     <!-- Branding & Contatos -->
-                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                    <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
                         <div class="flex items-center gap-3 mb-2">
                             <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="sliders" class="w-5 h-5"></i></span>
                             <div>
@@ -1128,7 +1927,7 @@
                                 </div>
                                 <div class="flex justify-between items-center px-1 mt-1.5">
                                     <span class="text-[9px] text-slate-400 dark:text-slate-500">
-                                        Subdomínio ativo: <span class="font-mono text-[10px] text-slate-500 dark:text-slate-300">{{ hotel.slug|default:'pousada' }}.localhost:8060</span>
+                                        Subdomínio ativo: <span class="font-mono text-[10px] text-slate-500 dark:text-slate-300">{{ hotel.slug|default:'pousada' }}.{{ request.base_host }}</span>
                                     </span>
                                     <span class="text-[9px] font-bold text-slate-400">Alterações via suporte</span>
                                 </div>
@@ -1142,30 +1941,160 @@
 
                         <!-- Paleta de Cores e Personalização -->
                         <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
-                            <div>
+                            <!-- Cor Primária -->
+                            <div x-data="colorPickerData('{{ hotel.cor_primaria|default:'#f97316' }}', 'cor_primaria_hex')" class="relative">
                                 <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Primária do Sistema & Site</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="color" id="cor_primaria_picker" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
-                                           class="w-12 h-12 rounded-xl border-0 cursor-pointer overflow-hidden bg-transparent"
-                                           oninput="document.getElementById('cor_primaria_hex').value = this.value">
-                                    <input type="text" name="cor_primaria" id="cor_primaria_hex" value="{{ hotel.cor_primaria|default:'#f97316' }}" 
+                                <div class="relative flex items-center max-w-[200px]">
+                                    <!-- Custom Swatch Button prefix -->
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    
+                                    <!-- Hex Text Input -->
+                                    <input type="text" name="cor_primaria" id="cor_primaria_hex" x-model="color"
                                            placeholder="#f97316" maxlength="7"
-                                           class="w-32 h-12 px-4 rounded-2xl input-glass text-sm font-mono focus:outline-none uppercase"
-                                           oninput="if(this.value.startsWith('#') && this.value.length === 7) document.getElementById('cor_primaria_picker').value = this.value">
+                                           class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent"
+                                           @input="onHexInput($el.value)">
+                                    
+                                    <!-- Dropper native picker button -->
+                                    <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                    </button>
+                                    
+                                    <!-- Hidden native color input picker -->
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-100 dark:border-navie-border/40 pt-3 space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Ajuste de Tom (HSL)</span>
+                                            <button type="button" @click="triggerNativePicker()" class="text-[9px] font-black text-brand hover:text-brand/80 flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                                <span>Conta-gotas</span>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Matiz (Hue)</span>
+                                                <span x-text="h + '°'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Saturação</span>
+                                                <span x-text="s + '%'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Luminosidade</span>
+                                                <span x-text="l + '%'"></span>
+                                            </div>
+                                            <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                        </div>
+                                    </div>
                                 </div>
                                 <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará os botões, links e menus do seu hotel no marketplace e painel.</p>
                             </div>
 
-                            <div>
+                            <!-- Cor Secundária -->
+                            <div x-data="colorPickerData('{{ hotel.cor_secundaria|default:'#2563eb' }}', 'cor_secundaria_hex')" class="relative">
                                 <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor Secundária (Detalhes)</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="color" id="cor_secundaria_picker" value="{{ hotel.cor_secundaria|default:'#2563eb' }}" 
-                                           class="w-12 h-12 rounded-xl border-0 cursor-pointer overflow-hidden bg-transparent"
-                                           oninput="document.getElementById('cor_secundaria_hex').value = this.value">
-                                    <input type="text" name="cor_secundaria" id="cor_secundaria_hex" value="{{ hotel.cor_secundaria|default:'#2563eb' }}" 
+                                <div class="relative flex items-center max-w-[200px]">
+                                    <!-- Custom Swatch Button prefix -->
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    
+                                    <!-- Hex Text Input -->
+                                    <input type="text" name="cor_secundaria" id="cor_secundaria_hex" x-model="color"
                                            placeholder="#2563eb" maxlength="7"
-                                           class="w-32 h-12 px-4 rounded-2xl input-glass text-sm font-mono focus:outline-none uppercase"
-                                           oninput="if(this.value.startsWith('#') && this.value.length === 7) document.getElementById('cor_secundaria_picker').value = this.value">
+                                           class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent"
+                                           @input="onHexInput($el.value)">
+                                    
+                                    <!-- Dropper native picker button -->
+                                    <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                    </button>
+                                    
+                                    <!-- Hidden native color input picker -->
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-brand ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <div class="border-t border-slate-100 dark:border-navie-border/40 pt-3 space-y-3">
+                                        <div class="flex justify-between items-center">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Ajuste de Tom (HSL)</span>
+                                            <button type="button" @click="triggerNativePicker()" class="text-[9px] font-black text-brand hover:text-brand/80 flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                                <span>Conta-gotas</span>
+                                            </button>
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Matiz (Hue)</span>
+                                                <span x-text="h + '°'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Saturação</span>
+                                                <span x-text="s + '%'"></span>
+                                            </div>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                        </div>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                <span>Luminosidade</span>
+                                                <span x-text="l + '%'"></span>
+                                            </div>
+                                            <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                   class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                   style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                        </div>
+                                    </div>
                                 </div>
                                 <p class="text-[10px] text-slate-400 leading-tight mt-2">Escolha a cor que pintará as tags de quartos, amenidades e pequenos detalhes nas páginas.</p>
                             </div>
@@ -1173,7 +2102,7 @@
                     </div>
 
                     <!-- Novo Bloco: Identidade & Mídias da Marca (Logomarca, Fundo & Miniatura de Compartilhamento) -->
-                    <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                    <div class="relative z-10 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
                         <div class="flex items-center gap-3 mb-2">
                             <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="palette" class="w-5 h-5"></i></span>
                             <div>
@@ -1190,6 +2119,7 @@
                                      onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-file-input').click()">
                                     
                                     <input type="file" id="logo-file-input" name="logo" accept="image/*" class="hidden"
+                                           onclick="event.stopPropagation()"
                                            onchange="previewImageUnified(this, 'logo')">
                                     
                                     <!-- Empty State -->
@@ -1222,6 +2152,7 @@
                                      onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('foto_fundo-file-input').click()">
                                     
                                     <input type="file" id="foto_fundo-file-input" name="foto_fundo" accept="image/*" class="hidden"
+                                           onclick="event.stopPropagation()"
                                            onchange="previewImageUnified(this, 'foto_fundo')">
                                     
                                     <!-- Empty State -->
@@ -1254,6 +2185,7 @@
                                      onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('imagem_compartilhamento-file-input').click()">
                                     
                                     <input type="file" id="imagem_compartilhamento-file-input" name="imagem_compartilhamento" accept="image/*" class="hidden"
+                                           onclick="event.stopPropagation()"
                                            onchange="previewImageUnified(this, 'imagem_compartilhamento')">
                                     
                                     <!-- Empty State -->
@@ -1277,6 +2209,57 @@
                                     </div>
                                     <input type="hidden" name="remover_imagem_compartilhamento" id="remover-imagem_compartilhamento-input" value="false">
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Galeria de Fotos da Empresa / Hotelaria -->
+                        <div class="border-t border-slate-100 dark:border-navie-border/60 pt-5 space-y-3">
+                            <div class="flex items-center gap-2">
+                                <span class="p-1.5 rounded-xl bg-brand/10 text-brand"><i data-lucide="images" class="w-4.5 h-4.5"></i></span>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Fotos da Hotelaria / Empresa</label>
+                                    <p class="text-[10px] text-slate-400 leading-tight">Suba até 10 fotos gerais (piscina, lazer, recepção, etc.) para exibição em carrossel na vitrine.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-row gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-navie-border">
+                                {% for slot in galeria_slots %}
+                                    <div class="relative w-24 h-24 sm:w-28 sm:h-28 border-2 {% if forloop.first %}border-solid border-brand dark:border-brand bg-brand-50/10 dark:bg-brand/5 shadow-inner{% else %}border-dashed border-slate-300 dark:border-navie-border bg-slate-50/50 dark:bg-black/10{% endif %} rounded-2xl overflow-hidden flex flex-col items-center justify-center transition-colors hover:border-brand/40 group cursor-pointer flex-shrink-0"
+                                         onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('galeria_{{ forloop.counter0 }}-file-input').click()">
+                                        
+                                        {% if forloop.first %}
+                                            <!-- Pill/Badge for primary photo -->
+                                            <span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-brand text-[8px] font-black text-white uppercase tracking-wider z-20 shadow-sm">Principal</span>
+                                        {% endif %}
+                                        
+                                        <input type="file" id="galeria_{{ forloop.counter0 }}-file-input" name="galeria_{{ forloop.counter0 }}_file" accept="image/*" class="hidden"
+                                               onclick="event.stopPropagation()"
+                                               onchange="previewImageUnified(this, 'galeria_{{ forloop.counter0 }}')">
+                                        
+                                        {% if slot %}
+                                            <input type="hidden" name="galeria_{{ forloop.counter0 }}_id" value="{{ slot.id }}">
+                                        {% endif %}
+                                        <input type="hidden" name="galeria_{{ forloop.counter0 }}_remover" id="remover-galeria_{{ forloop.counter0 }}-input" value="false">
+
+                                        <!-- Empty State -->
+                                        <div id="galeria_{{ forloop.counter0 }}-empty-state" class="flex-col items-center justify-center text-center p-2 {% if slot %}hidden{% else %}flex{% endif %}">
+                                            <i data-lucide="plus" class="w-5 h-5 {% if forloop.first %}text-brand{% else %}text-slate-400 dark:text-navie-textsec{% endif %} mb-1"></i>
+                                            <span class="text-[10px] font-bold {% if forloop.first %}text-brand{% else %}text-slate-600 dark:text-slate-300{% endif %}">FOTO {{ forloop.counter }}</span>
+                                        </div>
+
+                                        <!-- Active State -->
+                                        <div id="galeria_{{ forloop.counter0 }}-active-state" class="absolute inset-0 w-full h-full {% if not slot %}hidden{% endif %}">
+                                            <img id="galeria_{{ forloop.counter0 }}-preview-img" src="{% if slot %}{{ slot.url_imagem.url }}{% endif %}" class="w-full h-full object-cover" alt="Foto {{ forloop.counter }} preview">
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-200 z-10">
+                                                <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105"
+                                                        onclick="event.stopPropagation(); clearUnifiedMedia('galeria_{{ forloop.counter0 }}')">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                                <span class="text-[8px] font-black text-white uppercase tracking-wider bg-black/40 px-1 py-0.5 rounded text-center leading-none">Alterar</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -1309,47 +2292,53 @@
                                 </div>
                             </label>
                         </div>
-                        <div x-show="tipoMidia === 'imagem'" class="space-y-3">
-                            <div class="relative w-full h-48 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
-                                 onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
+                        <!-- Grid container for media input + double mockup preview -->
+                        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
+                            <!-- Left Column: Image or Video uploader -->
+                            <div class="xl:col-span-5 flex flex-col gap-4">
                                 
-                                <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
-                                       onchange="previewImageUnified(this, 'banner')">
-                                
-                                <!-- Empty State -->
-                                <div id="banner-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.banner %}hidden{% else %}flex{% endif %}">
-                                    <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
-                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Clique ou selecione para subir a Imagem Banner</span>
-                                    <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
-                                </div>
+                                <!-- Foto Estática (Banner) -->
+                                <div x-show="tipoMidia === 'imagem'" class="space-y-3">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Imagem de Entrada (Hero)</label>
+                                    <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                         onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
+                                        
+                                        <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
+                                               onclick="event.stopPropagation()"
+                                               onchange="previewImageUnified(this, 'banner')">
+                                        
+                                        <!-- Empty State -->
+                                        <div id="banner-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.banner %}hidden{% else %}flex{% endif %}">
+                                            <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                            <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Imagem de Entrada</span>
+                                            <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                        </div>
 
-                                <!-- Active State -->
-                                <div id="banner-active-state" class="absolute inset-0 w-full h-full {% if not hotel.banner %}hidden{% endif %}">
-                                    <img id="banner-preview-img" src="{% if hotel.banner %}{{ hotel.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
-                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
-                                        <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
-                                                onclick="event.stopPropagation(); clearUnifiedMedia('banner')">
-                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                            <span>Apagar</span>
-                                        </button>
-                                        <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        <!-- Active State -->
+                                        <div id="banner-active-state" class="absolute inset-0 w-full h-full {% if not hotel.banner %}hidden{% endif %}">
+                                            <img id="banner-preview-img" src="{% if hotel.banner %}{{ hotel.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                        onclick="event.stopPropagation(); clearUnifiedMedia('banner')">
+                                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                    <span>Apagar</span>
+                                                </button>
+                                                <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
+                                    <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Suba uma imagem em alta resolução. Ela será exibida de fundo no banner de entrada da sua pousada para os clientes.</p>
                                 </div>
-                                <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
-                            </div>
-                        </div>
 
-                        <!-- Campo Upload Vídeo com double mockup -->
-                        <div x-show="tipoMidia === 'video'" class="space-y-4 pt-2" style="display:none;">
-                            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center">
-                                <!-- Left Column: Video uploader -->
-                                <div class="xl:col-span-5 flex flex-col gap-4">
+                                <!-- Vídeo de Fundo (Hero) -->
+                                <div x-show="tipoMidia === 'video'" class="space-y-3" style="display:none;">
                                     <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Vídeo de Fundo do Banner (Hero)</label>
                                     
                                     <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
                                          onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('hero_video-file-input').click()">
                                         
-                                        <input type="file" id="hero_video-file-input" name="hero_video" accept="video/*" class="hidden" onchange="previewLocalHeroVideoUnified(this)">
+                                        <input type="file" id="hero_video-file-input" name="hero_video" accept="video/*" class="hidden" onclick="event.stopPropagation()" onchange="previewLocalHeroVideoUnified(this)">
                                         
                                         <!-- Empty State -->
                                         <div id="hero_video-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.hero_video %}hidden{% else %}flex{% endif %}">
@@ -1379,49 +2368,50 @@
                                     <p class="text-[10px] text-slate-400 b2b-text-media-gap leading-relaxed">Faça o upload do tour de vídeo principal do seu estabelecimento. Ele rodará de forma contínua no banner de entrada da sua pousada para os clientes.</p>
                                 </div>
 
-                                <!-- Right Column: Double devices -->
-                                <div class="xl:col-span-7 flex flex-row items-end justify-center gap-4 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5">
-                                    
-                                    <!-- Desktop Safari Mockup -->
-                                    <div class="flex flex-col gap-2 shrink-0">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Desktop)</span>
-                                        <div class="w-48 sm:w-64 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
-                                            <!-- Browser Header -->
-                                            <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-                                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
-                                                <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
-                                                <div class="h-2.5 w-32 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[5px] text-slate-400 truncate px-1" id="mockup-url-desktop">
-                                                    {{ hotel.slug|default:'pousadaramilostiangua' }}.navievibe.com
-                                                </div>
-                                            </div>
-                                            <!-- Scaling Iframe Area -->
-                                            <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
-                                                <iframe id="hero-preview-iframe-desktop" 
-                                                        src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
-                                                        class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
-                                                        style="transform: scale(0.20);"></iframe>
-                                            </div>
-                                        </div>
-                                    </div>
+                            </div>
 
-                                    <!-- Smartphone Mockup -->
-                                    <div class="flex flex-col gap-2 shrink-0">
-                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Mobile)</span>
-                                        <div class="w-[85px] h-[150px] rounded-[20px] border-[3px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
-                                            <!-- notch -->
-                                            <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
-                                            <!-- Scaling Iframe Area -->
-                                            <div class="w-full h-full bg-slate-950 relative overflow-hidden">
-                                                <iframe id="hero-preview-iframe-mobile" 
-                                                        src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
-                                                        class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
-                                                        style="transform: scale(0.226);"></iframe>
+                            <!-- Right Column: Double devices -->
+                            <div class="xl:col-span-7 flex flex-row items-end justify-center gap-4 bg-slate-50/40 dark:bg-black/10 p-5 rounded-3xl border border-slate-100 dark:border-white/5">
+                                
+                                <!-- Desktop Safari Mockup -->
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Desktop)</span>
+                                    <div class="w-48 sm:w-64 aspect-video rounded-xl border border-slate-200 dark:border-white/10 bg-slate-900 overflow-hidden shadow-lg flex flex-col relative group">
+                                        <!-- Browser Header -->
+                                        <div class="h-3.5 bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-white/5 flex items-center px-1.5 gap-1 shrink-0 relative z-10">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400"></span>
+                                            <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                            <div class="h-2.5 w-32 bg-white dark:bg-slate-900 rounded-[2px] ml-2 flex items-center justify-center text-[5px] text-slate-400 truncate px-1" id="mockup-url-desktop">
+                                                {{ hotel.slug|default:'pousadaramilostiangua' }}.navievibe.com
                                             </div>
                                         </div>
+                                        <!-- Scaling Iframe Area -->
+                                        <div class="flex-1 w-full bg-slate-950 relative overflow-hidden">
+                                            <iframe id="hero-preview-iframe-desktop" 
+                                                    src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
+                                                    class="absolute top-0 left-0 w-[1280px] h-[720px] border-0 origin-top-left pointer-events-none select-none"
+                                                    style="transform: scale(0.20);"></iframe>
+                                        </div>
                                     </div>
-                                    
                                 </div>
+
+                                <!-- Smartphone Mockup -->
+                                <div class="flex flex-col gap-2 shrink-0">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Entrada (Mobile)</span>
+                                    <div class="w-[85px] h-[150px] rounded-[20px] border-[3px] border-slate-800 dark:border-slate-700 bg-slate-900 overflow-hidden shadow-2xl relative flex flex-col shrink-0 z-0">
+                                        <!-- notch -->
+                                        <div class="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-1.5 bg-slate-800 rounded-full z-20"></div>
+                                        <!-- Scaling Iframe Area -->
+                                        <div class="w-full h-full bg-slate-950 relative overflow-hidden">
+                                            <iframe id="hero-preview-iframe-mobile" 
+                                                    src="{% if hotel.slug %}{% url 'hoteis:vanity_url' hotel.slug %}{% else %}/hotel/{{ hotel.id }}/{% endif %}?preview=1"
+                                                    class="absolute top-0 left-0 w-[375px] h-[675px] border-0 origin-top-left pointer-events-none select-none"
+                                                    style="transform: scale(0.226);"></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                             </div>
                         </div>
                     </div>
@@ -1455,6 +2445,14 @@
                         <!-- Inputs Ocultos de Latitude e Longitude -->
                         <input type="hidden" name="latitude" id="hotel_lat" value="{% if hotel.latitude %}{{ hotel.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
                         <input type="hidden" name="longitude" id="hotel_lon" value="{% if hotel.longitude %}{{ hotel.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
+
+                        <!-- Campo: Endereço por Escrito -->
+                        <div class="space-y-1.5 w-full">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Endereço por Extenso</label>
+                            <input type="text" name="endereco" value="{{ hotel.local.endereco }}" 
+                                   placeholder="Ex: Av. Beira Mar, S/N - Praia de Atalaia, Luís Correia - PI, 64220-000"
+                                   class="w-full h-10 px-3 rounded-xl border border-slate-200/80 dark:border-navie-border/60 bg-slate-50 dark:bg-white/5 text-[11px] font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand transition-colors">
+                        </div>
 
                         <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border flex flex-col gap-2">
                             <!-- Botões de Ações do Mapa -->
@@ -1619,6 +2617,120 @@
         
         <!-- JavaScript do Leaflet Selector -->
         <script>
+            // HSL & Color Picker utilities
+            function hexToHsl(hex) {
+                hex = hex.replace(/^#/, '');
+                if (hex.length === 3) {
+                    hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                }
+                let r = parseInt(hex.substring(0, 2), 16) / 255 || 0;
+                let g = parseInt(hex.substring(2, 4), 16) / 255 || 0;
+                let b = parseInt(hex.substring(4, 6), 16) / 255 || 0;
+                let max = Math.max(r, g, b), min = Math.min(r, g, b);
+                let h, s, l = (max + min) / 2;
+                if (max === min) {
+                    h = s = 0;
+                } else {
+                    let d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                    switch (max) {
+                        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h /= 6;
+                }
+                return {
+                    h: Math.round(h * 360),
+                    s: Math.round(s * 100),
+                    l: Math.round(l * 100)
+                };
+            }
+
+            function hslToHex(h, s, l) {
+                l /= 100;
+                const a = s * Math.min(l, 1 - l) / 100;
+                const f = n => {
+                    const k = (n + h / 30) % 12;
+                    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                    const hex = Math.round(255 * color).toString(16);
+                    return hex.padStart(2, '0');
+                };
+                return `#${f(0)}${f(8)}${f(4)}`;
+            }
+
+            function colorPickerData(initialColor, inputId) {
+                return {
+                    open: false,
+                    color: initialColor,
+                    h: 0,
+                    s: 100,
+                    l: 50,
+                    presets: [
+                        '#f97316', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#ec4899',
+                        '#f59e0b', '#14b8a6', '#6366f1', '#06b6d4', '#22c55e', '#475569'
+                    ],
+                    init() {
+                        this.syncHslFromHex(this.color);
+                    },
+                    syncHslFromHex(hex) {
+                        try {
+                            const hsl = hexToHsl(hex);
+                            this.h = hsl.h;
+                            this.s = hsl.s;
+                            this.l = hsl.l;
+                        } catch(e) {
+                            console.log(e);
+                        }
+                    },
+                    updateFromHsl() {
+                        this.color = hslToHex(parseInt(this.h), parseInt(this.s), parseInt(this.l));
+                        this.dispatchUpdate();
+                    },
+                    setPreset(hex) {
+                        this.color = hex;
+                        this.syncHslFromHex(hex);
+                        this.dispatchUpdate();
+                    },
+                    onHexInput(val) {
+                        if (val.startsWith('#') && val.length === 7) {
+                            this.color = val;
+                            this.syncHslFromHex(val);
+                            this.dispatchUpdate();
+                        }
+                    },
+                    onNativeInput(val) {
+                        this.color = val;
+                        this.syncHslFromHex(val);
+                        this.dispatchUpdate();
+                    },
+                    triggerNativePicker() {
+                        // Find native input by traversing children or finding it inside $el
+                        const picker = this.$el.querySelector('input[type="color"]');
+                        if (picker) {
+                            picker.click();
+                        }
+                    },
+                    dispatchUpdate() {
+                        const hexInput = document.getElementById(inputId);
+                        if (hexInput) {
+                            hexInput.value = this.color;
+                            hexInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                        const nativePicker = this.$el.querySelector('input[type="color"]');
+                        if (nativePicker) {
+                            nativePicker.value = this.color;
+                        }
+                        if (typeof updateAllIframes === 'function') {
+                            updateAllIframes();
+                        }
+                        if (typeof updateAllIframesGeral === 'function') {
+                            updateAllIframesGeral();
+                        }
+                    }
+                };
+            }
+
             let leafletMap;
             let leafletMarker;
             let camadaSatelite;
@@ -1805,7 +2917,7 @@
                         const doc = iframe.contentDocument || iframe.contentWindow.document;
                         if (doc) {
                             // Update Hero media type (video vs image)
-                            const heroTipoVal = document.querySelector('input[name="hero_tipo"]:checked')?.value || 'imagem';
+                            const heroTipoVal = document.querySelector('#form-salvar-config input[name="hero_tipo"]:checked')?.value || 'imagem';
                             const videoEl = doc.getElementById('hero-media-video');
                             const imgEl = doc.getElementById('hero-media-img');
                             
@@ -1845,7 +2957,7 @@
                                     const hasOrigLogo = "{% if hotel.logo %}true{% endif %}" === "true";
                                     const logoRemoved = document.getElementById('remover-logo-input')?.value === "true";
                                     if (hasOrigLogo && !logoRemoved) {
-                                        logoImg.src = "{{ hotel.logo.url }}";
+                                        logoImg.src = "{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}";
                                         logoWrapper.classList.remove('hidden');
                                     } else {
                                         logoWrapper.classList.add('hidden');
@@ -1889,6 +3001,22 @@
                     doc.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
                     doc.documentElement.style.setProperty('--navie-primary', rawColor);
                 }
+
+                // 3. Sync Brand Secondary Color
+                const colorInputSec = document.getElementById('cor_secundaria_hex');
+                if (colorInputSec && colorInputSec.value) {
+                    const rawColorSec = colorInputSec.value;
+                    let hexSec = rawColorSec.replace('#', '');
+                    if (hexSec.length === 3) {
+                        hexSec = hexSec[0] + hexSec[0] + hexSec[1] + hexSec[1] + hexSec[2] + hexSec[2];
+                    }
+                    const sr = parseInt(hexSec.substring(0, 2), 16) || 37;
+                    const sg = parseInt(hexSec.substring(2, 4), 16) || 99;
+                    const sb = parseInt(hexSec.substring(4, 6), 16) || 235;
+                    
+                    doc.documentElement.style.setProperty('--brand-color-secondary', rawColorSec);
+                    doc.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+                }
             }
 
             function updateAllIframes() {
@@ -1899,6 +3027,10 @@
 
             // Universal Image Upload Preview Handler
             function previewImageUnified(input, type) {
+                if (type === 'logo') {
+                    openLogoCropper(input, type);
+                    return;
+                }
                 const file = input.files[0];
                 if (file) {
                     const reader = new FileReader();
@@ -1945,6 +3077,30 @@
                 }
             }
 
+            function previewGaleriaUnified(input, index) {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById(`galeria-preview-${index}`).src = e.target.result;
+                        document.getElementById(`galeria-empty-${index}`).classList.add('hidden');
+                        document.getElementById(`galeria-active-${index}`).classList.remove('hidden');
+                        document.getElementById(`galeria-remover-${index}`).value = 'false';
+                        updateAllIframes();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function clearGaleriaUnified(index) {
+                document.getElementById(`galeria-preview-${index}`).src = '';
+                document.getElementById(`galeria-active-${index}`).classList.add('hidden');
+                document.getElementById(`galeria-empty-${index}`).classList.remove('hidden');
+                document.getElementById(`galeria-file-${index}`).value = '';
+                document.getElementById(`galeria-remover-${index}`).value = 'true';
+                updateAllIframes();
+            }
+
             // Local Uploaded Video Handler
             function previewLocalHeroVideoUnified(input) {
                 const file = input.files[0];
@@ -1984,9 +3140,400 @@
                 updateAllIframes();
             }
 
+            // ─────────────────────────────────────────────────────────────
+            // WYSIWYG REAL-TIME IFRAME HYDRATOR & BANNER VIDEO TOUR ENGINE (GERAL)
+            // ─────────────────────────────────────────────────────────────
+            var activeHeroVideoLocalUrlGeral = null;
+            var activeBannerLocalUrlGeral = null;
+            var activeLogoLocalUrlGeral = null;
+            var activeSobreBannerLocalUrlGeral = null;
+            var activeSobreVideoLocalUrlGeral = null;
+
+            function hydrateHeroIframeVideoGeral(iframeId) {
+                const iframe = document.getElementById(iframeId);
+                if (iframe) {
+                    try {
+                        const doc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (doc) {
+                            // Update Hero media type (video vs image)
+                            const heroTipoVal = document.querySelector('#form-salvar-config-geral input[name="hero_tipo"]:checked')?.value || 'imagem';
+                            const videoEl = doc.getElementById('hero-media-video');
+                            const imgEl = doc.getElementById('hero-media-img');
+                            
+                            if (videoEl && imgEl) {
+                                if (heroTipoVal === 'video') {
+                                    videoEl.classList.remove('hidden');
+                                    imgEl.classList.add('hidden');
+                                    
+                                    if (activeHeroVideoLocalUrlGeral) {
+                                        videoEl.src = activeHeroVideoLocalUrlGeral;
+                                    } else {
+                                        videoEl.src = "{% if hotel.empresa.hero_video %}{{ hotel.empresa.hero_video.url }}{% endif %}";
+                                    }
+                                    videoEl.load();
+                                    videoEl.play().catch(e => console.log('Autoplay blocked in hero preview (Geral)'));
+                                } else {
+                                    videoEl.classList.add('hidden');
+                                    videoEl.pause();
+                                    imgEl.classList.remove('hidden');
+                                    
+                                    if (activeBannerLocalUrlGeral) {
+                                        imgEl.src = activeBannerLocalUrlGeral;
+                                    } else {
+                                        imgEl.src = "{% if hotel.empresa.banner %}{{ hotel.empresa.banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}";
+                                    }
+                                }
+                            }
+
+                            // Update logo in preview
+                            const logoImg = doc.getElementById('hero-logo-img');
+                            const logoWrapper = doc.getElementById('hero-logo-wrapper');
+                            if (logoImg && logoWrapper) {
+                                if (activeLogoLocalUrlGeral) {
+                                    logoImg.src = activeLogoLocalUrlGeral;
+                                    logoWrapper.classList.remove('hidden');
+                                } else {
+                                    const hasOrigLogo = "{% if hotel.empresa.logo %}true{% endif %}" === "true";
+                                    const logoRemoved = document.getElementById('remover-logo-input-geral')?.value === "true";
+                                    if (hasOrigLogo && !logoRemoved) {
+                                        logoImg.src = "{% if hotel.empresa.logo %}{{ hotel.empresa.logo.url }}{% endif %}";
+                                        logoWrapper.classList.remove('hidden');
+                                    } else {
+                                        logoWrapper.classList.add('hidden');
+                                    }
+                                }
+                            }
+
+                            // Update Sobre media type (video vs image)
+                            const sobreTipoVal = document.querySelector('#form-salvar-config-geral input[name="sobre_midia_tipo"]:checked')?.value || 'imagem';
+                            const sobreVideoEl = doc.getElementById('sobre-media-video');
+                            const sobreImgEl = doc.getElementById('sobre-media-img');
+                            
+                            if (sobreVideoEl && sobreImgEl) {
+                                if (sobreTipoVal === 'video') {
+                                    sobreVideoEl.classList.remove('hidden');
+                                    sobreImgEl.classList.add('hidden');
+                                    
+                                    if (activeSobreVideoLocalUrlGeral) {
+                                        sobreVideoEl.src = activeSobreVideoLocalUrlGeral;
+                                    } else {
+                                        sobreVideoEl.src = "{% if hotel.empresa.sobre_video %}{{ hotel.empresa.sobre_video.url }}{% endif %}";
+                                    }
+                                    sobreVideoEl.load();
+                                    sobreVideoEl.play().catch(e => console.log('Autoplay blocked in sobre preview (Geral)'));
+                                } else {
+                                    sobreVideoEl.classList.add('hidden');
+                                    sobreVideoEl.pause();
+                                    sobreImgEl.classList.remove('hidden');
+                                    
+                                    if (activeSobreBannerLocalUrlGeral) {
+                                        sobreImgEl.src = activeSobreBannerLocalUrlGeral;
+                                    } else {
+                                        sobreImgEl.src = "{% if hotel.empresa.sobre_banner %}{{ hotel.empresa.sobre_banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}";
+                                    }
+                                }
+                            }
+
+                            syncIframeTextsGeral(doc);
+                        }
+                    } catch(e) {
+                        console.log("Iframe hydration access blocked (Geral): ", e);
+                    }
+                }
+            }
+
+            function syncIframeTextsGeral(doc) {
+                if (!doc || !doc.documentElement) return;
+                
+                // 1. Sync Group Name
+                const nameInput = document.querySelector('#form-salvar-config-geral input[name="nome_fantasia"]');
+                if (nameInput) {
+                    const groupH1 = doc.querySelector('h1');
+                    if (groupH1) {
+                        groupH1.textContent = nameInput.value || "Nome do Grupo";
+                    }
+                }
+
+                // 2. Sync Slogan/Description
+                const sloganInput = document.querySelector('#form-salvar-config-geral textarea[name="descricao_portal"]');
+                if (sloganInput) {
+                    const groupP = doc.querySelector('p');
+                    if (groupP) {
+                        groupP.textContent = sloganInput.value || "Slogan da Rede";
+                    }
+                }
+                
+                // 3. Sync Brand Color
+                const colorInput = document.getElementById('cor_primaria_grupo_hex');
+                if (colorInput && colorInput.value) {
+                    const rawColor = colorInput.value;
+                    let hex = rawColor.replace('#', '');
+                    if (hex.length === 3) {
+                        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+                    }
+                    const r = parseInt(hex.substring(0, 2), 16) || 37;
+                    const g = parseInt(hex.substring(2, 4), 16) || 99;
+                    const b = parseInt(hex.substring(4, 6), 16) || 235;
+                    
+                    doc.documentElement.style.setProperty('--brand-color', rawColor);
+                    doc.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
+                    doc.documentElement.style.setProperty('--navie-primary', rawColor);
+                }
+
+                // 4. Sync Brand Secondary Color
+                const colorInputSec = document.getElementById('cor_secundaria_grupo_hex');
+                if (colorInputSec && colorInputSec.value) {
+                    const rawColorSec = colorInputSec.value;
+                    let hexSec = rawColorSec.replace('#', '');
+                    if (hexSec.length === 3) {
+                        hexSec = hexSec[0] + hexSec[0] + hexSec[1] + hexSec[1] + hexSec[2] + hexSec[2];
+                    }
+                    const sr = parseInt(hexSec.substring(0, 2), 16) || 37;
+                    const sg = parseInt(hexSec.substring(2, 4), 16) || 99;
+                    const sb = parseInt(hexSec.substring(4, 6), 16) || 235;
+                    
+                    doc.documentElement.style.setProperty('--brand-color-secondary', rawColorSec);
+                    doc.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+                }
+
+                // 5. Sync Sobre Title and Text
+                const sobreTituloInput = document.getElementById('sobre_titulo_geral');
+                if (sobreTituloInput) {
+                    const sobreH2 = doc.getElementById('sobre-titulo');
+                    if (sobreH2) {
+                        sobreH2.textContent = sobreTituloInput.value || "Sobre Nós";
+                    }
+                }
+                const sobreTextoInput = document.getElementById('sobre_texto_input');
+                if (sobreTextoInput) {
+                    const sobreDiv = doc.getElementById('sobre-texto');
+                    if (sobreDiv) {
+                        sobreDiv.innerHTML = sobreTextoInput.value || "Conteúdo institucional da rede...";
+                        
+                        // Dynamically re-evaluate "Ler mais" button in preview iframe
+                        if (doc.defaultView && typeof doc.defaultView.initSobreExpander === 'function') {
+                            doc.defaultView.initSobreExpander();
+                        }
+                    }
+                }
+
+                // 6. Sync Sobre Custom Colors
+                const sobreFundoInput = document.getElementById('sobre_cor_fundo_hex');
+                if (sobreFundoInput && sobreFundoInput.value) {
+                    doc.documentElement.style.setProperty('--sobre-bg-color', sobreFundoInput.value);
+                    const iframeSec = doc.getElementById('sobre-section');
+                    if (iframeSec) {
+                        iframeSec.style.setProperty('--sobre-bg-color', sobreFundoInput.value);
+                    }
+                }
+                const sobreTextInput = document.getElementById('sobre_cor_texto_hex');
+                if (sobreTextInput && sobreTextInput.value) {
+                    doc.documentElement.style.setProperty('--sobre-text-color', sobreTextInput.value);
+                    const iframeSec = doc.getElementById('sobre-section');
+                    if (iframeSec) {
+                        iframeSec.style.setProperty('--sobre-text-color', sobreTextInput.value);
+                        
+                        // Sync border color on title
+                        const iframeH2 = doc.getElementById('sobre-titulo');
+                        if (iframeH2) {
+                            iframeH2.style.borderColor = sobreTextInput.value;
+                        }
+                    }
+                }
+                
+                // Re-evaluate contrast color on load/change
+                if (doc.defaultView && typeof doc.defaultView.initSobreExpander === 'function') {
+                    doc.defaultView.initSobreExpander();
+                }
+            }
+
+            function updateAllIframesGeral() {
+                ['hero-preview-iframe-desktop-geral', 'hero-preview-iframe-mobile-geral'].forEach(iframeId => {
+                    hydrateHeroIframeVideoGeral(iframeId);
+                });
+            }
+
+            function previewImageUnifiedGeral(input, type) {
+                if (type === 'logo-geral') {
+                    openLogoCropper(input, type);
+                    return;
+                }
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const previewImg = document.getElementById(`${type}-preview-img`);
+                        if (previewImg) {
+                            previewImg.src = e.target.result;
+                        }
+                        
+                        const activeState = document.getElementById(`${type}-active-state`);
+                        if (activeState) {
+                            activeState.classList.remove('hidden');
+                        }
+                        
+                        const emptyState = document.getElementById(`${type}-empty-state`);
+                        if (emptyState) {
+                            emptyState.classList.add('hidden');
+                            emptyState.classList.remove('flex');
+                        }
+                        
+                        document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`).value = 'false';
+
+                        if (type === 'banner-geral') {
+                            activeBannerLocalUrlGeral = e.target.result;
+                        } else if (type === 'logo-geral') {
+                            activeLogoLocalUrlGeral = e.target.result;
+                        } else if (type === 'sobre_banner-geral') {
+                            activeSobreBannerLocalUrlGeral = e.target.result;
+                        }
+                        updateAllIframesGeral();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function clearUnifiedMediaGeral(type) {
+                const previewImg = document.getElementById(`${type}-preview-img`);
+                if (previewImg) {
+                    previewImg.src = '';
+                }
+                
+                const activeState = document.getElementById(`${type}-active-state`);
+                if (activeState) {
+                    activeState.classList.add('hidden');
+                }
+                
+                const emptyState = document.getElementById(`${type}-empty-state`);
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                }
+                
+                const fileInput = document.getElementById(`${type}-file-input`);
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                
+                document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`).value = 'true';
+
+                if (type === 'banner-geral') {
+                    activeBannerLocalUrlGeral = null;
+                } else if (type === 'logo-geral') {
+                    activeLogoLocalUrlGeral = null;
+                } else if (type === 'sobre_banner-geral') {
+                    activeSobreBannerLocalUrlGeral = null;
+                }
+                updateAllIframesGeral();
+            }
+
+            function previewLocalHeroVideoUnifiedGeral(input) {
+                const file = input.files[0];
+                if (file) {
+                    if (file.size > 30 * 1024 * 1024) {
+                        alert("O arquivo de vídeo tour excede o limite máximo de 30MB.");
+                        input.value = '';
+                        return;
+                    }
+                    if (activeHeroVideoLocalUrlGeral) {
+                        URL.revokeObjectURL(activeHeroVideoLocalUrlGeral);
+                    }
+                    activeHeroVideoLocalUrlGeral = URL.createObjectURL(file);
+                    
+                    const player = document.getElementById('hero_video-geral-preview-player');
+                    if (player) {
+                        player.src = activeHeroVideoLocalUrlGeral;
+                        player.load();
+                        player.play().catch(e => console.log('Autoplay blocked in dashboard thumbnail (Geral)'));
+                    }
+                    
+                    document.getElementById('hero_video-geral-empty-state').classList.add('hidden');
+                    document.getElementById('hero_video-geral-empty-state').classList.remove('flex');
+                    document.getElementById('hero_video-geral-active-state').classList.remove('hidden');
+                    document.getElementById('remover-hero_video-geral-input').value = 'false';
+                    
+                    updateAllIframesGeral();
+                }
+            }
+
+            function clearHeroVideoUnifiedGeral() {
+                if (activeHeroVideoLocalUrlGeral) {
+                    URL.revokeObjectURL(activeHeroVideoLocalUrlGeral);
+                }
+                activeHeroVideoLocalUrlGeral = null;
+                
+                document.getElementById('hero_video-geral-active-state').classList.add('hidden');
+                document.getElementById('hero_video-geral-empty-state').classList.remove('hidden');
+                document.getElementById('hero_video-geral-empty-state').classList.add('flex');
+                document.getElementById('hero_video-geral-file-input').value = '';
+                document.getElementById('remover-hero_video-geral-input').value = 'true';
+                
+                updateAllIframesGeral();
+            }
+
+            function previewLocalSobreVideoUnifiedGeral(input) {
+                const file = input.files[0];
+                if (file) {
+                    if (file.size > 8 * 1024 * 1024) {
+                        alert("O arquivo de vídeo da seção Sobre excede o limite máximo de 8MB.");
+                        input.value = '';
+                        return;
+                    }
+                    if (activeSobreVideoLocalUrlGeral) {
+                        URL.revokeObjectURL(activeSobreVideoLocalUrlGeral);
+                    }
+                    activeSobreVideoLocalUrlGeral = URL.createObjectURL(file);
+                    
+                    const player = document.getElementById('sobre_video-geral-preview-player');
+                    if (player) {
+                        player.src = activeSobreVideoLocalUrlGeral;
+                        player.load();
+                        player.play().catch(e => console.log('Autoplay blocked in dashboard Sobre video preview (Geral)'));
+                    }
+                    
+                    document.getElementById('sobre_video-geral-empty-state').classList.add('hidden');
+                    document.getElementById('sobre_video-geral-empty-state').classList.remove('flex');
+                    document.getElementById('sobre_video-geral-active-state').classList.remove('hidden');
+                    document.getElementById('remover-sobre_video-geral-input').value = 'false';
+                    
+                    updateAllIframesGeral();
+                }
+            }
+
+            function clearSobreVideoUnifiedGeral() {
+                if (activeSobreVideoLocalUrlGeral) {
+                    URL.revokeObjectURL(activeSobreVideoLocalUrlGeral);
+                }
+                activeSobreVideoLocalUrlGeral = null;
+                
+                document.getElementById('sobre_video-geral-active-state').classList.add('hidden');
+                document.getElementById('sobre_video-geral-empty-state').classList.remove('hidden');
+                document.getElementById('sobre_video-geral-empty-state').classList.add('flex');
+                document.getElementById('sobre_video-file-input').value = '';
+                document.getElementById('remover-sobre_video-geral-input').value = 'true';
+                
+                updateAllIframesGeral();
+            }
+
+            function formatDoc(cmd) {
+                document.execCommand(cmd, false, null);
+                syncWysiwygToInput();
+            }
+
+            function syncWysiwygToInput() {
+                const editor = document.getElementById('wysiwyg-editor-sobre');
+                const hiddenInput = document.getElementById('sobre_texto_input');
+                if (editor && hiddenInput) {
+                    hiddenInput.value = editor.innerHTML;
+                    const event = new Event('input', { bubbles: true });
+                    hiddenInput.dispatchEvent(event);
+                }
+            }
+
             function setupDashboardListeners() {
                 const nameInput = document.querySelector('input[name="nome"]');
                 const colorInput = document.getElementById('cor_primaria_hex');
+                const colorInputSec = document.getElementById('cor_secundaria_hex');
                 const slugInput = document.querySelector('input[name="slug"]');
                 
                 if (nameInput) {
@@ -1995,6 +3542,10 @@
                 
                 if (colorInput) {
                     colorInput.addEventListener('input', updateAllIframes);
+                }
+                
+                if (colorInputSec) {
+                    colorInputSec.addEventListener('input', updateAllIframes);
                 }
                 
                 if (slugInput) {
@@ -2024,8 +3575,76 @@
                     }
                 }
                 
+                // Geral Config listeners
+                const nameInputGeral = document.querySelector('#form-salvar-config-geral input[name="nome_fantasia"]');
+                const sloganInputGeral = document.querySelector('#form-salvar-config-geral textarea[name="descricao_portal"]');
+                const colorInputGeral = document.getElementById('cor_primaria_grupo_hex');
+                const colorInputGeralSec = document.getElementById('cor_secundaria_grupo_hex');
+                const radioMediaGeral = document.querySelectorAll('#form-salvar-config-geral input[name="hero_tipo"]');
+
+                if (nameInputGeral) {
+                    nameInputGeral.addEventListener('input', updateAllIframesGeral);
+                }
+                if (sloganInputGeral) {
+                    sloganInputGeral.addEventListener('input', updateAllIframesGeral);
+                }
+                if (colorInputGeral) {
+                    colorInputGeral.addEventListener('input', updateAllIframesGeral);
+                }
+                if (colorInputGeralSec) {
+                    colorInputGeralSec.addEventListener('input', updateAllIframesGeral);
+                }
+                if (radioMediaGeral) {
+                    radioMediaGeral.forEach(radio => {
+                        radio.addEventListener('change', updateAllIframesGeral);
+                    });
+                }
+
+                // Listeners para a seção Sobre
+                const sobreTituloInput = document.getElementById('sobre_titulo_geral');
+                const sobreTextoInput = document.getElementById('sobre_texto_input');
+                const sobreFundoInput = document.getElementById('sobre_cor_fundo_hex');
+                const sobreTextInput = document.getElementById('sobre_cor_texto_hex');
+                const sobreRadioInputs = document.querySelectorAll('#form-salvar-config-geral input[name="sobre_midia_tipo"]');
+
+                if (sobreTituloInput) {
+                    sobreTituloInput.addEventListener('input', updateAllIframesGeral);
+                }
+                if (sobreTextoInput) {
+                    sobreTextoInput.addEventListener('input', updateAllIframesGeral);
+                }
+                if (sobreFundoInput) {
+                    sobreFundoInput.addEventListener('input', updateAllIframesGeral);
+                }
+                if (sobreTextInput) {
+                    sobreTextInput.addEventListener('input', updateAllIframesGeral);
+                }
+                if (sobreRadioInputs) {
+                    sobreRadioInputs.forEach(radio => {
+                        radio.addEventListener('change', updateAllIframesGeral);
+                    });
+                }
+
+                // Bind Geral iframe load events dynamically
+                const desktopIframeGeral = document.getElementById('hero-preview-iframe-desktop-geral');
+                const mobileIframeGeral = document.getElementById('hero-preview-iframe-mobile-geral');
+                
+                if (desktopIframeGeral) {
+                    desktopIframeGeral.addEventListener('load', () => hydrateHeroIframeVideoGeral('hero-preview-iframe-desktop-geral'));
+                    if (desktopIframeGeral.contentDocument && desktopIframeGeral.contentDocument.readyState === 'complete') {
+                        hydrateHeroIframeVideoGeral('hero-preview-iframe-desktop-geral');
+                    }
+                }
+                if (mobileIframeGeral) {
+                    mobileIframeGeral.addEventListener('load', () => hydrateHeroIframeVideoGeral('hero-preview-iframe-mobile-geral'));
+                    if (mobileIframeGeral.contentDocument && mobileIframeGeral.contentDocument.readyState === 'complete') {
+                        hydrateHeroIframeVideoGeral('hero-preview-iframe-mobile-geral');
+                    }
+                }
+
                 // Trigger initial text/color sync with a small timeout
                 setTimeout(updateAllIframes, 1000);
+                setTimeout(updateAllIframesGeral, 1000);
             }
 
             if (document.readyState !== 'loading') {
@@ -3478,4 +5097,314 @@
         </div>
     </div>
 </div>
+
+<!-- ─────────────────────────────────────────────────────────────
+     LOGOMARCA CROPPER/EDITOR INTEGRATION (AJUSTE FINO)
+     ───────────────────────────────────────────────────────────── -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+
+<style>
+    /* Force text wrapping on WYSIWYG editor to prevent ChatGPT/AI single-line copy paste bugs */
+    #wysiwyg-editor-sobre, #wysiwyg-editor-sobre * {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    
+    /* Cropper custom CSS styling to match dark/light premium theme */
+    .cropper-view-box,
+    .cropper-face {
+        border-radius: 8px;
+    }
+    .cropper-line {
+        background-color: #6366f1;
+    }
+    .cropper-point {
+        background-color: #6366f1;
+        width: 6px;
+        height: 6px;
+    }
+    .cropper-point.point-se {
+        width: 10px;
+        height: 10px;
+        opacity: 0.9;
+        background-color: #6366f1;
+    }
+</style>
+
+<!-- MODAL DE CORTE DE LOGOMARCA (AJUSTE FINO) -->
+<div id="modal-logo-cropper" style="display:none; position:fixed; inset:0; z-index:99999;" class="bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col transform transition-all duration-300">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
+            <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 text-indigo-600 dark:text-indigo-400">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                </svg>
+                Ajuste Fino da Logo
+            </h3>
+            <button type="button" onclick="closeLogoCropper()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer border-none bg-transparent">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 flex flex-col items-center gap-6">
+            <!-- Cropper Container -->
+            <div class="w-full h-[280px] bg-slate-100 dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 relative flex items-center justify-center">
+                <img id="cropper-target-image" src="" alt="Cortar imagem" class="max-h-full max-w-full hidden">
+            </div>
+
+            <!-- Controls Panel -->
+            <div class="w-full flex flex-col gap-4">
+                <!-- Row 1: Ratio & Zoom -->
+                <div class="flex items-center justify-between gap-4">
+                    <!-- Ratio Selection -->
+                    <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl border border-slate-200/50 dark:border-slate-800/80">
+                        <button type="button" id="btn-cropper-ratio-free" onclick="setCropperRatio(NaN)" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-indigo-600 text-white shadow-sm">
+                            Livre
+                        </button>
+                        <button type="button" id="btn-cropper-ratio-1-1" onclick="setCropperRatio(1)" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800">
+                            1:1 (Quadrado)
+                        </button>
+                    </div>
+
+                    <!-- Zoom Controls -->
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="cropperZoom(-0.02)" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer bg-transparent" title="Menos Zoom (Ajuste Fino)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+                        </button>
+                        <span class="text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest px-1">Zoom</span>
+                        <button type="button" onclick="cropperZoom(0.02)" class="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer bg-transparent" title="Mais Zoom (Ajuste Fino)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 2: Precision D-Pad movement (Ajuste Fino) & Reset -->
+                <div class="flex items-center justify-between gap-4 p-4 bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-100 dark:border-slate-800/80">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest leading-none">Ajuste Fino <br><span class="text-[9px] font-medium text-slate-500 normal-case">(Teclado ou botões)</span></span>
+                    </div>
+
+                    <!-- Movement D-Pad -->
+                    <div class="flex items-center gap-1 bg-slate-200/50 dark:bg-slate-900 rounded-xl p-1">
+                        <button type="button" onclick="cropperMove(-2, 0)" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer border-none bg-transparent" title="Mover para Esquerda">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                        </button>
+                        <div class="flex flex-col gap-1">
+                            <button type="button" onclick="cropperMove(0, -2)" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer border-none bg-transparent" title="Mover para Cima">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+                            </button>
+                            <button type="button" onclick="cropperMove(0, 2)" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer border-none bg-transparent" title="Mover para Baixo">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                            </button>
+                        </div>
+                        <button type="button" onclick="cropperMove(2, 0)" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center cursor-pointer border-none bg-transparent" title="Mover para Direita">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        </button>
+                    </div>
+
+                    <button type="button" onclick="cropperReset()" class="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center justify-center gap-1 cursor-pointer bg-transparent text-[10px] font-bold uppercase tracking-wider" title="Resetar Ajustes">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-end gap-3">
+            <button type="button" onclick="closeLogoCropper()" class="px-4 py-2.5 rounded-2xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border-none bg-transparent cursor-pointer">
+                Cancelar
+            </button>
+            <button type="button" onclick="saveCroppedLogo()" class="px-6 py-2.5 rounded-2xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 border-none cursor-pointer">
+                Salvar Ajuste
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let logoCropper = null;
+    let activeCropperFileInput = null;
+    let activeCropperType = null;
+    let selectedFileName = '';
+
+    function handleCropperKeydown(e) {
+        if (!logoCropper) return;
+        switch(e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                cropperMove(-2, 0);
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                cropperMove(2, 0);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                cropperMove(0, -2);
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                cropperMove(0, 2);
+                break;
+        }
+    }
+
+    function openLogoCropper(fileInput, type) {
+        if (!fileInput.files || !fileInput.files[0]) return;
+        
+        activeCropperFileInput = fileInput;
+        activeCropperType = type;
+        const file = fileInput.files[0];
+        selectedFileName = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const modal = document.getElementById('modal-logo-cropper');
+            const img = document.getElementById('cropper-target-image');
+            
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+            modal.style.display = 'flex';
+            
+            if (logoCropper) {
+                logoCropper.destroy();
+            }
+            
+            // Wait for image load to initialize Cropper
+            setTimeout(() => {
+                logoCropper = new Cropper(img, {
+                    viewMode: 1,
+                    dragMode: 'move',
+                    autoCropArea: 0.9,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    toggleDragModeOnDblclick: false,
+                    wheelZoomRatio: 0.02, // ultra slow wheel zoom for subtle adjustments
+                    ready() {
+                        setCropperRatio(NaN); // Default to Free Aspect Ratio
+                    }
+                });
+            }, 50);
+            
+            window.addEventListener('keydown', handleCropperKeydown);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function closeLogoCropper() {
+        const modal = document.getElementById('modal-logo-cropper');
+        modal.style.display = 'none';
+        
+        if (logoCropper) {
+            logoCropper.destroy();
+            logoCropper = null;
+        }
+        
+        if (activeCropperFileInput) {
+            activeCropperFileInput.value = '';
+        }
+        
+        window.removeEventListener('keydown', handleCropperKeydown);
+    }
+
+    function setCropperRatio(ratio) {
+        if (!logoCropper) return;
+        logoCropper.setAspectRatio(ratio);
+        
+        const btnFree = document.getElementById('btn-cropper-ratio-free');
+        const btn1_1 = document.getElementById('btn-cropper-ratio-1-1');
+        
+        if (isNaN(ratio)) {
+            btnFree.className = "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-indigo-600 text-white shadow-sm";
+            btn1_1.className = "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800";
+        } else {
+            btn1_1.className = "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-indigo-600 text-white shadow-sm";
+            btnFree.className = "px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border-none cursor-pointer bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800";
+        }
+    }
+
+    function cropperZoom(value) {
+        if (logoCropper) {
+            logoCropper.zoom(value);
+        }
+    }
+
+    function cropperMove(x, y) {
+        if (logoCropper) {
+            logoCropper.move(x, y);
+        }
+    }
+
+    function cropperReset() {
+        if (logoCropper) {
+            logoCropper.reset();
+        }
+    }
+
+    function saveCroppedLogo() {
+        if (!logoCropper || !activeCropperFileInput) return;
+        
+        logoCropper.getCroppedCanvas({
+            maxWidth: 1024,
+            maxHeight: 1024,
+            imageSmoothingQuality: 'high'
+        }).toBlob((blob) => {
+            const file = new File([blob], selectedFileName, { type: "image/png" });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            activeCropperFileInput.files = dataTransfer.files;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (activeCropperType === 'logo-geral') {
+                    activeLogoLocalUrlGeral = e.target.result;
+                    const previewImg = document.getElementById('logo-geral-preview-img');
+                    if (previewImg) previewImg.src = activeLogoLocalUrlGeral;
+                    
+                    const activeState = document.getElementById('logo-geral-active-state');
+                    const emptyState = document.getElementById('logo-geral-empty-state');
+                    if (activeState) activeState.classList.remove('hidden');
+                    if (emptyState) emptyState.classList.add('hidden');
+                    
+                    const removerInput = document.getElementById('remover-logo-input-geral');
+                    if (removerInput) removerInput.value = "false";
+                    
+                    if (typeof updateAllIframesGeral === 'function') {
+                        updateAllIframesGeral();
+                    }
+                } else {
+                    activeLogoLocalUrl = e.target.result;
+                    const previewImg = document.getElementById('logo-preview-img');
+                    if (previewImg) previewImg.src = activeLogoLocalUrl;
+                    
+                    const activeState = document.getElementById('logo-active-state');
+                    const emptyState = document.getElementById('logo-empty-state');
+                    if (activeState) activeState.classList.remove('hidden');
+                    if (emptyState) emptyState.classList.add('hidden');
+                    
+                    const removerInput = document.getElementById('remover-logo-input');
+                    if (removerInput) removerInput.value = "false";
+                    
+                    if (typeof updateAllIframes === 'function') {
+                        updateAllIframes();
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+            
+            closeLogoCropper();
+        }, 'image/png');
+    }
+</script>
 {% endblock %}

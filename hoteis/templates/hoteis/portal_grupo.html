@@ -1,0 +1,1387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ empresa.nome_fantasia }} - Portal de Reservas{% endblock %}
+
+{% block og_tags %}
+    <meta property="og:title" content="{{ empresa.nome_fantasia }} - Portal de Reservas">
+    <meta property="og:description" content="{% if empresa.descricao_portal %}{{ empresa.descricao_portal }}{% else %}Viva experiências extraordinárias e crie memórias inesquecíveis em nossa rede de pousadas.{% endif %}">
+    {% if empresa.imagem_compartilhamento %}
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ empresa.imagem_compartilhamento.url }}">
+    {% elif empresa.logo %}
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ empresa.logo.url }}">
+    {% endif %}
+    <meta property="og:type" content="website">
+{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS & JS para renderização de mapas -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<!-- Tailwind CSS CDN for dynamic utilities -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Swiper CSS -->
+<link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
+
+<!-- Injeção Dinâmica de Cores de Branding no Portal de Rede -->
+<script>
+    (function() {
+        const rawColor = "{{ empresa.cor_primaria|default:'#2563eb' }}";
+        let hex = rawColor.replace('#', '');
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        const r = parseInt(hex.substring(0, 2), 16) || 37;
+        const g = parseInt(hex.substring(2, 4), 16) || 99;
+        const b = parseInt(hex.substring(4, 6), 16) || 235;
+        
+        // YIQ Luminance Formula
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        
+        let brandColor = "#" + hex;
+        let brandTextColor = "#ffffff";
+        let brandColorBurned = brandColor;
+        
+        if (yiq >= 170) {
+            const factor = 0.45;
+            const dr = Math.max(0, Math.round(r * factor));
+            const dg = Math.max(0, Math.round(g * factor));
+            const db = Math.max(0, Math.round(b * factor));
+            brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+            brandTextColor = brandColorBurned;
+        } else {
+            brandTextColor = "#ffffff";
+            brandColorBurned = brandColor;
+        }
+        
+        document.documentElement.style.setProperty('--brand-color', brandColor);
+        document.documentElement.style.setProperty('--brand-text-color', brandTextColor);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
+        document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
+
+        // Cor Secundária (Detalhes)
+        const rawSecColor = "{{ empresa.cor_secundaria|default:'#10b981' }}";
+        let hexSec = rawSecColor.replace('#', '');
+        if (hexSec.length === 3) { hexSec = hexSec[0]+hexSec[0]+hexSec[1]+hexSec[1]+hexSec[2]+hexSec[2]; }
+        const sr = parseInt(hexSec.substring(0, 2), 16);
+        const sg = parseInt(hexSec.substring(2, 4), 16);
+        const sb = parseInt(hexSec.substring(4, 6), 16);
+        document.documentElement.style.setProperty('--brand-color-secondary', "#" + hexSec);
+        document.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+    })();
+</script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&display=swap');
+
+    /* Ocultar barra de rolagem globalmente para um visual ultra-clean e remover seu espaço */
+    html, body {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    ::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    * { scrollbar-width: none !important; }
+    [x-cloak] { display: none !important; }
+
+    :root {
+        --navie-primary: var(--brand-color, #2563eb);
+    }
+
+    .bg-action-blue { 
+        background-color: var(--brand-color) !important; 
+        color: var(--brand-text-color) !important;
+    }
+    .text-action-blue { color: var(--brand-color-burned) !important; }
+    .border-action-blue { border-color: var(--brand-color-burned) !important; }
+
+    /* Utilitários de Cor Secundária */
+    .text-action-secundario { color: var(--brand-color-secondary) !important; }
+    .border-action-secundario { border-color: var(--brand-color-secondary) !important; }
+    .bg-action-secundario { background-color: var(--brand-color-secondary) !important; }
+    .bg-action-secundario-alpha { background-color: var(--brand-color-secondary-alpha) !important; }
+
+    /* Cabeçalho transparente premium exclusivo */
+    @media (min-width: 768px) {
+        header.sticky {
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: transparent !important;
+            border-bottom: none !important;
+            box-shadow: none !important;
+            z-index: 100 !important;
+        }
+        header.sticky nav a, header.sticky .text-gray-600, header.sticky span, header.sticky button {
+            color: rgba(255, 255, 255, 0.95) !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        header.sticky nav a:hover {
+            color: var(--brand-color) !important;
+        }
+        header.sticky i[data-lucide] {
+            color: rgba(255, 255, 255, 0.95) !important;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        header.sticky img {
+            filter: brightness(0) invert(1) !important;
+        }
+    }
+
+    /* Ajuste do botão de login de acordo com a cor base da marca */
+    .header-profile-btn {
+        background-color: var(--brand-color-alpha, rgba(37, 99, 235, 0.15)) !important;
+        color: var(--brand-color, #2563eb) !important;
+        border: 1px solid var(--brand-color-alpha-focus, rgba(37, 99, 235, 0.25)) !important;
+    }
+    .header-profile-btn:hover {
+        background-color: var(--brand-color) !important;
+        color: var(--brand-text-color, #ffffff) !important;
+    }
+
+    /* ==========================================================================
+       SEÇÃO HERO: REGRAS ESPECÍFICAS DE ALINHAMENTO E ESPAÇAMENTO
+       ========================================================================== */
+    .hero-banner-portal {
+        height: 480px !important;
+        position: relative;
+    }
+    @media (min-width: 768px) {
+        .hero-banner-portal {
+            height: 560px !important;
+        }
+    }
+
+    /* Posição do Conteúdo do Hero (Logo, Título e Busca) */
+    .hero-content-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+        text-align: center;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* REGRAS DO HERO: MOBILE (Telas < 768px) */
+    @media (max-width: 767px) {
+        .hero-banner-portal {
+            height: 42vh !important;
+            min-height: 290px !important;
+            max-height: 355px !important;
+        }
+        .hero-content-wrapper {
+            padding-top: 8px !important;
+            padding-bottom: 24px !important;
+            justify-content: center !important;
+        }
+        .hero-logo-box {
+            width: 72px !important;
+            height: 72px !important;
+            margin-bottom: 2px !important;
+        }
+        .hero-banner-portal h1 {
+            font-size: 1.75rem !important;
+            margin-bottom: 6px !important;
+        }
+        .hero-banner-portal p {
+            font-size: 0.8rem !important;
+            margin-bottom: 12px !important;
+            line-height: 1.4 !important;
+        }
+    }
+
+    /* REGRAS DO HERO: DESKTOP (Telas >= 768px) */
+    @media (min-width: 768px) {
+        .hero-content-wrapper {
+            padding-top: 100px;
+            padding-bottom: 24px;
+        }
+        .hero-logo-box {
+            width: 136px;
+            height: 136px;
+            margin-bottom: 12px;
+        }
+    }
+
+    /* ==========================================================================
+       SEÇÃO SOBRE: REGRAS ESPECÍFICAS DE ALINHAMENTO E ESPAÇAMENTO
+       ========================================================================== */
+
+    /* Regras Gerais da Seção Sobre */
+    .sobre-section-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        transition: all 0.5s ease-in-out;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+    @media (min-width: 768px) {
+        .sobre-section-wrapper {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+    }
+
+    /* Regras do Container de Alinhamento Flex */
+    .sobre-flex-container {
+        display: flex;
+        align-items: stretch; /* Garante que os filhos estiquem na altura total */
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Regras da Coluna de Conteúdo (Esquerda) */
+    .sobre-left-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Mantém o título no topo e o botão no fundo da seção */
+        height: 100%;
+        min-width: 0;
+    }
+
+    /* Regras de Texto Gerais */
+    #sobre-texto, #sobre-texto * {
+        font-family: 'Poppins', sans-serif !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* REGRAS DO SOBRE: MOBILE (Telas < 768px) */
+    @media (max-width: 767px) {
+        .sobre-section-wrapper:not(.h-auto) {
+            height: 38vh;
+            min-height: 190px;
+            max-height: 250px;
+        }
+        .sobre-flex-container {
+            padding-left: 24px; /* pl-6 equivalent: afasta da curva esquerda */
+            padding-right: 16px;
+        }
+        .sobre-left-column {
+            width: 44% !important;
+            padding-top: 40px !important;
+            padding-bottom: 24px !important;
+            padding-right: 12px !important;
+            justify-content: center !important;
+            gap: 8px;
+        }
+        .sobre-media-container {
+            width: 56% !important;
+        }
+        .sobre-media-gradient {
+            background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%) !important;
+        }
+        .sobre-title-wrapper {
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        .sobre-title-line {
+            width: 4px;
+        }
+        #sobre-titulo {
+            font-size: 14px;
+        }
+        #sobre-texto {
+            font-size: 10px;
+            line-height: 1.6;
+        }
+        #sobre-readmore-btn {
+            margin-top: 8px;
+            font-size: 9px;
+        }
+    }
+
+    /* REGRAS DO SOBRE: DESKTOP (Telas >= 768px) */
+    @media (min-width: 768px) {
+        .sobre-section-wrapper:not(.h-auto) {
+            height: 30vh;
+            min-height: 220px;
+            max-height: 280px;
+        }
+        .sobre-flex-container {
+            padding-left: 24px; /* Alinha com o padding padrão md do site */
+            padding-right: 24px;
+        }
+        @media (min-width: 1280px) {
+            .sobre-flex-container {
+                padding-left: 48px; /* Alinha com o padding padrão xl do site */
+                padding-right: 48px;
+            }
+        }
+        .sobre-left-column {
+            width: 42%;
+            padding-top: 64px; /* Margem de cima exclusiva do título no desktop */
+            padding-bottom: 28px;
+            padding-right: 32px;
+        }
+        .sobre-title-wrapper {
+            margin-bottom: 12px;
+            gap: 6px;
+        }
+        .sobre-title-line {
+            width: 6px;
+        }
+        #sobre-titulo {
+            font-size: 20px;
+        }
+        #sobre-texto {
+            font-size: 13px;
+            line-height: 1.625;
+        }
+        #sobre-readmore-btn {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+    }
+
+    .hero-badge {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        border-radius: 9999px !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .portal-hotel-card {
+        border-radius: 24px;
+        background-color: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+    }
+    .portal-hotel-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    .line-clamp-3 {
+        display: -webkit-box !important;
+        -webkit-line-clamp: 3 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+    @media (min-width: 768px) {
+        .md\:line-clamp-4 {
+            display: -webkit-box !important;
+            -webkit-line-clamp: 4 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+    }
+    .line-clamp-none {
+        display: block !important;
+        -webkit-line-clamp: unset !important;
+        overflow: visible !important;
+    }
+    .portal-desktop-grid {
+        display: none !important;
+    }
+    @media (min-width: 768px) {
+        .portal-desktop-grid {
+            display: grid !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO BANNER DA REDE -->
+<div class="relative w-full bg-slate-950 hero-banner-portal">
+    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden">
+        <div class="absolute inset-0 bg-black/60 z-10"></div>
+        <video id="hero-media-video" src="{% if empresa.hero_video %}{{ empresa.hero_video.url }}{% endif %}" class="w-full h-full object-cover opacity-80 {% if empresa.hero_tipo != 'video' or not empresa.hero_video %}hidden{% endif %}" autoplay loop muted playsinline></video>
+        <img id="hero-media-img" src="{% if empresa.banner %}{{ empresa.banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}" alt="{{ empresa.nome_fantasia }}" class="w-full h-full object-cover opacity-80 {% if empresa.hero_tipo == 'video' and empresa.hero_video %}hidden{% endif %}">
+    </div>
+
+    <!-- Conteúdo do Hero da Rede -->
+    <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
+        {% if empresa.logo %}
+        <div class="hero-logo-box flex items-center justify-center shrink-0 select-none">
+            <img src="{{ empresa.logo.url }}" alt="{{ empresa.nome_fantasia }}" class="max-h-full max-w-full object-contain">
+        </div>
+        {% endif %}
+
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-2xl mb-3">
+            {{ empresa.nome_fantasia }}
+        </h1>
+        <p class="text-sm md:text-lg text-white/90 max-w-2xl mb-6 font-medium leading-relaxed drop-shadow-md">
+            {% if empresa.descricao_portal %}{{ empresa.descricao_portal }}{% else %}Viva experiências extraordinárias e crie memórias inesquecíveis em nossa rede de pousadas.{% endif %}
+        </p>
+
+        <!-- BARRA DE BUSCA HORIZONTAL COMPACTA -->
+        <div class="w-[92%] sm:w-full max-w-2xl lg:max-w-3xl mx-auto z-[30] relative">
+            <form method="GET" action="" onsubmit="event.preventDefault(); buscarQuartosDisponiveisGrupo();" class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]" style="position: relative;">
+                
+                <!-- Campo 1: Período/Datas -->
+                <div class="flex flex-col text-center px-4 sm:px-8 py-2 sm:py-3 flex-[1.2] border-r border-slate-100 cursor-pointer rounded-l-full hover:bg-slate-50 transition-colors"
+                     onclick="openAvailabilityModal()">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate text-center w-full">Datas</label>
+                    <input type="text" name="datas" id="search-dates" value="{{ datas_str }}" placeholder="Selecione as datas" readonly 
+                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full font-bold text-center focus:outline-none"
+                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;text-align:center!important;outline:none!important;">
+                </div>
+
+                <!-- Campo 2: Hóspedes (Dropdown Customizado) -->
+                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors cursor-pointer" 
+                     style="position: relative;"
+                     x-data="{ openGuests: false, guests: {% if guests_str == '1 Hóspede' %}1{% elif 'Hóspedes' in guests_str %}{{ guests_str|slice:':1' }}{% else %}2{% endif %}, guestsLabel: '{{ guests_str|default:'2 Hóspedes' }}' }" 
+                     @click="openGuests = !openGuests"
+                     @click.outside="openGuests = false">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center cursor-pointer">Hóspedes</label>
+                    <div class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 bg-transparent border-none outline-none w-full select-none text-center">
+                        <span x-text="guestsLabel" class="truncate font-bold"></span>
+                    </div>
+                    <input type="hidden" name="guests" id="search-guests" :value="guestsLabel">
+
+                    <!-- Dropdown de Hóspedes (Centralizado e com largura reduzida usando inline style) -->
+                    <div x-show="openGuests" x-cloak
+                         @click.stop=""
+                         style="display: none; position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 8px); z-index: 9999; width: 140px;">
+                        <div x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                             class="bg-white border border-slate-200 rounded-2xl shadow-2xl p-1 max-h-60 overflow-y-auto no-scrollbar"
+                             style="width: 100%;">
+                            <template x-for="g in [1, 2, 3, 4, 5, 6, 7, '8 ou mais']">
+                                <button type="button" 
+                                        @click="guests = g; guestsLabel = (g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')); openGuests = false;"
+                                        class="w-full text-left px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
+                                    <span x-text="g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão Buscar Incorporado -->
+                <button type="submit" id="hero-search-btn"
+                        class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
+                        title="Buscar Acomodações">
+                    <!-- Ícone de Busca -->
+                    <span id="search-btn-icon" class="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                    </span>
+                    <!-- Loader -->
+                    <span id="search-btn-loader" class="hidden flex items-center justify-center">
+                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" style="color: var(--brand-text-color);">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CONTEÚDO PRINCIPAL DO PORTAL -->
+<div class="relative z-20 bg-white shadow-xl rounded-t-xl md:rounded-t-2xl overflow-hidden" style="margin-top: -30px;">
+    
+    <!-- SEÇÃO INSTITUCIONAL: SOBRE A REDE -->
+    <div id="sobre-section" class="sobre-section-wrapper"
+         style="--sobre-bg-color: {{ empresa.sobre_cor_fundo|default:'#f8fafc' }}; --sobre-text-color: {{ empresa.sobre_cor_texto|default:'#0f172a' }}; background-color: var(--sobre-bg-color); color: var(--sobre-text-color);">
+        
+        <!-- Conteúdo Alinhado ao Container -->
+        <div class="container mx-auto sobre-flex-container relative z-20">
+            <!-- Left side: Content (Title + Description) -->
+            <div class="sobre-left-column">
+                <div class="flex flex-col justify-start">
+                    <div class="flex items-stretch sobre-title-wrapper">
+                        <span class="sobre-title-line shrink-0" style="background-color: var(--sobre-text-color); border-radius: 9999px !important;"></span>
+                        <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
+                            {{ empresa.sobre_titulo|default:'Sobre a Rede' }}
+                        </h2>
+                    </div>
+                    <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 md:line-clamp-5 transition-all duration-300">
+                        {% if empresa.sobre_texto %}{{ empresa.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa rede de pousadas e viva experiências únicas com o melhor conforto do Ceará.</p>{% endif %}
+                    </div>
+                </div>
+                <!-- Botão Ler Mais -->
+                <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+                    Ler mais
+                </button>
+            </div>
+        </div>
+
+        <!-- Right side: Media (Blended with gradient) -->
+        <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10 bg-transparent">
+            <!-- Overlay Gradient -->
+            <div class="sobre-media-gradient absolute inset-0 z-20" style="background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
+            
+            <video id="sobre-media-video" src="{% if empresa.sobre_video %}{{ empresa.sobre_video.url }}{% endif %}" class="absolute inset-0 w-full h-full object-cover opacity-95 {% if empresa.sobre_midia_tipo != 'video' or not empresa.sobre_video %}hidden{% endif %}" autoplay loop muted playsinline></video>
+            <img id="sobre-media-img" src="{% if empresa.sobre_banner %}{{ empresa.sobre_banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}" alt="{{ empresa.nome_fantasia }}" class="absolute inset-0 w-full h-full object-cover opacity-95 {% if empresa.sobre_midia_tipo == 'video' and empresa.sobre_video %}hidden{% endif %}">
+        </div>
+    </div>
+
+    <div id="resultados-busca-container" class="hidden container mx-auto px-4 md:px-6 xl:px-12 mt-6"></div>
+
+    <main class="container mx-auto px-4 md:px-6 xl:px-12 pt-10 md:pt-16 pb-10">
+
+
+
+        <!-- SEÇÕES DAS POUSADAS E SEUS QUARTOS EM CARROSSEL -->
+        <div class="max-w-[90rem] mx-auto space-y-20 md:space-y-28 pb-6">
+            {% if pousadas_data %}
+                {% for item in pousadas_data %}
+                    {% if item.tem_quartos %}
+                    <section class="w-full">
+                        <!-- Cabeçalho da Pousada: Nome + Botão de Ação -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                            <div>
+                                <h3 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">{{ item.hotel.nome }}</h3>
+                                <p class="text-xs text-slate-400 font-bold flex items-center gap-1.5 mt-1">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 text-action-blue" style="color: var(--brand-color) !important;"></i>
+                                    <span>{{ item.hotel.local.nome }} — {{ item.hotel.local.cidade }}/{{ item.hotel.local.estado }}</span>
+                                </p>
+                            </div>
+                            <a href="{% url 'hoteis:detalhe' item.hotel.id %}" 
+                               hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                               class="inline-flex items-center justify-center gap-2 bg-action-blue hover:opacity-95 text-white font-extrabold px-6 py-3 rounded-full text-xs transition-all shadow-md shadow-blue-500/10 self-start sm:self-auto"
+                               style="background-color: var(--brand-color) !important; color: var(--brand-text-color) !important;">
+                                <span>Ver Pousada Completa</span>
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
+                        
+                        <!-- ── DESKTOP: Grid de Cards no mesmo estilo (hidden md:grid) ── -->
+                        <div class="portal-desktop-grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-12">
+                            {% for quarto in item.quartos %}
+                            <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
+                               hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                               class="relative rounded-[2rem] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col bg-slate-900 aspect-[3/4]">
+                                
+                                <!-- Imagem -->
+                                <div class="absolute inset-0 w-full h-full">
+                                    {% if quarto.imagens.all %}
+                                        <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                    {% else %}
+                                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                            <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                </div>
+
+                                <!-- Conteúdo -->
+                                <div class="relative z-10 mt-auto p-4 xl:p-5 flex flex-col items-start text-left w-full">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2 flex items-center gap-1">
+                                        <i data-lucide="users" class="w-3 h-3 shrink-0"></i>
+                                        <span>{{ quarto.capacidade_pessoas }} Hóspede{{ quarto.capacidade_pessoas|pluralize }}</span>
+                                    </span>
+                                    <h4 class="text-base xl:text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ quarto.nome }}</h4>
+                                    <p class="text-[11px] xl:text-xs text-white/80 line-clamp-2 leading-relaxed w-full mb-3">{{ quarto.descricao|striptags }}</p>
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+
+                        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (block md:hidden) ── -->
+                        {% if item.quartos|length >= 2 %}
+                            {% if item.quartos|length == 2 %}
+                            <!-- Caso especial com exatamente 2 quartos (duplicados para 4 slides no carrossel) -->
+                            <div class="block md:hidden -mx-4 w-[calc(100%+2rem)] mb-10"
+                                 x-data="{ 
+                                    active: 1, 
+                                    total: 4,
+                                    autoPlayInterval: null,
+                                    touchStartX: 0,
+                                    touchEndX: 0,
+                                    isMouseDown: false,
+                                    startAutoplay() {
+                                        this.autoPlayInterval = setInterval(() => {
+                                            this.active = (this.active % this.total) + 1;
+                                        }, 3000);
+                                    },
+                                    stopAutoplay() {
+                                        clearInterval(this.autoPlayInterval);
+                                    },
+                                    handleTouchStart(e) {
+                                        this.touchStartX = e.changedTouches[0].screenX;
+                                        this.stopAutoplay();
+                                    },
+                                    handleTouchEnd(e) {
+                                        this.touchEndX = e.changedTouches[0].screenX;
+                                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                                        this.startAutoplay();
+                                    },
+                                    handleMouseDown(e) {
+                                        this.touchStartX = e.clientX;
+                                        this.isMouseDown = true;
+                                        this.stopAutoplay();
+                                    },
+                                    handleMouseUp(e) {
+                                        if (!this.isMouseDown) return;
+                                        this.isMouseDown = false;
+                                        this.touchEndX = e.clientX;
+                                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                                        this.startAutoplay();
+                                    },
+                                    handleSwipe(start, end) {
+                                        const diff = start - end;
+                                        if (Math.abs(diff) > 40) {
+                                            if (diff > 0) {
+                                                this.active = (this.active % this.total) + 1;
+                                            } else {
+                                                this.active = this.active === 1 ? this.total : this.active - 1;
+                                            }
+                                        }
+                                    }
+                                 }"
+                                 x-init="startAutoplay()"
+                                 @touchstart="handleTouchStart($event)"
+                                 @touchend="handleTouchEnd($event)"
+                                 @mousedown="handleMouseDown($event)"
+                                 @mouseup="handleMouseUp($event)"
+                                 @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                                 @mouseenter="stopAutoplay()">
+                                
+                                <div class="relative w-full h-[360px] flex items-center justify-center overflow-hidden">
+                                    <!-- Loop 1: Quartos nas posições 1 e 2 -->
+                                    {% for quarto in item.quartos %}
+                                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
+                                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                       class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       x-show="active === {{ forloop.counter }} || 
+                                               (active === 1 ? {{ forloop.counter }} === 4 : {{ forloop.counter }} === active - 1) || 
+                                               (active === 4 ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"
+                                       :style="active === {{ forloop.counter }} 
+                                               ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                               : (active === 4 ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)
+                                               ? 'transform: translateX(42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'
+                                               : 'transform: translateX(-42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'">
+                                        
+                                        <!-- Imagem -->
+                                        <div class="absolute inset-0 w-full h-full">
+                                            {% if quarto.imagens.all %}
+                                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                            {% else %}
+                                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                        </div>
+
+                                        <!-- Conteúdo -->
+                                        <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
+                                            <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2 flex items-center gap-1">
+                                                <i data-lucide="users" class="w-3 h-3 shrink-0"></i>
+                                                <span>{{ quarto.capacidade_pessoas }} Hóspede{{ quarto.capacidade_pessoas|pluralize }}</span>
+                                            </span>
+                                            <h4 class="text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ quarto.nome }}</h4>
+                                            <p class="text-[10px] text-white/80 line-clamp-2 leading-relaxed w-full mb-2">{{ quarto.descricao|striptags }}</p>
+                                            <div class="flex justify-between items-center w-full">
+                                                <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+
+                                    <!-- Loop 2: Mesmos quartos nas posições 3 e 4 -->
+                                    {% for quarto in item.quartos %}
+                                    {% with idx=forloop.counter|add:2 %}
+                                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
+                                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                       class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       x-show="active === {{ idx }} || 
+                                               (active === 1 ? {{ idx }} === 4 : {{ idx }} === active - 1) || 
+                                               (active === 4 ? {{ idx }} === 1 : {{ idx }} === active + 1)"
+                                       :style="active === {{ idx }} 
+                                               ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                               : (active === 4 ? {{ idx }} === 1 : {{ idx }} === active + 1)
+                                               ? 'transform: translateX(42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'
+                                               : 'transform: translateX(-42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'">
+                                        
+                                        <!-- Imagem -->
+                                        <div class="absolute inset-0 w-full h-full">
+                                            {% if quarto.imagens.all %}
+                                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                            {% else %}
+                                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                        </div>
+
+                                        <!-- Conteúdo -->
+                                        <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
+                                            <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2 flex items-center gap-1">
+                                                <i data-lucide="users" class="w-3 h-3 shrink-0"></i>
+                                                <span>{{ quarto.capacidade_pessoas }} Hóspede{{ quarto.capacidade_pessoas|pluralize }}</span>
+                                            </span>
+                                            <h4 class="text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ quarto.nome }}</h4>
+                                            <p class="text-[10px] text-white/80 line-clamp-2 leading-relaxed w-full mb-2">{{ quarto.descricao|striptags }}</p>
+                                            <div class="flex justify-between items-center w-full">
+                                                <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </div>
+
+                                <div class="flex justify-center items-center gap-2 mt-1">
+                                    {% for quarto in item.quartos %}
+                                    <button @click="active = {{ forloop.counter }}"
+                                            class="transition-all duration-300"
+                                            :class="(active === {{ forloop.counter }} || active === {{ forloop.counter|add:2 }}) ? 'w-6 h-1.5 rounded-full bg-action-secundario shadow-sm' : 'w-1.5 h-1.5 rounded-full bg-slate-300'">
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <!-- Caso geral com 3 ou mais quartos (carrossel normal) -->
+                            <div class="block md:hidden -mx-4 w-[calc(100%+2rem)] mb-10"
+                                 x-data="{ 
+                                    active: 1, 
+                                    total: {{ item.quartos|length }},
+                                    autoPlayInterval: null,
+                                    touchStartX: 0,
+                                    touchEndX: 0,
+                                    isMouseDown: false,
+                                    startAutoplay() {
+                                        this.autoPlayInterval = setInterval(() => {
+                                            this.active = (this.active % this.total) + 1;
+                                        }, 3000);
+                                    },
+                                    stopAutoplay() {
+                                        clearInterval(this.autoPlayInterval);
+                                    },
+                                    handleTouchStart(e) {
+                                        this.touchStartX = e.changedTouches[0].screenX;
+                                        this.stopAutoplay();
+                                    },
+                                    handleTouchEnd(e) {
+                                        this.touchEndX = e.changedTouches[0].screenX;
+                                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                                        this.startAutoplay();
+                                    },
+                                    handleMouseDown(e) {
+                                        this.touchStartX = e.clientX;
+                                        this.isMouseDown = true;
+                                        this.stopAutoplay();
+                                    },
+                                    handleMouseUp(e) {
+                                        if (!this.isMouseDown) return;
+                                        this.isMouseDown = false;
+                                        this.touchEndX = e.clientX;
+                                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                                        this.startAutoplay();
+                                    },
+                                    handleSwipe(start, end) {
+                                        const diff = start - end;
+                                        if (Math.abs(diff) > 40) {
+                                            if (diff > 0) {
+                                                this.active = (this.active % this.total) + 1;
+                                            } else {
+                                                this.active = this.active === 1 ? this.total : this.active - 1;
+                                            }
+                                        }
+                                    }
+                                 }"
+                                 x-init="startAutoplay()"
+                                 @touchstart="handleTouchStart($event)"
+                                 @touchend="handleTouchEnd($event)"
+                                 @mousedown="handleMouseDown($event)"
+                                 @mouseup="handleMouseUp($event)"
+                                 @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                                 @mouseenter="stopAutoplay()">
+                                
+                                <div class="relative w-full h-[360px] flex items-center justify-center overflow-hidden">
+                                    {% for quarto in item.quartos %}
+                                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
+                                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                       class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       x-show="active === {{ forloop.counter }} || 
+                                               (active === 1 ? {{ forloop.counter }} === total : {{ forloop.counter }} === active - 1) || 
+                                               (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"
+                                       :style="active === {{ forloop.counter }} 
+                                               ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                               : (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)
+                                               ? 'transform: translateX(42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'
+                                               : 'transform: translateX(-42%) scale(0.85); z-index: 20; opacity: 0.6; visibility: visible;'">
+                                        
+                                        <!-- Imagem -->
+                                        <div class="absolute inset-0 w-full h-full">
+                                            {% if quarto.imagens.all %}
+                                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                            {% else %}
+                                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                        </div>
+
+                                        <!-- Conteúdo -->
+                                        <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
+                                            <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2 flex items-center gap-1">
+                                                <i data-lucide="users" class="w-3 h-3 shrink-0"></i>
+                                                <span>{{ quarto.capacidade_pessoas }} Hóspede{{ quarto.capacidade_pessoas|pluralize }}</span>
+                                            </span>
+                                            <h4 class="text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ quarto.nome }}</h4>
+                                            <p class="text-[10px] text-white/80 line-clamp-2 leading-relaxed w-full mb-2">{{ quarto.descricao|striptags }}</p>
+                                            <div class="flex justify-between items-center w-full">
+                                                <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="flex justify-center items-center gap-2 mt-1">
+                                    {% for quarto in item.quartos %}
+                                    <button @click="active = {{ forloop.counter }}"
+                                            class="transition-all duration-300"
+                                            :class="active === {{ forloop.counter }} ? 'w-6 h-1.5 rounded-full bg-action-secundario shadow-sm' : 'w-1.5 h-1.5 rounded-full bg-slate-300'">
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                        <!-- ── MÓVEL: Caso haja apenas 1 quarto (sem carrossel, centralizado estático) ── -->
+                        <div class="block md:hidden px-4 mb-10 flex justify-center">
+                            {% for quarto in item.quartos %}
+                            <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
+                               hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                               class="relative rounded-[2rem] overflow-hidden shadow-md group flex flex-col bg-slate-900 border border-slate-100/10 w-[85%] aspect-[3/4]">
+                                <div class="absolute inset-0 w-full h-full">
+                                    {% if quarto.imagens.all %}
+                                        <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                    {% else %}
+                                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                            <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+                                </div>
+                                <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2 flex items-center gap-1">
+                                        <i data-lucide="users" class="w-3 h-3 shrink-0"></i>
+                                        <span>{{ quarto.capacidade_pessoas }} Hóspede{{ quarto.capacidade_pessoas|pluralize }}</span>
+                                    </span>
+                                    <h4 class="text-base font-black text-white leading-tight mb-1 truncate w-full">{{ quarto.nome }}</h4>
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </section>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="py-24 text-center bg-slate-50 rounded-[2rem] border border-slate-100 max-w-xl mx-auto">
+                    <i data-lucide="hotel" class="w-16 h-16 text-slate-300 mx-auto mb-4 animate-bounce"></i>
+                    <h3 class="text-xl font-bold text-slate-700">Nenhum quarto disponível</h3>
+                    <p class="text-slate-500 mt-1">Não encontramos acomodações disponíveis para os critérios selecionados no momento.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- ── SEÇÃO INSTITUCIONAL: NOSSA LOCALIZAÇÃO ── -->
+        <div class="mt-8 border-t border-slate-100 pt-8" id="nossa-localizacao-secao">
+            <style>
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none !important;
+                }
+                .no-scrollbar {
+                    -ms-overflow-style: none !important;
+                    scrollbar-width: none !important;
+                }
+            </style>
+            <!-- Cabeçalho Centralizado -->
+            <div class="text-center max-w-2xl mx-auto mb-6 px-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">
+                    Nossa Localização
+                </span>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Explore nossas pousadas</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
+                    Localize nossas unidades físicas diretamente no mapa de satélite e encontre o caminho ideal para o seu descanso.
+                </p>
+            </div>
+
+            <!-- AlpineJS Map Controller Wrapper -->
+            <div x-data="{
+                pousadas: [
+                    {% for item in pousadas_data %}
+                    {
+                        id: {{ item.hotel.id }},
+                        nome: '{{ item.hotel.nome|escapejs }}',
+                        endereco: '{{ item.hotel.local.endereco|escapejs }}',
+                        lat: {% if item.hotel.latitude %}{{ item.hotel.latitude|stringformat:'f' }}{% else %}-4.004445{% endif %},
+                        lon: {% if item.hotel.longitude %}{{ item.hotel.longitude|stringformat:'f' }}{% else %}-40.990278{% endif %},
+                        url_hotel: '{% url 'hoteis:detalhe' item.hotel.id %}'
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                activeId: {% if pousadas_data %}{{ pousadas_data.0.hotel.id }}{% else %}null{% endif %},
+                mapType: 'satellite', // 'satellite' or 'roadmap'
+                mapObj: null,
+                roadmapLayer: null,
+                satelliteLayer: null,
+                markerObj: null,
+                bgStyle: '',
+                isMobile: window.innerWidth < 768,
+                
+                get activePousada() {
+                    return this.pousadas.find(p => p.id === this.activeId) || {};
+                },
+
+                updateBg() {
+                    this.$nextTick(() => {
+                        if (!this.activeId) return;
+                        const activeEl = document.getElementById('switch-btn-' + this.activeId);
+                        if (activeEl) {
+                            this.bgStyle = 'left: ' + activeEl.offsetLeft + 'px; width: ' + activeEl.offsetWidth + 'px; height: ' + activeEl.offsetHeight + 'px;';
+                        }
+                    });
+                },
+                
+                getShortName(fullName, companyName) {
+                    const generics = ['pousada', 'pousadas', 'hotel', 'hoteis', 'resort', 'resorts', 'chalé', 'chales', 'hostel', 'flats', 'flat', 'grupo', 'rede', 'villa', 'villas', 'casa', 'casas'];
+                    const companyWords = companyName ? companyName.toLowerCase().split(/\s+/) : [];
+                    const words = fullName.split(/\s+/);
+                    const filtered = words.filter(word => {
+                        const lower = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+                        if (generics.includes(lower)) return false;
+                        if (companyWords.some(cw => cw.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '') === lower)) return false;
+                        return true;
+                    });
+                    if (filtered.length > 0) {
+                        return filtered.join(' ');
+                    }
+                    return words[words.length - 1] || fullName;
+                },
+
+                initMap() {
+                    const activeHotel = this.pousadas.find(p => p.id === this.activeId);
+                    if (!activeHotel) return;
+                    
+                    // Inicializa camadas Leaflet
+                    this.roadmapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap'
+                    });
+
+                    this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: 'Imagens &copy; Esri'
+                    });
+
+                    // Cria mapa
+                    this.mapObj = L.map('mapaGrupo', {
+                        center: [activeHotel.lat, activeHotel.lon],
+                        zoom: 15,
+                        layers: [this.satelliteLayer],
+                        scrollWheelZoom: false
+                    });
+
+                    const redPin = L.icon({
+                        iconUrl: 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' width=\'32\' height=\'32\'><path fill=\'%23ef4444\' d=\'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\'/></svg>',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    });
+
+                    this.markerObj = L.marker([activeHotel.lat, activeHotel.lon], { icon: redPin }).addTo(this.mapObj);
+                    this.markerObj.bindPopup('<b>' + activeHotel.nome + '</b><br>' + activeHotel.endereco).openPopup();
+                    
+                    setTimeout(() => {
+                        this.mapObj.invalidateSize();
+                    }, 500);
+                },
+
+                updateMap(hotel) {
+                    if (!this.mapObj || !hotel.lat || !hotel.lon) return;
+                    this.mapObj.setView([hotel.lat, hotel.lon], 15);
+                    this.markerObj.setLatLng([hotel.lat, hotel.lon]);
+                    this.markerObj.setPopupContent('<b>' + hotel.nome + '</b><br>' + hotel.endereco);
+                    this.markerObj.openPopup();
+                    setTimeout(() => { this.mapObj.invalidateSize(); }, 150);
+                },
+
+                setMapType(type) {
+                    this.mapType = type;
+                    if (type === 'roadmap') {
+                        this.mapObj.removeLayer(this.satelliteLayer);
+                        this.mapObj.addLayer(this.roadmapLayer);
+                    } else {
+                        this.mapObj.removeLayer(this.roadmapLayer);
+                        this.mapObj.addLayer(this.satelliteLayer);
+                    }
+                },
+
+                openGoogleMaps(hotel) {
+                    if (!hotel.lat || !hotel.lon) return;
+                    const url = 'https://www.google.com/maps/search/?api=1&query=' + hotel.lat + ',' + hotel.lon;
+                    window.open(url, '_blank');
+                },
+
+                scrollToHotel(hotel) {
+                    // Rolagem suave até o cabeçalho da pousada na página
+                    const sections = document.querySelectorAll('section');
+                    let targetSection = null;
+                    sections.forEach(sec => {
+                        if (sec.innerHTML.includes(hotel.nome)) {
+                            targetSection = sec;
+                        }
+                    });
+                    if (targetSection) {
+                        targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        window.location.href = hotel.url_hotel;
+                    }
+                }
+            }"
+            x-init="let resizeTimeout; window.addEventListener('resize', () => { clearTimeout(resizeTimeout); resizeTimeout = setTimeout(() => { isMobile = window.innerWidth < 768; updateBg(); }, 100); }); $watch('activeId', () => updateBg()); setTimeout(() => { initMap(); updateBg(); }, 500)"
+            class="max-w-[90rem] mx-auto px-4 mb-10">
+
+                <!-- Alternador / Filtro de Pousadas (Estilo Segmented Control / Interruptor Deslizante) -->
+                <div class="flex justify-center mb-8 px-4 w-full">
+                    <div class="relative flex items-center bg-slate-100 p-1 rounded-full border border-slate-200/80 shadow-inner max-w-full overflow-x-auto no-scrollbar select-none flex-nowrap">
+                        <!-- Sliding Indicator -->
+                        <div class="absolute bg-action-secundario rounded-full shadow-md transition-all duration-300 ease-out z-0"
+                             :style="bgStyle"></div>
+                        
+                        <!-- Buttons -->
+                        <template x-for="p in pousadas" :key="p.id">
+                            <button type="button"
+                                    :id="'switch-btn-' + p.id"
+                                    @click="activeId = p.id; updateMap(p); updateBg();"
+                                    class="relative z-10 flex items-center gap-2 px-5 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-extrabold cursor-pointer select-none transition-colors duration-300 flex-shrink-0 border-0 bg-transparent"
+                                    :class="activeId === p.id ? 'text-white' : 'text-slate-600 hover:text-slate-900'">
+                                <!-- Pin Icon -->
+                                <svg class="w-3.5 h-3.5 shrink-0 transition-colors duration-300"
+                                     :class="activeId === p.id ? 'text-white' : 'text-slate-400'"
+                                     fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path>
+                                </svg>
+                                <!-- Smart Name -->
+                                <span x-text="isMobile ? getShortName(p.nome, '{{ empresa.nome_fantasia|escapejs }}') : p.nome"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Card Único Combinado (Info + Mapa) -->
+                <div x-show="activeId !== null"
+                     class="bg-white border border-slate-200/80 rounded-3xl p-5 md:p-6 shadow-lg max-w-5xl mx-auto w-full">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+                        <!-- 1. Header (Esquerda no desktop, Topo no mobile) -->
+                        <div class="col-span-12 md:col-span-5 md:row-start-1 md:row-span-1 flex flex-col gap-1 justify-center">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-[#ef4444] mb-0.5 block">Unidade Selecionada</span>
+                            <div class="flex justify-between items-start gap-4">
+                                <h4 class="text-base md:text-lg font-black text-slate-900 leading-tight" x-text="activePousada.nome"></h4>
+                                <!-- Alternador Mapa / Satélite Customizado -->
+                                <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0 select-none">
+                                    <button type="button" 
+                                            @click="setMapType('roadmap')"
+                                            :class="mapType === 'roadmap' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600 bg-transparent'"
+                                            class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold">
+                                        Mapa
+                                    </button>
+                                    <button type="button" 
+                                            @click="setMapType('satellite')"
+                                            :class="mapType === 'satellite' ? 'bg-white text-slate-800 shadow-xs' : 'text-slate-400 hover:text-slate-600 bg-transparent'"
+                                            class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold">
+                                        Satélite
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Endereço (Esquerda no desktop, abaixo do Header no mobile) -->
+                        <div class="col-span-12 md:col-span-5 md:row-start-2 md:row-span-1 flex flex-col justify-center">
+                            <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span class="p-2 rounded-xl bg-action-secundario-alpha text-action-secundario shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path>
+                                    </svg>
+                                </span>
+                                <div class="min-w-0">
+                                    <span class="block text-[8px] font-black uppercase tracking-wider text-slate-400 mb-1">Endereço</span>
+                                    <p class="text-xs text-slate-600 font-bold leading-relaxed break-words" x-text="activePousada.endereco"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Mapa (Direita no desktop, entre endereço e botões no mobile) -->
+                        <div class="col-span-12 md:col-span-7 md:row-start-1 md:row-span-3 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 relative h-[280px] md:h-auto">
+                            <div id="mapaGrupo" class="w-full h-full min-h-[280px] md:min-h-0 md:absolute md:inset-0 z-10"></div>
+                        </div>
+
+                        <!-- 4. Ações/Botões (Esquerda no desktop, abaixo do Mapa no mobile) -->
+                        <div class="col-span-12 md:col-span-5 md:row-start-3 md:row-span-1 flex flex-col gap-2.5 justify-end">
+                            <!-- Abrir rota no Google Maps -->
+                            <button type="button" 
+                                    @click="openGoogleMaps(activePousada)"
+                                    class="w-full bg-action-secundario hover:opacity-90 text-white font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-none cursor-pointer shadow-md shadow-[var(--brand-color-secondary)]/15">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-3-3m3 3V9a6 6 0 0112 0v3"></path>
+                                </svg>
+                                <span>Abrir Rota no GPS / Google Maps</span>
+                            </button>
+                            
+                            <!-- Ver Acomodações -->
+                            <button type="button" 
+                                    @click="scrollToHotel(activePousada)"
+                                    class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"></path>
+                                </svg>
+                                <span>Ver Acomodações</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal de Busca de Disponibilidade -->
+{% include 'hoteis/quartos/modal_disponibilidade.html' %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+    (function() {
+        lucide.createIcons();
+
+        // Inicializa Swiper nos carrosséis de quartos de cada pousada
+        document.querySelectorAll('.hotel-rooms-swiper').forEach(el => {
+            new Swiper(el, {
+                slidesPerView: 1.2,
+                spaceBetween: 16,
+                loop: false,
+                autoplay: false,
+                breakpoints: {
+                    640: { slidesPerView: 2.2, spaceBetween: 20 },
+                    1024: { slidesPerView: 3, spaceBetween: 24 },
+                    1280: { slidesPerView: 4, spaceBetween: 24 }
+                },
+                pagination: { el: el.querySelector('.swiper-pagination'), clickable: true }
+            });
+        });
+
+        // Inicializa Swiper nos cards de quarto individuais (para transição de fotos do quarto)
+        document.querySelectorAll('.swiper:not(.hotel-rooms-swiper)').forEach(swiperEl => {
+            new Swiper(swiperEl, {
+                loop: true, 
+                autoplay: { delay: 3500, disableOnInteraction: false }, 
+                pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+            });
+        });
+
+        window.buscarQuartosDisponiveisGrupo = function() {
+            const datesInput = document.getElementById('search-dates');
+            const guestsInput = document.getElementById('search-guests');
+            const searchBtn = document.getElementById('hero-search-btn');
+            const btnIcon = document.getElementById('search-btn-icon');
+            const btnLoader = document.getElementById('search-btn-loader');
+            const resultsContainer = document.getElementById('resultados-busca-container');
+
+            if (!datesInput || !datesInput.value.trim()) {
+                openAvailabilityModal();
+                return;
+            }
+
+            if (searchBtn) searchBtn.disabled = true;
+            if (btnIcon) btnIcon.classList.add('hidden');
+            if (btnLoader) btnLoader.classList.remove('hidden');
+
+            const empresaId = "{{ empresa.id }}";
+            const dates = datesInput.value.trim();
+            const guests = guestsInput ? guestsInput.value : '2 Hóspedes';
+            const url = `/api/empresa/${empresaId}/buscar-quartos/?datas=${encodeURIComponent(dates)}&guests=${encodeURIComponent(guests)}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na busca de quartos');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    if (resultsContainer) {
+                        resultsContainer.innerHTML = html;
+                        resultsContainer.classList.remove('hidden');
+                        
+                        if (window.lucide) {
+                            window.lucide.createIcons();
+                        }
+                        
+                        setTimeout(() => {
+                            const targetSection = document.getElementById('resultados-busca-secao');
+                            if (targetSection) {
+                                targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }, 100);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Erro ao buscar quartos. Tente novamente.');
+                })
+                .finally(() => {
+                    if (searchBtn) searchBtn.disabled = false;
+                    if (btnIcon) btnIcon.classList.remove('hidden');
+                    if (btnLoader) btnLoader.classList.add('hidden');
+                });
+        };
+
+        // Inicializa o limitador da seção Sobre
+        initSobreExpander();
+    })();
+
+    function getContrastColor(hex) {
+        if (!hex) return '#000000';
+        hex = hex.replace('#', '').trim();
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length !== 6) return '#000000';
+        const r = parseInt(hex.substring(0, 2), 16) || 0;
+        const g = parseInt(hex.substring(2, 4), 16) || 0;
+        const b = parseInt(hex.substring(4, 6), 16) || 0;
+        
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        
+        let rPercent = r / 255, gPercent = g / 255, bPercent = b / 255;
+        let max = Math.max(rPercent, gPercent, bPercent), min = Math.min(rPercent, gPercent, bPercent);
+        let h, s, l = (max + min) / 2;
+        if (max === min) {
+            h = s = 0;
+        } else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case rPercent: h = (gPercent - bPercent) / d + (gPercent < bPercent ? 6 : 0); break;
+                case gPercent: h = (bPercent - rPercent) / d + 2; break;
+                case bPercent: h = (rPercent - gPercent) / d + 4; break;
+            }
+            h /= 6;
+        }
+        h = Math.round(h * 360);
+        s = Math.round(s * 100);
+        l = Math.round(l * 100);
+        
+        if (l > 90) return '#000000';
+        if (l < 10) return '#ffffff';
+        
+        if (h >= 30 && h <= 65) {
+            if (l > 50) {
+                return `hsl(${h}, ${Math.min(s + 20, 100)}%, 15%)`;
+            } else {
+                return `hsl(${h}, ${Math.min(s + 20, 100)}%, 85%)`;
+            }
+        }
+        
+        if (luminance > 0.5) {
+            return `hsl(${h}, ${s}%, 15%)`;
+        } else {
+            return `hsl(${h}, ${s}%, 85%)`;
+        }
+    }
+
+    function updateSobreButtonColor() {
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        const sectionEl = document.getElementById('sobre-section');
+        if (!btnEl || !sectionEl) return;
+        
+        let bgHex = sectionEl.style.getPropertyValue('--sobre-bg-color') || '#f8fafc';
+        bgHex = bgHex.trim();
+        const buttonColor = getContrastColor(bgHex);
+        btnEl.style.color = buttonColor;
+    }
+
+    function initSobreExpander() {
+        updateSobreButtonColor();
+        const textEl = document.getElementById('sobre-texto');
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        if (!textEl || !btnEl) return;
+        
+        // Remove clamping class to measure natural scrollHeight
+        textEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
+        const fullHeight = textEl.scrollHeight;
+        
+        // Restore clamp class
+        textEl.classList.add('line-clamp-4', 'md:line-clamp-5');
+        
+        setTimeout(() => {
+            const isOverflowing = textEl.scrollHeight > textEl.clientHeight;
+            if (isOverflowing) {
+                btnEl.classList.remove('hidden');
+            } else {
+                btnEl.classList.add('hidden');
+            }
+        }, 50);
+    }
+
+    let isSobreExpanded = false;
+    function toggleSobreExpander() {
+        const textEl = document.getElementById('sobre-texto');
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        const sectionEl = document.getElementById('sobre-section');
+        
+        if (!textEl || !btnEl || !sectionEl) return;
+        
+        isSobreExpanded = !isSobreExpanded;
+        if (isSobreExpanded) {
+            textEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
+            textEl.classList.add('line-clamp-none');
+            
+            sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
+            
+            btnEl.textContent = 'Ler menos';
+        } else {
+            textEl.classList.remove('line-clamp-none');
+            textEl.classList.add('line-clamp-4', 'md:line-clamp-5');
+            
+            sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
+            
+            btnEl.textContent = 'Ler mais';
+            
+            // Smooth scroll back to section top
+            sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+</script>
+{% endblock %}

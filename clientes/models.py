@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class ClientePerfil(models.Model):
     """
@@ -78,7 +79,7 @@ class ClientePerfil(models.Model):
         max_length=2,
         help_text="Sigla de duas letras correspondente ao estado brasileiro (ex: CE)."
     )
-
+ 
     # Auditoria Legal
     aceite_termos = models.BooleanField(
         'Aceita Termos de Uso', 
@@ -100,10 +101,44 @@ class ClientePerfil(models.Model):
         null=True, blank=True,
         help_text="Assinatura técnica do navegador e sistema operacional do cliente coletada no cadastro."
     )
-
+ 
     class Meta:
         verbose_name = 'Perfil de Cliente'
         verbose_name_plural = 'Perfis de Clientes'
-
+ 
     def __str__(self):
         return f"{self.user.get_full_name() or self.user.username} (CPF: {self.cpf})"
+
+class PostMomento(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='momentos')
+    reserva = models.ForeignKey('hoteis.Reserva', on_delete=models.SET_NULL, null=True, blank=True, related_name='momentos', db_constraint=False)
+    estabelecimento_nome = models.CharField(max_length=255, blank=True, null=True) # Ex: Pousada Ramilos Tianguá
+    imagem = models.ImageField(upload_to='clientes/momentos/', null=True, blank=True)
+    texto = models.TextField(blank=True, null=True)
+    avaliacao = models.PositiveSmallIntegerField(default=5, help_text="Nota de 1 a 5 estrelas")
+    likes = models.ManyToManyField(User, related_name='momentos_curtidos', blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-criado_em']
+        verbose_name = 'Momento'
+        verbose_name_plural = 'Momentos'
+
+    def __str__(self):
+        return f"Momento {self.id.hex[:8].upper()} por {self.usuario.username}"
+
+class ComentarioMomento(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(PostMomento, on_delete=models.CASCADE, related_name='comentarios')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comentarios_momentos')
+    texto = models.TextField(max_length=500)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['criado_em']
+        verbose_name = 'Comentário de Momento'
+        verbose_name_plural = 'Comentários de Momentos'
+
+    def __str__(self):
+        return f"Comentário de {self.usuario.username} no Post {self.post.id.hex[:8].upper()}"

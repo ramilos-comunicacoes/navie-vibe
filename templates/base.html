@@ -43,11 +43,17 @@
         <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
         <link rel="apple-touch-icon" href="{% static 'images/logo.png' %}">
     {% endif %}
-    <!-- Google Fonts: Poppins (Sans) e Quicksand (Display) -->
+    <!-- Google Fonts: Inter (Sans), Poppins (Sans) e Quicksand (Display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        // O portal B2C público do Naviê Vibe utiliza tema claro fixo por design.
+        // Removemos a classe 'dark' para evitar vazamento de estado das áreas de painéis B2B.
+        document.documentElement.classList.remove('dark');
+    </script>
     
     <!-- Swiper CSS Local -->
     <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
@@ -294,7 +300,9 @@
     <!-- Header Simples -->
     <header class="bg-white sticky top-0 z-50 shadow-sm">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="{% if request.parent_host_url %}{{ request.parent_host_url }}/{% else %}{% url 'hoteis:home' %}{% endif %}" class="flex items-center gap-3 text-2xl font-black tracking-tight" style="min-width: 200px;">
+            <a href="{% if request.parent_host_url %}{{ request.parent_host_url }}{% else %}/{% endif %}" 
+               {% if not request.parent_host_url %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% endif %}
+               class="flex items-center gap-3 text-2xl font-black tracking-tight" style="min-width: 200px;">
                 <img src="{% static 'images/logo.png' %}" alt="Logo Naviê" class="h-10 w-auto object-contain">
                 <span class="font-poppins"><span id="typewriter-text"></span><span class="type-cursor"></span></span>
             </a>
@@ -308,7 +316,9 @@
             <div class="flex items-center gap-4">
                 <a href="javascript:void(0)" onclick="toggleNavieCart()" class="relative p-2 text-gray-600 hover:text-action-blue transition-colors">
                     <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    {% if request.session.carrinho %}
                     <span class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">1</span>
+                    {% endif %}
                 </a>
                 {% if request.user.is_authenticated %}
                     {% if request.user.perfil_parceiro %}
@@ -400,7 +410,7 @@
                         <li><a href="{% url 'hoteis:partner_login' %}" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="bed-double" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Naviê <span style="color:#60a5fa;font-weight:600;margin-left:3px;">Hospedagens</span></a></li>
                         <li><a href="#" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="clapperboard" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Ciné <span style="color:#60a5fa;font-weight:600;margin-left:3px;">Naviê</span></a></li>
                         <li><a href="#" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="ticket" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Naviê <span style="color:#60a5fa;font-weight:600;margin-left:3px;">Shows</span></a></li>
-                        <li><a href="#" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Naviê <span style="color:#60a5fa;font-weight:600;margin-left:3px;">Dashboard</span></a></li>
+                        <li><a href="{% if request.parent_host_url %}{{ request.parent_host_url }}/sistemadeadministracao/{% else %}{% url 'administracao:dashboard' %}{% endif %}" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Naviê <span style="color:#60a5fa;font-weight:600;margin-left:3px;">Dashboard</span></a></li>
                         <li><a href="#" style="color:#9ca3af;text-decoration:none;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'"><i data-lucide="handshake" class="w-3.5 h-3.5 text-[#3b82f6] shrink-0"></i>Seja um Parceiro</a></li>
                     </ul>
                 </div>

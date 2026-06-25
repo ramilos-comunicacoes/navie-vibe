@@ -1,0 +1,339 @@
+{% extends 'base_partner.html' %}
+{% load static %}
+
+{% block title %}Portaria e Reservas | {{ active_pousada.nome }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dropdown-menu-glass {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+        z-index: 1000 !important;
+    }
+    .dark .dropdown-menu-glass {
+        background: rgba(20, 20, 25, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}<span class="hidden md:inline">Portaria e Reservas</span>{% endblock %}
+
+{% block header_subtitle %}
+<span class="text-[9px] font-extrabold text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wide leading-none hidden md:block">
+    Controle Operacional de Quartos em Tempo Real
+</span>
+{% endblock %}
+
+{% block header_actions %}
+<!-- Filtros de Ocupação no Cabeçalho Global -->
+<form id="filtro-periodo" 
+      hx-get="{% url 'sistema:partner_reserva_grid' %}" 
+      hx-target="#reservas-grid-container" 
+      hx-trigger="change, load" 
+      x-data="{
+          // Category state
+          openCat: false,
+          selectedCat: 'todas',
+          selectedCatLabel: 'Todas as Categorias',
+          optionsCat: [
+              { value: 'todas', label: 'Todas as Categorias' },
+              {% for cat in categorias %}
+              { value: '{{ cat.id }}', label: '{{ cat.nome }}' }{% if not forloop.last %},{% endif %}
+              {% endfor %}
+          ],
+          chooseCat(option) {
+              this.selectedCat = option.value;
+              this.selectedCatLabel = option.label;
+              this.openCat = false;
+              this.triggerSubmit();
+          },
+
+          // Date state
+          dataInicio: '{{ default_inicio }}',
+          dataFim: '{{ default_fim }}',
+          
+          showInicioCal: false,
+          showFimCal: false,
+          
+          calMonth: null,
+          calYear: null,
+          monthsList: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+          weekDaysList: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+          
+          init() {
+              this.$watch('dataInicio', () => this.triggerSubmit());
+              this.$watch('dataFim', () => this.triggerSubmit());
+          },
+          
+          triggerSubmit() {
+              this.$nextTick(() => {
+                  const form = document.getElementById('filtro-periodo');
+                  if (form) {
+                      htmx.trigger(form, 'change');
+                  }
+              });
+          },
+          
+          // Calendar methods
+          initCalendar(dateVal) {
+              let d = dateVal ? new Date(dateVal + 'T00:00:00') : new Date();
+              this.calMonth = d.getMonth();
+              this.calYear = d.getFullYear();
+          },
+          prevMonth() {
+              if (this.calMonth === 0) {
+                  this.calMonth = 11;
+                  this.calYear--;
+              } else {
+                  this.calMonth--;
+              }
+          },
+          nextMonth() {
+              if (this.calMonth === 11) {
+                  this.calMonth = 0;
+                  this.calYear++;
+              } else {
+                  this.calMonth++;
+              }
+          },
+          getDaysGrid(type) {
+              let days = [];
+              let firstDay = new Date(this.calYear, this.calMonth, 1);
+              let lastDay = new Date(this.calYear, this.calMonth + 1, 0);
+              
+              let prevMonthLastDay = new Date(this.calYear, this.calMonth, 0).getDate();
+              let startingDayOfWeek = firstDay.getDay(); 
+              
+              for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                  let dayNum = prevMonthLastDay - i;
+                  let m = this.calMonth === 0 ? 11 : this.calMonth - 1;
+                  let y = this.calMonth === 0 ? this.calYear - 1 : this.calYear;
+                  let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+                  days.push({
+                      dayNum: dayNum,
+                      isCurrentMonth: false,
+                      dateStr: dateStr,
+                      isAvailable: this.checkDateAvailable(dateStr, type)
+                  });
+              }
+              
+              let totalDays = lastDay.getDate();
+              for (let i = 1; i <= totalDays; i++) {
+                  let dateStr = `${this.calYear}-${(this.calMonth+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                  days.push({
+                      dayNum: i,
+                      isCurrentMonth: true,
+                      dateStr: dateStr,
+                      isAvailable: this.checkDateAvailable(dateStr, type)
+                  });
+              }
+              
+              let remaining = 42 - days.length;
+              for (let i = 1; i <= remaining; i++) {
+                  let m = this.calMonth === 11 ? 0 : this.calMonth + 1;
+                  let y = this.calMonth === 11 ? this.calYear + 1 : this.calYear;
+                  let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                  days.push({
+                      dayNum: i,
+                      isCurrentMonth: false,
+                      dateStr: dateStr,
+                      isAvailable: this.checkDateAvailable(dateStr, type)
+                  });
+              }
+              return days;
+          },
+          checkDateAvailable(dateStr, type) {
+              if (type === 'fim' && this.dataInicio && new Date(dateStr + 'T00:00:00') <= new Date(this.dataInicio + 'T00:00:00')) {
+                  return false;
+              }
+              return true;
+          },
+          selectDate(dateStr, type) {
+              if (!this.checkDateAvailable(dateStr, type)) return;
+              if (type === 'inicio') {
+                  this.dataInicio = dateStr;
+                  this.showInicioCal = false;
+                  if (this.dataFim && new Date(this.dataFim + 'T00:00:00') <= new Date(dateStr + 'T00:00:00')) {
+                      this.dataFim = '';
+                  }
+              } else {
+                  this.dataFim = dateStr;
+                  this.showFimCal = false;
+              }
+          },
+          formatDateBR(dateStr) {
+              if (!dateStr) return '';
+              let parts = dateStr.split('-');
+              return `${parts[2]}/${parts[1]}/${parts[0]}`;
+          }
+      }"
+      class="flex items-center gap-4 mr-2">
+    
+    <!-- Acomodação (Dropdown AlpineJS Customizado com Bordas Redondas) -->
+    <div @click.outside="openCat = false" class="relative inline-block text-left select-none">
+
+        <!-- Trigger Button -->
+        <button type="button" 
+                @click="openCat = !openCat"
+                class="flex items-center justify-between gap-3 w-52 bg-slate-50 dark:bg-white/5 border border-slate-200/85 dark:border-white/10 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 dark:text-white cursor-pointer hover:border-brand transition-colors focus:outline-none">
+            <span x-text="selectedCatLabel" class="truncate text-left"></span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
+               :class="openCat ? 'rotate-180' : ''"></i>
+        </button>
+
+        <!-- Hidden Input -->
+        <input type="hidden" name="categoria" :value="selectedCat">
+
+        <!-- Panel Dropdown Premium -->
+        <div x-show="openCat"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+             class="dropdown-menu absolute right-0 mt-2 w-56 max-h-64 overflow-y-auto no-scrollbar"
+             style="display: none;">
+             
+            <template x-for="option in optionsCat" :key="option.value">
+                <button type="button"
+                        @click="chooseCat(option)"
+                        :class="selectedCat == option.value
+                            ? 'bg-brand/10 dark:bg-white/10 text-brand dark:text-white font-black'
+                            : ''"
+                        class="dropdown-item w-full bg-transparent border-none text-left flex items-center justify-between gap-2">
+                    <span x-text="option.label" class="text-left flex-1 truncate"></span>
+                    <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0"
+                       x-show="selectedCat == option.value"></i>
+                </button>
+            </template>
+        </div>
+    </div>
+
+    <!-- Período De -->
+    <div class="flex items-center gap-2">
+        <span class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">De</span>
+        <div class="relative" @click.outside="showInicioCal = false">
+            <input type="text" :value="formatDateBR(dataInicio)" readonly
+                   @click="initCalendar(dataInicio); showInicioCal = !showInicioCal; showFimCal = false;"
+                   class="bg-slate-50 dark:bg-white/5 border border-slate-200/85 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand cursor-pointer w-28 text-center">
+            <input type="hidden" name="data_inicio" :value="dataInicio">
+            
+            <div x-show="showInicioCal" x-transition
+                 class="absolute left-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                 style="display: none; min-width: 230px;">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span class="font-extrabold text-slate-800 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                    <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                    <template x-for="day in weekDaysList">
+                        <span x-text="day"></span>
+                    </template>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center">
+                    <template x-for="day in getDaysGrid('inicio')" :key="day.dateStr">
+                        <button type="button" @click.stop="selectDate(day.dateStr, 'inicio')"
+                                :disabled="!day.isAvailable"
+                                :class="{
+                                    'bg-brand text-white font-black': dataInicio === day.dateStr,
+                                    'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': dataInicio !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                    'text-slate-300 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                    'opacity-25 text-slate-400 dark:text-slate-600 line-through cursor-not-allowed': !day.isAvailable
+                                }"
+                                class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                            <span x-text="day.dayNum"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Até -->
+    <div class="flex items-center gap-2">
+        <span class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">Até</span>
+        <div class="relative" @click.outside="showFimCal = false">
+            <input type="text" :value="formatDateBR(dataFim)" readonly
+                   @click="initCalendar(dataFim); showFimCal = !showFimCal; showInicioCal = false;"
+                   class="bg-slate-50 dark:bg-white/5 border border-slate-200/85 dark:border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-brand cursor-pointer w-28 text-center">
+            <input type="hidden" name="data_fim" :value="dataFim">
+            
+            <div x-show="showFimCal" x-transition
+                 class="absolute left-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                 style="display: none; min-width: 230px;">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <span class="font-extrabold text-slate-800 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                    <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-500 dark:text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                    <template x-for="day in weekDaysList">
+                        <span x-text="day"></span>
+                    </template>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center">
+                    <template x-for="day in getDaysGrid('fim')" :key="day.dateStr">
+                        <button type="button" @click.stop="selectDate(day.dateStr, 'fim')"
+                                :disabled="!day.isAvailable"
+                                :class="{
+                                    'bg-brand text-white font-black': dataFim === day.dateStr,
+                                    'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': dataFim !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                    'text-slate-300 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                    'opacity-25 text-slate-400 dark:text-slate-600 line-through cursor-not-allowed': !day.isAvailable
+                                }"
+                                class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                            <span x-text="day.dayNum"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<button type="button" 
+        hx-get="{% url 'sistema:partner_reserva_detalhe_nova' %}" 
+        hx-target="#modal-container" 
+        hx-trigger="click" 
+        class="h-9 w-9 bg-brand hover:bg-brand/90 text-brand-text rounded-xl shadow-md flex items-center justify-center cursor-pointer transition-transform active:scale-95 border-none shrink-0" 
+        title="Cadastrar Reserva Manualmente">
+    <i data-lucide="plus" class="w-5 h-5" style="color: var(--brand-text) !important;"></i>
+</button>
+{% endblock %}
+
+{% block subheader %}
+<!-- Sub-cabeçalho: KPIs de Ocupação (Swapped via HTMX OOB) -->
+<div id="kpi-container" class="grid grid-cols-3 gap-4 px-6 py-3 bg-white/70 dark:bg-slate-900/40 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border flex-shrink-0 select-none">
+    <div class="bg-white dark:bg-white/5 border border-slate-200/60 dark:border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xs h-14 animate-pulse"></div>
+    <div class="bg-white dark:bg-white/5 border border-slate-200/60 dark:border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xs h-14 animate-pulse"></div>
+    <div class="bg-white dark:bg-white/5 border border-slate-200/60 dark:border-white/5 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xs h-14 animate-pulse"></div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Container Grid PMS (Carregado via HTMX) -->
+<div class="w-full" id="reservas-grid-container">
+    <!-- Indicador de Carregamento inicial -->
+    <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+        <span class="animate-spin mb-3 text-brand"><i data-lucide="loader-2" class="w-8 h-8"></i></span>
+        <p class="text-xs font-bold uppercase tracking-wider">Carregando mapa de quartos...</p>
+    </div>
+</div>
+{% endblock %}

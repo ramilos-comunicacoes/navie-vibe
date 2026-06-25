@@ -1,0 +1,289 @@
+<div id="modalFNRH" 
+     @abrir-modal-fnrh.window="activeTab = $event.detail.tab"
+     x-data="{ 
+          activeTab: 0, 
+          veiculoPlaca: '{{ carrinho.veiculo.placa|default:'' }}',
+          veiculoModelo: '{{ carrinho.veiculo.modelo|default:'' }}',
+          veiculoCor: '{{ carrinho.veiculo.cor|default:'' }}',
+          loadingVeiculo: false,
+          
+          buscarPlaca() {
+              let placaLimpa = this.veiculoPlaca.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+              if (placaLimpa.length < 7) return;
+              this.loadingVeiculo = true;
+              setTimeout(() => {
+                  let lastDigit = parseInt(placaLimpa.slice(-1)) || 0;
+                  if (lastDigit % 2 === 0) {
+                      this.veiculoModelo = 'Toyota Corolla';
+                      this.veiculoCor = 'Prata';
+                  } else {
+                      this.veiculoModelo = 'Jeep Compass';
+                      this.veiculoCor = 'Preto';
+                  }
+                  this.loadingVeiculo = false;
+              }, 1200);
+          }
+     }"
+     class="fixed inset-0 hidden items-center justify-center select-none" style="z-index: 9999;">
+    
+    <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity duration-300" onclick="fecharModalFNRH()"></div>
+    
+    <div class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[90vh] mx-4 transform scale-95 opacity-0 transition-all duration-300" id="modalFNRHPanel">
+        
+        <!-- Header -->
+        <div class="px-5 pt-4 pb-0 border-b border-gray-100 shrink-0 bg-gray-50 rounded-t-2xl">
+            <div class="flex justify-between items-center pb-2">
+                <div>
+                    <h3 class="text-base font-bold text-ramiros-brown">Dados da Reserva</h3>
+                    <p class="text-[11px] text-gray-500 uppercase tracking-wide">FNRH & Veículo</p>
+                </div>
+                <button onclick="fecharModalFNRH()" class="p-1.5 text-gray-400 hover:text-gray-650 hover:bg-gray-200 rounded-full border-none bg-transparent cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <!-- Abas Cápsulas -->
+            <div class="relative mt-2 pb-3">
+                <div class="flex flex-row gap-2.5 overflow-x-auto no-scrollbar py-1">
+                    {% for h in carrinho.hospedes %}
+                        <button type="button" 
+                                id="btn-aba-{{ h.index }}"
+                                onclick="alternarAbaHospede({{ h.index }})"
+                                class="px-5 py-2.5 rounded-full text-xs transition-all duration-300 whitespace-nowrap flex items-center gap-1.5 btn-aba-hospede cursor-pointer border-none"
+                                style="{% if h.index == 0 %}background: #451a03 !important; color: #ffffff !important; border: 1px solid #451a03 !important; box-shadow: 0 6px 15px rgba(69,26,3,0.2) !important; font-weight: bold !important; transform: scale(1.03) !important;{% else %}background: #f8fafc !important; color: #451a03 !important; border: 1px solid #e2e8f0 !important; font-weight: bold !important; transform: scale(1) !important;{% endif %}">
+                            <i data-lucide="user" class="w-3.5 h-3.5 shrink-0" style="color: inherit !important;"></i>
+                            <span style="color: inherit !important;">Hóspede {{ h.ordem }} {% if h.index == 0 %}(Titular){% endif %}</span>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 overflow-y-auto no-scrollbar flex-1">
+            {% for h in carrinho.hospedes %}
+                <div id="container-form-{{ h.index }}" class="container-form-hospede {% if h.index != 0 %}hidden{% endif %}">
+                    <form id="formFNRH-{{ h.index }}" class="space-y-4" onsubmit="event.preventDefault(); salvarDadosFNRH({{ h.index }});">
+                        {% csrf_token %}
+                        {% if h.index == 0 %}
+                            <p class="text-xs text-amber-900 mb-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50 p-4 rounded-3xl border border-amber-100 flex items-start gap-3 shadow-[0_4px_12px_rgba(251,191,36,0.03)]">
+                                <i data-lucide="info" class="w-5 h-5 text-ramiros-soft shrink-0 mt-0.5"></i> 
+                                <span class="font-medium text-left">Os dados do Titular serão guardados para confirmar sua reserva com total segurança.</span>
+                            </p>
+                        {% endif %}
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                            <div class="col-span-1 md:col-span-2">
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Nome Completo *</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="user" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_nome" value="{{ h.nome|default:'' }}" required class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Ex: João da Silva">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">CPF *</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_cpf" value="{{ h.cpf|default:'' }}" required class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="000.000.000-00">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">E-mail {% if h.index == 0 %}*{% else %}(Opcional){% endif %}</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="mail" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="email" name="hospede_email" value="{{ h.email|default:'' }}" {% if h.index == 0 %}required{% endif %} class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="seu@email.com">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Telefone {% if h.index == 0 %}*{% else %}(Opcional){% endif %}</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="phone" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_telefone" value="{{ h.telefone|default:'' }}" {% if h.index == 0 %}required{% endif %} class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="(00) 00000-0000">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">RG / Identidade</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_rg" value="{{ h.rg|default:'' }}" class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Documento">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Nacionalidade</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="globe" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_nacionalidade" value="{{ h.nacionalidade|default:'Brasileira' }}" class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Ex: Brasileira">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Profissão</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="briefcase" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_profissao" value="{{ h.profissao|default:'' }}" class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Ex: Engenheiro">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">CEP {% if h.index == 0 %}*{% else %}(Opcional){% endif %}</label>
+                                <div class="relative" style="position: relative !important; display: block !important;">
+                                    <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                        <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                    </div>
+                                    <input type="text" name="hospede_cep" value="{{ h.cep|default:'' }}" {% if h.index == 0 %}required{% endif %} class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="00000-000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-2 text-left">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Endereço Completo {% if h.index == 0 %}*{% else %}(Opcional){% endif %}</label>
+                            <div class="relative" style="position: relative !important; display: block !important;">
+                                <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                    <i data-lucide="navigation" class="w-4 h-4"></i>
+                                </div>
+                                <input type="text" name="hospede_endereco" value="{{ h.endereco|default:'' }}" {% if h.index == 0 %}required{% endif %} class="w-full bg-slate-50 border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Rua, Número, Bairro, Cidade - UF">
+                            </div>
+                        </div>
+                        
+                        {% if h.index == 0 %}
+                        <!-- Veículo -->
+                        <div class="mt-4 pt-4 border-t border-slate-105">
+                            <h4 class="text-xs font-bold text-ramiros-brown flex items-center gap-1.5 mb-3 px-1">
+                                <i data-lucide="car" class="w-4.5 h-4.5 text-ramiros-soft animate-pulse"></i>
+                                <span>Veículo para Garagem (Opcional)</span>
+                            </h4>
+                            <div class="bg-amber-50/20 rounded-3xl p-4 border border-amber-100/30 space-y-4 text-left">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Placa do Veículo</label>
+                                    <div class="relative" style="position: relative !important; display: block !important;">
+                                        <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                            <i data-lucide="credit-card" class="w-4 h-4"></i>
+                                        </div>
+                                        <input type="text" name="veiculo_placa" x-model="veiculoPlaca" @input="buscarPlaca()" class="w-full bg-white border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold uppercase" style="padding-left: 3rem !important;" placeholder="Ex: ABC1D23">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Modelo</label>
+                                        <div class="relative" style="position: relative !important; display: block !important;">
+                                            <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                                <i data-lucide="car" class="w-4 h-4"></i>
+                                            </div>
+                                            <input type="text" name="veiculo_modelo" x-model="veiculoModelo" :disabled="loadingVeiculo" class="w-full bg-white border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Ex: Toyota Corolla">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Cor</label>
+                                        <div class="relative" style="position: relative !important; display: block !important;">
+                                            <div style="position: absolute !important; left: 1.25rem !important; top: 50% !important; transform: translateY(-50%) !important; display: flex !important; align-items: center !important; color: #94a3b8; z-index: 10 !important;">
+                                                <i data-lucide="palette" class="w-4 h-4"></i>
+                                            </div>
+                                            <input type="text" name="veiculo_cor" x-model="veiculoCor" :disabled="loadingVeiculo" class="w-full bg-white border border-slate-200/80 rounded-full py-3 text-xs text-slate-800 focus:outline-none focus:border-ramiros-yellow focus:ring-4 focus:ring-ramiros-yellow/10 transition-all font-semibold" style="padding-left: 3rem !important;" placeholder="Ex: Prata">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="pt-6 flex justify-end gap-3 border-t border-slate-100 mt-6 shrink-0">
+                            <button type="button" onclick="fecharModalFNRH()" class="px-5 py-2.5 rounded-full text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all bg-transparent border-none cursor-pointer">Cancelar</button>
+                            <button type="submit" class="px-7 py-3 bg-ramiros-brown hover:bg-ramiros-brown-light text-white text-xs font-extrabold rounded-full shadow-[0_4px_15px_rgba(69,26,3,0.15)] transition-all hover:scale-[1.02] flex items-center gap-2 border-none cursor-pointer">
+                                <i data-lucide="check" class="w-4 h-4"></i> Salvar Hóspede {{ h.ordem }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function alternarAbaHospede(idx) {
+        document.querySelectorAll('.container-form-hospede').forEach(f => f.classList.add('hidden'));
+        const formAtivo = document.getElementById('container-form-' + idx);
+        if (formAtivo) formAtivo.classList.remove('hidden');
+        
+        document.querySelectorAll('.btn-aba-hospede').forEach(b => {
+            b.style.cssText = "background: #f8fafc !important; color: #451a03 !important; border: 1px solid #e2e8f0 !important; font-weight: bold !important; transform: scale(1) !important;";
+        });
+        
+        const btnAtivo = document.getElementById('btn-aba-' + idx);
+        if (btnAtivo) {
+            btnAtivo.style.cssText = "background: #451a03 !important; color: #ffffff !important; border: 1px solid #451a03 !important; box-shadow: 0 6px 15px rgba(69,26,3,0.2) !important; font-weight: bold !important; transform: scale(1.03) !important;";
+        }
+        
+        const modal = document.getElementById('modalFNRH');
+        if (window.Alpine && modal) {
+            const data = Alpine.$data(modal);
+            if (data) data.activeTab = idx;
+        }
+    }
+
+    function abrirModalFNRH(idxTab) {
+        const modal = document.getElementById('modalFNRH');
+        const panel = document.getElementById('modalFNRHPanel');
+        if (!modal || !panel) return;
+        alternarAbaHospede(parseInt(idxTab) || 0);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            panel.classList.remove('scale-95', 'opacity-0');
+            panel.classList.add('scale-100', 'opacity-100');
+            modal.querySelector('.bg-gray-900\\/40').classList.add('opacity-100');
+            if (window.lucide) lucide.createIcons();
+        }, 10);
+    }
+
+    function fecharModalFNRH() {
+        const modal = document.getElementById('modalFNRH');
+        const panel = document.getElementById('modalFNRHPanel');
+        if (!modal || !panel) return;
+        panel.classList.remove('scale-100', 'opacity-100');
+        panel.classList.add('scale-95', 'opacity-0');
+        modal.querySelector('.bg-gray-900\\/40').classList.remove('opacity-100');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+
+    function salvarDadosFNRH(idx) {
+        const form = document.getElementById('formFNRH-' + idx);
+        if (!form) return;
+        const formData = new FormData(form);
+        fetch("{% url 'website:carrinho_salvar_fnrh' %}?idx=" + idx, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Preencha os campos obrigatórios.');
+            }
+        })
+        .catch(err => alert('Erro ao salvar os dados.'));
+    }
+</script>

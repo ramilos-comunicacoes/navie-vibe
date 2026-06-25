@@ -1,0 +1,1362 @@
+<style>
+    .modal-detail-glass {
+        background: rgba(255, 255, 255, 0.82) !important;
+        backdrop-filter: blur(28px) !important;
+        -webkit-backdrop-filter: blur(28px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    }
+    .dark .modal-detail-glass {
+        background: rgba(15, 23, 42, 0.82) !important;
+        backdrop-filter: blur(28px) !important;
+        -webkit-backdrop-filter: blur(28px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    .select-dropdown-container::-webkit-scrollbar {
+        display: none !important;
+    }
+    .select-dropdown-container {
+        -ms-overflow-style: none !important;  
+        scrollbar-width: none !important;  
+    }
+    .modal-input-glass {
+        background: rgba(15, 23, 42, 0.03) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        color: #1e293b !important;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .modal-input-glass:focus {
+        background: rgba(15, 23, 42, 0.01) !important;
+        border-color: var(--brand-color, #eab308) !important;
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.15) !important;
+        transform: translateY(-1px) !important;
+    }
+    .dark .modal-input-glass {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2) !important;
+    }
+    .dark .modal-input-glass:focus,
+    .dark .modal-input-glass:active,
+    .dark .modal-input-glass:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: var(--brand-color, #eab308) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2) !important;
+        transform: translateY(-1px) !important;
+    }
+    .modal-input-glass::placeholder {
+        color: rgba(156, 163, 175, 0.6) !important;
+    }
+    .dark .modal-input-glass::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+    .dropdown-menu-glass {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+        z-index: 1000 !important;
+    }
+    .dark .dropdown-menu-glass {
+        background: rgba(20, 20, 25, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    }
+    .dropdown-item-glass {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-align: left;
+        border: none;
+        background: transparent !important;
+        color: #475569 !important;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+    .dark .dropdown-item-glass {
+        color: #cbd5e1 !important;
+    }
+    .dropdown-item-glass:hover {
+        background: rgba(234, 179, 8, 0.1) !important;
+        color: var(--brand-color, #eab308) !important;
+    }
+</style>
+
+<div id="modalReservaDetalhe" 
+     x-data="{ 
+         activeGuestTab: 1, 
+         editing: {% if not reserva.id %}true{% else %}false{% endif %},
+         guestCount: {% if not reserva.id %}1{% else %}{{ reserva.quantidade_hospedes }}{% endif %},
+         
+         // Confirmação de Exclusão
+         showDeleteConfirm: false,
+         confirmPassword: '',
+         deleteError: '',
+         
+         // Sucesso
+         showSuccessOverlay: false,
+         
+         // Dados da Estadia para Edição
+         checkin: '{{ reserva.data_checkin|date:'Y-m-d' }}',
+         checkout: '{{ reserva.data_checkout|date:'Y-m-d' }}',
+         selectedCategoriaId: '{{ reserva.quarto.categoria.id }}',
+         selectedCategoriaNome: 'Carregando...',
+         selectedQuartoId: '{{ reserva.quarto.id }}',
+         selectedQuartoNumero: 'Selecione o Quarto',
+         valorTotal: '',
+         valorPago: '',
+         subtotal: '',
+         
+         // Veículo
+         veiculoPlaca: '{{ veiculo.placa|default:"" }}',
+         veiculoModelo: '{{ veiculo.modelo|default:"" }}',
+         veiculoCor: '{{ veiculo.cor|default:"" }}',
+         
+         // Listas
+         categorias: [],
+         quartos: [],
+         indisponibilidades: {},
+         
+         // Calendar states
+         showCheckinCal: false,
+         showCheckoutCal: false,
+         calMonth: null,
+         calYear: null,
+         monthsList: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+         weekDaysList: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+         
+         // Métodos
+         init() {
+             this.categorias = JSON.parse(this.$el.dataset.categorias || '[]');
+             this.quartos = JSON.parse(this.$el.dataset.quartos || '[]');
+             this.indisponibilidades = JSON.parse(this.$el.dataset.indisponibilidades || '{}');
+             
+             // Inicializa valores formatados em BRL
+             let t = parseFloat('{{ reserva.valor_total|default:0.00|stringformat:".2f" }}');
+             if (isNaN(t)) t = 0;
+             this.valorTotal = this.formatBRL(Math.round(t * 100).toString());
+
+             let p = parseFloat('{{ reserva.valor_pago|default:0.00|stringformat:".2f" }}');
+             if (isNaN(p)) p = 0;
+             this.valorPago = this.formatBRL(Math.round(p * 100).toString());
+
+             let s = parseFloat('{{ reserva.subtotal|default:0.00|stringformat:".2f" }}');
+             if (isNaN(s)) s = 0;
+             this.subtotal = this.formatBRL(Math.round(s * 100).toString());
+             
+             // Sucesso do salvamento
+             this.showSuccessOverlay = {{ save_success|yesno:"true,false" }};
+             if (this.showSuccessOverlay) {
+                 setTimeout(() => {
+                     this.showSuccessOverlay = false;
+                     document.getElementById('modal-container').innerHTML = '';
+                     const filtro = document.getElementById('filtro-periodo');
+                     if (filtro) { htmx.trigger(filtro, 'change'); } else { window.location.reload(); }
+                 }, 1800);
+             }
+             
+             // Inicializa nomes dos selects
+             let initialCat = this.categorias.find(c => c.id == this.selectedCategoriaId);
+             if (initialCat) {
+                 this.selectedCategoriaNome = initialCat.nome + ' (R$ ' + new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2}).format(initialCat.preco_base) + '/diária)';
+             } else {
+                 this.selectedCategoriaNome = 'Selecione a Categoria';
+             }
+             let initialQ = this.quartos.find(q => q.id == this.selectedQuartoId);
+             if (initialQ) {
+                 this.selectedQuartoNumero = 'Quarto Nº ' + initialQ.numero;
+             } else {
+                 this.selectedQuartoNumero = 'Selecione o Quarto';
+             }
+             
+             this.$watch('selectedCategoriaId', value => {
+                 let cat = this.categorias.find(c => c.id == value);
+                 if (cat) {
+                     this.selectedCategoriaNome = cat.nome + ' (R$ ' + new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2}).format(cat.preco_base) + '/diária)';
+                 } else {
+                     this.selectedCategoriaNome = 'Selecione a Categoria';
+                 }
+                 
+                 let q = this.quartos.find(item => item.id == this.selectedQuartoId);
+                 if (q && q.categoria_id != value) {
+                     this.selectedQuartoId = '';
+                     this.selectedQuartoNumero = 'Selecione o Quarto';
+                 }
+                 this.recalcularTotal();
+             });
+             this.$watch('selectedQuartoId', value => {
+                 let q = this.quartos.find(item => item.id == value);
+                 if (q) {
+                     this.selectedQuartoNumero = 'Quarto Nº ' + q.numero;
+                     this.selectedCategoriaId = q.categoria_id;
+                     if (this.guestCount > q.capacidade_maxima) {
+                         this.guestCount = q.capacidade_maxima;
+                         if (this.activeGuestTab > this.guestCount) {
+                             this.activeGuestTab = 1;
+                         }
+                     }
+                 } else {
+                     this.selectedQuartoNumero = 'Selecione o Quarto';
+                 }
+                 this.recalcularTotal();
+             });
+             this.$watch('checkin', () => this.recalcularTotal());
+             this.$watch('checkout', () => this.recalcularTotal());
+             
+             // Placa brasileira format
+             this.$watch('veiculoPlaca', value => {
+                 let v = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                 if (v.length > 7) {
+                     v = v.substring(0, 7);
+                 }
+                 if (v.length >= 5) {
+                     let char5 = v.charAt(4);
+                     let isDigit = char5 >= '0' && char5 <= '9';
+                     if (isDigit) {
+                         this.veiculoPlaca = v.substring(0, 3) + '-' + v.substring(3);
+                         return;
+                     }
+                 }
+                 this.veiculoPlaca = v;
+             });
+         },
+         
+         formatMoney(val) {
+             if (val === undefined || val === null || val === '') return '0,00';
+             let num;
+             if (typeof val === 'number') {
+                 num = val;
+             } else {
+                 let str = val.toString().trim();
+                 if (str.includes(',')) {
+                     let clean = str.replace(/\./g, '').replace(',', '.');
+                     num = parseFloat(clean);
+                 } else {
+                     num = parseFloat(str);
+                 }
+             }
+             if (isNaN(num)) return '0,00';
+             return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+         },
+         
+         formatBRL(value) {
+             if (!value) return '0,00';
+             let clean = value.toString().replace(/\D/g, '');
+             if (clean === '') clean = '0';
+             let cents = parseInt(clean, 10);
+             let real = (cents / 100).toFixed(2);
+             let parts = real.split('.');
+             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+             return parts.join(',');
+         },
+         
+         updateBRL(el, field) {
+             let raw = el.value;
+             let formatted = this.formatBRL(raw);
+             if (field === 'total') {
+                 this.valorTotal = formatted;
+                 el.value = this.valorTotal;
+             } else {
+                 this.valorPago = formatted;
+                 el.value = this.valorPago;
+             }
+         },
+         
+         recalcularTotal() {
+             if (this.checkin && this.checkout) {
+                 let d1 = new Date(this.checkin + 'T00:00:00');
+                 let d2 = new Date(this.checkout + 'T00:00:00');
+                 let diff = d2 - d1;
+                 let noites = Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24)));
+                 
+                 let cat = this.categorias.find(c => c.id == this.selectedCategoriaId);
+                 if (cat) {
+                     let precoDiaria = cat.preco_base;
+                     let subtotal = precoDiaria * noites;
+                     this.valorTotal = this.formatBRL(Math.round(subtotal * 100).toString());
+                     this.subtotal = this.formatBRL(Math.round(subtotal * 100).toString());
+                 }
+             }
+         },
+         
+         // Métodos do Calendário
+         initCalendar(dateVal) {
+             let d = dateVal ? new Date(dateVal + 'T00:00:00') : new Date();
+             this.calMonth = d.getMonth();
+             this.calYear = d.getFullYear();
+         },
+         prevMonth() {
+             if (this.calMonth === 0) {
+                 this.calMonth = 11;
+                 this.calYear--;
+             } else {
+                 this.calMonth--;
+             }
+         },
+         nextMonth() {
+             if (this.calMonth === 11) {
+                 this.calMonth = 0;
+                 this.calYear++;
+             } else {
+                 this.calMonth++;
+             }
+         },
+         getDaysGrid(type) {
+             let days = [];
+             let firstDay = new Date(this.calYear, this.calMonth, 1);
+             let lastDay = new Date(this.calYear, this.calMonth + 1, 0);
+             
+             let prevMonthLastDay = new Date(this.calYear, this.calMonth, 0).getDate();
+             let startingDayOfWeek = firstDay.getDay(); 
+             
+             for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                 let dayNum = prevMonthLastDay - i;
+                 let m = this.calMonth === 0 ? 11 : this.calMonth - 1;
+                 let y = this.calMonth === 0 ? this.calYear - 1 : this.calYear;
+                 let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: dayNum,
+                     isCurrentMonth: false,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             
+             let totalDays = lastDay.getDate();
+             for (let i = 1; i <= totalDays; i++) {
+                 let dateStr = `${this.calYear}-${(this.calMonth+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: i,
+                     isCurrentMonth: true,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             
+             let remaining = 42 - days.length;
+             for (let i = 1; i <= remaining; i++) {
+                 let m = this.calMonth === 11 ? 0 : this.calMonth + 1;
+                 let y = this.calMonth === 11 ? this.calYear + 1 : this.calYear;
+                 let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: i,
+                     isCurrentMonth: false,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             return days;
+         },
+         checkDateAvailable(dateStr, type) {
+             if (type === 'checkout' && this.checkin && new Date(dateStr + 'T00:00:00') <= new Date(this.checkin + 'T00:00:00')) {
+                 return false;
+             }
+             if (!this.selectedQuartoId) return true;
+             let list = this.indisponibilidades[this.selectedQuartoId] || [];
+             return !list.includes(dateStr);
+         },
+         selectDate(dateStr, type) {
+             if (!this.checkDateAvailable(dateStr, type)) return;
+             if (type === 'checkin') {
+                 this.checkin = dateStr;
+                 this.showCheckinCal = false;
+                 if (this.checkout && new Date(this.checkout + 'T00:00:00') <= new Date(dateStr + 'T00:00:00')) {
+                     this.checkout = '';
+                 }
+             } else {
+                 this.checkout = dateStr;
+                 this.showCheckoutCal = false;
+             }
+         },
+         formatDateBR(dateStr) {
+             if (!dateStr) return '';
+             let parts = dateStr.split('-');
+             return `${parts[2]}/${parts[1]}/${parts[0]}`;
+         }
+     }"
+     data-categorias="{{ categorias_json }}"
+     data-quartos="{{ quartos_json }}"
+     data-indisponibilidades="{{ indisponibilidades_json }}"
+     class="fixed inset-0 flex items-center justify-center select-none" style="z-index: 9999;">
+    
+    <!-- Background overlay close button -->
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300" onclick="document.getElementById('modal-container').innerHTML = '';"></div>
+    
+    <!-- Panel -->
+    {% if not reserva.id %}
+    <form hx-post="{% url 'sistema:partner_reserva_salvar' %}"
+          hx-target="#modal-container"
+          hx-encoding="multipart/form-data"
+          id="modalReservaPanel"
+          class="relative modal-detail-glass w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[92vh] mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    {% else %}
+    <div class="relative modal-detail-glass w-full max-w-5xl rounded-[2.5rem] shadow-2xl flex flex-col max-h-[92vh] mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200" id="modalReservaPanel">
+    {% endif %}
+        {% csrf_token %}
+        
+        <!-- Header -->
+        <div class="px-6 py-3 border-b border-slate-100 dark:border-white/5 bg-slate-50/40 dark:bg-white/5 rounded-t-[2.5rem] shrink-0 flex justify-between items-center">
+            <div class="text-left flex items-center gap-3">
+                {% if reserva.id %}
+                    <span class="text-[9px] font-black uppercase text-brand tracking-widest bg-brand/10 px-2.5 py-0.5 rounded-md">Localizador #{{ reserva.id }}</span>
+                {% else %}
+                    <span class="text-[9px] font-black uppercase text-brand tracking-widest bg-brand/10 px-2.5 py-0.5 rounded-md">Nova Reserva</span>
+                {% endif %}
+                <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Painel Detalhado da Reserva</h3>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-container').innerHTML = '';" class="p-1 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer transition-colors">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        
+        <!-- Body Grid -->
+        <div class="flex-1 overflow-y-auto no-scrollbar p-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+                             <!-- COLUNA ESQUERDA: Resumo Estadia (2/5) -->
+                {% if reserva.id %}
+                <form hx-post="{% url 'sistema:partner_salvar_estadia_veiculo' reserva.id %}"
+                      hx-target="#modal-container"
+                      class="md:col-span-2 flex flex-col justify-between space-y-6">
+                    {% csrf_token %}
+                {% else %}
+                <div class="md:col-span-2 flex flex-col justify-between space-y-6">
+                {% endif %}
+                    <div class="space-y-6">
+                        <!-- Informações do Quarto e Datas -->
+                        <div class="bg-slate-555/5 dark:bg-white/3 p-5 rounded-3xl border border-slate-100 dark:border-white/5 text-xs text-left">
+                            <div class="flex justify-between items-center pb-2.5 border-b border-slate-200/40 dark:border-white/5 mb-3">
+                                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Dados da Estadia</h4>
+                                <span class="px-2.5 py-0.5 text-[8.5px] font-black rounded-md uppercase tracking-wider
+                                    {% if reserva.status == 'HOSPEDADO' %}bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400
+                                    {% elif reserva.status == 'FINALIZADA' %}bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-300
+                                    {% elif reserva.status == 'CANCELADA' %}bg-red-100 text-red-800 dark:bg-red-500/10 dark:text-red-400
+                                    {% else %}bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400{% endif %}">
+                                    {{ reserva.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <!-- Visualização -->
+                            <div x-show="!editing" class="grid grid-cols-2 gap-4 w-full">
+                                <div>
+                                    <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Categoria de Quarto</span>
+                                    <span class="font-extrabold text-slate-800 dark:text-white mt-0.5 block truncate">{{ reserva.quarto.categoria.nome }}</span>
+                                </div>
+                                <div>
+                                    <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Quarto Alocado</span>
+                                    <span class="font-black text-brand mt-0.5 block">Nº {{ reserva.quarto.numero }}</span>
+                                </div>
+                                <div class="border-t border-slate-200/40 dark:border-white/5 pt-3 mt-2 col-span-1">
+                                    <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Entrada (Check-in)</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300 mt-0.5 block">
+                                        {{ reserva.data_checkin|date:"d/m/Y" }} às {{ reserva.hora_checkin|time:"H:i" }}
+                                    </span>
+                                </div>
+                                <div class="border-t border-slate-200/40 dark:border-white/5 pt-3 mt-2 col-span-1">
+                                    <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Saída (Checkout)</span>
+                                    <span class="font-bold text-slate-700 dark:text-slate-300 mt-0.5 block">
+                                        {{ reserva.data_checkout|date:"d/m/Y" }} às {{ reserva.hora_checkout|time:"H:i" }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Edição -->
+                            <div x-show="editing" class="grid grid-cols-2 gap-3.5 w-full text-left">
+                                <div class="col-span-2">
+                                    <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Categoria de Quarto</label>
+                                    <div class="relative" x-data="{ openCat: false }" @click.outside="openCat = false">
+                                        <button type="button" @click="openCat = !openCat"
+                                                class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                            <span x-text="selectedCategoriaNome" class="truncate text-left"></span>
+                                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openCat ? 'rotate-180' : ''"></i>
+                                        </button>
+                                        <input type="hidden" name="categoria" :value="selectedCategoriaId">
+                                        
+                                        <div x-show="openCat" x-transition
+                                             class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[999]"
+                                             style="display: none;">
+                                            <div class="p-1.5 space-y-1 select-dropdown-container">
+                                                <template x-for="cat in categorias" :key="cat.id">
+                                                    <button type="button" @click="selectedCategoriaId = cat.id; openCat = false;"
+                                                            :class="selectedCategoriaId == cat.id ? 'bg-brand/10 text-brand font-black' : ''"
+                                                            class="dropdown-item-glass">
+                                                         <span x-text="cat.nome + ' (R$ ' + new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2}).format(cat.preco_base) + '/diária)'"></span>
+                                                        <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="selectedCategoriaId == cat.id"></i>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Quarto</label>
+                                    <div class="relative" x-data="{ openQuarto: false }" @click.outside="openQuarto = false">
+                                        <button type="button" @click="openQuarto = !openQuarto"
+                                                class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                            <span x-text="selectedQuartoNumero" class="truncate text-left"></span>
+                                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openQuarto ? 'rotate-180' : ''"></i>
+                                        </button>
+                                        <input type="hidden" name="quarto" :value="selectedQuartoId" required>
+                                        
+                                        <div x-show="openQuarto" x-transition
+                                             class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[999]"
+                                             style="display: none;">
+                                            <div class="p-1.5 space-y-1 select-dropdown-container">
+                                                <template x-for="q in quartos" :key="q.id">
+                                                    <template x-if="q.categoria_id == selectedCategoriaId">
+                                                        <button type="button" @click="selectedQuartoId = q.id; openQuarto = false;"
+                                                                :class="selectedQuartoId == q.id ? 'bg-brand/10 text-brand font-black' : ''"
+                                                                class="dropdown-item-glass">
+                                                            <span x-text="'Quarto Nº ' + q.numero + ' (' + q.status + ')'"></span>
+                                                            <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="selectedQuartoId == q.id"></i>
+                                                        </button>
+                                                    </template>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-1">
+                                    <div class="relative" @click.outside="showCheckinCal = false">
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Entrada (Check-in)</label>
+                                        <input type="text" :value="formatDateBR(checkin)" required placeholder="DD/MM/AAAA" readonly
+                                               @click="initCalendar(checkin); showCheckinCal = !showCheckinCal; showCheckoutCal = false;"
+                                               class="modal-input-glass w-full rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                                        <input type="hidden" name="data_checkin" :value="checkin">
+                                        
+                                        <div x-show="showCheckinCal" x-transition
+                                             class="absolute left-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                                             style="display: none; min-width: 230px;">
+                                            <div class="flex items-center justify-between mb-3 px-1">
+                                                <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                                </button>
+                                                <span class="font-extrabold text-slate-850 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                                                <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                                </button>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                                                <template x-for="day in weekDaysList">
+                                                    <span x-text="day"></span>
+                                                </template>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-1 text-center">
+                                                <template x-for="day in getDaysGrid('checkin')" :key="day.dateStr">
+                                                    <button type="button" @click.stop="selectDate(day.dateStr, 'checkin')"
+                                                            :disabled="!day.isAvailable"
+                                                            :class="{
+                                                                'bg-brand text-white font-black': checkin === day.dateStr,
+                                                                'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': checkin !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                                                'text-slate-350 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                                                'opacity-25 text-slate-450 dark:text-slate-650 line-through cursor-not-allowed': !day.isAvailable
+                                                            }"
+                                                            class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                                                        <span x-text="day.dayNum"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-span-1">
+                                    <div class="relative" @click.outside="showCheckoutCal = false">
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Saída (Checkout)</label>
+                                        <input type="text" :value="formatDateBR(checkout)" required placeholder="DD/MM/AAAA" readonly
+                                               @click="initCalendar(checkout); showCheckoutCal = !showCheckoutCal; showCheckinCal = false;"
+                                               class="modal-input-glass w-full rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                                        <input type="hidden" name="data_checkout" :value="checkout">
+                                        
+                                        <div x-show="showCheckoutCal" x-transition
+                                             class="absolute left-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                                             style="display: none; min-width: 230px;">
+                                            <div class="flex items-center justify-between mb-3 px-1">
+                                                <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                                </button>
+                                                <span class="font-extrabold text-slate-850 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                                                <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                                </button>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                                                <template x-for="day in weekDaysList">
+                                                    <span x-text="day"></span>
+                                                </template>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-1 text-center">
+                                                <template x-for="day in getDaysGrid('checkout')" :key="day.dateStr">
+                                                    <button type="button" @click.stop="selectDate(day.dateStr, 'checkout')"
+                                                            :disabled="!day.isAvailable"
+                                                            :class="{
+                                                                'bg-brand text-white font-black': checkout === day.dateStr,
+                                                                'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': checkout !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                                                'text-slate-350 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                                                'opacity-25 text-slate-455 dark:text-slate-650 line-through cursor-not-allowed': !day.isAvailable
+                                                            }"
+                                                            class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                                                        <span x-text="day.dayNum"></span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if not reserva.id %}
+                                <div class="col-span-2 mt-2">
+                                    <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Quantidade de Hóspedes</label>
+                                    <div x-data="{ openGuests: false }" class="relative w-full" @click.outside="openGuests = false">
+                                        <button type="button" @click="openGuests = !openGuests"
+                                                class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                            <span x-text="guestCount === 1 ? '1 Hóspede' : guestCount + ' Hóspedes'" class="truncate text-left"></span>
+                                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openGuests ? 'rotate-180' : ''"></i>
+                                        </button>
+                                        <input type="hidden" name="quantidade_hospedes" :value="guestCount">
+                                        
+                                        <div x-show="openGuests" x-transition
+                                             class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[999]"
+                                             style="display: none;">
+                                            <div class="p-1 space-y-0.5 select-dropdown-container">
+                                                <template x-for="val in Array.from({length: (quartos.find(q => q.id == selectedQuartoId)?.capacidade_maxima || 8)}, (_, i) => i + 1)">
+                                                    <button type="button" 
+                                                            @click="guestCount = val; openGuests = false; if(activeGuestTab > val) activeGuestTab = 1;"
+                                                            :class="guestCount === val ? 'bg-brand/10 text-brand font-black' : ''"
+                                                            class="dropdown-item-glass">
+                                                        <span x-text="val === 1 ? '1 Hóspede' : val + ' Hóspedes'"></span>
+                                                        <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="guestCount === val"></i>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Resumo Financeiro -->
+                        <div class="text-left w-full">
+                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2.5 px-1.5">Resumo Financeiro</h4>
+                            <div class="bg-slate-555/5 dark:bg-white/3 p-5 rounded-3xl border border-slate-100 dark:border-white/5 text-xs space-y-2">
+                                
+                                <!-- Visualização -->
+                                <div x-show="!editing" class="space-y-2 w-full">
+                                    <p class="flex justify-between text-slate-500 dark:text-slate-400 font-semibold"><span>Noites Reservadas:</span><span class="font-bold text-slate-700 dark:text-white">{{ reserva.total_noites }} noites</span></p>
+                                    <p class="flex justify-between text-slate-500 dark:text-slate-400 font-semibold"><span>Diárias da Estadia:</span><span class="font-bold text-slate-700 dark:text-white" x-text="'R$ ' + formatMoney(subtotal)">R$ {{ reserva.subtotal|floatformat:2 }}</span></p>
+                                    <div class="border-t border-slate-200 dark:border-white/5 pt-3 mt-3 flex justify-between items-center">
+                                        <span class="font-black text-slate-800 dark:text-white text-xs uppercase">Valor Pago pelo Hóspede</span>
+                                        <span class="font-black text-slate-900 dark:text-white text-base font-poppins" x-text="'R$ ' + formatMoney(valorTotal)">R$ {{ reserva.valor_total|floatformat:2 }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Edição -->
+                                <div x-show="editing" class="space-y-3 w-full text-left">
+                                    <div>
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Valor Total da Hospedagem (R$)</label>
+                                        <input type="text" x-model="valorTotal" @input="updateBRL($event.target, 'total')" name="valor_total" class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Valor Pago / Adiantamento (R$)</label>
+                                        <input type="text" x-model="valorPago" @input="updateBRL($event.target, 'pago')" name="valor_pago" class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Veículo / Garagem -->
+                        <div class="text-left w-full">
+                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2.5 px-1.5">Garagem & Veículo</h4>
+                            
+                            <!-- Visualização -->
+                            <div x-show="!editing" class="bg-amber-50/10 dark:bg-white/3 p-4 rounded-3xl border border-amber-100/20 dark:border-white/5 text-xs w-full">
+                                {% if veiculo %}
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <div>
+                                            <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Placa</span>
+                                            <span class="font-extrabold text-amber-800 dark:text-brand-400 block mt-0.5 uppercase tracking-wider">{{ veiculo.placa }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Modelo</span>
+                                            <span class="font-bold text-slate-700 dark:text-slate-350 block mt-0.5 truncate">{{ veiculo.modelo }}</span>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider">Cor</span>
+                                            <span class="font-bold text-slate-700 dark:text-slate-350 block mt-0.5 truncate">{{ veiculo.cor }}</span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-slate-400 italic">Nenhum veículo cadastrado para esta estadia.</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Edição -->
+                            <div x-show="editing" class="bg-amber-50/10 dark:bg-white/3 p-4 rounded-3xl border border-amber-100/20 dark:border-white/5 text-xs w-full">
+                                <div class="grid grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Placa</label>
+                                        <input type="text" x-model="veiculoPlaca" name="veiculo_placa" placeholder="ABC-1234" class="modal-input-glass w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none uppercase">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Modelo</label>
+                                        <input type="text" x-model="veiculoModelo" name="veiculo_modelo" placeholder="Corolla" class="modal-input-glass w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Cor</label>
+                                        <input type="text" x-model="veiculoCor" name="veiculo_cor" placeholder="Preto" class="modal-input-glass w-full rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ações Portaria no rodapé esquerdo -->
+                    <div class="space-y-2.5 pt-5 border-t border-slate-150/40 dark:border-white/5 text-xs select-none">
+                        
+                        <!-- Visualização -->
+                        {% if reserva.id %}
+                        <div x-show="!editing" class="space-y-2.5">
+                            {% if reserva.status == 'CONFIRMADA' or reserva.status == 'PENDENTE' %}
+                                <div class="flex items-center gap-2">
+                                    <button type="button" hx-post="{% url 'sistema:partner_reserva_checkin' reserva.id %}"
+                                            hx-target="#modal-container"
+                                            class="flex-grow py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-555 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                        <i data-lucide="check" class="w-4 h-4"></i> Confirmar Check-in
+                                    </button>
+                                    {% if reserva.valor_pago >= reserva.valor_total and reserva.valor_pago > 0 %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Pago
+                                        </button>
+                                    {% else %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-350 font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-solid border-slate-300/50 dark:border-white/10 outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Não Pago
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if reserva.status == 'HOSPEDADO' %}
+                                <div class="flex items-center gap-2">
+                                    <button type="button" hx-post="{% url 'sistema:partner_reserva_checkout' reserva.id %}"
+                                            hx-target="#modal-container"
+                                            class="flex-grow py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                        <i data-lucide="log-out" class="w-4 h-4"></i> Confirmar Check-out
+                                    </button>
+                                    {% if reserva.valor_pago >= reserva.valor_total and reserva.valor_pago > 0 %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Pago
+                                        </button>
+                                    {% else %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-350 font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-solid border-slate-300/50 dark:border-white/10 outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Não Pago
+                                        </button>
+                                    {% endif %}
+                                </div>
+                                <button type="button" hx-post="{% url 'sistema:partner_reserva_checkin' reserva.id %}"
+                                        hx-target="#modal-container"
+                                        class="w-full py-3.5 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none mt-2">
+                                    <i data-lucide="undo-2" class="w-4 h-4"></i> Reverter Check-in
+                                </button>
+                            {% endif %}
+                            
+                            {% if reserva.status == 'FINALIZADA' %}
+                                <div class="flex items-center gap-2">
+                                    <button type="button" hx-post="{% url 'sistema:partner_reserva_checkout' reserva.id %}"
+                                            hx-target="#modal-container"
+                                            class="flex-grow py-3.5 rounded-2xl bg-slate-500 hover:bg-slate-600 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                        <i data-lucide="undo-2" class="w-4 h-4"></i> Reverter Check-out
+                                    </button>
+                                    {% if reserva.valor_pago >= reserva.valor_total and reserva.valor_pago > 0 %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Pago
+                                        </button>
+                                    {% else %}
+                                        <button type="button" hx-post="{% url 'sistema:partner_reserva_toggle_pagamento' reserva.id %}"
+                                                hx-target="#modal-container"
+                                                class="py-3.5 px-4 rounded-2xl bg-slate-200 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 text-slate-700 dark:text-slate-350 font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-solid border-slate-300/50 dark:border-white/10 outline-none">
+                                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Não Pago
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            <div class="flex gap-2.5 mt-2">
+                                <button type="button" @click="showDeleteConfirm = true; confirmPassword = ''; deleteError = '';"
+                                        class="w-full py-3 px-4 rounded-xl border border-red-200/50 hover:bg-red-600 hover:text-white text-red-600 font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer bg-transparent">
+                                    Excluir Diária
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Edição / Criação -->
+                        <div x-show="editing" class="space-y-2.5">
+                            <button type="submit"
+                                    class="w-full py-3.5 rounded-2xl bg-brand hover:bg-brand-hover text-brand-text font-black text-[10px] uppercase tracking-widest shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border-none outline-none">
+                                <i data-lucide="save" class="w-4 h-4"></i> {% if not reserva.id %}Salvar Lançamento{% else %}Salvar Estadia & Garagem{% endif %}
+                            </button>
+                            <button type="button" 
+                                    {% if not reserva.id %}
+                                    onclick="document.getElementById('modal-container').innerHTML = '';"
+                                    {% else %}
+                                    @click="editing = false"
+                                    {% endif %}
+                                    class="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-200 font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer bg-transparent">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                {% if reserva.id %}
+                </form>
+                {% else %}
+                </div>
+                {% endif %}
+
+                <!-- COLUNA DIREITA: Ficha Hóspedes FNRH (3/5) -->
+                <div class="md:col-span-3 bg-slate-555/5 dark:bg-white/1 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 flex flex-col justify-between h-full text-left min-h-[520px]">
+                    <div>
+                        <!-- Header do painel de Hóspedes (Tabs + Lápis) -->
+                        <div class="flex items-center justify-between pb-3.5 mb-5 border-b border-slate-200/50 dark:border-white/5">
+                            <!-- Abas dos hóspedes -->
+                            <div class="flex flex-wrap gap-2">
+                                {% for h in hospedes %}
+                                    <button type="button"
+                                            x-show="{% if not reserva.id %}{{ h.ordem }} <= guestCount{% else %}true{% endif %}"
+                                            @click="activeGuestTab = {{ h.ordem }}; {% if not reserva.id %}editing = true;{% endif %} $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); })"
+                                            :class="activeGuestTab === {{ h.ordem }} ? 'bg-brand text-brand-text shadow-sm font-black' : 'bg-white dark:bg-white/5 text-slate-750 dark:text-slate-300 hover:bg-slate-100 border border-slate-200/60 dark:border-white/5 font-semibold'"
+                                            class="px-3.5 py-2 rounded-xl text-[10px] uppercase tracking-wider transition-all border-none cursor-pointer flex items-center gap-1.5">
+                                        <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                                        <span>Hóspede {{ h.ordem }} {% if h.ordem == 1 %}(Titular){% endif %}</span>
+                                    </button>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Botão Lápis/Editar com Contorno Claro e Identificação Robusta -->
+                            {% if reserva.id %}
+                            <button type="button"
+                                    @click="editing = !editing; $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); })"
+                                    :class="editing ? 'border-red-300 bg-red-50 text-red-600 hover:bg-red-100 dark:border-red-500/30 dark:bg-red-500/10' : 'border-slate-250 bg-white hover:bg-slate-50 text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-350 dark:hover:bg-white/10'"
+                                    class="px-3.5 py-2 rounded-xl border border-solid shadow-xs cursor-pointer flex items-center gap-1.5 transition-all font-black text-[10px] uppercase tracking-wider">
+                                <template x-if="!editing">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                        <span>Editar Ficha</span>
+                                    </span>
+                                </template>
+                                <template x-if="editing">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                        <span>Cancelar</span>
+                                    </span>
+                                </template>
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <!-- Formulários FNRH -->
+                        {% for h in hospedes %}
+                            {% if not reserva.id %}
+                            <div x-show="activeGuestTab === {{ h.ordem }} && {{ h.ordem }} <= guestCount"
+                                 x-data="{
+                                     newFiles: [],
+                                     cpf: '',
+                                     telefone: '',
+                                     rg: '',
+                                     
+                                     init() {
+                                         this.cpf = this.formatCPF('{{ h.cpf|default:''|escapejs }}');
+                                         this.telefone = this.formatPhone('{{ h.telefone|default:''|escapejs }}');
+                                         this.rg = this.formatRG('{{ h.rg|default:''|escapejs }}');
+                                     },
+                                     
+                                     formatCPF(value) {
+                                         if (!value) return '';
+                                         let clean = value.toString().replace(/\D/g, '');
+                                         clean = clean.substring(0, 11);
+                                         if (clean.length <= 3) {
+                                             return clean;
+                                         } else if (clean.length <= 6) {
+                                             return `${clean.slice(0, 3)}.${clean.slice(3, 6)}`;
+                                         } else if (clean.length <= 9) {
+                                             return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}`;
+                                         } else {
+                                             return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+                                         }
+                                     },
+                                     
+                                     formatPhone(value) {
+                                         if (!value) return '';
+                                         let clean = value.toString().replace(/\D/g, '');
+                                         clean = clean.substring(0, 11);
+                                         if (clean.length <= 2) {
+                                             return clean;
+                                         } else if (clean.length <= 6) {
+                                             return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+                                         } else if (clean.length <= 10) {
+                                             return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`;
+                                         } else {
+                                             return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+                                         }
+                                     },
+                                     
+                                     formatRG(value) {
+                                         if (!value) return '';
+                                         let clean = value.toString().replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                                         clean = clean.substring(0, 15);
+                                         if (clean.length <= 2) {
+                                             return clean;
+                                         } else if (clean.length <= 5) {
+                                             return `${clean.slice(0, 2)}.${clean.slice(2)}`;
+                                         } else if (clean.length <= 8) {
+                                             return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5)}`;
+                                         } else {
+                                             return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}-${clean.slice(8)}`;
+                                         }
+                                     },
+                                     
+                                     addFile() {
+                                         document.getElementById('novos_documentos_{{ h.ordem }}').click();
+                                     },
+                                     
+                                     onFilesAdded(event) {
+                                         const files = event.target.files;
+                                         for (let i = 0; i < files.length; i++) {
+                                             this.newFiles.push(files[i]);
+                                         }
+                                         $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); });
+                                     },
+                                     
+                                     removeNewFile(index) {
+                                         this.newFiles.splice(index, 1);
+                                         const dt = new DataTransfer();
+                                         this.newFiles.forEach(file => dt.items.add(file));
+                                         document.getElementById('novos_documentos_{{ h.ordem }}').files = dt.files;
+                                         $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); });
+                                     },
+                                     
+                                     getFileColor(filename) {
+                                         if (!filename) return 'bg-slate-100 border-slate-350 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300';
+                                         const ext = filename.split('.').pop().toLowerCase();
+                                         if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) {
+                                             return 'bg-purple-100/70 border-purple-300 text-purple-900 dark:bg-purple-950 dark:border-purple-800/60 dark:text-purple-300';
+                                         }
+                                         if (ext === 'pdf') {
+                                             return 'bg-red-100/70 border-red-300 text-red-900 dark:bg-red-950 dark:border-red-800/60 dark:text-red-300';
+                                         }
+                                         if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) {
+                                             return 'bg-green-100/70 border-green-300 text-green-900 dark:bg-green-950 dark:border-green-800/60 dark:text-green-300';
+                                         }
+                                         if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) {
+                                             return 'bg-blue-100/70 border-blue-300 text-blue-900 dark:bg-blue-950 dark:border-blue-800/60 dark:text-blue-300';
+                                         }
+                                         return 'bg-slate-100 border-slate-300 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300';
+                                     },
+                                     
+                                     getFileIcon(filename) {
+                                         if (!filename) return 'file';
+                                         const ext = filename.split('.').pop().toLowerCase();
+                                         if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) return 'image';
+                                         if (ext === 'pdf') return 'file-text';
+                                         if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) return 'table';
+                                         if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) return 'file-type-2';
+                                         return 'file';
+                                     },
+                                     
+                                     getFileTypeName(filename) {
+                                         if (!filename) return 'Arquivo';
+                                         const ext = filename.split('.').pop().toLowerCase();
+                                         if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) return 'Imagem';
+                                         if (ext === 'pdf') return 'Documento PDF';
+                                         if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) return 'Planilha Excel';
+                                         if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) return 'Documento Texto';
+                                         return 'Arquivo';
+                                     }
+                                 }"
+                                 class="space-y-4 flex flex-col justify-between">
+                            {% else %}
+                            <form hx-post="{% url 'sistema:partner_salvar_hospede_fnrh' h.id %}"
+                                  hx-encoding="multipart/form-data"
+                                  hx-target="#modal-container"
+                                  x-show="activeGuestTab === {{ h.ordem }}"
+                                  x-data="{
+                                      newFiles: [],
+                                      cpf: '',
+                                      telefone: '',
+                                      rg: '',
+                                      
+                                      init() {
+                                          this.cpf = this.formatCPF('{{ h.cpf|default:''|escapejs }}');
+                                          this.telefone = this.formatPhone('{{ h.telefone|default:''|escapejs }}');
+                                          this.rg = this.formatRG('{{ h.rg|default:''|escapejs }}');
+                                      },
+                                      
+                                      formatCPF(value) {
+                                          if (!value) return '';
+                                          let clean = value.toString().replace(/\D/g, '');
+                                          clean = clean.substring(0, 11);
+                                          if (clean.length <= 3) {
+                                              return clean;
+                                          } else if (clean.length <= 6) {
+                                              return `${clean.slice(0, 3)}.${clean.slice(3, 6)}`;
+                                          } else if (clean.length <= 9) {
+                                              return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}`;
+                                          } else {
+                                              return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+                                          }
+                                      },
+                                      
+                                      formatPhone(value) {
+                                          if (!value) return '';
+                                          let clean = value.toString().replace(/\D/g, '');
+                                          clean = clean.substring(0, 11);
+                                          if (clean.length <= 2) {
+                                              return clean;
+                                          } else if (clean.length <= 6) {
+                                              return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+                                          } else if (clean.length <= 10) {
+                                              return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`;
+                                          } else {
+                                              return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+                                          }
+                                      },
+                                      
+                                      formatRG(value) {
+                                          if (!value) return '';
+                                          let clean = value.toString().replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                                          clean = clean.substring(0, 15);
+                                          if (clean.length <= 2) {
+                                              return clean;
+                                          } else if (clean.length <= 5) {
+                                              return `${clean.slice(0, 2)}.${clean.slice(2)}`;
+                                          } else if (clean.length <= 8) {
+                                              return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5)}`;
+                                          } else {
+                                              return `${clean.slice(0, 2)}.${clean.slice(2, 5)}.${clean.slice(5, 8)}-${clean.slice(8)}`;
+                                          }
+                                      },
+                                      
+                                      addFile() {
+                                          document.getElementById('novos_documentos_{{ h.id }}').click();
+                                      },
+                                      
+                                      onFilesAdded(event) {
+                                          const files = event.target.files;
+                                          for (let i = 0; i < files.length; i++) {
+                                              this.newFiles.push(files[i]);
+                                          }
+                                          $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); });
+                                      },
+                                      
+                                      removeNewFile(index) {
+                                          this.newFiles.splice(index, 1);
+                                          const dt = new DataTransfer();
+                                          this.newFiles.forEach(file => dt.items.add(file));
+                                          document.getElementById('novos_documentos_{{ h.id }}').files = dt.files;
+                                          $nextTick(() => { if(typeof lucide !== 'undefined') lucide.createIcons(); });
+                                      },
+                                      
+                                      getFileColor(filename) {
+                                          if (!filename) return 'bg-slate-100 border-slate-350 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300';
+                                          const ext = filename.split('.').pop().toLowerCase();
+                                          if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) {
+                                              return 'bg-purple-100/70 border-purple-300 text-purple-900 dark:bg-purple-950 dark:border-purple-800/60 dark:text-purple-300';
+                                          }
+                                          if (ext === 'pdf') {
+                                              return 'bg-red-100/70 border-red-300 text-red-900 dark:bg-red-950 dark:border-red-800/60 dark:text-red-300';
+                                          }
+                                          if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) {
+                                              return 'bg-green-100/70 border-green-300 text-green-900 dark:bg-green-950 dark:border-green-800/60 dark:text-green-300';
+                                          }
+                                          if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) {
+                                              return 'bg-blue-100/70 border-blue-300 text-blue-900 dark:bg-blue-950 dark:border-blue-800/60 dark:text-blue-300';
+                                          }
+                                          return 'bg-slate-100 border-slate-300 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300';
+                                      },
+                                      
+                                      getFileIcon(filename) {
+                                          if (!filename) return 'file';
+                                          const ext = filename.split('.').pop().toLowerCase();
+                                          if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) return 'image';
+                                          if (ext === 'pdf') return 'file-text';
+                                          if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) return 'table';
+                                          if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) return 'file-type-2';
+                                          return 'file';
+                                      },
+                                      
+                                      getFileTypeName(filename) {
+                                          if (!filename) return 'Arquivo';
+                                          const ext = filename.split('.').pop().toLowerCase();
+                                          if (['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext)) return 'Imagem';
+                                          if (ext === 'pdf') return 'Documento PDF';
+                                          if (['xlsx', 'xls', 'csv', 'ods'].includes(ext)) return 'Planilha Excel';
+                                          if (['docx', 'doc', 'txt', 'rtf', 'odt'].includes(ext)) return 'Documento Texto';
+                                          return 'Arquivo';
+                                      }
+                                  }"
+                                  class="space-y-4 flex flex-col justify-between">
+                            {% endif %}
+                                {% csrf_token %}
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">Nome Completo</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_nome_{{ h.ordem }}{% else %}nome{% endif %}" value="{{ h.nome|default:'' }}"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" {% if h.ordem == 1 %}required{% endif %} />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">CPF</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_cpf_{{ h.ordem }}{% else %}cpf{% endif %}" x-model="cpf" @input="cpf = formatCPF(cpf)"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" {% if h.ordem == 1 %}required{% endif %} />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">RG / Identidade</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_rg_{{ h.ordem }}{% else %}rg{% endif %}" x-model="rg" @input="rg = formatRG(rg)"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">E-mail</label>
+                                        <input type="email" name="{% if not reserva.id %}hospede_email_{{ h.ordem }}{% else %}email{% endif %}" value="{{ h.email|default:'' }}"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" {% if h.ordem == 1 %}required{% endif %} />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">Telefone</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_telefone_{{ h.ordem }}{% else %}telefone{% endif %}" x-model="telefone" @input="telefone = formatPhone(telefone)"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" {% if h.ordem == 1 %}required{% endif %} />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">Profissão</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_profissao_{{ h.ordem }}{% else %}profissao{% endif %}" value="{{ h.profissao|default:'' }}"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">Nacionalidade</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_nacionalidade_{{ h.ordem }}{% else %}nacionalidade{% endif %}" value="{{ h.nacionalidade|default:'Brasileira' }}"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" />
+                                    </div>
+                                    <div class="sm:col-span-2">
+                                        <label class="block text-[8.5px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1">Endereço</label>
+                                        <input type="text" name="{% if not reserva.id %}hospede_endereco_{{ h.ordem }}{% else %}endereco{% endif %}" value="{{ h.endereco|default:'' }}"
+                                               :disabled="!editing" :readonly="!editing"
+                                               :class="editing ? 'bg-white dark:bg-slate-900 border-slate-300 dark:border-white/15 focus:ring-1 focus:ring-brand' : 'bg-slate-100/40 dark:bg-white/2 border-transparent cursor-not-allowed select-text'"
+                                               class="w-full px-4 py-2.5 rounded-xl text-slate-800 dark:text-white font-semibold transition-all border outline-none" />
+                                    </div>
+                                </div>
+
+                                <!-- SEÇÃO DE ANEXOS GERAIS (Fundo transparente e cards de alto contraste) -->
+                                <div class="space-y-2 mt-2 text-left">
+                                    <div class="flex items-center justify-between px-1">
+                                        <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Documentos & Anexos Gerais</h5>
+                                        
+                                        <!-- Botão Adicionar Arquivos -->
+                                        <button type="button"
+                                                x-show="editing"
+                                                @click="addFile()"
+                                                class="px-3 py-1.5 rounded-lg border border-solid border-brand/20 bg-brand/10 hover:bg-brand/20 text-brand font-black text-[9px] uppercase tracking-wider cursor-pointer flex items-center gap-1 transition-all">
+                                            <i data-lucide="plus" class="w-3 h-3"></i> Adicionar Arquivos
+                                        </button>
+                                    </div>
+
+                                    <!-- Input File escondido com suporte a múltiplos arquivos -->
+                                    <input type="file" id="{% if not reserva.id %}novos_documentos_{{ h.ordem }}{% else %}novos_documentos_{{ h.id }}{% endif %}" name="{% if not reserva.id %}documentos_{{ h.ordem }}{% else %}novos_documentos{% endif %}" multiple style="display: none;" @change="onFilesAdded($event)" />
+
+                                    <!-- Listinha Contida com Scroll e sem fundo cinza escuro/remendado para melhor legibilidade -->
+                                    <div class="border border-solid border-slate-200 dark:border-white/10 rounded-2xl p-3 bg-white/50 dark:bg-slate-950/40 max-h-44 overflow-y-auto no-scrollbar space-y-2">
+                                        
+                                        <!-- Placeholder se vazio -->
+                                        <template x-if="newFiles.length === 0 && {% if h.documentos.all.count > 0 %}false{% else %}true{% endif %}">
+                                            <div class="text-center py-5 text-slate-400 dark:text-slate-500">
+                                                <i data-lucide="folder-open" class="w-6 h-6 mx-auto mb-1 opacity-45"></i>
+                                                <span class="text-[9.5px] font-bold">Nenhum anexo adicionado a este hóspede</span>
+                                            </div>
+                                        </template>
+
+                                        <!-- Documentos já salvos no banco de dados -->
+                                        {% for doc in h.documentos.all %}
+                                            <div class="flex items-center justify-between p-2.5 rounded-xl border border-solid transition-all shadow-xs"
+                                                 :class="getFileColor('{{ doc.nome|escapejs }}')">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    <div class="p-1.5 rounded-lg bg-white/40 dark:bg-black/20 flex items-center justify-center shrink-0">
+                                                        <template x-if="getFileIcon('{{ doc.nome|escapejs }}') === 'image'"><i data-lucide="image" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon('{{ doc.nome|escapejs }}') === 'file-text'"><i data-lucide="file-text" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon('{{ doc.nome|escapejs }}') === 'table'"><i data-lucide="table" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon('{{ doc.nome|escapejs }}') === 'file-type-2'"><i data-lucide="file-type-2" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon('{{ doc.nome|escapejs }}') === 'file'"><i data-lucide="file" class="w-4 h-4"></i></template>
+                                                    </div>
+                                                    <div class="min-w-0 text-left">
+                                                        <span x-text="getFileTypeName('{{ doc.nome|escapejs }}')" class="block text-[8px] font-black uppercase tracking-wider opacity-60"></span>
+                                                        <span class="block text-xs font-bold truncate pr-2">{{ doc.nome }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1.5 shrink-0">
+                                                    <a href="{{ doc.arquivo.url }}" target="_blank" class="p-1 text-inherit hover:opacity-85 transition-opacity">
+                                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                                    </a>
+                                                    <!-- Botão de Deletar Imediato via HTMX -->
+                                                    <button type="button"
+                                                            x-show="editing"
+                                                            hx-post="{% url 'sistema:partner_deletar_documento_hospede' doc.id %}"
+                                                            hx-target="#modal-container"
+                                                            hx-confirm="Tem certeza que deseja excluir permanentemente o anexo '{{ doc.nome }}'?"
+                                                            class="p-1 hover:text-red-600 dark:hover:text-red-400 bg-transparent border-none cursor-pointer transition-colors">
+                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Novos Documentos Selecionados (Fila de Upload Temporária) -->
+                                        <template x-for="(file, index) in newFiles" :key="index">
+                                            <div :class="getFileColor(file.name)"
+                                                 class="flex items-center justify-between p-2.5 rounded-xl border border-solid transition-all animate-in fade-in duration-200 shadow-xs">
+                                                <div class="flex items-center gap-2.5 min-w-0">
+                                                    <div class="p-1.5 rounded-lg bg-white/40 dark:bg-black/20 flex items-center justify-center shrink-0">
+                                                        <template x-if="getFileIcon(file.name) === 'image'"><i data-lucide="image" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon(file.name) === 'file-text'"><i data-lucide="file-text" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon(file.name) === 'table'"><i data-lucide="table" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon(file.name) === 'file-type-2'"><i data-lucide="file-type-2" class="w-4 h-4"></i></template>
+                                                        <template x-if="getFileIcon(file.name) === 'file'"><i data-lucide="file" class="w-4 h-4"></i></template>
+                                                    </div>
+                                                    <div class="min-w-0 text-left">
+                                                        <span class="block text-[8px] font-black uppercase tracking-wider opacity-60">Upload Pendente</span>
+                                                        <span x-text="file.name" class="block text-xs font-bold truncate pr-2"></span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <button type="button"
+                                                            @click="removeNewFile(index)"
+                                                            class="p-1 hover:text-red-600 dark:hover:text-red-400 bg-transparent border-none cursor-pointer transition-colors">
+                                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                    </div>
+                                </div>
+
+                                <!-- Botões para Salvar/Cancelar no rodapé do formulário do hóspede -->
+                                <div x-show="editing" class="flex justify-end gap-2.5 mt-5 pt-3.5 border-t border-slate-100 dark:border-white/5">
+                                    <button type="button" @click="editing = false" class="px-4.5 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 bg-transparent border-none cursor-pointer transition-colors">
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" class="px-5 py-2.5 bg-brand text-brand-text font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md border-none cursor-pointer flex items-center gap-1.5 hover:shadow-lg transition-all">
+                                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar Hóspede
+                                    </button>
+                                </div>
+                            {% if not reserva.id %}
+                            </div>
+                            {% else %}
+                            </form>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    {% if not reserva.id %}
+    </form>
+    {% else %}
+    </div>
+    {% endif %}
+
+    <!-- Popup de confirmação de exclusão física -->
+    {% if reserva.id %}
+    <div x-show="showDeleteConfirm" x-transition
+         class="absolute inset-0 z-[1100] flex items-center justify-center bg-slate-900/60 backdrop-blur-md"
+         style="display: none;">
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-md w-full border border-slate-200 dark:border-white/10 shadow-2xl mx-4 text-center animate-in fade-in zoom-in-95 duration-200">
+            <span class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="triangle-alert" class="w-6 h-6"></i>
+            </span>
+            <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider mb-2">Excluir Diária Permanentemente?</h4>
+            <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-6 uppercase tracking-wider">
+                ATENÇÃO: Esta ação é irreversível. Todas as informações desta diária e hóspedes associados serão excluídos permanentemente.
+            </p>
+            
+            <form hx-post="{% url 'sistema:partner_reserva_excluir' reserva.id %}"
+                  hx-target="#delete-error-msg"
+                  class="space-y-4 text-left">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-[8px] font-black text-slate-455 dark:text-slate-400 uppercase tracking-wider mb-1.5 px-1">Senha de Autorização</label>
+                    <input type="password" name="password" x-model="confirmPassword" required placeholder="Digite sua senha de acesso"
+                           class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand">
+                </div>
+                
+                <div id="delete-error-msg" class="text-center"></div>
+                
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="showDeleteConfirm = false"
+                            class="w-full py-3.5 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-200 font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer bg-transparent">
+                        Cancelar
+                     </button>
+                     <button type="submit"
+                             class="w-full py-3.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-[9px] uppercase tracking-widest shadow-md transition-all cursor-pointer border-none outline-none">
+                         Confirmar Exclusão
+                     </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Overlay de Sucesso Animado (Glassmorphism / Claro) -->
+    <div x-show="showSuccessOverlay" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+         class="absolute inset-0 z-[1200] flex flex-col items-center justify-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-white"
+         style="display: none;">
+        
+        <div class="relative flex items-center justify-center w-20 h-20 mb-6">
+            <div class="absolute inset-0 bg-emerald-500/15 dark:bg-emerald-500/25 rounded-full animate-ping duration-1000"></div>
+            <div class="relative w-16 h-16 bg-emerald-500 dark:bg-emerald-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-105 animate-bounce">
+                <svg class="w-8 h-8 text-white stroke-[3.5] animate-dash" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+        </div>
+        
+        <h4 class="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-white mb-2">
+            {% if success_message %}{{ success_message }}{% else %}Salvo com Sucesso!{% endif %}
+        </h4>
+        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Aguarde, atualizando dados...</p>
+    </div>
+</div>
+
+<script>
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+</script>

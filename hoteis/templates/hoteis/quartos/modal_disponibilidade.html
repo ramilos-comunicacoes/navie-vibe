@@ -204,13 +204,14 @@
 
 <!-- Lógica do Calendário Interativo -->
 <script>
+(function() {
     let currentDate = new Date();
-    // Forçar início em Maio de 2026 para corresponder à localTime do sistema (Maio 2026)
-    let calendarYear = 2026;
-    let calendarMonth = 4; // Maio (0-indexed: 4)
+    let calendarYear = currentDate.getFullYear();
+    let calendarMonth = currentDate.getMonth();
 
-    let selectedCheckIn = null;
-    let selectedCheckOut = null;
+    // Inicializa propriedades globais no objeto window
+    window.selectedCheckIn = null;
+    window.selectedCheckOut = null;
 
     // Lista de dias ocupados fictícios para o quarto (simulando ocupação real)
     // Usaremos chaves no formato "YYYY-MM-DD"
@@ -227,10 +228,8 @@
         "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializa o calendário
-        renderCalendar();
-    });
+    // Inicializa o calendário
+    renderCalendar();
 
     window.openAvailabilityModal = function() {
         const modal = document.getElementById('availabilityModal');
@@ -273,7 +272,7 @@
         document.getElementById('btn-confirm-dates').disabled = true;
     }
 
-    function changeMonth(direction) {
+    window.changeMonth = function(direction) {
         calendarMonth += direction;
         if (calendarMonth < 0) {
             calendarMonth = 11;
@@ -445,4 +444,5 @@
             mainCtaButton.setAttribute('onclick', 'addToCartWorkflow()');
         }
     };
+})();
 </script>

@@ -296,10 +296,10 @@
                 </a>
             </div>
 
-            <div id="events-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            <div id="events-grid" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-6 md:gap-8">
                 {% for h in proximos %}
                 <a href="{% if h.slug and request.subdomains_supported %}{{ request.scheme }}://{{ h.slug }}.{{ request.base_host }}/{% else %}{% url 'hoteis:detalhe' h.id %}{% endif %}" class="event-card bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group transition-all duration-300">
-                    <div class="relative overflow-hidden h-48 md:h-52">
+                    <div class="relative overflow-hidden h-32 sm:h-48 md:h-52">
                         {% if h.banner %}
                         <img src="{{ h.banner.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';">
                         {% else %}
@@ -308,8 +308,8 @@
                         </div>
                         {% endif %}
                         
-                        <div class="absolute top-4 left-4 bg-slate-900/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 select-none">
-                            <span class="text-[9px] font-black uppercase text-white tracking-widest">
+                        <div class="absolute top-3 left-3 sm:top-4 sm:left-4 bg-slate-900/40 backdrop-blur-md px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border border-white/10 select-none">
+                            <span class="text-[8px] sm:text-[9px] font-black uppercase text-white tracking-widest">
                                 {% if 'pousada' in h.nome.lower %}
                                     Pousada
                                 {% elif 'chale' in h.nome.lower or 'chalé' in h.nome.lower %}
@@ -320,20 +320,20 @@
                             </span>
                         </div>
                     </div>
-                    <div class="p-5 flex flex-col justify-between flex-grow">
+                    <div class="p-3.5 sm:p-5 flex flex-col justify-between flex-grow">
                         <div>
-                            <h4 class="font-extrabold text-base md:text-lg text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1">{{ h.nome }}</h4>
-                            <p class="text-xs text-slate-500 flex items-center gap-1.5">
-                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i></span>
+                            <h4 class="font-extrabold text-sm sm:text-base md:text-lg text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1" title="{{ h.nome }}">{{ h.nome }}</h4>
+                            <p class="text-[10px] sm:text-xs text-slate-500 flex items-center gap-1.5 truncate">
+                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3 h-3 sm:w-3.5 sm:h-3.5"></i></span>
                                 {{ h.local.cidade }} / {{ h.local.estado }}
                             </p>
                         </div>
-                        <div class="mt-5 pt-4 border-t border-slate-100 flex justify-between items-center">
+                        <div class="mt-3.5 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex justify-between items-center">
                             <div class="flex flex-col">
-                                <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">A partir de</span>
-                                <span class="text-xs font-black text-blue-600 leading-normal mt-0.5">Sob consulta</span>
+                                <span class="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">A partir de</span>
+                                <span class="text-[10px] sm:text-xs font-black text-blue-600 leading-normal mt-0.5">Sob consulta</span>
                             </div>
-                            <div class="bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-xs font-extrabold group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                            <div class="bg-blue-50 text-blue-600 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-extrabold group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shrink-0">
                                 Ver mais
                             </div>
                         </div>

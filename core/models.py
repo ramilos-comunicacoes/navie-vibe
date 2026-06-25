@@ -16,10 +16,68 @@ class Empresa(models.Model):
     
     categoria = models.CharField('Categoria Principal', max_length=20, choices=CATEGORIA_CHOICES)
     
+    # Roteamento e Modalidade de Rede (Exclusivo do Admin do Sistema)
+    slug = models.SlugField('Subdomínio da Rede', unique=True, blank=True, null=True, help_text='Subdomínio para o portal unificado da empresa. Ex: pousadasramilos')
+    
+    MODALIDADE_PORTAL_CHOICES = [
+        ('individual', 'Páginas Individuais por Pousada'),
+        ('unificado', 'Portal de Rede Unificado (Uma única página para o grupo)'),
+    ]
+    modalidade_portal = models.CharField(
+        'Modalidade do Portal',
+        max_length=20,
+        choices=MODALIDADE_PORTAL_CHOICES,
+        default='individual',
+        help_text='Define se a empresa exibe um portal único com todos os hotéis ou páginas independentes.'
+    )
+    
     logo = models.ImageField(upload_to='empresas/logos/', null=True, blank=True)
     banner = models.ImageField(upload_to='empresas/banners/', null=True, blank=True)
+    hero_tipo = models.CharField(
+        'Tipo de Mídia do Hero',
+        max_length=10, 
+        default='imagem', 
+        choices=[('imagem', 'Imagem'), ('video', 'Vídeo')],
+        help_text="Tipo de mídia a ser exibida no cabeçalho/Hero do site"
+    )
+    hero_video = models.FileField(
+        'Vídeo do Hero',
+        upload_to='empresas/videos/', 
+        null=True, 
+        blank=True, 
+        help_text="Vídeo curto em loop (MP4 de até 8MB)"
+    )
     
     cor_primaria = models.CharField('Cor da Marca (Hex)', max_length=7, default='#1e3a8a')
+    cor_secundaria = models.CharField('Cor Secundária (Hex)', max_length=7, default='#2563eb')
+    imagem_compartilhamento = models.ImageField(
+        'Imagem de Compartilhamento (16:9)', 
+        upload_to='empresas/compartilhamento/', 
+        null=True, 
+        blank=True, 
+        help_text='Imagem para miniatura de compartilhamento nas redes sociais (WhatsApp, Facebook, etc.)'
+    )
+    descricao_portal = models.TextField('Descrição/Slogan do Portal', blank=True, null=True, help_text='Slogan ou descrição principal da rede que aparecerá no topo do portal unificado.')
+    
+    # Seção Sobre (Portal de Rede Unificado)
+    sobre_titulo = models.CharField('Título da Seção Sobre', max_length=255, blank=True, null=True)
+    sobre_texto = models.TextField('Texto da Seção Sobre', blank=True, null=True)
+    sobre_midia_tipo = models.CharField(
+        'Tipo de Mídia do Sobre',
+        max_length=10,
+        default='imagem',
+        choices=[('imagem', 'Imagem'), ('video', 'Vídeo')]
+    )
+    sobre_banner = models.ImageField('Imagem do Sobre', upload_to='empresas/sobre/', null=True, blank=True)
+    sobre_video = models.FileField(
+        'Vídeo do Sobre',
+        upload_to='empresas/sobre_videos/',
+        null=True,
+        blank=True,
+        help_text="Vídeo curto em loop (MP4 de até 8MB)"
+    )
+    sobre_cor_fundo = models.CharField('Cor de Fundo do Sobre (Hex)', max_length=7, default='#f8fafc')
+    sobre_cor_texto = models.CharField('Cor do Texto do Sobre (Hex)', max_length=7, default='#0f172a')
     
     # Endereço e Localização
     endereco = models.CharField('Endereço', max_length=255)
@@ -33,12 +91,15 @@ class Empresa(models.Model):
     email_contato = models.EmailField('E-mail de Contato')
     telefone_contato = models.CharField('Telefone / WhatsApp', max_length=20)
     
-    # Status e Datas
     ativa = models.BooleanField(default=True)
     destaque = models.BooleanField(default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página da empresa")
+
+    @property
+    def hoteis_ativos_ordenados(self):
+        return self.hoteis.filter(status='ativo').order_by('ordem', 'id')
 
     class Meta:
         verbose_name = 'Empresa'

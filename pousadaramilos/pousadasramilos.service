@@ -1,0 +1,16 @@
+[Unit]
+Description=Gunicorn daemon para Pousadas Ramilos
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/apps/pousadasramilos
+ExecStart=/var/www/apps/pousadasramilos/venv/bin/gunicorn \
+--access-logfile - \
+--workers 3 \
+--bind 127.0.0.1:8017 \
+core.wsgi:application
+
+[Install]
+WantedBy=multi-user.target

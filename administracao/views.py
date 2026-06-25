@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.conf import settings
 from parceiros.models import SolicitacaoEmpresa, Documento, StatusSolicitacao, TipoEmpresa
-from hoteis.models import Hotel, Local, Produtor, ParceiroUsuario, Quarto
+from hoteis.models import Hotel, Local, Produtor, ParceiroUsuario, Quarto, ConfigSistema, HotelTarifaFaixa, HotelDocumento, HotelTermoAdesao, HotelAuditLog
 from core.models import Empresa
 
 # Decorador customizado para garantir que apenas superusuários ativos acessem as views
@@ -25,8 +25,8 @@ def login_view(request):
     error_msg = None
     
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+        username = request.POST.get('navie_username') or request.POST.get('username')
+        password = request.POST.get('navie_password') or request.POST.get('password')
         next_url = request.POST.get('next', 'administracao:dashboard')
         
         user = authenticate(request, username=username, password=password)
@@ -159,12 +159,18 @@ def hoteis_list_view(request):
     # Lista de hotéis
     hoteis = Hotel.objects.all().select_related('local').order_by('nome')
     
+    # Configuração Geral do Sistema
+    config_sistema = ConfigSistema.objects.first()
+    if not config_sistema:
+        config_sistema = ConfigSistema.objects.create()
+    
     context = {
         'total_hoteis': total_hoteis,
         'hoteis_ativos': hoteis_ativos,
         'hoteis_destaque': hoteis_destaque,
         'total_quartos': total_quartos,
         'hoteis': hoteis,
+        'config_sistema': config_sistema,
         'active_tab': 'hoteis',
     }
     return render(request, 'administracao/hoteis_list.html', context)
@@ -195,6 +201,10 @@ def hotel_create_view(request):
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
         
+        # Rede/Empresa Portal Info
+        slug_rede = request.POST.get('slug_rede')
+        modalidade_portal = request.POST.get('modalidade_portal', 'individual')
+        
         # 2. Dados de Localização
         cep = request.POST.get('cep')
         endereco = request.POST.get('endereco')
@@ -220,6 +230,8 @@ def hotel_create_view(request):
             errors.append("Este e-mail de usuário já está cadastrado.")
         if Empresa.objects.filter(cnpj=cnpj).exists():
             errors.append("Este CNPJ já está cadastrado em outra empresa.")
+        if slug_rede and Empresa.objects.filter(slug=slug_rede).exists():
+            errors.append("Este slug de subdomínio de rede já está em uso por outra empresa.")
         if Hotel.objects.filter(slug=slug).exists():
             errors.append("Este slug de URL já está em uso por outro hotel.")
             
@@ -250,10 +262,17 @@ def hotel_create_view(request):
                     telefone_contato=whatsapp,
                     cor_primaria=cor_primaria,
                     logo=request.FILES.get('logo'),
-                    banner=request.FILES.get('banner')
+                    banner=request.FILES.get('banner'),
+                    slug=slug_rede or None,
+                    modalidade_portal=modalidade_portal
                 )
                 
                 # Cria Hotel
+                config_sistema = ConfigSistema.objects.first()
+                taxa_fixa = config_sistema.taxa_fixa_padrao if config_sistema else 15.00
+                taxa_percentual = config_sistema.taxa_percentual_padrao if config_sistema else 10.00
+                limite_trafego = config_sistema.limite_trafego_padrao if config_sistema else 100
+                
                 hotel = Hotel.objects.create(
                     empresa=empresa,
                     nome=nome_fantasia,
@@ -269,7 +288,11 @@ def hotel_create_view(request):
                     destaque=destaque,
                     venda_online=venda_online,
                     latitude=latitude or None,
-                    longitude=longitude or None
+                    longitude=longitude or None,
+                    taxa_fixa_navie=taxa_fixa,
+                    taxa_percentual_navie=taxa_percentual,
+                    limite_trafego_gb=limite_trafego,
+                    consumo_trafego_gb=0.00
                 )
                 
                 # Cria Usuário
@@ -338,6 +361,10 @@ def hotel_edit_view(request, pk):
         latitude = request.POST.get('latitude')
         longitude = request.POST.get('longitude')
         
+        # Rede/Empresa Portal Info
+        slug_rede = request.POST.get('slug_rede')
+        modalidade_portal = request.POST.get('modalidade_portal', 'individual')
+        
         # 2. Dados de Localização
         cep = request.POST.get('cep')
         endereco = request.POST.get('endereco')
@@ -363,6 +390,8 @@ def hotel_edit_view(request, pk):
             errors.append("Este e-mail de usuário já está cadastrado.")
         if empresa and Empresa.objects.filter(cnpj=cnpj).exclude(pk=empresa.pk).exists():
             errors.append("Este CNPJ já está cadastrado em outra empresa.")
+        if slug_rede and Empresa.objects.filter(slug=slug_rede).exclude(pk=empresa.pk if empresa else None).exists():
+            errors.append("Este slug de subdomínio de rede já está em uso por outra empresa.")
         if Hotel.objects.filter(slug=slug).exclude(pk=hotel.pk).exists():
             errors.append("Este slug de URL já está em uso por outro hotel.")
             
@@ -392,7 +421,9 @@ def hotel_edit_view(request, pk):
                         cep=cep,
                         email_contato=email_contato,
                         telefone_contato=whatsapp,
-                        cor_primaria=cor_primaria
+                        cor_primaria=cor_primaria,
+                        slug=slug_rede or None,
+                        modalidade_portal=modalidade_portal
                     )
                 else:
                     empresa.nome_fantasia = nome_fantasia
@@ -405,6 +436,8 @@ def hotel_edit_view(request, pk):
                     empresa.email_contato = email_contato
                     empresa.telefone_contato = whatsapp
                     empresa.cor_primaria = cor_primaria
+                    empresa.slug = slug_rede or None
+                    empresa.modalidade_portal = modalidade_portal
                     if 'logo' in request.FILES:
                         empresa.logo = request.FILES['logo']
                     elif request.POST.get('clear_logo') == 'true':
@@ -493,3 +526,255 @@ def hotel_edit_view(request, pk):
         'GOOGLE_API_KEY': settings.GOOGLE_API_KEY,
     }
     return render(request, 'administracao/hotel_form.html', context)
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        return x_forwarded_for.split(',')[0]
+    return request.META.get('REMOTE_ADDR')
+
+
+@superuser_required
+def hotel_salvar_configuracao_admin(request, pk):
+    if request.method == 'POST':
+        hotel = get_object_or_404(Hotel, pk=pk)
+        
+        # Guardar valores originais para log de auditoria
+        original_values = {
+            'slug': hotel.slug,
+            'taxa_fixa_navie': float(hotel.taxa_fixa_navie),
+            'taxa_percentual_navie': float(hotel.taxa_percentual_navie),
+            'limite_trafego_gb': int(hotel.limite_trafego_gb),
+            'consumo_trafego_gb': float(hotel.consumo_trafego_gb),
+            'venda_online': hotel.venda_online,
+            'usar_tarifas_faixa': hotel.usar_tarifas_faixa,
+            'status': hotel.status,
+        }
+        
+        slug = request.POST.get('slug')
+        taxa_fixa = request.POST.get('taxa_fixa_navie')
+        taxa_percentual = request.POST.get('taxa_percentual_navie')
+        limite_trafego = request.POST.get('limite_trafego_gb')
+        consumo_trafego = request.POST.get('consumo_trafego_gb')
+        venda_online = 'venda_online' in request.POST
+        usar_tarifas_faixa = 'usar_tarifas_faixa' in request.POST
+        status = request.POST.get('status', 'ativo')
+        
+        errors = []
+        if not slug:
+            errors.append("O slug do subdomínio é obrigatório.")
+        elif Hotel.objects.filter(slug=slug).exclude(pk=hotel.pk).exists():
+            errors.append("Este slug de subdomínio já está em uso por outro hotel.")
+            
+        if not errors:
+            try:
+                hotel.slug = slug
+                hotel.taxa_fixa_navie = float(taxa_fixa) if taxa_fixa else 0.0
+                hotel.taxa_percentual_navie = float(taxa_percentual) if taxa_percentual else 0.0
+                hotel.limite_trafego_gb = int(limite_trafego) if limite_trafego else 100
+                hotel.consumo_trafego_gb = float(consumo_trafego) if consumo_trafego else 0.0
+                hotel.venda_online = venda_online
+                hotel.usar_tarifas_faixa = usar_tarifas_faixa
+                hotel.status = status
+                hotel.save()
+                
+                # Gerar Logs de Auditoria
+                new_values = {
+                    'slug': hotel.slug,
+                    'taxa_fixa_navie': float(hotel.taxa_fixa_navie),
+                    'taxa_percentual_navie': float(hotel.taxa_percentual_navie),
+                    'limite_trafego_gb': int(hotel.limite_trafego_gb),
+                    'consumo_trafego_gb': float(hotel.consumo_trafego_gb),
+                    'venda_online': hotel.venda_online,
+                    'usar_tarifas_faixa': hotel.usar_tarifas_faixa,
+                    'status': hotel.status,
+                }
+                
+                ip = get_client_ip(request)
+                ua = request.META.get('HTTP_USER_AGENT', '')[:255]
+                
+                for field, old_val in original_values.items():
+                    new_val = new_values[field]
+                    if old_val != new_val:
+                        HotelAuditLog.objects.create(
+                            hotel=hotel,
+                            usuario=request.user,
+                            ip_origem=ip,
+                            dispositivo=ua,
+                            campo_alterado=field,
+                            valor_antigo=str(old_val),
+                            valor_novo=str(new_val)
+                        )
+                        
+                messages.success(request, f"Configurações administrativas de '{hotel.nome}' atualizadas com sucesso!")
+            except Exception as e:
+                messages.error(request, f"Erro ao salvar configurações: {str(e)}")
+        else:
+            for error in errors:
+                messages.error(request, error)
+                
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def hotel_documento_adicionar(request, pk):
+    if request.method == 'POST':
+        hotel = get_object_or_404(Hotel, pk=pk)
+        nome = request.POST.get('nome')
+        arquivo = request.FILES.get('arquivo')
+        if nome and arquivo:
+            try:
+                doc = HotelDocumento.objects.create(hotel=hotel, nome=nome, arquivo=arquivo)
+                # Audit Log
+                HotelAuditLog.objects.create(
+                    hotel=hotel,
+                    usuario=request.user,
+                    ip_origem=get_client_ip(request),
+                    dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+                    campo_alterado='documento',
+                    valor_antigo=None,
+                    valor_novo=f"Adicionado documento: {nome} ({arquivo.name})"
+                )
+                messages.success(request, f"Documento '{nome}' adicionado com sucesso!")
+            except Exception as e:
+                messages.error(request, f"Erro ao adicionar documento: {str(e)}")
+        else:
+            messages.error(request, "Nome e arquivo do documento são obrigatórios.")
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def hotel_documento_excluir(request, doc_pk):
+    doc = get_object_or_404(HotelDocumento, pk=doc_pk)
+    hotel = doc.hotel
+    nome = doc.nome
+    try:
+        doc.arquivo.delete(save=False)
+        doc.delete()
+        # Audit Log
+        HotelAuditLog.objects.create(
+            hotel=hotel,
+            usuario=request.user,
+            ip_origem=get_client_ip(request),
+            dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+            campo_alterado='documento',
+            valor_antigo=f"Documento existente: {nome}",
+            valor_novo="Removido"
+        )
+        messages.success(request, f"Documento '{nome}' removido com sucesso!")
+    except Exception as e:
+        messages.error(request, f"Erro ao remover documento: {str(e)}")
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def hotel_termo_registrar(request, pk):
+    if request.method == 'POST':
+        hotel = get_object_or_404(Hotel, pk=pk)
+        versao = request.POST.get('versao_termo', '1.0')
+        try:
+            HotelTermoAdesao.objects.create(
+                hotel=hotel,
+                versao_termo=versao,
+                ip_origem=get_client_ip(request),
+                dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+                usuario=request.user
+            )
+            # Audit Log
+            HotelAuditLog.objects.create(
+                hotel=hotel,
+                usuario=request.user,
+                ip_origem=get_client_ip(request),
+                dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+                campo_alterado='termo_adesao',
+                valor_antigo=None,
+                valor_novo=f"Registrado aceite de termo versão {versao}"
+            )
+            messages.success(request, f"Aceite de Termo de Uso v{versao} registrado com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao registrar aceite de termo: {str(e)}")
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def hotel_tarifas_faixa_salvar(request, pk):
+    if request.method == 'POST':
+        hotel = get_object_or_404(Hotel, pk=pk)
+        min_val = request.POST.get('valor_minimo')
+        max_val = request.POST.get('valor_maximo')
+        taxa_fixa = request.POST.get('taxa_fixa')
+        taxa_pct = request.POST.get('taxa_percentual')
+        
+        if min_val and max_val:
+            try:
+                faixa = HotelTarifaFaixa.objects.create(
+                    hotel=hotel,
+                    valor_minimo=float(min_val),
+                    valor_maximo=float(max_val),
+                    taxa_fixa=float(taxa_fixa) if taxa_fixa else 0.0,
+                    taxa_percentual=float(taxa_pct) if taxa_pct else 0.0
+                )
+                # Audit Log
+                HotelAuditLog.objects.create(
+                    hotel=hotel,
+                    usuario=request.user,
+                    ip_origem=get_client_ip(request),
+                    dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+                    campo_alterado='tarifa_faixa',
+                    valor_antigo=None,
+                    valor_novo=f"Adicionada faixa: R$ {min_val} a R$ {max_val} -> R$ {taxa_fixa} + {taxa_pct}%"
+                )
+                messages.success(request, "Nova faixa de tarifa adicionada com sucesso!")
+            except Exception as e:
+                messages.error(request, f"Erro ao adicionar faixa de tarifa: {str(e)}")
+        else:
+            messages.error(request, "Valores mínimo e máximo são obrigatórios.")
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def hotel_tarifa_faixa_excluir(request, faixa_pk):
+    faixa = get_object_or_404(HotelTarifaFaixa, pk=faixa_pk)
+    hotel = faixa.hotel
+    desc = f"Faixa: R$ {faixa.valor_minimo} a R$ {faixa.valor_maximo} -> R$ {faixa.taxa_fixa} + {faixa.taxa_percentual}%"
+    try:
+        faixa.delete()
+        # Audit Log
+        HotelAuditLog.objects.create(
+            hotel=hotel,
+            usuario=request.user,
+            ip_origem=get_client_ip(request),
+            dispositivo=request.META.get('HTTP_USER_AGENT', '')[:255],
+            campo_alterado='tarifa_faixa',
+            valor_antigo=desc,
+            valor_novo="Removida"
+        )
+        messages.success(request, "Faixa de tarifa removida com sucesso!")
+    except Exception as e:
+        messages.error(request, f"Erro ao remover faixa de tarifa: {str(e)}")
+    return redirect('administracao:hoteis_list')
+
+
+@superuser_required
+def salvar_configuracao_sistema(request):
+    if request.method == 'POST':
+        taxa_fixa = request.POST.get('taxa_fixa_padrao')
+        taxa_pct = request.POST.get('taxa_percentual_padrao')
+        limite_trafego = request.POST.get('limite_trafego_padrao')
+        
+        try:
+            config = ConfigSistema.objects.first()
+            if not config:
+                config = ConfigSistema.objects.create()
+                
+            config.taxa_fixa_padrao = float(taxa_fixa) if taxa_fixa else 15.00
+            config.taxa_percentual_padrao = float(taxa_pct) if taxa_pct else 10.00
+            config.limite_trafego_padrao = int(limite_trafego) if limite_trafego else 100
+            config.save()
+            messages.success(request, "Configurações gerais do sistema salvas com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao salvar configurações gerais: {str(e)}")
+    return redirect('administracao:hoteis_list')
+
+

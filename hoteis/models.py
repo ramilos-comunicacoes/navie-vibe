@@ -23,10 +23,10 @@ class Local(models.Model):
 from core.models import Empresa
 
 class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empresa
-    empresa = models.OneToOneField(
+    empresa = models.ForeignKey(
         Empresa, 
         on_delete=models.CASCADE, 
-        related_name='perfil_hospedagem',
+        related_name='hoteis',
         null=True, blank=True,
         db_constraint=False,
         help_text="A entidade comercial dona desta hospedagem"
@@ -63,7 +63,15 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
     visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página do hotel")
+    ordem = models.IntegerField(default=0, help_text="Ordem de exibição no portal unificado do grupo")
     venda_online = models.BooleanField(default=True, help_text="Se ativado, permite reservas e pagamentos online pelo site. Se desativado, o botão de reserva direciona para contato via WhatsApp.")
+
+    # Configurações Administrativas do Marketplace (Naviê Vibe)
+    taxa_fixa_navie = models.DecimalField(max_digits=10, decimal_places=2, default=15.00, help_text="Taxa fixa cobrada pelo Naviê por reserva (R$)")
+    taxa_percentual_navie = models.DecimalField(max_digits=5, decimal_places=2, default=10.00, help_text="Comissão percentual cobrada pelo Naviê (%)")
+    limite_trafego_gb = models.PositiveIntegerField(default=100, help_text="Limite de tráfego mensal alocado em GB")
+    consumo_trafego_gb = models.DecimalField(max_digits=10, decimal_places=2, default=14.20, help_text="Consumo atual de tráfego no mês em GB")
+    usar_tarifas_faixa = models.BooleanField(default=False, help_text="Se ativado, utiliza a tabela de faixas de valor para calcular a taxa da diária")
 
 
     
@@ -476,6 +484,161 @@ class Restaurante(models.Model):
         
     def __str__(self):
         return self.nome
+
+
+class ConfigSistema(models.Model):
+    taxa_fixa_padrao = models.DecimalField(max_digits=10, decimal_places=2, default=15.00, help_text="Taxa fixa padrão do sistema por reserva (R$)")
+    taxa_percentual_padrao = models.DecimalField(max_digits=5, decimal_places=2, default=10.00, help_text="Comissão percentual padrão do sistema (%)")
+    limite_trafego_padrao = models.PositiveIntegerField(default=100, help_text="Limite padrão de tráfego em GB")
+
+    class Meta:
+        verbose_name = "Configuração Geral do Sistema"
+        verbose_name_plural = "Configurações Gerais do Sistema"
+
+    def __str__(self):
+        return "Configurações Gerais do Sistema"
+
+
+class HotelTarifaFaixa(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='tarifas_faixa')
+    valor_minimo = models.DecimalField(max_digits=10, decimal_places=2, help_text="Valor mínimo da diária")
+    valor_maximo = models.DecimalField(max_digits=10, decimal_places=2, help_text="Valor máximo da diária")
+    taxa_fixa = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Taxa fixa em R$")
+    taxa_percentual = models.DecimalField(max_digits=5, decimal_places=2, default=0.00, help_text="Taxa em %")
+
+    class Meta:
+        verbose_name = "Faixa de Tarifa"
+        verbose_name_plural = "Faixas de Tarifas"
+        ordering = ['valor_minimo']
+
+    def __str__(self):
+        return f"{self.hotel.nome}: R$ {self.valor_minimo} a R$ {self.valor_maximo} -> R$ {self.taxa_fixa} + {self.taxa_percentual}%"
+
+
+class HotelDocumento(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='documentos')
+    nome = models.CharField(max_length=255)
+    arquivo = models.FileField(upload_to='hoteis/documentos/')
+    data_upload = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Documento do Hotel"
+        verbose_name_plural = "Documentos do Hotel"
+        ordering = ['-data_upload']
+
+    def __str__(self):
+        return f"{self.nome} ({self.hotel.nome})"
+
+
+class HotelTermoAdesao(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='termos_adesao')
+    versao_termo = models.CharField(max_length=50, default='1.0')
+    data_aceite = models.DateTimeField(auto_now_add=True)
+    ip_origem = models.GenericIPAddressField()
+    dispositivo = models.TextField()
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, db_constraint=False)
+
+    class Meta:
+        verbose_name = "Aceite de Termo"
+        verbose_name_plural = "Aceites de Termos"
+        ordering = ['-data_aceite']
+
+    def __str__(self):
+        return f"{self.hotel.nome} aceitou v{self.versao_termo} em {self.data_aceite}"
+
+
+class HotelAuditLog(models.Model):
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='audit_logs')
+    usuario = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, db_constraint=False)
+    data_alteracao = models.DateTimeField(auto_now_add=True)
+    ip_origem = models.GenericIPAddressField()
+    dispositivo = models.TextField()
+    campo_alterado = models.CharField(max_length=100)
+    valor_antigo = models.TextField(null=True, blank=True)
+    valor_novo = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Log de Alteração do Hotel"
+        verbose_name_plural = "Logs de Alteração de Hotéis"
+        ordering = ['-data_alteracao']
+
+    def __str__(self):
+        return f"{self.hotel.nome} - {self.campo_alterado} por {self.usuario.username if self.usuario else 'Sistema'}"
+
+
+class HotelSecao(models.Model):
+    TIPO_CHOICES = [
+        ('texto_imagem', 'Texto com Imagem'),
+        ('galeria', 'Galeria de Fotos'),
+        ('atracoes', 'Grade de Atrações / Atividades'),
+        ('video', 'Vídeo em Destaque'),
+        ('destaques', 'Carrossel de Destaques'),
+    ]
+    
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='secoes')
+    titulo = models.CharField('Título da Seção', max_length=200)
+    subtitulo = models.CharField('Subtítulo', max_length=255, blank=True, null=True)
+    tipo = models.CharField('Tipo de Layout', max_length=20, choices=TIPO_CHOICES, default='texto_imagem')
+    
+    # Campos para tipo 'texto_imagem' ou 'video'
+    texto = models.TextField('Texto / Descrição', blank=True, null=True)
+    imagem = models.ImageField('Imagem de Destaque', upload_to='hoteis/secoes/', blank=True, null=True)
+    video = models.FileField('Vídeo da Seção', upload_to='hoteis/secoes/videos/', blank=True, null=True)
+    video_url = models.CharField('URL de Vídeo (YouTube/Vimeo ou MP4)', max_length=500, blank=True, null=True)
+    link_cta = models.CharField('Link de Ação', max_length=255, blank=True, null=True)
+    preco = models.DecimalField('Preço/Valor', max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    ordem = models.PositiveIntegerField('Ordem de Exibição', default=0)
+    ativa = models.BooleanField('Ativa?', default=True)
+    
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = 'Seção do Hotel'
+        verbose_name_plural = 'Seções do Hotel'
+
+    @property
+    def is_internal_link(self):
+        if not self.link_cta:
+            return False
+        link = self.link_cta.strip().lower()
+        if link.startswith('/') or 'localhost' in link or 'navievibe' in link or 'navie.com' in link:
+            return True
+        return False
+
+    def __str__(self):
+        return f"{self.titulo} ({self.get_tipo_display()}) - {self.hotel.nome}"
+
+
+class HotelSecaoItem(models.Model):
+    """
+    Itens específicos para seções de tipo repetitivo (Galeria de Fotos ou Grade de Atrações)
+    """
+    secao = models.ForeignKey(HotelSecao, on_delete=models.CASCADE, related_name='itens')
+    titulo = models.CharField('Título/Legenda', max_length=200)
+    descricao = models.TextField('Descrição/Detalhes', blank=True, null=True)
+    preco = models.DecimalField('Preço Individual (R$)', max_digits=10, decimal_places=2, null=True, blank=True)
+    imagem = models.ImageField('Foto do Item', upload_to='hoteis/secoes/itens/', blank=True, null=True)
+    video = models.FileField('Vídeo do Item', upload_to='hoteis/secoes/itens/videos/', blank=True, null=True)
+    link_cta = models.CharField('Link de Ação / Compras', max_length=255, blank=True, null=True, help_text="Link para compra de ingresso ou WhatsApp")
+    ordem = models.PositiveIntegerField('Ordem', default=0)
+    
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = 'Item da Seção'
+        verbose_name_plural = 'Itens da Seção'
+
+    @property
+    def is_internal_link(self):
+        if not self.link_cta:
+            return False
+        link = self.link_cta.strip().lower()
+        if link.startswith('/') or 'localhost' in link or 'navievibe' in link or 'navie.com' in link:
+            return True
+        return False
+
+    def __str__(self):
+        return f"{self.titulo} - {self.secao.titulo}"
+
 
 
 

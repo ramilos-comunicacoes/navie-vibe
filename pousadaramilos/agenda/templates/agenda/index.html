@@ -1,0 +1,61 @@
+{% extends 'base_partner.html' %}
+{% load static %}
+
+{% block title %}Agenda / Kanban{% endblock %}
+{% block header_title %}Agenda / Quadro Kanban{% endblock %}
+
+{% block header_subtitle %}
+<span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-tight mt-0.5 hidden sm:inline-block leading-none">
+    Gerencie e organize as atividades operacionais da pousada.
+</span>
+{% endblock %}
+
+{% block header_actions %}
+<!-- Botão Nova Atividade -->
+<button hx-get="{% url 'agenda:nova_tarefa' %}"
+        hx-target="#modal-container"
+        class="h-9 px-4 rounded-xl bg-brand hover:bg-brand/90 text-brand-text flex items-center justify-center gap-2 text-xs font-black shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] focus:outline-none">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    <span>Nova Atividade</span>
+</button>
+{% endblock %}
+
+{% block subheader %}
+<!-- Subcabeçalho colado ao cabeçalho principal -->
+<div id="agenda-subheader" class="w-full shrink-0">
+    {% include 'agenda/partials/subheader.html' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col min-h-0 overflow-hidden">
+    <!-- QUADRO KANBAN DINÂMICO -->
+    <div id="kanban-board-container"
+         hx-get="{% url 'agenda:painel_atividades' %}?periodo={{ periodo }}"
+         hx-trigger="tarefaModificada from:body"
+         hx-target="#kanban-board-container"
+         hx-swap="innerHTML"
+         class="flex-1 min-h-0 flex flex-col">
+        {% include 'agenda/partials/kanban.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    /* Estilos Customizados para o Arrasta-e-Solta (Sortable.js) */
+    .sortable-ghost {
+        opacity: 0.4;
+        background: var(--brand-color-alpha) !important;
+        border: 2px dashed var(--brand-color) !important;
+        transform: scale(0.98);
+    }
+    .sortable-chosen {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+    }
+    .sortable-drag {
+        opacity: 0.9;
+        transform: rotate(2deg) scale(1.02);
+    }
+</style>
+{% endblock %}

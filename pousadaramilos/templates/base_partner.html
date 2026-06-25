@@ -1,0 +1,700 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth" 
+x-data="{ 
+    theme: localStorage.getItem('theme') || 'light', 
+    sidebarMobileOpen: false,
+    sidebarExpanded: false,
+    notificationsOpen: false,
+    activeTab: localStorage.getItem('partner_active_tab') || 'dashboard', 
+    viewMode: localStorage.getItem('partner_view_mode') || 'grid',
+    estoqueTab: localStorage.getItem('partner_estoque_tab') || 'inventario',
+    comprasMode: localStorage.getItem('partner_compras_mode') || 'list',
+    comprasFormTab: localStorage.getItem('partner_compras_form_tab') || 'itens',
+    
+    // Formulário de Compras persistente localmente
+    compraFornecedorId: localStorage.getItem('partner_compra_fornecedor_id') || '',
+    compraFornecedorLabel: localStorage.getItem('partner_compra_fornecedor_label') || 'Selecione um fornecedor...',
+    compraData: localStorage.getItem('partner_compra_data') || '',
+    compraObservacao: localStorage.getItem('partner_compra_observacao') || '',
+    compraItens: JSON.parse(localStorage.getItem('partner_compra_itens')) || [{
+        produto_id: '',
+        produto_label: 'Selecione...',
+        produto_select_open: false,
+        produto_search: '',
+        quantidade_raw: '1',
+        valor_total_raw: '0,00',
+        validade: ''
+    }],
+
+    initCompraForm() {
+        this.compraFornecedorId = '';
+        this.compraFornecedorLabel = 'Selecione um fornecedor...';
+        this.compraObservacao = '';
+        this.compraItens = [{
+            produto_id: '', produto_label: 'Selecione...', produto_select_open: false,
+            produto_search: '', quantidade_raw: '1', valor_total_raw: '0,00', validade: ''
+        }];
+        this.comprasFormTab = 'itens';
+    },
+    
+    updateStatusColor() {
+        const meta = document.getElementById('theme-color-meta');
+        if (!meta) return;
+        meta.setAttribute('content', this.theme === 'glass' ? '#0f0f0f' : '#ffffff');
+    },
+    init() {
+        this.updateStatusColor();
+        if (this.theme === 'glass') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        // Persiste abas
+        this.$watch('activeTab', value => {
+            localStorage.setItem('partner_active_tab', value);
+        });
+        
+        // Persiste estoque e compras
+        this.$watch('estoqueTab', value => localStorage.setItem('partner_estoque_tab', value));
+        this.$watch('comprasMode', value => localStorage.setItem('partner_compras_mode', value));
+        this.$watch('comprasFormTab', value => localStorage.setItem('partner_compras_form_tab', value));
+        this.$watch('compraFornecedorId', value => localStorage.setItem('partner_compra_fornecedor_id', value));
+        this.$watch('compraFornecedorLabel', value => localStorage.setItem('partner_compra_fornecedor_label', value));
+        this.$watch('compraData', value => localStorage.setItem('partner_compra_data', value));
+        this.$watch('compraObservacao', value => localStorage.setItem('partner_compra_observacao', value));
+        this.$watch('compraItens', value => localStorage.setItem('partner_compra_itens', JSON.stringify(value)), { deep: true });
+    },
+    
+    toggleTheme() {
+        this.theme = this.theme === 'light' ? 'glass' : 'light';
+        localStorage.setItem('theme', this.theme);
+        this.updateStatusColor();
+        
+        if(this.theme === 'glass') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }
+}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta">
+    <script>
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            const meta = document.getElementById('theme-color-meta');
+            if (theme === 'glass') {
+                document.documentElement.classList.add('dark');
+                if (meta) meta.setAttribute('content', '#0f0f0f');
+            } else {
+                document.documentElement.classList.remove('dark');
+                if (meta) meta.setAttribute('content', '#ffffff');
+            }
+        })();
+    </script>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{% block title %}Painel de Controle{% endblock %} | {{ active_pousada.nome|default:"Rede Ramilos" }}</title>
+    
+    <!-- Ícone de Atalho (Favicon Sem Fundo) -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo_white.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/logo_white.png' %}">
+    
+    <!-- Estilos Locais de Fontes (Poppins e Inter) -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-400.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-500.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-600.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-900.woff2' %}") format('woff2');
+        }
+    </style>
+
+    <!-- Bibliotecas Locais (Zero Dependência de CDNs em Produção) -->
+    <script src="{% static 'vendor/tailwind.js' %}"></script>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'vendor/alpine.min.js' %}" defer></script>
+    <script src="{% static 'vendor/lucide.min.js' %}"></script>
+    <script src="{% static 'vendor/sortable.min.js' %}"></script>
+    
+    <!-- Flatpickr Local -->
+    <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
+    <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'vendor/flatpickr/pt.js' %}"></script>
+
+    <!-- Chart.js Local -->
+    <script src="{% static 'vendor/chart.min.js' %}"></script>
+
+    <!-- Quill Rich Text Editor Local -->
+    <link rel="stylesheet" href="{% static 'vendor/quill/quill.snow.min.css' %}">
+    <script src="{% static 'vendor/quill/quill.min.js' %}"></script>
+
+    <script>
+        // =====================================================================
+        // ALGORITMO MATEMÁTICO YIQ & CONTRASTE DINÂMICO
+        // Calcula a paleta de cores e o contraste a partir do hexadecimal da pousada
+        // =====================================================================
+        const activeBrandColor = "{{ active_pousada.cor_primaria_hex|default:'#2563eb' }}";
+        
+        function applyDynamicTheme(hexColor) {
+            if (!hexColor || !hexColor.startsWith('#')) hexColor = '#2563eb';
+            const hex = hexColor.replace('#', '');
+            const r = parseInt(hex.substring(0, 2), 16);
+            const g = parseInt(hex.substring(2, 4), 16);
+            const b = parseInt(hex.substring(4, 6), 16);
+            
+            document.documentElement.style.setProperty('--brand-color', hexColor);
+            document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
+            document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
+            
+            // YIQ Luminance Contrast Calculation
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            let brandText = '#ffffff';
+            let brandColorBurned = hexColor;
+            
+            if (yiq >= 170) { // Cor primária muito clara! (Contraste ativo)
+                const factor = 0.45; // Escurece para manter legibilidade excelente
+                const dr = Math.max(0, Math.round(r * factor));
+                const dg = Math.max(0, Math.round(g * factor));
+                const db = Math.max(0, Math.round(b * factor));
+                brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+                brandText = brandColorBurned;
+            } else {
+                brandText = '#ffffff';
+                brandColorBurned = hexColor;
+            }
+            
+            document.documentElement.style.setProperty('--brand-text', brandText);
+            document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        }
+        
+        applyDynamicTheme(activeBrandColor);
+
+        // Helper global de formatação BRL com separador de milhar
+        window.formatBRL = function(val) {
+            if (val === null || val === undefined || isNaN(val)) return '0,00';
+            return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+        };
+
+        // Configuração Dinâmica do Tailwind usando variáveis CSS
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            DEFAULT: 'var(--brand-color)',
+                            alpha: 'var(--brand-color-alpha)',
+                            focus: 'var(--brand-color-alpha-focus)',
+                            text: 'var(--brand-text)',
+                            burned: 'var(--brand-color-burned)',
+                        },
+                        navie: {
+                            bg: '#090d16',
+                            overlay: 'rgba(0, 0, 0, 0.7)',
+                            glass: 'rgba(255, 255, 255, 0.03)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            textsec: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html, body { 
+            margin: 0; padding: 0; max-width: 100%; width: 100%; height: 100vh; height: 100dvh;
+            overflow: hidden; background-color: #ffffff; font-family: 'Inter', sans-serif;
+        }
+        html.dark, html.dark body {
+            background-color: #070b12 !important;
+        }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        html.dark ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        [x-cloak] { display: none !important; }
+        
+        /* Vidro de Luxo (Glassmorphism) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        }
+        
+        /* Dropdowns Elegantes Padronizados */
+        .dropdown-menu {
+            border-radius: 1rem !important; /* rounded-2xl */
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            z-index: 50;
+            padding: 0.375rem !important; /* p-1.5 */
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(226, 232, 240, 0.8) !important;
+            max-height: 16rem !important; /* max-h-64 */
+            overflow-y: auto !important;
+            scrollbar-width: none !important; /* Firefox */
+            -ms-overflow-style: none !important; /* IE 10+ */
+        }
+        .dropdown-menu::-webkit-scrollbar {
+            display: none !important; /* Safari/Chrome */
+        }
+        .dark .dropdown-menu {
+            background: rgba(15, 23, 42, 0.85) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 700;
+            color: #334155; /* text-slate-700 */
+            border-radius: 0.75rem !important; /* rounded-xl */
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .dark .dropdown-item {
+            color: #e2e8f0; /* text-slate-250 */
+        }
+        .dropdown-item:hover {
+            background-color: var(--brand-color-alpha) !important;
+            color: var(--brand-color-burned) !important;
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.65) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        .input-glass { 
+            background: rgba(255, 255, 255, 0.6) !important; 
+            border: 1px solid rgba(0, 0, 0, 0.08) !important; 
+            backdrop-filter: blur(8px); 
+            color: #1a1a1a !important; 
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); 
+            transition: all 0.2s ease; 
+        }
+        .dark .input-glass { 
+            background: rgba(15, 23, 42, 0.3) !important; 
+            border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+            color: white !important; 
+        }
+        .input-glass:focus { 
+            background: rgba(255, 255, 255, 0.9) !important; 
+            border-color: var(--brand-color) !important; 
+            box-shadow: 0 0 0 4px var(--brand-color-alpha) !important; 
+            transform: translateY(-1px); 
+            outline: none;
+        }
+
+        /* Estilização Premium para selects nativos e fallbacks */
+        select {
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m19 9-7 7-7-7'/%3E%3C/svg%3E") !important;
+            background-position: right 1rem center !important;
+            background-repeat: no-repeat !important;
+            background-size: 1rem !important;
+            padding-right: 2.5rem !important;
+            border-radius: 0.75rem !important; /* rounded-xl */
+            transition: all 0.2s ease !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+        select::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        /* Oculta barras de rolagem nativas para containers customizados */
+        .select-dropdown-container::-webkit-scrollbar {
+            display: none !important;
+        }
+        .select-dropdown-container {
+            -ms-overflow-style: none !important;  /* IE/Edge */
+            scrollbar-width: none !important;  /* Firefox */
+        }
+        /* Textura Glassmorphism Translúcida Premium para Inputs (Modo Claro) */
+        .modal-input-glass {
+            background: rgba(15, 23, 42, 0.03) !important;
+            border: 1px solid rgba(15, 23, 42, 0.08) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            color: #1e293b !important;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        /* Efeito de foco/focalização nos campos */
+        .modal-input-glass:focus {
+            background: rgba(15, 23, 42, 0.01) !important;
+            border-color: var(--brand-color, #2563eb) !important;
+            box-shadow: 0 0 0 4px var(--brand-color-alpha) !important;
+            transform: translateY(-1px) !important;
+        }
+        /* Adaptação e Contraste Máximo no Modo Escuro (Dark Mode) */
+        .dark .modal-input-glass {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2) !important;
+        }
+        .dark .modal-input-glass:focus,
+        .dark .modal-input-glass:active,
+        .dark .modal-input-glass:hover {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border-color: var(--brand-color, #2563eb) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 0 4px var(--brand-color-alpha) !important;
+            transform: translateY(-1px) !important;
+        }
+        .modal-input-glass::placeholder {
+            color: rgba(156, 163, 175, 0.6) !important;
+        }
+        .dark .modal-input-glass::placeholder {
+            color: rgba(255, 255, 255, 0.4) !important;
+        }
+        /* Card Translúcido Isolante de Contraste */
+        .modal-card-glass {
+            background: rgba(15, 23, 42, 0.02) !important;
+            border: 1px solid rgba(15, 23, 42, 0.05) !important;
+        }
+        .dark .modal-card-glass {
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="text-slate-600 dark:text-slate-200 font-sans antialiased flex min-h-screen bg-slate-50/50 dark:bg-[#070b12] relative">
+    
+    <!-- Fundo de Vidro: Exibido apenas no tema 'glass' -->
+    <div x-show="theme === 'glass'" class="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#070b12]" style="display: none; height: 100dvh;">
+        <div class="absolute inset-0 w-full h-full bg-black/65 z-10 backdrop-blur-[8px]"></div>
+        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80" class="absolute inset-0 w-full h-full object-cover opacity-40">
+    </div>
+
+    <!-- Espaçador Estático para a Sidebar Expansível no Desktop -->
+    <div class="hidden md:block w-[70px] hover:w-[260px] transition-all duration-300 min-h-screen flex-shrink-0 z-10 peer"></div>
+
+    <!-- SIDEBAR LATERAL EXPANSÍVEL -->
+    <aside 
+        :class="sidebarMobileOpen ? 'translate-x-0' : '-translate-x-full'"
+        class="fixed top-0 left-0 h-[100dvh] bg-white/90 dark:bg-slate-900/40 backdrop-blur-xl border-r border-slate-200/80 dark:border-navie-border transition-all duration-300 ease-in-out z-50 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] md:translate-x-0 w-72 md:w-[70px] hover:w-[260px] overflow-hidden group/sidebar"
+    >
+        <!-- Header da Sidebar -->
+        <div class="h-20 flex items-center justify-center md:justify-start px-4 border-b border-slate-200/50 dark:border-navie-border flex-shrink-0 whitespace-nowrap transition-all duration-300">
+            <!-- Modo Expandido -->
+            <div :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="items-center gap-2.5 w-full animate-in fade-in duration-300">
+                <div class="h-9 w-9 rounded-xl bg-brand flex items-center justify-center p-1.5 shadow-md">
+                    <img src="{% static 'images/logo_white.png' %}" alt="Logo" class="h-full w-auto object-contain">
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-slate-900 dark:text-white font-black tracking-tight text-xs uppercase">{{ active_pousada.nome|default:"RAMIROS"|slice:":12" }}</span>
+                    <span class="text-[9px] font-bold text-slate-400 dark:text-navie-textsec tracking-widest uppercase">PAINEL PMS</span>
+                </div>
+            </div>
+            <!-- Modo Recolhido -->
+            <div :class="sidebarMobileOpen ? 'hidden' : 'flex group-hover/sidebar:hidden'" class="flex items-center justify-center w-full h-full">
+                <div class="h-9 w-9 rounded-xl bg-brand flex items-center justify-center p-1.5 shadow-md transition-transform duration-200 group-hover/sidebar:scale-105">
+                    <img src="{% static 'images/logo_white.png' %}" alt="Logo" class="h-full w-auto object-contain">
+                </div>
+            </div>
+        </div>
+
+        <!-- Links de Navegação da Sidebar (Baseados nas abas/permissões) -->
+        <nav class="flex-1 overflow-y-auto no-scrollbar py-6 flex flex-col gap-6 px-3">
+            <div>
+                <p class="px-3 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">Operação</p>
+                <ul class="space-y-1">
+                    <!-- Link: Dashboard Geral -->
+                    {% if request.user.role == 'DIRECAO' or request.user.role == 'PORTARIA' or request.user.is_superuser %}
+                    <li>
+                        <a href="{% url 'sistema:dashboard' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if request.resolver_match.url_name == 'dashboard' %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Visão Geral</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Link: Reservas & Portaria (PMS Grid) -->
+                    {% if request.user.role == 'DIRECAO' or request.user.role == 'PORTARIA' or request.user.is_superuser %}
+                    <li>
+                        <a href="{% url 'sistema:partner_reserva_list' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if 'reserva' in request.resolver_match.url_name %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="calendar-range" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Portaria e Reservas</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Link: Agenda / Kanban (Atividades) -->
+                    {% if request.user.is_authenticated %}
+                    <li>
+                        <a href="{% url 'agenda:painel_atividades' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if request.resolver_match.namespace == 'agenda' %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Agenda / Kanban</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Link: Quartos & Tarifas (Cadastro) -->
+                    {% if request.user.role == 'DIRECAO' or request.user.is_superuser %}
+                    <li>
+                        <a href="{% url 'sistema:quarto_list' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if 'quarto' in request.resolver_match.url_name %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="bed" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Quartos & Tarifas</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Link: Estoque & Almoxarifado -->
+                    {% if request.user.role == 'DIRECAO' or request.user.is_superuser %}
+                    <li>
+                        <a href="{% url 'estoque:dashboard' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if 'estoque' in request.resolver_match.namespaces or 'estoque' in request.resolver_match.url_name %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="package" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Estoque & Compras</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- Administrativo Global -->
+            {% if request.user.role == 'DIRECAO' or request.user.is_superuser %}
+            <div>
+                <p class="px-3 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap">Global</p>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="{% url 'sistema:pousada_list' %}" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap group/link focus:outline-none {% if 'pousada' in request.resolver_match.url_name %}text-brand dark:text-white bg-brand/10 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="building" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Pousadas Ramilos</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </nav>
+
+        <!-- Rodapé da Sidebar (Dados do Usuário Logado) -->
+        <div class="p-3 border-t border-slate-200/50 dark:border-navie-border flex-shrink-0">
+            <div class="flex items-center gap-3 overflow-hidden whitespace-nowrap">
+                <div class="h-9 w-9 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-300 font-bold flex-shrink-0 shadow-sm border border-slate-300/30">
+                    {{ request.user.username|slice:":2"|upper }}
+                </div>
+                <div :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="flex flex-col min-w-0 flex-1 animate-in fade-in duration-300">
+                    <span class="text-xs font-bold text-slate-800 dark:text-white truncate">{{ request.user.nome_completo|default:request.user.username }}</span>
+                    <span class="text-[9px] font-semibold text-slate-400 dark:text-navie-textsec truncate">{{ request.user.get_role_display }}</span>
+                </div>
+                <a href="{% url 'sistema:logout' %}" :class="sidebarMobileOpen ? 'block' : 'hidden group-hover/sidebar:block'" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Sair do Sistema">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Fundo Escuro ao abrir Sidebar no Celular -->
+    <div x-show="sidebarMobileOpen" @click="sidebarMobileOpen = false" x-transition.opacity class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden" style="display: none;"></div>
+
+    <!-- CONTEÚDO PRINCIPAL (PAINEL DIREITO) -->
+    <main class="flex-1 flex flex-col h-screen relative z-10 min-w-0 overflow-hidden" style="height: 100dvh;">
+        
+        <!-- Header Superior -->
+        <header class="bg-white/70 dark:bg-slate-900/30 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 w-full flex-shrink-0 sticky top-0 z-[45]" style="height: 4.5rem;">
+            
+            <div class="flex items-center gap-4 shrink-0 mr-4">
+                <!-- Toggle Sidebar Mobile -->
+                <button @click="sidebarMobileOpen = !sidebarMobileOpen" class="md:hidden text-slate-500 hover:text-brand transition-colors p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div id="header_title_area" class="flex flex-col justify-center">
+                    <h1 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white tracking-tight uppercase leading-none">
+                        {% block header_title %}Painel PMS{% endblock %}
+                    </h1>
+                    {% block header_subtitle %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- Ações e Perfil -->
+            <div class="flex items-center gap-4 flex-1 justify-end">
+                <!-- Área de Ações Dinâmicas via HTMX OOB Swap -->
+                <div id="header_actions_area" class="flex items-center gap-3 animate-in fade-in duration-300">
+                    {% block header_actions %}{% endblock %}
+                </div>
+                
+                <!-- Seletor de Pousada (Se Admin tiver mais de uma) -->
+                {% if pousadas_list %}
+                <div x-data="{ open: false }" class="relative shrink-0" @click.outside="open = false">
+                    <button @click="open = !open" class="h-9 px-3.5 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200/80 dark:border-navie-border flex items-center justify-center gap-2 text-slate-600 dark:text-slate-200 hover:text-brand hover:border-brand/40 dark:hover:border-brand/40 transition-all shadow-sm focus:outline-none text-xs font-black tracking-tight" title="Selecionar Pousada Ativa">
+                        <i data-lucide="building" class="w-4 h-4 text-brand"></i>
+                        <span>{{ active_pousada.nome }}</span>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-60 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+                    
+                    <div x-show="open"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute right-0 mt-2 w-56 dropdown-menu animate-in fade-in zoom-in-95 duration-200"
+                         style="display: none;">
+                        <div class="px-3.5 py-2 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest border-b border-slate-200/30 dark:border-navie-border mb-1">
+                            Selecionar Unidade
+                        </div>
+                        {% for p in pousadas_list %}
+                            <a href="?set_pousada={{ p.id }}" 
+                               class="dropdown-item {% if p.id == active_pousada.id %}text-brand bg-brand/5{% endif %}">
+                                <span>{{ p.nome }}</span>
+                                {% if p.id == active_pousada.id %}
+                                    <i data-lucide="check" class="w-3.5 h-3.5 text-brand"></i>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Botão de Notificações -->
+                <div x-data="{ open: false }" class="relative shrink-0" @click.outside="open = false">
+                    <button @click="open = !open" class="w-9 h-9 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200/80 dark:border-navie-border flex items-center justify-center text-slate-400 hover:text-brand hover:border-brand/40 dark:hover:border-brand/40 transition-all shadow-sm focus:outline-none relative" title="Notificações">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+                    </button>
+                    
+                    <div x-show="open"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute right-0 mt-2 w-72 dropdown-menu animate-in fade-in zoom-in-95 duration-200"
+                         style="display: none;">
+                        <div class="px-4 py-2.5 border-b border-slate-200/30 dark:border-navie-border flex items-center justify-between mb-1">
+                            <span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Notificações</span>
+                            <span class="text-[9px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded-full animate-pulse">2 novas</span>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto no-scrollbar">
+                            <div class="px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors border-b border-slate-200/20 dark:border-white/5 cursor-pointer">
+                                <p class="text-xs font-bold text-slate-700 dark:text-white">Nova Reserva Realizada</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Carlos Eduardo reservou o Quarto 201 na Pousada Ramilos Sertão.</p>
+                                <span class="text-[8px] font-bold text-brand mt-1 block">Há 5 minutos</span>
+                            </div>
+                            <div class="px-4 py-3 hover:bg-slate-100/50 dark:hover:bg-white/5 transition-colors cursor-pointer">
+                                <p class="text-xs font-bold text-slate-700 dark:text-white">Alerta de Limpeza</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Quarto 102 marcado como SUJO (check-out realizado).</p>
+                                <span class="text-[8px] font-bold text-brand mt-1 block">Há 1 hora</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão de Tema (Light vs Glass) -->
+                <button @click="toggleTheme()" class="w-9 h-9 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200/80 dark:border-navie-border flex items-center justify-center text-slate-400 hover:text-brand hover:border-brand/40 dark:hover:border-brand/40 transition-all shadow-sm focus:outline-none" title="Alternar Modo de Visualização">
+                    <i x-show="theme !== 'glass'" data-lucide="moon" class="w-4 h-4" style="display: none;"></i>
+                    <i x-show="theme === 'glass'" data-lucide="sun" class="w-4 h-4" style="display: none;"></i>
+                </button>
+        </header>
+
+        <!-- Sub-header Dinâmico (Emendado ao cabeçalho principal) -->
+        {% block subheader %}{% endblock %}
+
+        <!-- Área de Conteúdo Central -->
+        <div class="flex-1 overflow-y-auto no-scrollbar p-6 relative z-10">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Inicialização dos Ícones Lucide -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+            if (typeof Alpine !== 'undefined' && event.detail.target) {
+                let target = event.detail.target;
+                if (target.id && !document.body.contains(target)) {
+                    const newTarget = document.getElementById(target.id);
+                    if (newTarget) {
+                        target = newTarget;
+                    }
+                }
+                Alpine.process(target);
+            }
+        });
+    </script>
+    <!-- Modal Global Container (Usado por HTMX em todo o sistema) -->
+    <div id="modal-container" style="position: relative; z-index: 99999;"></div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

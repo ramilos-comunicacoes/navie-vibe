@@ -201,6 +201,53 @@ x-data="{
             background-color: rgba(0, 0, 0, 0.4);
         }
 
+        /* Estilo Global de Selects */
+        select {
+            width: 100% !important;
+            height: 38px !important;
+            padding: 0 1rem !important;
+            background-color: #f8fafc !important;
+            border: 1px solid var(--navie-border) !important;
+            border-radius: var(--navie-radius-md) !important;
+            font-size: 13px !important;
+            font-family: inherit !important;
+            color: var(--navie-text) !important;
+            box-sizing: border-box !important;
+            transition: var(--navie-transition) !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+            background-position: right 0.75rem center !important;
+            background-repeat: no-repeat !important;
+            background-size: 1.25rem !important;
+            padding-right: 2.5rem !important;
+        }
+        .dark select {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+        }
+        select:focus {
+            background-color: #ffffff !important;
+            border-color: var(--navie-primary) !important;
+            outline: none !important;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        }
+        .dark select:focus {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+            border-color: var(--navie-primary) !important;
+        }
+        select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+        .dark select option {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+
         /* ─── Regras de Botões e Selects do Cabeçalho Actions ─── */
         .btn-header {
             display: inline-flex !important;
@@ -440,6 +487,15 @@ x-data="{
                             <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Documentos Legais</span>
                         </a>
                     </li>
+                    
+                    <li>
+                        <a href="#" class="w-full flex items-center p-2 text-sm font-semibold rounded-xl transition-colors overflow-hidden whitespace-nowrap group/link focus:outline-none {% if active_tab == 'taxas' %}text-blue-600 dark:text-white bg-blue-50/80 dark:bg-white/10 font-bold{% else %}text-slate-500 dark:text-navie-textsec hover:text-blue-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10{% endif %}">
+                            <div class="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg">
+                                <i data-lucide="percent" class="w-5 h-5"></i>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Taxas & Comissões</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
             
@@ -493,9 +549,15 @@ x-data="{
         
         <!-- Header Superior -->
         <header class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 w-full flex-shrink-0 sticky top-0 z-[60] transition-colors"
+                x-data="{ viewMode: 'list', selectedHotel: null, activeTab: 'cadastro' }"
+                @hotel-selected.window="viewMode = 'detail'; selectedHotel = $event.detail; activeTab = 'cadastro'; $nextTick(() => { if (window.lucide) { lucide.createIcons(); } })"
+                @hotel-list.window="viewMode = 'list'; selectedHotel = null; activeTab = 'cadastro'"
+                @go-to-list.window="viewMode = 'list'; selectedHotel = null; activeTab = 'cadastro'"
+                @tab-changed.window="activeTab = $event.detail"
                 style="height: calc(4.5rem + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px);">
             
-            <div class="flex items-center gap-4 shrink-0 mr-4">
+            <!-- Modo de Lista (Padrão) -->
+            <div class="flex items-center gap-4 shrink-0 mr-4" x-show="viewMode !== 'detail' || !selectedHotel">
                 <button @click="sidebarMobileOpen = !sidebarMobileOpen" class="md:hidden text-slate-500 dark:text-navie-textsec hover:text-blue-600 transition-colors">
                     <i data-lucide="menu" class="w-6 h-6"></i>
                 </button>
@@ -506,6 +568,59 @@ x-data="{
                     <p class="text-[9px] font-black text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight tracking-wider uppercase hidden sm:block">
                         {% block page_subtitle %}Portal de controle global do marketplace{% endblock %}
                     </p>
+                </div>
+            </div>
+
+            <!-- Modo de Detalhes do Hotel (Dinâmico) -->
+            <div class="flex items-center gap-4 shrink-0 mr-2 max-w-[80vw] md:max-w-none" x-show="viewMode === 'detail' && selectedHotel" style="display: none;">
+                <div class="flex items-center gap-3 shrink-0">
+                    <button @click="$dispatch('go-to-list')" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-650 dark:text-white flex items-center justify-center transition-all focus:outline-none shrink-0" title="Voltar para a Lista">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
+                    <div class="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-sm border border-slate-200/50 dark:border-navie-border flex-shrink-0 flex items-center justify-center">
+                        <template x-if="selectedHotel && selectedHotel.logo_url">
+                            <img :src="selectedHotel.logo_url" :alt="selectedHotel.nome" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="selectedHotel && !selectedHotel.logo_url">
+                            <div class="w-full h-full bg-blue-100 dark:bg-white/10 text-blue-600 dark:text-white flex items-center justify-center font-bold text-xs uppercase" x-text="selectedHotel ? selectedHotel.nome.slice(0,2).toUpperCase() : ''"></div>
+                        </template>
+                    </div>
+                    <div class="hidden sm:block mr-2">
+                        <h2 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight leading-none" x-text="selectedHotel ? selectedHotel.nome : ''"></h2>
+                        <p class="text-[9px] font-medium text-slate-400 dark:text-slate-450 mt-1 flex items-center gap-1">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span x-text="selectedHotel ? selectedHotel.endereco + ', ' + selectedHotel.cidade + ' - ' + selectedHotel.estado : ''" class="truncate max-w-[120px] lg:max-w-none"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Alternador / Interruptor de Abas (Capsule Segmented Control) -->
+                <div class="flex items-center bg-slate-100/80 dark:bg-black/25 p-1 rounded-xl gap-0.5 border border-slate-200/30 dark:border-navie-border/30 overflow-x-auto no-scrollbar max-w-[160px] xs:max-w-[200px] sm:max-w-xs md:max-w-none shrink-0 shadow-sm dark:shadow-none">
+                    <button @click="activeTab = 'cadastro'; $dispatch('tab-changed', 'cadastro')" 
+                            :class="activeTab === 'cadastro' ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'" 
+                            class="px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-black transition-all cursor-pointer border-none bg-transparent whitespace-nowrap outline-none">
+                        Geral
+                    </button>
+                    <button @click="activeTab = 'midias'; $dispatch('tab-changed', 'midias')" 
+                            :class="activeTab === 'midias' ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'" 
+                            class="px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-black transition-all cursor-pointer border-none bg-transparent whitespace-nowrap outline-none">
+                        Mídias
+                    </button>
+                    <button @click="activeTab = 'documentos'; $dispatch('tab-changed', 'documentos')" 
+                            :class="activeTab === 'documentos' ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'" 
+                            class="px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-black transition-all cursor-pointer border-none bg-transparent whitespace-nowrap outline-none">
+                        Docs
+                    </button>
+                    <button @click="activeTab = 'termos'; $dispatch('tab-changed', 'termos')" 
+                            :class="activeTab === 'termos' ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'" 
+                            class="px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-black transition-all cursor-pointer border-none bg-transparent whitespace-nowrap outline-none">
+                        Termos
+                    </button>
+                    <button @click="activeTab = 'logs'; $dispatch('tab-changed', 'logs')" 
+                            :class="activeTab === 'logs' ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white'" 
+                            class="px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-wider font-black transition-all cursor-pointer border-none bg-transparent whitespace-nowrap outline-none">
+                        Logs
+                    </button>
                 </div>
             </div>
 

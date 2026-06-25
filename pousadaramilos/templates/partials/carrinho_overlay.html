@@ -1,0 +1,171 @@
+<style>
+    /* Ocultar barra de rolagem no carrinho */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none !important;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+    header.cart-open-header {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+        z-index: 50 !important;
+    }
+    header.cart-open-header nav a, 
+    header.cart-open-header .text-gray-600, 
+    header.cart-open-header span, 
+    header.cart-open-header button {
+        color: #451a03 !important;
+        text-shadow: none !important;
+    }
+    header.cart-open-header nav a:hover {
+        color: #fbbf24 !important;
+    }
+    header.cart-open-header i[data-lucide] {
+        color: #78350f !important;
+        filter: none !important;
+    }
+    header.cart-open-header span.bg-red-500 {
+        background-color: #ef4444 !important;
+        color: #ffffff !important;
+    }
+    header.cart-open-header img {
+        filter: none !important;
+    }
+</style>
+
+<div id="navieCartOverlay" class="fixed top-[72px] left-0 w-full h-[calc(100vh-72px)] bg-white z-[40] transition-transform duration-500 ease-in-out flex flex-col" style="transform: translateY(-120%);">
+    
+    <!-- Title Section -->
+    <div class="px-4 md:px-8 pt-7 pb-4 max-w-[90rem] mx-auto w-full shrink-0 border-b border-gray-100/50">
+        <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold text-ramiros-brown font-poppins tracking-tight">Carrinho de compras</h1>
+            <span class="px-2 py-0.5 rounded-full bg-amber-50 text-[10px] font-bold text-ramiros-soft font-poppins">{{ carrinho.quantidade_hospedes }} hóspede{% if carrinho.quantidade_hospedes != 1 %}s{% endif %}</span>
+        </div>
+        <p class="text-xs text-slate-400 font-medium mt-0.5">Revise suas escolhas e complete os dados obrigatórios.</p>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-40 no-scrollbar">
+        <div class="max-w-[90rem] mx-auto w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="cartItemsContainer">
+                {% if carrinho %}
+                    {% include 'partials/card_carrinho_hospedagem.html' %}
+                {% else %}
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center mb-4 border border-slate-100">
+                            <i data-lucide="shopping-cart" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-sm font-bold text-ramiros-brown font-poppins">Seu carrinho está vazio</h3>
+                        <p class="text-xs text-slate-400 mt-1">Nenhuma acomodação selecionada para estadia.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Footer -->
+    <div class="bg-white px-4 md:px-8 py-5 shrink-0 absolute bottom-0 left-0 w-full z-20 shadow-[0_-8px_30px_rgba(0,0,0,0.05)] border-t border-slate-100 flex items-center justify-center">
+        <div class="max-w-[90rem] w-full">
+            {% if carrinho %}
+                <!-- DESKTOP LAYOUT -->
+                <div class="hidden md:flex flex-row justify-between items-center w-full gap-6">
+                    <div class="flex flex-col gap-1 flex-1">
+                        <div class="flex items-center gap-2 text-[11px] sm:text-xs text-slate-455 font-semibold font-poppins">
+                            <span>1 Acomodação</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                            <span>{{ carrinho.quantidade_hospedes }} Hóspede{% if carrinho.quantidade_hospedes != 1 %}s{% endif %}</span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                            <span>{{ carrinho.noites }} Noite{% if carrinho.noites != 1 %}s{% endif %}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Total</span>
+                            <span class="text-2xl md:text-3xl font-black text-ramiros-brown font-poppins leading-none">
+                                R$ {{ carrinho.total|floatformat:0 }}<span class="text-base text-slate-400 font-normal">,00</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="w-[380px] shrink-0">
+                        <button id="btnConfirmarCompra" 
+                                {% if not carrinho.todos_hospedes_completos %}
+                                    disabled 
+                                    class="w-full py-4 px-6 rounded-full font-bold transition-all flex justify-center items-center gap-2 text-xs sm:text-sm cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200/80"
+                                {% else %}
+                                    class="w-full py-4 px-6 rounded-full font-bold text-ramiros-brown bg-ramiros-yellow hover:bg-ramiros-yellow-hover shadow-md shadow-amber-500/10 hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs sm:text-sm hover:-translate-y-0.5 border-none outline-none"
+                                {% endif %}
+                                onclick="window.location.href='{% url 'website:checkout_processar' %}'">
+                            {% if not carrinho.todos_hospedes_completos %}
+                                <i data-lucide="lock" class="w-4 h-4 shrink-0"></i>
+                                Preencha a Ficha do Titular
+                            {% else %}
+                                Finalizar Reserva <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MOBILE LAYOUT -->
+                <div class="flex md:hidden flex-col gap-4 w-full">
+                    <div class="w-full bg-slate-50/70 p-4 rounded-3xl border border-slate-200/40 text-xs">
+                        <div class="flex justify-between text-slate-550 font-semibold">
+                            <span>Período da Estadia</span>
+                            <span>{{ carrinho.noites }} noite{% if carrinho.noites != 1 %}s{% endif %}</span>
+                        </div>
+                        <div class="border-t border-slate-200/50 my-2.5"></div>
+                        <div class="flex justify-between items-center">
+                            <span class="font-extrabold text-ramiros-brown text-sm">Valor Total</span>
+                            <span class="font-black text-ramiros-brown text-xl font-poppins">
+                                R$ {{ carrinho.total|floatformat:0 }}<span class="text-sm text-slate-400 font-normal">,00</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="w-full">
+                        <button id="btnConfirmarCompraMobile" 
+                                {% if not carrinho.todos_hospedes_completos %}
+                                    disabled 
+                                    class="w-full py-4 px-6 rounded-full font-bold transition-all flex justify-center items-center gap-2 text-xs cursor-not-allowed bg-slate-100 text-slate-400 border border-slate-200/80"
+                                {% else %}
+                                    class="w-full py-4 px-6 rounded-full font-bold text-ramiros-brown bg-ramiros-yellow hover:bg-ramiros-yellow-hover shadow-md shadow-amber-500/10 hover:shadow-lg transition-all flex justify-center items-center gap-2 cursor-pointer text-xs border-none outline-none"
+                                {% endif %}
+                                onclick="window.location.href='{% url 'website:checkout_processar' %}'">
+                            {% if not carrinho.todos_hospedes_completos %}
+                                <i data-lucide="lock" class="w-4 h-4 shrink-0"></i>
+                                Preencha os Dados Obrigatórios
+                            {% else %}
+                                Finalizar Reserva <i data-lucide="arrow-right" class="w-4 h-4 shrink-0"></i>
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <button class="w-full py-4 px-6 rounded-full font-bold text-slate-400 bg-slate-100 border border-slate-200/80 cursor-not-allowed text-xs sm:text-sm" disabled>Carrinho Vazio</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleNavieCart() {
+        const cart = document.getElementById('navieCartOverlay');
+        const header = document.querySelector('header');
+        if (!cart) return;
+        if (cart.style.transform === 'translateY(0%)') {
+            cart.style.transform = 'translateY(-120%)';
+            document.body.style.overflow = 'auto';
+            if (header) header.classList.remove('cart-open-header');
+        } else {
+            cart.style.transform = 'translateY(0%)';
+            document.body.style.overflow = 'hidden';
+            if (header) header.classList.add('cart-open-header');
+        }
+    }
+</script>

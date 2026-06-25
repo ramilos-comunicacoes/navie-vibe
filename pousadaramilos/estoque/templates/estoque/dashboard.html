@@ -1,0 +1,364 @@
+{% extends 'base_partner.html' %}
+{% load static %}
+
+{% block title %}Estoque & Compras{% endblock %}
+
+{% block header_title %}Estoque & Almoxarifado{% endblock %}
+
+{% block header_subtitle %}
+<span class="text-[9px] font-bold text-slate-400 dark:text-navie-textsec tracking-widest uppercase mt-0.5">
+    Gerenciamento de Insumos e Compras B2B
+</span>
+{% endblock %}
+
+{% block header_actions %}
+<div class="flex items-center gap-2">
+    <!-- Botão Registrar Saída (Apenas Inventário) -->
+    <button x-show="estoqueTab === 'inventario'" 
+            hx-get="{% url 'estoque:registrar_movimento' %}" 
+            hx-target="#modal-container" 
+            hx-trigger="click" 
+            class="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md flex items-center gap-2 text-xs font-black uppercase cursor-pointer transition-all active:scale-95 border-none">
+        <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        <span>Registrar Saída</span>
+    </button>
+
+    <!-- Botão Novo Produto (Apenas Inventário) -->
+    <button x-show="estoqueTab === 'inventario'" 
+            hx-get="{% url 'estoque:criar_produto' %}" 
+            hx-target="#modal-container" 
+            hx-trigger="click" 
+            class="h-9 px-4 bg-brand hover:bg-brand/90 text-brand-text rounded-xl shadow-md flex items-center gap-2 text-xs font-black uppercase cursor-pointer transition-all active:scale-95 border-none">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>Novo Item</span>
+    </button>
+
+    <!-- Botões da Aba de Compras -->
+    <div x-show="estoqueTab === 'compras'" class="flex items-center gap-2">
+        <!-- Voltar para Lista se estiver no Formulário -->
+        <button x-show="comprasMode === 'form'"
+                @click="comprasMode = 'list'"
+                class="h-9 px-4 bg-slate-200 dark:bg-white/10 hover:bg-slate-350 dark:hover:bg-white/20 text-slate-700 dark:text-white rounded-xl shadow-sm flex items-center gap-2 text-xs font-black uppercase cursor-pointer transition-all active:scale-95 border-none">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Voltar</span>
+        </button>
+
+        <!-- Nova Compra (Apenas se estiver no modo lista) -->
+        <button x-show="comprasMode === 'list'"
+                @click="comprasMode = 'form'; initCompraForm()"
+                class="h-9 px-4 bg-brand hover:bg-brand/90 text-brand-text rounded-xl shadow-md flex items-center gap-2 text-xs font-black uppercase cursor-pointer transition-all active:scale-95 border-none">
+            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+            <span>Nova Compra</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block subheader %}
+<!-- Subcabeçalho de Filtros e Abas -->
+<div class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
+    <!-- Abas Internas -->
+    <div class="flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-xl w-full sm:w-auto">
+        <button @click="estoqueTab = 'inventario'" 
+                :class="estoqueTab === 'inventario' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
+                class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs tracking-tight transition-all border-none cursor-pointer">
+            Inventário
+        </button>
+        <button @click="estoqueTab = 'compras'" 
+                :class="estoqueTab === 'compras' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'"
+                class="flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs tracking-tight transition-all border-none cursor-pointer">
+            Compras & Lotes
+        </button>
+    </div>
+
+    <!-- Filtros por Aba -->
+    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <!-- Filtros do Inventário -->
+        <div x-show="estoqueTab === 'inventario'" class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- Pesquisa -->
+            <form method="GET" action="." class="relative w-full sm:w-60">
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Pesquisar item ou código..." 
+                       class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border rounded-xl px-3 py-2 pl-9 text-xs text-slate-700 dark:text-white placeholder-slate-400 dark:placeholder-slate-550 focus:outline-none focus:border-brand/50">
+                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                {% if search_query %}
+                    <a href="?" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </a>
+                {% endif %}
+            </form>
+
+            <!-- Categorias -->
+            <div class="relative shrink-0">
+                <select onchange="window.location.href=this.value" class="h-9 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border text-xs text-slate-700 dark:text-white focus:outline-none cursor-pointer">
+                    <option value="?">Todas Categorias</option>
+                    {% for cat in categorias %}
+                        <option value="?categoria={{ cat.id }}" {% if cat.id == categoria_selected_id %}selected{% endif %}>{{ cat.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Adicionar Categoria -->
+            <button hx-get="{% url 'estoque:criar_categoria' %}" 
+                    hx-target="#modal-container" 
+                    hx-trigger="click" 
+                    class="h-9 w-9 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-white border-none rounded-xl flex items-center justify-center cursor-pointer shadow-sm active:scale-95" 
+                    title="Adicionar Categoria">
+                <i data-lucide="folder-plus" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Filtros de Compras (Apenas modo Lista) -->
+        <div x-show="estoqueTab === 'compras' && comprasMode === 'list'" class="flex items-center gap-2 w-full sm:w-auto">
+            <!-- Fornecedores -->
+            <select onchange="window.location.href=this.value" class="h-9 px-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-navie-border text-xs text-slate-700 dark:text-white focus:outline-none cursor-pointer">
+                <option value="?">Todos Fornecedores</option>
+                {% for forn in fornecedores %}
+                    <option value="?fornecedor={{ forn.id }}" {% if forn.id == fornecedor_selected_id %}selected{% endif %}>{{ forn.nome }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Adicionar Fornecedor -->
+            <button hx-get="{% url 'estoque:criar_fornecedor' %}" 
+                    hx-target="#modal-container" 
+                    hx-trigger="click" 
+                    class="h-9 w-9 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-white border-none rounded-xl flex items-center justify-center cursor-pointer shadow-sm active:scale-95" 
+                    title="Adicionar Fornecedor">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="estoque-container" class="h-full flex flex-col min-h-0 w-full">
+    <!-- ================= SUB-TAB INVENTÁRIO (60/40 SPLIT) ================= -->
+    <div x-show="estoqueTab === 'inventario'" class="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+        <!-- Lista de Produtos (60%) -->
+        <div class="flex-1 bg-white/60 dark:bg-navie-glass border border-slate-200/50 dark:border-navie-border rounded-3xl p-6 flex flex-col min-h-0 shadow-sm backdrop-blur-md">
+            <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
+                <i data-lucide="package-search" class="w-4 h-4 text-brand"></i>
+                <span>Itens de Almoxarifado</span>
+            </h2>
+
+            <!-- Tabela com Rolagem Interna -->
+            <div class="flex-1 overflow-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200/50 dark:border-navie-border text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <th class="pb-3 pl-2">Item</th>
+                            <th class="pb-3">Categoria</th>
+                            <th class="pb-3 text-center">Mínimo</th>
+                            <th class="pb-3 text-right">Estoque</th>
+                            <th class="pb-3 text-center">Status</th>
+                            <th class="pb-3 text-right pr-2">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-white/5 font-semibold text-slate-700 dark:text-slate-200">
+                        {% for prod in produtos %}
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all">
+                                <!-- Produto Info -->
+                                <td class="py-3 pl-2 flex items-center gap-3">
+                                    {% if prod.imagem %}
+                                        <img src="{{ prod.imagem.url }}" alt="{{ prod.nome }}" class="w-10 h-10 object-cover rounded-xl border border-slate-200/50 dark:border-white/10">
+                                    {% else %}
+                                        <div class="w-10 h-10 bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500 border border-slate-200/50 dark:border-white/10 rounded-xl flex items-center justify-center">
+                                            <i data-lucide="image" class="w-4 h-4"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-900 dark:text-white text-xs">{{ prod.nome }}</span>
+                                        <span class="text-[10px] text-slate-400 mt-0.5">Ref: {{ prod.codigo_barras|default:"Sem cód. barras" }}</span>
+                                    </div>
+                                </td>
+
+                                <!-- Categoria -->
+                                <td class="py-3">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 text-[10px] text-slate-600 dark:text-slate-300 font-bold border border-slate-200/30">
+                                        <i data-lucide="{{ prod.categoria.icone|default:'box' }}" class="w-3.5 h-3.5"></i>
+                                        {{ prod.categoria.nome|default:"Geral" }}
+                                    </span>
+                                </td>
+
+                                <!-- Mínimo -->
+                                <td class="py-3 text-center text-slate-400 dark:text-slate-500 font-mono">
+                                    {{ prod.estoque_minimo|floatformat:1 }} {{ prod.unidade_medida }}
+                                </td>
+
+                                <!-- Estoque Atual -->
+                                <td class="py-3 text-right font-mono font-bold text-xs {% if prod.precisa_reposicao %}text-rose-500 dark:text-rose-400{% else %}text-emerald-500 dark:text-emerald-400{% endif %}">
+                                    {{ prod.estoque_atual|floatformat:1 }} {{ prod.unidade_medida }}
+                                </td>
+
+                                <!-- Status Validade/Aviso -->
+                                <td class="py-3 text-center">
+                                    {% if prod.precisa_reposicao %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 text-[9px] uppercase font-black tracking-wider">Comprar</span>
+                                    {% elif prod.status_validade == 'critico' %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[9px] uppercase font-black tracking-wider" title="Validade Crítica: {{ prod.proxima_validade|date:'d/m/Y' }}">Validade</span>
+                                    {% elif prod.status_validade == 'alerta' %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[9px] uppercase font-black tracking-wider" title="Validade Próxima: {{ prod.proxima_validade|date:'d/m/Y' }}">Validade</span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[9px] uppercase font-black tracking-wider">OK</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Ações -->
+                                <td class="py-3 text-right pr-2">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <!-- Editar -->
+                                        <button hx-get="{% url 'estoque:editar_produto' prod.id %}" 
+                                                hx-target="#modal-container" 
+                                                hx-trigger="click" 
+                                                class="h-7 w-7 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-600 dark:text-white border-none rounded-lg flex items-center justify-center cursor-pointer shadow-sm active:scale-95" 
+                                                title="Editar Produto">
+                                            <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                        </button>
+
+                                        <!-- Excluir -->
+                                        <button hx-post="{% url 'estoque:excluir_produto' prod.id %}" 
+                                                hx-confirm="Tem certeza que deseja remover o produto '{{ prod.nome }}' do almoxarifado?"
+                                                class="h-7 w-7 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border-none rounded-lg flex items-center justify-center cursor-pointer shadow-sm active:scale-95" 
+                                                title="Remover Produto">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                    <i data-lucide="box" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                                    <p>Nenhum produto cadastrado.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Histórico de Movimentações (40%) -->
+        <div class="w-full lg:w-96 bg-white/60 dark:bg-navie-glass border border-slate-200/50 dark:border-navie-border rounded-3xl p-6 flex flex-col min-h-0 shadow-sm backdrop-blur-md">
+            <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4 text-brand"></i>
+                <span>Histórico de Estoque</span>
+            </h2>
+
+            <!-- Timeline com Rolagem Interna -->
+            <div class="flex-1 overflow-auto custom-scrollbar pr-2 space-y-4">
+                {% for mov in movimentos %}
+                    <div class="bg-slate-50/50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-2xl p-4 flex flex-col gap-2 transition-all hover:-translate-y-0.5">
+                        <div class="flex justify-between items-start">
+                            <div class="flex items-center gap-2">
+                                <!-- Ícone de Movimento -->
+                                {% if mov.tipo == 'entrada' %}
+                                    <span class="p-1 rounded-lg bg-emerald-500/10 text-emerald-500">
+                                        <i data-lucide="arrow-down-left" class="w-4 h-4"></i>
+                                    </span>
+                                {% elif mov.tipo == 'saida' %}
+                                    <span class="p-1 rounded-lg bg-amber-500/10 text-amber-500">
+                                        <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                    </span>
+                                {% else %}
+                                    <span class="p-1 rounded-lg bg-blue-500/10 text-blue-500">
+                                        <i data-lucide="sliders" class="w-4 h-4"></i>
+                                    </span>
+                                {% endif %}
+                                <span class="font-bold text-slate-900 dark:text-white text-xs">{{ mov.produto.nome }}</span>
+                            </div>
+                            <!-- Quantidade Movimentada -->
+                            <span class="font-mono font-bold text-xs {% if mov.tipo == 'entrada' %}text-emerald-500{% elif mov.tipo == 'saida' %}text-amber-500{% else %}text-blue-500{% endif %}">
+                                {% if mov.tipo == 'entrada' %}+{% elif mov.tipo == 'saida' %}-{% endif %}{{ mov.quantidade|floatformat:1 }}
+                            </span>
+                        </div>
+
+                        <!-- Detalhes do registro -->
+                        <div class="text-[10px] text-slate-400 dark:text-slate-500 space-y-1">
+                            <p class="font-medium">Ref: {{ mov.referencia|default:"Sem motivo informado" }}</p>
+                            <div class="flex justify-between items-center text-[9px] pt-1 border-t border-slate-200/20 dark:border-white/5">
+                                <span>Por: {{ mov.criado_por.nome_completo|default:mov.criado_por.username|default:"Sistema" }}</span>
+                                <span>{{ mov.criado_em|date:"d/m/Y H:i" }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Ações na Timeline (Reversão / Relançamento) -->
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200/20 dark:border-white/5">
+                            {% if mov.tipo == 'saida' and not mov.reversoes.exists %}
+                                <button hx-post="{% url 'estoque:reverter_movimento' mov.id %}" 
+                                        hx-target="#toast-container" 
+                                        hx-swap="outerHTML"
+                                        class="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-500 border-none rounded-xl text-[10px] font-black uppercase py-2 cursor-pointer transition-all active:scale-95">
+                                    Estornar Saída
+                                </button>
+                            {% endif %}
+                            {% if mov.tipo == 'entrada' and mov.movimento_origem and not mov.reversoes.exists %}
+                                <button hx-post="{% url 'estoque:relancar_movimento' mov.id %}" 
+                                        hx-target="#toast-container" 
+                                        hx-swap="outerHTML"
+                                        class="flex-1 bg-brand/10 hover:bg-brand/20 text-brand border-none rounded-xl text-[10px] font-black uppercase py-2 cursor-pointer transition-all active:scale-95">
+                                    Relançar Saída
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="py-12 text-center text-slate-400 dark:text-slate-500">
+                        <i data-lucide="scroll" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                        <p>Sem movimentações registradas.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SUB-TAB COMPRAS & LOTES ================= -->
+    <div x-show="estoqueTab === 'compras'" class="flex-1 flex flex-col min-h-0">
+        <!-- Modo Lista -->
+        <div x-show="comprasMode === 'list'" class="flex-1 bg-white/60 dark:bg-navie-glass border border-slate-200/50 dark:border-navie-border rounded-3xl p-6 flex flex-col min-h-0 shadow-sm backdrop-blur-md">
+            <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight mb-4 flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-4 h-4 text-brand"></i>
+                <span>Ordens de Compra</span>
+            </h2>
+
+            <!-- Tabela com Rolagem Interna -->
+            <div class="flex-1 overflow-auto custom-scrollbar">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200/50 dark:border-navie-border text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <th class="pb-3 pl-2">Compra ID</th>
+                            <th class="pb-3">Fornecedor</th>
+                            <th class="pb-3">Data Compra</th>
+                            <th class="pb-3 text-right">Valor Total</th>
+                            <th class="pb-3 text-center">Status</th>
+                            <th class="pb-3 text-center">Financeiro (Pago)</th>
+                            <th class="pb-3 text-center">Estoque (Recebido)</th>
+                            <th class="pb-3 text-right pr-2">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compras-table-body" class="divide-y divide-slate-100 dark:divide-white/5 font-semibold text-slate-700 dark:text-slate-200">
+                        {% for compra in compras %}
+                            {% include 'estoque/partials/compra_row.html' %}
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="py-12 text-center text-slate-400 dark:text-slate-500">
+                                    <i data-lucide="shopping-cart" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                                    <p>Nenhuma compra registrada.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modo Formulário Inline -->
+        <div x-show="comprasMode === 'form'" id="compras-form-container" class="flex-1 min-h-0">
+            {% include 'estoque/partials/form_compra.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container OOB para Mensagens HTMX -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+{% endblock %}

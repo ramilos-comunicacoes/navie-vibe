@@ -1,0 +1,1087 @@
+{% load static %}
+
+<style>
+    /* Ocultação local de barras de rolagem */
+    .select-dropdown-container::-webkit-scrollbar {
+        display: none !important;
+    }
+    .select-dropdown-container {
+        -ms-overflow-style: none !important;  
+        scrollbar-width: none !important;  
+    }
+    /* Premium Custom Glassmorphism Input Styling */
+    .modal-input-glass {
+        background: rgba(15, 23, 42, 0.03) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        color: #1e293b !important;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02) !important;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .modal-input-glass:focus {
+        background: rgba(15, 23, 42, 0.01) !important;
+        border-color: var(--brand-color, #eab308) !important;
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.15) !important;
+        transform: translateY(-1px) !important;
+    }
+    .dark .modal-input-glass {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.2) !important;
+    }
+    .dark .modal-input-glass:focus,
+    .dark .modal-input-glass:active,
+    .dark .modal-input-glass:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: var(--brand-color, #eab308) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.2) !important;
+        transform: translateY(-1px) !important;
+    }
+    .modal-input-glass::placeholder {
+        color: rgba(156, 163, 175, 0.6) !important;
+    }
+    .dark .modal-input-glass::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+    /* Premium Custom Glassmorphism Card Container Styling */
+    .modal-card-glass {
+        background: rgba(15, 23, 42, 0.02) !important;
+        border: 1px solid rgba(15, 23, 42, 0.05) !important;
+    }
+    .dark .modal-card-glass {
+        background: rgba(255, 255, 255, 0.02) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Local Glassmorphism Dropdowns */
+    .dropdown-menu-glass {
+        background: rgba(255, 255, 255, 0.95) !important;
+        border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    }
+    .dark .dropdown-menu-glass {
+        background: rgba(20, 20, 25, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3) !important;
+    }
+    .dropdown-item-glass {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-align: left;
+        border: none;
+        background: transparent !important;
+        color: #475569 !important;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+    .dark .dropdown-item-glass {
+        color: #cbd5e1 !important;
+    }
+    .dropdown-item-glass:hover {
+        background: rgba(234, 179, 8, 0.1) !important;
+        color: var(--brand-color, #eab308) !important;
+    }
+    .modal-form-glass {
+        background: rgba(255, 255, 255, 0.75) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    }
+    .dark .modal-form-glass {
+        background: rgba(15, 23, 42, 0.75) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+</style>
+
+<div id="modalReservaFormulario" 
+     x-data="{ 
+         activeGuestTab: 1,
+         selectedCategoriaId: '{% if reserva %}{{ reserva.quarto.categoria.id }}{% else %}{% endif %}',
+         selectedCategoriaNome: '{% if reserva %}{{ reserva.quarto.categoria.nome }} (R$ {{ reserva.quarto.categoria.preco_base|floatformat:2 }}/diária){% else %}Selecione uma Categoria{% endif %}',
+         selectedQuartoId: '{% if reserva %}{{ reserva.quarto.id }}{% else %}{% endif %}',
+         selectedQuartoNumero: '{% if reserva %}Cabana Nº {{ reserva.quarto.numero }}{% else %}Selecione o Quarto{% endif %}',
+         statusReserva: '{% if reserva %}{{ reserva.status }}{% else %}CONFIRMADA{% endif %}',
+         checkin: '{% if submitted_data %}{{ submitted_data.data_checkin }}{% elif reserva %}{{ reserva.data_checkin|date:'Y-m-d' }}{% else %}{% endif %}',
+         horaCheckin: '{% if submitted_data %}{{ submitted_data.hora_checkin }}{% elif reserva %}{{ reserva.hora_checkin|time:'H:i' }}{% else %}14:00{% endif %}',
+         checkout: '{% if submitted_data %}{{ submitted_data.data_checkout }}{% elif reserva %}{{ reserva.data_checkout|date:'Y-m-d' }}{% else %}{% endif %}',
+         horaCheckout: '{% if submitted_data %}{{ submitted_data.hora_checkout }}{% elif reserva %}{{ reserva.hora_checkout|time:'H:i' }}{% else %}12:00{% endif %}',
+         indisponibilidades: {},
+         showCheckinCal: false,
+         showCheckoutCal: false,
+         calMonth: null,
+         calYear: null,
+         monthsList: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+         weekDaysList: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+         valorTotal: '',
+         valorPago: '',
+         maxGuests: {% if reserva %}{{ reserva.quarto.capacidade_maxima }}{% else %}8{% endif %},
+         guestCount: {% if reserva %}{{ reserva.quantidade_hospedes|default:1 }}{% else %}1{% endif %},
+         noites: 1,
+         categorias: [],
+         quartos: [],
+
+         // BRL Currency Helpers
+         initBRL(val) {
+             let num = parseFloat(val);
+             if (isNaN(num)) num = 0;
+             let cents = Math.round(num * 100);
+             this.valorTotal = this.formatBRL(cents.toString());
+             
+             let p = parseFloat('{% if reserva %}{{ reserva.valor_pago|default:0.00|stringformat:".2f" }}{% else %}0.00{% endif %}');
+             if (isNaN(p)) p = 0;
+             this.valorPago = this.formatBRL(Math.round(p * 100).toString());
+         },
+         formatBRL(value) {
+             if (!value) return '0,00';
+             let clean = value.toString().replace(/\D/g, '');
+             if (clean === '') clean = '0';
+             let cents = parseInt(clean, 10);
+             let real = (cents / 100).toFixed(2);
+             let parts = real.split('.');
+             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+             return parts.join(',');
+         },
+         updateBRL(el, field) {
+             let raw = el.value;
+             let formatted = this.formatBRL(raw);
+             if (field === 'total') {
+                 this.valorTotal = formatted;
+                 el.value = this.valorTotal;
+             } else {
+                 this.valorPago = formatted;
+                 el.value = this.valorPago;
+             }
+         },
+
+         // CPF masking helper
+         formatCPF(value) {
+             if (!value) return '';
+             let clean = value.toString().replace(/\D/g, '');
+             clean = clean.substring(0, 11);
+             if (clean.length <= 3) {
+                 return clean;
+             } else if (clean.length <= 6) {
+                 return `${clean.slice(0, 3)}.${clean.slice(3, 6)}`;
+             } else if (clean.length <= 9) {
+                 return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}`;
+             } else {
+                 return `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+             }
+         },
+
+         // Phone masking helper
+         formatPhone(value) {
+             if (!value) return '';
+             let clean = value.toString().replace(/\D/g, '');
+             clean = clean.substring(0, 11);
+             if (clean.length <= 2) {
+                 return clean;
+             } else if (clean.length <= 6) {
+                 return `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+             } else if (clean.length <= 10) {
+                 return `(${clean.slice(0, 2)}) ${clean.slice(2, 6)}-${clean.slice(6)}`;
+             } else {
+                 return `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+             }
+         },
+
+         // Placa masking helper (Mercosul limit: 7 chars)
+         formatPlaca(value) {
+             if (!value) return '';
+             return value.toString().toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 7);
+         },
+
+         // CEP masking and fetching helper
+         formatCEP(value) {
+             if (!value) return '';
+             let clean = value.toString().replace(/\D/g, '');
+             clean = clean.substring(0, 8);
+             if (clean.length <= 5) {
+                 return clean;
+             } else {
+                 return `${clean.slice(0, 5)}-${clean.slice(5)}`;
+             }
+         },
+         async fetchCEP(cepValue, num) {
+             let cleanCEP = cepValue.replace(/\D/g, '');
+             if (cleanCEP.length !== 8) return;
+             
+             try {
+                 const response = await fetch(`https://brasilapi.com.br/api/cep/v1/${cleanCEP}`);
+                 if (!response.ok) throw new Error('CEP não encontrado');
+                 const data = await response.json();
+                 
+                 const street = data.street || '';
+                 const neighborhood = data.neighborhood || '';
+                 const city = data.city || '';
+                 const state = data.state || '';
+                 
+                 let address = '';
+                 if (street) address += street;
+                 if (neighborhood) address += (address ? `, ${neighborhood}` : '');
+                 if (city) address += (address ? `, ${city}` : '');
+                 if (state) address += ` - ${state}`;
+                 
+                 const inputAddress = document.getElementById(`endereco_${num}`);
+                 if (inputAddress) {
+                     inputAddress.value = address;
+                     inputAddress.dispatchEvent(new Event('input'));
+                 }
+             } catch (error) {
+                 console.error('Erro ao buscar CEP:', error);
+             }
+         },
+
+         // Dynamic document upload state & helpers (up to 8 guests!)
+         guestDocs: {
+             1: [
+                 {% for h in hospedes %}{% if h.ordem == 1 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             2: [
+                 {% for h in hospedes %}{% if h.ordem == 2 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             3: [
+                 {% for h in hospedes %}{% if h.ordem == 3 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             4: [
+                 {% for h in hospedes %}{% if h.ordem == 4 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             5: [
+                 {% for h in hospedes %}{% if h.ordem == 5 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             6: [
+                 {% for h in hospedes %}{% if h.ordem == 6 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             7: [
+                 {% for h in hospedes %}{% if h.ordem == 7 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ],
+             8: [
+                 {% for h in hospedes %}{% if h.ordem == 8 %}
+                     {% if h.documento_frente %}{ name: '{{ h.documento_frente.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_frente.url }}', type: '', is_existing: true, field: 'frente' },{% endif %}
+                     {% if h.documento_verso %}{ name: '{{ h.documento_verso.name|escapejs }}'.split('/').pop(), existing_url: '{{ h.documento_verso.url }}', type: '', is_existing: true, field: 'verso' },{% endif %}
+                 {% endif %}{% endfor %}
+             ]
+         },
+         deletedDocs: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [] },
+
+         getFileType(name) {
+             if (!name) return 'other';
+             let ext = name.split('.').pop().toLowerCase();
+             if (ext === 'pdf') return 'pdf';
+             if (['xlsx', 'xls', 'csv'].includes(ext)) return 'excel';
+             if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'svg'].includes(ext)) return 'image';
+             return 'other';
+         },
+         addFiles(event, num) {
+             const files = event.target.files ? Array.from(event.target.files) : Array.from(event.dataTransfer.files);
+             files.forEach(file => {
+                 if (this.guestDocs[num].length < 2) {
+                     this.guestDocs[num].push({
+                         name: file.name,
+                         size: file.size,
+                         type: this.getFileType(file.name),
+                         file: file,
+                         is_existing: false
+                     });
+                 }
+             });
+             this.updateFileInput(num);
+             if (event.target.value) event.target.value = '';
+         },
+         removeFile(idx, num) {
+             const doc = this.guestDocs[num][idx];
+             if (doc.is_existing) {
+                 this.deletedDocs[num].push(doc.field);
+             }
+             this.guestDocs[num].splice(idx, 1);
+             this.updateFileInput(num);
+         },
+         updateFileInput(num) {
+             const input = document.getElementById(`files_input_${num}`);
+             if (!input) return;
+             const dt = new DataTransfer();
+             this.guestDocs[num].forEach(doc => {
+                 if (!doc.is_existing && doc.file) {
+                     dt.items.add(doc.file);
+                 }
+             });
+             input.files = dt.files;
+         },
+
+         // Calendar functions
+         initCalendar(dateVal) {
+             let d = dateVal ? new Date(dateVal + 'T00:00:00') : new Date();
+             this.calMonth = d.getMonth();
+             this.calYear = d.getFullYear();
+         },
+         prevMonth() {
+             if (this.calMonth === 0) {
+                 this.calMonth = 11;
+                 this.calYear--;
+             } else {
+                 this.calMonth--;
+             }
+         },
+         nextMonth() {
+             if (this.calMonth === 11) {
+                 this.calMonth = 0;
+                 this.calYear++;
+             } else {
+                 this.calMonth++;
+             }
+         },
+         getDaysGrid(type) {
+             let days = [];
+             let firstDay = new Date(this.calYear, this.calMonth, 1);
+             let lastDay = new Date(this.calYear, this.calMonth + 1, 0);
+             
+             let prevMonthLastDay = new Date(this.calYear, this.calMonth, 0).getDate();
+             let startingDayOfWeek = firstDay.getDay(); 
+             
+             for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                 let dayNum = prevMonthLastDay - i;
+                 let m = this.calMonth === 0 ? 11 : this.calMonth - 1;
+                 let y = this.calMonth === 0 ? this.calYear - 1 : this.calYear;
+                 let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${dayNum.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: dayNum,
+                     isCurrentMonth: false,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             
+             let totalDays = lastDay.getDate();
+             for (let i = 1; i <= totalDays; i++) {
+                 let dateStr = `${this.calYear}-${(this.calMonth+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: i,
+                     isCurrentMonth: true,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             
+             let remaining = 42 - days.length;
+             for (let i = 1; i <= remaining; i++) {
+                 let m = this.calMonth === 11 ? 0 : this.calMonth + 1;
+                 let y = this.calMonth === 11 ? this.calYear + 1 : this.calYear;
+                 let dateStr = `${y}-${(m+1).toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`;
+                 days.push({
+                     dayNum: i,
+                     isCurrentMonth: false,
+                     dateStr: dateStr,
+                     isAvailable: this.checkDateAvailable(dateStr, type)
+                 });
+             }
+             return days;
+         },
+         checkDateAvailable(dateStr, type) {
+             if (type === 'checkout' && this.checkin && new Date(dateStr + 'T00:00:00') <= new Date(this.checkin + 'T00:00:00')) {
+                 return false;
+             }
+             if (!this.selectedQuartoId) return true;
+             let list = this.indisponibilidades[this.selectedQuartoId] || [];
+             return !list.includes(dateStr);
+         },
+         selectDate(dateStr, type) {
+             if (!this.checkDateAvailable(dateStr, type)) return;
+             if (type === 'checkin') {
+                 this.checkin = dateStr;
+                 this.showCheckinCal = false;
+                 if (this.checkout && new Date(this.checkout + 'T00:00:00') <= new Date(dateStr + 'T00:00:00')) {
+                     this.checkout = '';
+                 }
+             } else {
+                 this.checkout = dateStr;
+                 this.showCheckoutCal = false;
+             }
+         },
+         formatDateBR(dateStr) {
+             if (!dateStr) return '';
+             let parts = dateStr.split('-');
+             return `${parts[2]}/${parts[1]}/${parts[0]}`;
+         },
+
+         init() {
+             this.categorias = JSON.parse(this.$el.dataset.categorias);
+             this.quartos = JSON.parse(this.$el.dataset.quartos);
+             this.indisponibilidades = JSON.parse(this.$el.dataset.indisponibilidades || '{}');
+
+             [1, 2, 3, 4, 5, 6, 7, 8].forEach(num => {
+                 if (this.guestDocs[num]) {
+                     this.guestDocs[num].forEach(d => {
+                          if (d.is_existing) d.type = this.getFileType(d.name);
+                     });
+                 }
+             });
+
+              this.initBRL('{% if not reserva %}0.00{% else %}{{ reserva.valor_total|default:0.00|stringformat:".2f" }}{% endif %}');
+             this.calcularNoitesETotal();
+             
+             this.$watch('selectedCategoriaId', value => {
+                 let cat = this.categorias.find(c => c.id == value);
+                 if (cat) {
+                      this.selectedCategoriaNome = cat.nome + ' (R$ ' + new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2}).format(cat.preco_base) + '/diária)';
+                     this.maxGuests = 8; 
+                     this.guestCount = Math.min(8, cat.capacidade);
+                 } else {
+                     this.selectedCategoriaNome = 'Selecione uma Categoria';
+                 }
+                 
+                 let q = this.quartos.find(item => item.id == this.selectedQuartoId);
+                 if (q && q.categoria_id != value) {
+                     this.selectedQuartoId = '';
+                     this.selectedQuartoNumero = 'Selecione o Quarto';
+                 }
+                 this.calcularNoitesETotal();
+             });
+
+             this.$watch('selectedQuartoId', value => {
+                 let q = this.quartos.find(item => item.id == value);
+                 if (q) {
+                     this.selectedQuartoNumero = 'Cabana Nº ' + q.numero;
+                     this.maxGuests = 8; 
+                     this.guestCount = Math.min(8, q.capacidade_maxima);
+                     this.selectedCategoriaId = q.categoria_id;
+                 } else {
+                     this.selectedQuartoNumero = 'Selecione o Quarto';
+                 }
+                 this.calcularNoitesETotal();
+             });
+
+             this.$watch('checkin', () => this.calcularNoitesETotal());
+             this.$watch('checkout', () => this.calcularNoitesETotal());
+         },
+
+         calcularNoitesETotal() {
+             if (this.checkin && this.checkout) {
+                 let d1 = new Date(this.checkin + 'T00:00:00');
+                 let d2 = new Date(this.checkout + 'T00:00:00');
+                 let diff = d2 - d1;
+                 this.noites = Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24)));
+             } else {
+                 this.noites = 1;
+             }
+
+             {% if not reserva %}
+             let cat = this.categorias.find(c => c.id == this.selectedCategoriaId);
+             if (cat) {
+                 let precoDiaria = cat.preco_base;
+                 let subtotal = precoDiaria * this.noites;
+                 let total = subtotal;
+                 this.initBRL(total.toFixed(2));
+             }
+             {% endif %}
+         }
+     }"
+     data-categorias="{{ categorias_json }}"
+     data-quartos="{{ quartos_json }}"
+     data-indisponibilidades="{{ indisponibilidades_json }}"
+     class="fixed inset-0 flex items-center justify-center select-none p-1 sm:p-4" style="z-index: 99999;">
+    
+    <!-- Background overlay -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300 pointer-events-auto" onclick="document.getElementById('modal-container').innerHTML = '';"></div>
+    
+    <!-- Panel (Full width on mobile, max-width on desktop) -->
+    <div class="relative modal-form-glass w-full max-w-2xl rounded-2xl sm:rounded-[2.5rem] shadow-2xl flex flex-col max-h-[96vh] mx-0 sm:mx-4 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto" id="modalReservaFormPanel">
+        
+        <!-- Header -->
+        <div class="px-4 sm:px-6 pt-5 pb-3 border-b border-slate-100 dark:border-white/5 bg-slate-50/40 dark:bg-slate-950/20 rounded-t-2xl sm:rounded-t-[2.5rem] shrink-0">
+            <div class="flex justify-between items-center gap-4">
+                <div class="flex-shrink-0 text-left">
+                    <h3 class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider mt-1 flex items-center gap-1.5 pr-2">
+                        <span class="flex items-center text-brand shrink-0 pr-0.5" style="pointer-events:none;"><i data-lucide="{% if not reserva %}calendar-plus{% else %}calendar-days{% endif %}" class="w-4 h-4"></i></span>
+                        <span class="truncate">{% if not reserva %}Manual Nova Reserva{% else %}Reserva #{{ reserva.id|slice:":8"|upper }}{% endif %}</span>
+                    </h3>
+                </div>
+                
+                <!-- Contained Guest Tab Switcher Carousel -->
+                <div class="flex-1 min-w-0 max-w-[340px] bg-slate-100 dark:bg-white/5 p-0.5 rounded-2xl border border-slate-200/50 dark:border-white/5 overflow-x-auto select-none no-scrollbar flex items-center gap-1">
+                    <template x-for="i in Array.from({length: guestCount}, (_, i) => i + 1)">
+                        <button type="button" @click="activeGuestTab = i"
+                                :class="activeGuestTab === i ? 'bg-brand text-white shadow-sm font-black' : 'text-slate-500 dark:text-slate-450 hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
+                                class="px-3.5 py-1.5 rounded-xl text-[9px] transition-all uppercase tracking-wider shrink-0 select-none cursor-pointer border-none font-bold">
+                            <span x-text="i === 1 ? 'Hóspede 1' : 'Hóspede ' + i"></span>
+                        </button>
+                    </template>
+                </div>
+                
+                <button type="button" onclick="document.getElementById('modal-container').innerHTML = '';" class="p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer shrink-0">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Form HTML -->
+        <form hx-post="{% url 'sistema:partner_reserva_salvar' %}" 
+              hx-target="#modal-container"
+              hx-swap="innerHTML"
+              hx-encoding="multipart/form-data"
+              class="flex flex-col flex-1 overflow-hidden">
+            {% csrf_token %}
+            {% if reserva %}
+                <input type="hidden" name="reserva_id" value="{{ reserva.id }}">
+            {% endif %}
+
+            <!-- Body (Spacious lateral margins on mobile) -->
+            <div class="p-4 sm:p-6 overflow-y-auto no-scrollbar flex-1 space-y-5 bg-transparent text-slate-700 dark:text-slate-200">
+                
+                {% if error_message %}
+                <div class="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl flex items-start gap-3 text-left">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-650 shrink-0"></i>
+                    <span class="text-xs font-semibold text-red-600 dark:text-red-400">{{ error_message }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Acomodação & Estadia Card (Conditional Hide, visible only in Guest 1) -->
+                <div x-show="activeGuestTab === 1" class="p-5 rounded-3xl modal-card-glass space-y-4 text-left">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Informações de Acomodação & Estadia</h4>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Categoria Customizada (Glass Menu) -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Categoria de Acomodação</label>
+                            <div class="relative" x-data="{ openCat: false }" @click.outside="openCat = false">
+                                <button type="button" @click="openCat = !openCat"
+                                        class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                    <span x-text="selectedCategoriaNome" class="truncate text-left"></span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openCat ? 'rotate-180' : ''"></i>
+                                </button>
+                                <input type="hidden" name="categoria" :value="selectedCategoriaId" required>
+                                
+                                <div x-show="openCat" x-transition
+                                     class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[120]"
+                                     style="display: none;">
+                                    <div class="p-1.5 space-y-1 select-dropdown-container">
+                                        <template x-for="cat in categorias" :key="cat.id">
+                                            <button type="button" @click="selectedCategoriaId = cat.id; openCat = false;"
+                                                    :class="selectedCategoriaId == cat.id ? 'bg-brand/10 text-brand font-black' : ''"
+                                                    class="dropdown-item-glass">
+                                                 <span x-text="cat.nome + ' (R$ ' + new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2}).format(cat.preco_base) + '/diária)'"></span>
+                                                <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="selectedCategoriaId == cat.id"></i>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quarto Físico Customizado (Glass Menu) -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Cabana / Quarto Físico</label>
+                            <div class="relative" x-data="{ openQuarto: false }" @click.outside="openQuarto = false">
+                                <button type="button" @click="openQuarto = !openQuarto"
+                                        class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                    <span x-text="selectedQuartoNumero" class="truncate text-left"></span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openQuarto ? 'rotate-180' : ''"></i>
+                                </button>
+                                <input type="hidden" name="quarto" :value="selectedQuartoId" required>
+                                
+                                <div x-show="openQuarto" x-transition
+                                     class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[120]"
+                                     style="display: none;">
+                                    <div class="p-1.5 space-y-1 select-dropdown-container">
+                                        <template x-for="q in quartos" :key="q.id">
+                                            <template x-if="q.categoria_id == selectedCategoriaId">
+                                                <button type="button" @click="selectedQuartoId = q.id; openQuarto = false;"
+                                                        :class="selectedQuartoId == q.id ? 'bg-brand/10 text-brand font-black' : ''"
+                                                        class="dropdown-item-glass">
+                                                    <span x-text="'Cabana Nº ' + q.numero + ' (' + q.status + ')'"></span>
+                                                    <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="selectedQuartoId == q.id"></i>
+                                                </button>
+                                            </template>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Data Entrada -->
+                        <div class="relative" @click.outside="showCheckinCal = false">
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Check-in (Data de Entrada)</label>
+                            <input type="text" :value="formatDateBR(checkin)" required placeholder="DD/MM/AAAA" readonly
+                                   @click="initCalendar(checkin); showCheckinCal = !showCheckinCal; showCheckoutCal = false;"
+                                   class="modal-input-glass w-full rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                            <input type="hidden" name="data_checkin" :value="checkin">
+                            
+                            <!-- Custom Calendar Popup -->
+                            <div x-show="showCheckinCal" x-transition
+                                 class="absolute left-0 right-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                                 style="display: none;">
+                                <!-- Calendar Header -->
+                                <div class="flex items-center justify-between mb-3 px-1">
+                                    <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                    </button>
+                                    <span class="font-extrabold text-slate-850 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                                    <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                </div>
+                                <!-- Week Days -->
+                                <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                                    <template x-for="day in weekDaysList">
+                                        <span x-text="day"></span>
+                                    </template>
+                                </div>
+                                <!-- Days Grid -->
+                                <div class="grid grid-cols-7 gap-1 text-center">
+                                    <template x-for="day in getDaysGrid('checkin')" :key="day.dateStr">
+                                        <button type="button" @click.stop="selectDate(day.dateStr, 'checkin')"
+                                                :disabled="!day.isAvailable"
+                                                :class="{
+                                                    'bg-brand text-white font-black': checkin === day.dateStr,
+                                                    'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': checkin !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                                    'text-slate-350 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                                    'opacity-25 text-slate-450 dark:text-slate-650 line-through cursor-not-allowed': !day.isAvailable
+                                                }"
+                                                class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                                            <span x-text="day.dayNum"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Horário Entrada -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Check-in (Horário)</label>
+                            <input type="time" name="hora_checkin" x-model="horaCheckin" required
+                                   class="modal-input-glass w-full rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Data Saída -->
+                        <div class="relative" @click.outside="showCheckoutCal = false">
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Checkout (Data de Saída)</label>
+                            <input type="text" :value="formatDateBR(checkout)" required placeholder="DD/MM/AAAA" readonly
+                                   @click="initCalendar(checkout); showCheckoutCal = !showCheckoutCal; showCheckinCal = false;"
+                                   class="modal-input-glass w-full rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                            <input type="hidden" name="data_checkout" :value="checkout">
+                            
+                            <!-- Custom Calendar Popup -->
+                            <div x-show="showCheckoutCal" x-transition
+                                 class="absolute left-0 right-0 mt-1.5 p-3 rounded-2xl dropdown-menu-glass shadow-xl z-[999] text-xs select-none"
+                                 style="display: none;">
+                                <!-- Calendar Header -->
+                                <div class="flex items-center justify-between mb-3 px-1">
+                                    <button type="button" @click.stop="prevMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+                                    </button>
+                                    <span class="font-extrabold text-slate-850 dark:text-white" x-text="monthsList[calMonth] + ' ' + calYear"></span>
+                                    <button type="button" @click.stop="nextMonth()" class="p-1 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer text-slate-550 dark:text-slate-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                </div>
+                                <!-- Week Days -->
+                                <div class="grid grid-cols-7 gap-1 text-center font-black text-[9px] text-slate-400 uppercase mb-2">
+                                    <template x-for="day in weekDaysList">
+                                        <span x-text="day"></span>
+                                    </template>
+                                </div>
+                                <!-- Days Grid -->
+                                <div class="grid grid-cols-7 gap-1 text-center">
+                                    <template x-for="day in getDaysGrid('checkout')" :key="day.dateStr">
+                                        <button type="button" @click.stop="selectDate(day.dateStr, 'checkout')"
+                                                :disabled="!day.isAvailable"
+                                                :class="{
+                                                    'bg-brand text-white font-black': checkout === day.dateStr,
+                                                    'text-slate-800 dark:text-white hover:bg-brand/10 dark:hover:bg-white/10': checkout !== day.dateStr && day.isCurrentMonth && day.isAvailable,
+                                                    'text-slate-350 dark:text-slate-500': !day.isCurrentMonth && day.isAvailable,
+                                                    'opacity-25 text-slate-450 dark:text-slate-650 line-through cursor-not-allowed': !day.isAvailable
+                                                }"
+                                                class="h-7 w-full rounded-lg text-[10px] flex items-center justify-center cursor-pointer border-none bg-transparent font-semibold transition-all">
+                                            <span x-text="day.dayNum"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Horário Saída -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-450 uppercase tracking-wider mb-1.5 px-1">Checkout (Horário)</label>
+                            <input type="time" name="hora_checkout" x-model="horaCheckout" required
+                                   class="modal-input-glass w-full rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <!-- Quantidade de Hóspedes (Permite aumentar livremente até 8 hóspedes) -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Qtd Hóspedes</label>
+                            <div x-data="{ openGuests: false }" class="relative w-full">
+                                <button type="button" @click="openGuests = !openGuests"
+                                        class="flex items-center justify-between gap-3 w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white cursor-pointer select-none">
+                                    <span x-text="guestCount === 1 ? '1 Hóspede' : guestCount + ' Hóspedes'" class="truncate text-left"></span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200" :class="openGuests ? 'rotate-180' : ''"></i>
+                                </button>
+                                <div x-show="openGuests" @click.away="openGuests = false"
+                                     x-transition
+                                     class="dropdown-menu-glass absolute left-0 mt-1.5 w-full max-h-48 overflow-y-auto no-scrollbar z-[120]"
+                                     style="display: none;">
+                                    <div class="p-1 space-y-0.5 select-dropdown-container">
+                                        <template x-for="val in [1, 2, 3, 4, 5, 6, 7, 8]">
+                                            <button type="button" 
+                                                    @click="guestCount = val; openGuests = false"
+                                                    :class="guestCount === val ? 'bg-brand/10 text-brand font-black' : ''"
+                                                    class="dropdown-item-glass">
+                                                <span x-text="val === 1 ? '1 Hóspede' : val + ' Hóspedes'"></span>
+                                                <i data-lucide="check" class="w-3.5 h-3.5 text-brand shrink-0" x-show="guestCount === val"></i>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="quantidade_hospedes" :value="guestCount">
+                            </div>
+                        </div>
+                        
+                        <!-- Valor Total Cobrado (BRL) -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Valor Total Cobrado (R$)</label>
+                            <input type="text" name="valor_total" :value="valorTotal" @input="updateBRL($event.target, 'total')" required placeholder="0,00"
+                                   class="w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                        </div>
+                        
+                        <!-- Valor Pago (BRL) -->
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Valor Já Pago (R$)</label>
+                            <input type="text" name="valor_pago" :value="valorPago" @input="updateBRL($event.target, 'pago')" required placeholder="0,00"
+                                   class="w-full modal-input-glass rounded-xl px-4 py-3 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- Hidden Input for operational status choice -->
+                    <input type="hidden" name="status" :value="statusReserva">
+
+                    <!-- Informativo de Estadia -->
+                    <div class="bg-brand/5 dark:bg-white/3 p-4 rounded-2xl border border-brand/10 dark:border-white/5 text-xs flex items-center justify-between text-slate-650 dark:text-slate-300">
+                        <span class="font-bold">Período de Permanência Estimado:</span>
+                        <span class="font-black text-brand dark:text-white" x-text="noites + ' noite(s)'"></span>
+                    </div>
+                </div>
+
+                <!-- Formulários dos Hóspedes (Loops 1 to 8 based on capacity) -->
+                <div>
+                    <div class="space-y-4">
+                        {% for i in "12345678"|make_list %}
+                            {% with num=forloop.counter %}
+                                <div x-show="activeGuestTab === {{ num }}" class="space-y-5 animate-in fade-in duration-200 text-left">
+                                    
+                                    <!-- Campos Pessoais FNRH -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="col-span-2">
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Nome Completo {% if num == 1 %}*{% endif %}</label>
+                                            <input type="text" name="hospede_nome_{{ num }}" id="nome_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.nome }}{% elif reserva %}{{ reserva.hospede_nome }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.nome }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-semibold" 
+                                                   placeholder="Nome do hóspede" {% if num == 1 %}required{% endif %} />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">CPF {% if num == 1 %}*{% endif %}</label>
+                                            <input type="text" name="hospede_cpf_{{ num }}" id="cpf_{{ num }}"
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.cpf }}{% elif reserva %}{{ reserva.hospede_cpf }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.cpf }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-mono" 
+                                                   placeholder="000.000.000-00"
+                                                   x-init="$el.value = formatCPF($el.value)"
+                                                   @input="$event.target.value = formatCPF($event.target.value)" {% if num == 1 %}required{% endif %} />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Telefone {% if num == 1 %}*{% endif %}</label>
+                                            <input type="text" name="hospede_telefone_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.telefone }}{% elif reserva %}{{ reserva.hospede_telefone }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.telefone }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-semibold text-slate-800 dark:text-white" 
+                                                   x-init="$el.value = formatPhone($el.value)"
+                                                   @input="$event.target.value = formatPhone($event.target.value)" {% if num == 1 %}required{% endif %} />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">E-mail {% if num == 1 %}*{% endif %}</label>
+                                            <input type="email" name="hospede_email_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.email }}{% elif reserva %}{{ reserva.hospede_email }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.email }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-semibold text-slate-800 dark:text-white" 
+                                                   placeholder="cliente@email.com" {% if num == 1 %}required{% endif %} />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Identidade (RG)</label>
+                                            <input type="text" name="hospede_rg_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.rg }}{% elif reserva %}{{ reserva.hospede_rg }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.rg }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none" 
+                                                   placeholder="RG do hóspede" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Nacionalidade</label>
+                                            <input type="text" name="hospede_nacionalidade_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.nacionalidade }}{% elif reserva %}{{ reserva.hospede_nacionalidade }}{% else %}Brasileira{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.nacionalidade }}{% else %}Brasileira{% endif %}{% empty %}Brasileira{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none" 
+                                                   placeholder="Ex: Brasileira" />
+                                        </div>
+                                        <div>
+                                            <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Profissão</label>
+                                            <input type="text" name="hospede_profissao_{{ num }}" 
+                                                   value="{% if num == 1 %}{% if titular %}{{ titular.profissao }}{% elif reserva %}{{ reserva.hospede_profissao }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.profissao }}{% endif %}{% endfor %}{% endif %}"
+                                                   class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none" 
+                                                   placeholder="Profissão do hóspede" />
+                                        </div>
+                                        
+                                        <!-- CEP & Endereço Completo -->
+                                        <div class="col-span-2 grid grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                                    CEP <span class="text-[7px] text-brand lowercase font-normal italic">(busca CEP)</span>
+                                                </label>
+                                                <input type="text" name="cep_{{ num }}" id="cep_{{ num }}"
+                                                       class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-bold" 
+                                                       placeholder="00000-000"
+                                                       x-init="$el.value = formatCEP($el.value)"
+                                                       @input="$event.target.value = formatCEP($event.target.value); if($event.target.value.replace(/\D/g, '').length === 8) fetchCEP($event.target.value, {{ num }})" />
+                                            </div>
+                                            <div class="col-span-2">
+                                                <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Endereço Completo</label>
+                                                <input type="text" id="endereco_{{ num }}" name="hospede_endereco_{{ num }}"
+                                                       value="{% if num == 1 %}{% if titular %}{{ titular.endereco }}{% elif reserva %}{{ reserva.hospede_endereco }}{% endif %}{% else %}{% for ac in acompanhantes %}{% if ac.ordem == num %}{{ ac.endereco }}{% endif %}{% endfor %}{% endif %}"
+                                                       class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs focus:outline-none font-semibold text-slate-800 dark:text-white" 
+                                                       placeholder="Rua, Bairro, Cidade - UF" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Upload Reativo de Múltiplos Documentos com Botão e Grade Quadrada -->
+                                    <div class="pt-4 border-t border-slate-100 dark:border-white/5 space-y-3">
+                                        <div class="flex items-center gap-1.5">
+                                            <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                                            <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Documentos de Identificação (Frente & Verso)</h5>
+                                        </div>
+                                        
+                                        <div class="space-y-3">
+                                            <!-- Full-width visual upload button -->
+                                            <div class="relative w-full">
+                                                <button type="button" class="w-full py-3.5 rounded-2xl bg-brand/10 border border-brand/20 hover:bg-brand/15 text-brand font-black text-[9px] uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 cursor-pointer border-none" onclick="document.getElementById('files_input_{{ num }}').click()">
+                                                    <i data-lucide="plus" class="w-4 h-4"></i> Adicionar arquivo
+                                                </button>
+                                                <input type="file" name="documentos_{{ num }}" multiple :id="'files_input_' + {{ num }}" x-on:change="addFiles($event, {{ num }})" class="hidden" />
+                                            </div>
+                                            
+                                            <!-- Dynamic Squared Document Cards (Desktop: 4x4, Mobile: 2x2) -->
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                                                <template x-for="(doc, idx) in guestDocs[{{ num }}]" :key="idx">
+                                                    <div :class="{
+                                                        'bg-red-500/5 border-red-500/25 text-red-600 dark:text-red-400': doc.type === 'pdf',
+                                                        'bg-green-500/5 border-green-500/25 text-green-600 dark:text-green-400': doc.type === 'excel',
+                                                        'bg-purple-500/5 border-purple-500/25 text-purple-600 dark:text-purple-400': doc.type === 'image',
+                                                        'bg-blue-500/5 border-blue-500/25 text-blue-600 dark:text-blue-400': doc.type === 'other'
+                                                    }" class="relative p-3 rounded-2xl border flex flex-col items-center justify-center text-center gap-2 aspect-square transition-all overflow-hidden select-none">
+                                                        <!-- Absolute trash button -->
+                                                        <button type="button" @click="removeFile(idx, {{ num }})" class="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer shrink-0">
+                                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        </button>
+                                                        
+                                                        <!-- Icon -->
+                                                        <template x-if="doc.type === 'pdf'">
+                                                            <i data-lucide="file-text" class="w-7 h-7 text-red-500 shrink-0"></i>
+                                                        </template>
+                                                        <template x-if="doc.type === 'image'">
+                                                            <i data-lucide="image" class="w-7 h-7 text-purple-500 shrink-0"></i>
+                                                        </template>
+                                                        <template x-if="doc.type !== 'pdf' && doc.type !== 'image'">
+                                                            <i data-lucide="file" class="w-7 h-7 text-blue-500 shrink-0"></i>
+                                                        </template>
+                                                        
+                                                        <!-- Filename -->
+                                                        <span x-text="doc.name" class="text-[9px] font-extrabold truncate w-full px-1 text-slate-700 dark:text-slate-200"></span>
+                                                        
+                                                        <!-- External link if existing -->
+                                                        <template x-if="doc.is_existing">
+                                                            <a :href="doc.existing_url" target="_blank" class="text-[8px] uppercase tracking-wider text-brand font-black hover:underline mt-0.5 pointer-events-auto">
+                                                                Visualizar
+                                                            </a>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            
+                                            <!-- Fallback if empty -->
+                                            <div x-show="!guestDocs[{{ num }}] || guestDocs[{{ num }}].length === 0" class="flex items-center justify-center h-20 text-[10px] text-slate-450 dark:text-slate-500 bg-slate-50/50 dark:bg-white/3 rounded-2xl border border-slate-100 dark:border-white/5 select-none">
+                                                Nenhum documento anexado
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <input type="hidden" name="delete_doc_frente_{{ num }}" :value="deletedDocs[{{ num }}].includes('frente') ? 'true' : 'false'">
+                                    <input type="hidden" name="delete_doc_verso_{{ num }}" :value="deletedDocs[{{ num }}].includes('verso') ? 'true' : 'false'">
+                                    
+                                    <!-- Seção Veículo (Exclusivo Hóspede 1 Titular) -->
+                                    {% if num == 1 %}
+                                        <div class="pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+                                            <div class="flex items-center gap-1.5">
+                                                <i data-lucide="car" class="w-4 h-4 text-slate-400"></i>
+                                                <h5 class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Controle de Garagem & Estacionamento (Opcional)</h5>
+                                            </div>
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 modal-card-glass p-5 rounded-3xl">
+                                                <div>
+                                                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Placa</label>
+                                                    <input type="text" name="veiculo_placa" value="{{ veiculo.placa|default:'' }}" placeholder="ABC1D23" 
+                                                           class="w-full h-10 px-3 rounded-xl modal-input-glass text-xs font-bold focus:outline-none uppercase" 
+                                                           x-init="$el.value = formatPlaca($el.value)"
+                                                           @input="$event.target.value = formatPlaca($event.target.value)" maxlength="10" />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Modelo / Marca</label>
+                                                    <input type="text" name="veiculo_modelo" value="{{ veiculo.modelo|default:'' }}" placeholder="Ex: Corolla" class="w-full h-10 px-3 rounded-xl modal-input-glass text-xs focus:outline-none font-semibold text-slate-800 dark:text-white" />
+                                                </div>
+                                                <div>
+                                                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Cor</label>
+                                                    <input type="text" name="veiculo_cor" value="{{ veiculo.cor|default:'' }}" placeholder="Ex: Preto" class="w-full h-10 px-3 rounded-xl modal-input-glass text-xs focus:outline-none font-semibold text-slate-800 dark:text-white" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <!-- HISTÓRICO DE AUDITORIA & LOGS (Mostrado sob Hóspede 1) -->
+                                    {% if num == 1 and reserva and logs %}
+                                    <div class="pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+                                        <div class="flex items-center gap-1.5">
+                                            <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                                            <h4 class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Histórico de Auditoria & Logs</h4>
+                                        </div>
+                                        
+                                        <div class="max-h-40 overflow-y-auto no-scrollbar pr-1 space-y-3">
+                                            {% for log in logs %}
+                                            <div class="relative pl-6 pb-2 last:pb-0 border-l border-slate-200 dark:border-white/10 text-left">
+                                                <!-- Marker -->
+                                                <div class="absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full border border-white dark:border-slate-900 bg-brand shadow-sm"></div>
+                                                
+                                                <div class="flex items-start justify-between gap-4">
+                                                    <div>
+                                                        <p class="text-[10px] font-black text-slate-700 dark:text-slate-200">
+                                                            {% if log.acao == 'checkin' %}Confirmou Check-in
+                                                            {% elif log.acao == 'checkout' %}Confirmou Check-out
+                                                            {% elif log.acao == 'desmarcar_checkin' %}Estornou Check-in
+                                                            {% elif log.acao == 'desmarcar_checkout' %}Estornou Check-out
+                                                            {% elif log.acao == 'cancelar' %}Cancelou Reserva
+                                                            {% else %}Salvou/Editou Reserva{% endif %}
+                                                        </p>
+                                                        <p class="text-[9px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{{ log.detalhes }}</p>
+                                                    </div>
+                                                    <div class="text-right shrink-0">
+                                                        <span class="text-[8px] font-bold text-slate-400 dark:text-slate-500">{{ log.criado_em|date:"d/m H:i" }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Actions (Premium live checkin/checkout buttons row) -->
+            <div class="flex gap-2.5 p-4 sm:p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/40 dark:bg-slate-950/20 rounded-b-2xl sm:rounded-b-[2.5rem] shrink-0 select-none">
+                <!-- Cancel / Fechar -->
+                <button type="button" 
+                        onclick="document.getElementById('modal-container').innerHTML = '';"
+                        class="px-5 py-3.5 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-slate-200 font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer">
+                    Fechar
+                </button>
+                
+                <!-- Save Lançamento -->
+                <button type="submit" 
+                        class="flex-1 py-3.5 rounded-2xl bg-brand hover:scale-[1.01] active:scale-[0.99] text-brand-text font-black text-[9px] uppercase tracking-widest shadow-lg shadow-brand/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer border-none outline-none">
+                    <i data-lucide="check" class="w-4 h-4" style="color: var(--brand-text) !important;"></i> Salvar Lançamento
+                </button>
+
+                <!-- Check-in and Check-out operational live actions -->
+                {% if reserva %}
+                    <!-- Check-in Toggle Button -->
+                    <button type="button" 
+                            hx-post="{% url 'sistema:partner_reserva_checkin' reserva.id %}"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML"
+                            @click="statusReserva = (statusReserva === 'HOSPEDADO' || statusReserva === 'FINALIZADA') ? 'CONFIRMADA' : 'HOSPEDADO'"
+                            :class="(statusReserva === 'HOSPEDADO' || statusReserva === 'FINALIZADA')
+                                ? 'py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1.5 border-none outline-none'
+                                : 'py-3.5 px-4 rounded-2xl border border-emerald-500/30 text-emerald-600 dark:text-emerald-450 hover:bg-emerald-500/10 font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1.5 outline-none bg-transparent'">
+                        <span class="flex items-center gap-1.5" x-show="statusReserva === 'HOSPEDADO' || statusReserva === 'FINALIZADA'">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-white"></i> Check-in Ativo
+                        </span>
+                        <span class="flex items-center gap-1.5" x-show="statusReserva !== 'HOSPEDADO' && statusReserva !== 'FINALIZADA'">
+                            <i data-lucide="circle" class="w-3.5 h-3.5"></i> Fazer Check-in
+                        </span>
+                    </button>
+
+                    <!-- Check-out Toggle Button -->
+                    <button type="button" 
+                            hx-post="{% url 'sistema:partner_reserva_checkout' reserva.id %}"
+                            hx-target="#modal-container"
+                            hx-swap="innerHTML"
+                            @click="statusReserva = (statusReserva === 'FINALIZADA') ? 'HOSPEDADO' : 'FINALIZADA'"
+                            :class="(statusReserva === 'FINALIZADA')
+                                ? 'py-3.5 px-4 rounded-2xl bg-indigo-650 hover:bg-indigo-700 text-white font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1.5 border-none outline-none'
+                                : 'py-3.5 px-4 rounded-2xl border border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 font-black text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1.5 outline-none bg-transparent'">
+                        <span class="flex items-center gap-1.5" x-show="statusReserva === 'FINALIZADA'">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-white"></i> Checkout Ativo
+                        </span>
+                        <span class="flex items-center gap-1.5" x-show="statusReserva !== 'FINALIZADA'">
+                            <i data-lucide="circle" class="w-3.5 h-3.5"></i> Fazer Checkout
+                        </span>
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    if(typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+
+{% if trigger_grid_update %}
+<script>
+    const filtro = document.getElementById('filtro-periodo');
+    if (filtro) {
+        htmx.trigger(filtro, 'change');
+    }
+</script>
+{% endif %}

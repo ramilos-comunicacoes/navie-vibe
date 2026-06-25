@@ -1,5 +1,7 @@
 <!-- Airbnb Style Card -->
-<a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}" class="group flex flex-col w-full bg-transparent transition-all duration-300 cursor-pointer"
+<a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' quarto.hotel.id quarto.slug %}{% endif %}" 
+   hx-boost="true" hx-target="body" hx-swap="outerHTML"
+   class="group flex flex-col w-full bg-transparent transition-all duration-300 cursor-pointer"
      data-ai-titulo="{{ quarto.seo_titulo|default:quarto.nome }}"
      data-ai-descricao="{{ quarto.seo_descricao|default:quarto.descricao }}">
     
@@ -35,6 +37,14 @@
     
     <!-- Corpo do Card (Sem bordas, tipografia clean otimizada para grids menores) -->
     <div class="flex flex-col gap-0.5 px-0.5">
+        <!-- Nome do Hotel (se mostrar_hotel for True) -->
+        {% if mostrar_hotel %}
+        <span class="text-[9px] font-black uppercase tracking-wider text-action-secundario flex items-center gap-1 mb-0.5 truncate" title="{{ quarto.hotel.nome }}">
+            <i data-lucide="map-pin" class="w-2.5 h-2.5 shrink-0"></i>
+            {{ quarto.hotel.nome }}
+        </span>
+        {% endif %}
+        
         <h4 class="font-display font-extrabold text-sm sm:text-base text-gray-900 truncate" title="{{ quarto.nome }}">{{ quarto.nome }}</h4>
         
         <p class="text-xs text-gray-500 truncate" title="{{ quarto.descricao|striptags }}">{{ quarto.descricao|striptags|truncatechars:50 }}</p>

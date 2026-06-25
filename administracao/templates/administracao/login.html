@@ -152,17 +152,17 @@
                 <form action="" method="post" id="login-form">
                     {% csrf_token %}
                     <div class="partner-form-group">
-                        <label class="partner-label" for="id_username">Usuário</label>
+                        <label class="partner-label" for="id_navie_username">Usuário</label>
                         <div class="partner-input-wrapper">
                             <i data-lucide="user" class="partner-input-icon"></i>
-                            <input type="text" name="username" id="id_username" class="partner-input-field" placeholder="Digite seu usuário mestre" required autofocus>
+                            <input type="text" name="navie_username" id="id_navie_username" class="partner-input-field" placeholder="Digite seu usuário mestre" autocomplete="off" data-lpignore="true" required autofocus>
                         </div>
                     </div>
                     <div class="partner-form-group" style="margin-bottom: 2rem;">
-                        <label class="partner-label" for="id_password">Senha</label>
+                        <label class="partner-label" for="id_navie_password">Senha</label>
                         <div class="partner-input-wrapper">
                             <i data-lucide="lock" class="partner-input-icon"></i>
-                            <input type="password" name="password" id="id_password" class="partner-input-field" placeholder="Digite sua senha de acesso" required>
+                            <input type="password" name="navie_password" id="id_navie_password" class="partner-input-field" placeholder="Digite sua senha de acesso" autocomplete="off" data-lpignore="true" required>
                         </div>
                         <input type="hidden" name="next" value="{{ next }}">
                     </div>

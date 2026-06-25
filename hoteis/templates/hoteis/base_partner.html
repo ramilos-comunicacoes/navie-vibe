@@ -373,6 +373,38 @@ x-data="{
             appearance: textfield !important;
         }
 
+        /* --- Color Picker Premium styling --- */
+        input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 0.85rem;
+            width: 100%;
+            height: 100%;
+            display: block;
+            box-sizing: border-box;
+        }
+        input[type="color"]::-moz-color-swatch {
+            border: none;
+            border-radius: 0.85rem;
+            width: 100%;
+            height: 100%;
+            display: block;
+            box-sizing: border-box;
+        }
+
         /* Estilização para selects nativos de forma unificada */
         select {
             appearance: none !important;
@@ -450,14 +482,14 @@ x-data="{
         .badge-manutencao { background-color: rgba(239, 68, 68, 0.15); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3); }
 
         /* Dynamic smart B2B contrast-safety color overrides */
-        .bg-brand, [class*="bg-brand"]:not([class*="bg-brand-"]):not([class*="-bg-brand"]) {
+        .bg-brand, [class*="bg-brand"]:not([class*="bg-brand-"]):not([class*="-bg-brand"]):not([class*="bg-brand/"]) {
             background-color: var(--brand-color) !important;
             color: var(--brand-text) !important;
         }
         .bg-brand svg, .bg-brand i, .bg-brand span, .bg-brand h1, .bg-brand h2, .bg-brand h3, .bg-brand h4 {
             color: var(--brand-text) !important;
         }
-        .text-brand, [class*="text-brand"]:not([class*="text-brand-"]):not([class*="-text-brand"]) {
+        .text-brand, [class*="text-brand"]:not([class*="text-brand-"]):not([class*="-text-brand"]):not([class*="text-brand/"]) {
             color: var(--brand-color-burned) !important;
         }
         .text-brand svg, .text-brand i {
@@ -543,6 +575,17 @@ x-data="{
     <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Previne tela branca e flicker ao recarregar a página) -->
     <script>
         (function() {
+            // Sincroniza abas a partir de parâmetros na URL (tab e config_tab)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTab = urlParams.get('tab');
+            const urlConfigTab = urlParams.get('config_tab');
+            if (urlTab) {
+                localStorage.setItem('partner_active_tab', urlTab);
+            }
+            if (urlConfigTab) {
+                localStorage.setItem('partner_config_tab', urlConfigTab);
+            }
+
             const theme = localStorage.getItem('theme');
             const isDark = theme === 'glass' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
@@ -840,7 +883,8 @@ x-data="{
                 <button @click="sidebarMobileOpen = !sidebarMobileOpen" class="md:hidden text-slate-500 dark:text-navie-textsec hover:text-brand transition-colors">
                     <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="menu" class="w-6 h-6"></i></span>
                 </button>
-                <div class="hidden md:flex flex-col">
+                
+                <div class="hidden md:flex flex-col" x-show="activeTab !== 'configuracoes'">
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
                         <span x-show="activeTab === 'financeiro'">Financeiro</span>
@@ -864,6 +908,7 @@ x-data="{
                         <span x-show="activeTab === 'limpeza'">Quartos para Higienizar</span>
                         <span x-show="activeTab === 'manutencao'">Ordens de Serviço Ativas</span>
                         <span x-show="activeTab === 'configuracoes' && configTab === 'site'">Vitrine & Configurações do Site</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'">Configurações Gerais do Grupo</span>
                         <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'">Plano & Assinatura SaaS</span>
                     </h1>
                     <!-- Subtítulo Dinâmico do Cabeçalho (Ocultado no Mobile para manter respiro) -->
@@ -889,7 +934,30 @@ x-data="{
                         <span x-show="activeTab === 'limpeza'">Cronograma de limpeza do dia pós check-out</span>
                         <span x-show="activeTab === 'manutencao'">Manutenções preventivas e corretivas dos quartos</span>
                         <span x-show="activeTab === 'configuracoes' && configTab === 'site'">Personalização visual, branding, contatos e geolocalização do seu hotel</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'">Personalização visual, logotipo, banner e slogan da rede unificada do grupo</span>
                     </div>
+                </div>
+
+                <!-- Alternador Site / Geral / Assinatura (Desktop apenas, alinhado à esquerda) -->
+                <div class="hidden md:flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner" 
+                     x-show="activeTab === 'configuracoes'" x-transition.opacity style="display: none;">
+                    {% if hotel.empresa and hotel.empresa.modalidade_portal == 'unificado' %}
+                    <button type="button" @click="configTab = 'geral'"
+                            :class="configTab === 'geral' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold' : 'text-slate-500 dark:text-navie-textsec'" 
+                            class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 font-bold">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="globe" class="w-3.5 h-3.5"></i></span> Geral (Grupo)
+                    </button>
+                    {% endif %}
+                    <button type="button" @click="configTab = 'site'"
+                            :class="configTab === 'site' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold' : 'text-slate-500 dark:text-navie-textsec'" 
+                            class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 font-bold">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="monitor" class="w-3.5 h-3.5"></i></span> Vitrine / Site
+                    </button>
+                    <button type="button" @click="configTab = 'assinatura'"
+                            :class="configTab === 'assinatura' ? 'bg-white dark:bg-white/10 text-brand shadow-sm font-bold' : 'text-slate-500 dark:text-navie-textsec'" 
+                            class="px-3.5 py-1.5 rounded-xl text-xs transition-all flex items-center gap-1.5 font-bold">
+                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="credit-card" class="w-3.5 h-3.5"></i></span> Plano / Assinatura
+                    </button>
                 </div>
             </div>
 
@@ -898,6 +966,46 @@ x-data="{
                 <div id="header_actions_area" class="flex items-center gap-4 flex-1 justify-end">
                     {% block header_actions %}{% endblock %}
                 </div>
+
+                {% if request.hoteis_autorizados %}
+                    <!-- Alternador de Pousadas Premium (Custom Dropdown) -->
+                    <div x-data="{ open: false }" class="relative z-[90]">
+                        <button @click="open = !open" @click.outside="open = false" 
+                                class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white px-3 h-9 rounded-full transition-colors items-center gap-2 text-xs font-medium shadow-sm dark:shadow-none">
+                            <span class="flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="building" class="w-3.5 h-3.5"></i></span>
+                            <span class="truncate max-w-[120px]" x-text="activeTab === 'configuracoes' && configTab === 'geral' ? 'Geral (Grupo)' : '{{ hotel.nome }}'">{{ hotel.nome }}</span>
+                            <span class="flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="chevron-down" class="w-3 h-3"></i></span>
+                        </button>
+                        
+                        <div x-show="open" x-transition.opacity style="display: none;"
+                             class="absolute left-0 right-0 mt-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-navie-border shadow-xl p-1 flex flex-col gap-1 z-[99]">
+                            {% for h in request.hoteis_autorizados %}
+                                <a href="?set_hotel={{ h.id }}" @click="configTab = 'site'"
+                                   class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-colors"
+                                   :class="(activeTab === 'configuracoes' && configTab === 'geral') ? 'text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand dark:hover:text-white' : ('{{ h.id }}' == '{{ hotel.id }}' ? 'text-brand bg-brand-50/80 dark:bg-white/10 dark:text-white' : 'text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand dark:hover:text-white')">
+                                    <span class="truncate text-left">{{ h.nome }}</span>
+                                    {% if h.id == hotel.id %}
+                                        <span x-show="!(activeTab === 'configuracoes' && configTab === 'geral')" class="flex items-center justify-center text-brand dark:text-white shrink-0"><i data-lucide="check" class="w-3 h-3"></i></span>
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                            
+                            {% if hotel.empresa and hotel.empresa.modalidade_portal == 'unificado' %}
+                                <div class="h-px bg-slate-100 dark:bg-white/5 my-1"></div>
+                                <button type="button" @click="activeTab = 'configuracoes'; configTab = 'geral'; open = false;"
+                                   class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-colors text-left w-full focus:outline-none"
+                                   :class="(activeTab === 'configuracoes' && configTab === 'geral') ? 'text-brand bg-brand-50/80 dark:bg-white/10 dark:text-white' : 'text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand dark:hover:text-white'">
+                                    <span class="truncate text-left">Geral (Grupo)</span>
+                                    <span x-show="activeTab === 'configuracoes' && configTab === 'geral'" class="flex items-center justify-center text-brand dark:text-white shrink-0">
+                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </span>
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
 
                 <div class="w-px h-6 bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
 

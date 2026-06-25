@@ -21,6 +21,7 @@ urlpatterns = [
     path('hospedagens/atividades/deletar/<int:tarefa_id>/', views.partner_deletar_tarefa, name='partner_deletar_tarefa'),
     path('hospedagens/atividades/mudar-status/<int:tarefa_id>/', views.partner_mudar_status_tarefa, name='partner_mudar_status_tarefa'),
     path('hospedagens/configuracoes/salvar/', views.partner_salvar_configuracoes, name='partner_salvar_configuracoes'),
+    path('hospedagens/configuracoes/geral/salvar/', views.partner_salvar_configuracoes_geral, name='partner_salvar_configuracoes_geral'),
     
     # Gestão de Quartos (Reativa via HTMX)
     path('hospedagens/quartos/formulario/', views.partner_quarto_formulario, name='partner_quarto_formulario'),
@@ -52,9 +53,19 @@ urlpatterns = [
     path('hospedagens/hospedes/pedido/<int:pedido_id>/status/', views.partner_hospedes_atualizar_status, name='partner_hospedes_atualizar_status'),
     path('hospedagens/hospedes/reserva/<uuid:reserva_id>/lancar/', views.partner_hospedes_lancar_consumo, name='partner_hospedes_lancar_consumo'),
     
+    # Gestão de Seções Modulares (CMS do Anfitrião)
+    path('hospedagens/secoes/destaques/salvar/', views.partner_secao_destaques_salvar, name='partner_secao_destaques_salvar'),
+    path('hospedagens/secoes/salvar/', views.partner_secao_salvar, name='partner_secao_salvar'),
+    path('hospedagens/secoes/salvar/<int:secao_id>/', views.partner_secao_salvar, name='partner_secao_salvar'),
+    path('hospedagens/secoes/deletar/<int:secao_id>/', views.partner_secao_deletar, name='partner_secao_deletar'),
+    path('hospedagens/secoes/itens/salvar/', views.partner_secao_item_salvar, name='partner_secao_item_salvar'),
+    path('hospedagens/secoes/itens/salvar/<int:item_id>/', views.partner_secao_item_salvar, name='partner_secao_item_salvar'),
+    path('hospedagens/secoes/itens/deletar/<int:item_id>/', views.partner_secao_item_deletar, name='partner_secao_item_deletar'),
+    
     path('cidade/<slug:cidade_slug>/', views.cidade_detalhe, name='cidade_detalhe'),
     path('api/hotel/verificar-subdominio/', views.api_verificar_subdominio, name='verificar_subdominio'),
     path('api/hotel/<int:hotel_id>/buscar-quartos/', views.api_buscar_quartos, name='api_buscar_quartos'),
+    path('api/empresa/<int:empresa_id>/buscar-quartos/', views.api_buscar_quartos_grupo, name='api_buscar_quartos_grupo'),
     path('acomodacao/<slug:quarto_slug>/', views.quarto_detalhe_subdomain, name='quarto_detalhe_subdomain'),
     path('teste-404/', views.teste_404, name='teste_404'),
     path('<slug:slug>/', views.vanity_url, name='vanity_url'),

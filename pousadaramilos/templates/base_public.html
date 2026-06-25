@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Pousadas Ramilos | Serra, Sertão e Praia{% endblock %}</title>
+    
+    <!-- Ícone de Atalho (Favicon Sem Fundo) -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo_white.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/logo_white.png' %}">
+    
+    <!-- Estilos de Fontes Locais (Poppins e Inter) -->
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 300;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-400.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-400.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 550;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-500.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Inter';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Inter-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-700.woff2' %}") format('woff2');
+        }
+        @font-face {
+            font-family: 'Poppins';
+            font-style: normal;
+            font-weight: 900;
+            font-display: swap;
+            src: url("{% static 'fonts/Poppins-900.woff2' %}") format('woff2');
+        }
+    </style>
+
+    <!-- Bibliotecas Locais (Alta Performance) -->
+    <script src="{% static 'vendor/tailwind.js' %}"></script>
+    <script src="{% static 'vendor/htmx.min.js' %}"></script>
+    <script src="{% static 'vendor/alpine.min.js' %}" defer></script>
+    <script src="{% static 'vendor/lucide.min.js' %}"></script>
+    
+    <!-- Flatpickr Local -->
+    <link rel="stylesheet" href="{% static 'vendor/flatpickr/flatpickr.min.css' %}">
+    <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'vendor/flatpickr/pt.js' %}"></script>
+
+    <script>
+        // Configuração do Tailwind para o Site Público (Amarelo, Marrom e Branco)
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        ramiros: {
+                            // Amarelo Principal do Site
+                            yellow: {
+                                DEFAULT: '#fbbf24', // Amber/Yellow principal
+                                light: '#fef08a',
+                                hover: '#f59e0b',
+                            },
+                            // Marrom Elegante para contrastes e textos nobres
+                            brown: {
+                                DEFAULT: '#451a03', // Marrom escuro luxo
+                                light: '#78350f',
+                                soft: '#b45309',
+                                warmBg: '#fefdfb', // warm luxurious off-white background
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fefdfb;
+            color: #451a03;
+            font-family: 'Inter', sans-serif;
+        }
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+        [x-cloak] { display: none !important; }
+
+        /* ============================================================
+           ESTILOS GLOBAIS: Inputs, Selects e Textareas do Site Público
+           Aplica bordas arredondadas, fonte e paleta Ramiros para
+           qualquer elemento nativo de formulário em qualquer página.
+        ============================================================ */
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+        select,
+        textarea {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 700;
+            font-size: 0.75rem; /* text-xs */
+            color: #451a03; /* ramiros-brown */
+            background-color: #f8fafc; /* slate-50 */
+            border: 1.5px solid #e2e8f0; /* slate-200 */
+            border-radius: 1rem; /* rounded-2xl */
+            padding: 0.625rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+        select:focus,
+        textarea:focus {
+            border-color: #fbbf24; /* ramiros-yellow */
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+        }
+
+        /* Select: ícone de seta customizado com a cor da marca */
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23451a03' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.875rem center;
+            background-size: 0.85rem;
+            padding-right: 2.5rem;
+            cursor: pointer;
+        }
+
+        /* Placeholder com cor discreta */
+        input::placeholder,
+        textarea::placeholder {
+            color: #94a3b8; /* slate-400 */
+            font-weight: 600;
+        }
+
+        /* Exceção: elementos dentro da barra de busca do hero
+           mantêm o visual transparente que já foi definido inline */
+        #search-pousada,
+        #search-dates {
+            background-color: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #451a03;
+        }
+        #search-pousada:focus,
+        #search-dates:focus {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* ============================================================
+           MOBILE: Botão "Reservar Agora" no cabeçalho
+           Garante que o texto não quebre e não vaze para fora do botão
+        ============================================================ */
+        @media (max-width: 640px) {
+            .btn-reservar-agora {
+                padding: 0.5rem 0.875rem !important;
+                font-size: 0.65rem !important;
+                letter-spacing: 0.04em !important;
+                white-space: nowrap !important;
+                max-width: 130px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between selection:bg-ramiros-yellow selection:text-ramiros-brown">
+
+    <!-- CABEÇALHO FLUTUANTE DINÂMICO (Transparente -> Amarelo no Scroll) -->
+    <header 
+        x-data="{ scrolled: {% if solid_header %}true{% else %}false{% endif %} }"
+        @scroll.window="if (!{% if solid_header %}true{% else %}false{% endif %}) scrolled = window.scrollY > 50"
+        :class="scrolled ? 'bg-ramiros-yellow shadow-md py-3 text-ramiros-brown border-b border-ramiros-yellow-hover/10' : 'bg-transparent py-5 text-white'"
+        class="fixed top-0 left-0 w-full z-50 transition-all duration-300 select-none"
+    >
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <!-- Logo com troca dinâmica de cor de acordo com o scroll -->
+            <a href="{% url 'website:home' %}" class="flex items-center gap-2">
+                <!-- Se scrolled=true: Usa a logo com fundo amarelo ou marrom. Se false: Usa a logo branca sem fundo -->
+                <img :src="scrolled ? '{% static 'images/logo_yellow.png' %}' : '{% static 'images/logo_white.png' %}'" 
+                     alt="Pousadas Ramilos" 
+                     class="h-12 sm:h-14 w-auto object-contain transition-all duration-300">
+            </a>
+
+            <!-- Menu de Navegação - Desktop -->
+            <nav class="hidden md:flex items-center gap-8 font-bold text-xs uppercase tracking-wider">
+                <a href="#experiencias" :class="scrolled ? 'hover:text-ramiros-brown-light' : 'hover:text-ramiros-yellow'" class="transition-colors">Experiências</a>
+                <a href="#unidades" :class="scrolled ? 'hover:text-ramiros-brown-light' : 'hover:text-ramiros-yellow'" class="transition-colors">Nossas Pousadas</a>
+                <a href="#quartos" :class="scrolled ? 'hover:text-ramiros-brown-light' : 'hover:text-ramiros-yellow'" class="transition-colors">Acomodações</a>
+            </nav>
+
+            <!-- Ações Rápida (Botão de Venda e Botão de Gaveta Mobile) -->
+            <div class="flex items-center gap-3">
+                <!-- Shopping Cart Icon/Badge (Sempre Visível) -->
+                <button type="button" 
+                        onclick="toggleNavieCart()"
+                        :class="scrolled ? 'text-ramiros-brown hover:text-ramiros-brown-light bg-ramiros-brown/10' : 'text-white hover:text-ramiros-yellow bg-white/10'"
+                        class="w-[33px] h-[33px] sm:w-[37px] sm:h-[37px] rounded-full relative transition-all border-none cursor-pointer flex items-center justify-center shrink-0"
+                        title="Ver meu carrinho de compras">
+                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                    {% if carrinho %}
+                    <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center animate-bounce leading-none">1</span>
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- RODAPÉ ROBUSTO (Marrom Escuro Luxo com detalhes em Amarelo/Branco) -->
+    <footer class="bg-ramiros-brown text-white/90 pt-16 pb-8 select-none relative z-10 border-t-4 border-ramiros-yellow">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
+            <!-- Coluna 1: Logo e Descrição -->
+            <div class="space-y-4 md:col-span-2">
+                <img src="{% static 'images/logo_white.png' %}" alt="Pousadas Ramilos" class="h-14 w-auto object-contain">
+                <p class="text-xs text-white/60 leading-relaxed max-w-sm">
+                    Descubra o aconchego ideal para sua viagem. Gerenciamos três unidades exclusivas na Serra, no Sertão e na Praia, oferecendo sofisticação, simplicidade e hospitalidade única.
+                </p>
+                <div class="flex items-center gap-3 text-ramiros-yellow pt-2">
+                    <a href="#" class="hover:text-white transition-colors p-1.5 bg-white/5 rounded-full"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+                    <a href="#" class="hover:text-white transition-colors p-1.5 bg-white/5 rounded-full"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+                    <a href="#" class="hover:text-white transition-colors p-1.5 bg-white/5 rounded-full"><i data-lucide="youtube" class="w-4 h-4"></i></a>
+                </div>
+            </div>
+
+            <!-- Coluna 2: Unidades -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-black uppercase tracking-wider text-ramiros-yellow">Nossas Unidades</h4>
+                <ul class="space-y-2 text-xs text-white/70">
+                    <li><a href="#" class="hover:text-white transition-colors">Pousada Serra - Tianguá (Serra)</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Pousada Luís Correia (Praia)</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Pousada Ramilos Sertão (Sertão)</a></li>
+                </ul>
+            </div>
+            
+            <!-- Coluna 3: Links Úteis e Acesso Administrativo -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-black uppercase tracking-wider text-ramiros-yellow">Links Úteis</h4>
+                <ul class="space-y-2 text-xs text-white/70">
+                    <li><a href="#" class="hover:text-white transition-colors">Políticas de Cancelamento</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Sobre Nós</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Fale Conosco</a></li>
+                    
+                    <!-- LINK AO SISTEMA OPERACIONAL INTERNO PMS -->
+                    <li class="pt-2 border-t border-white/5">
+                        <a href="{% url 'sistema:dashboard' %}" class="inline-flex items-center gap-1.5 text-ramiros-yellow hover:text-white transition-colors font-bold">
+                            <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                            <span>Painel do Parceiro (Sistema)</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="max-w-7xl mx-auto px-6 mt-16 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-white/40 font-bold uppercase tracking-wider">
+            <span>© 2026 Pousadas Ramilos. Todos os direitos reservados.</span>
+            <span>Desenvolvido com sofisticação monolítica</span>
+        </div>
+    </footer>
+
+    <!-- INCLUSÃO DOS TEMPLATES DO CARRINHO E FNRH -->
+    {% include 'partials/carrinho_overlay.html' %}
+    {% include 'partials/modal_dados_hospede.html' %}
+
+    <!-- Inicialização dos Ícones Lucide -->
+    <script>
+        function handleReservarClick(categoriaId, slug) {
+            const datesInput = document.getElementById('search-dates');
+            if (datesInput) {
+                if (typeof adicionarAoCarrinho === 'function') {
+                    adicionarAoCarrinho(categoriaId);
+                }
+            } else {
+                window.location.href = `/quartos/` + slug + `/`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

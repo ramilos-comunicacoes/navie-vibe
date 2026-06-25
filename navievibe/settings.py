@@ -16,6 +16,16 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Carregar variáveis do arquivo .env local, se existir
+env_file = BASE_DIR / '.env'
+if env_file.exists():
+    with open(env_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, val = line.split('=', 1)
+                os.environ[key.strip()] = val.strip()
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -73,6 +83,7 @@ MIDDLEWARE = [
     'core.middleware.SubdomainMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'hoteis.middleware.PartnerHotelMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Requisito para allauth
@@ -236,6 +247,8 @@ USE_I18N = True
 
 USE_TZ = True
 
+USE_THOUSAND_SEPARATOR = True
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -261,10 +274,21 @@ GOOGLE_API_KEY = "AIzaSyDnaMUm_EFwesiaLTYw823UaN-IbXoLo5k"
 
 
 # Integração Oficial Mercado Pago (Checkout Transparente)
-MERCADOPAGO_PUBLIC_KEY = 'APP_USR-358bd3a8-e2f0-4e9d-b2fd-9e4a673b09a2'
-MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-4287188570193981-052909-e4fdb78128da8bdc840b1d95a9e9d141-3435684980'
+MERCADOPAGO_PUBLIC_KEY = os.environ.get('MERCADOPAGO_PUBLIC_KEY', 'APP_USR-358bd3a8-e2f0-4e9d-b2fd-9e4a673b09a2')
+MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-4287188570193981-052909-e4fdb78128da8bdc840b1d95a9e9d141-3435684980')
 
 # Evita colisão de sessão quando rodando outros projetos Django em localhost em portas diferentes
 SESSION_COOKIE_NAME = 'navievibe_sessionid'
+
+# Redireciona usuários não autenticados para a tela de login customizada do cliente B2C
+LOGIN_URL = 'clientes:login_cadastro'
+
+# Configurações de Segurança para Produção (HTTPS atrás de Proxy Nginx)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = '.navievibe.com'
+
+
 
 

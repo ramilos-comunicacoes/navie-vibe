@@ -132,6 +132,24 @@
         justify-content: space-between;
         min-height: 200px;
     }
+
+    /* Swiper customized styles for lodging banner */
+    .hotel-card-swiper .swiper-pagination-bullet {
+        background: rgba(255, 255, 255, 0.7) !important;
+        opacity: 0.5 !important;
+        transition: all 0.3s ease;
+    }
+    .hotel-card-swiper .swiper-pagination-bullet-active {
+        background: #ffffff !important;
+        opacity: 1 !important;
+        width: 12px !important;
+        border-radius: 4px !important;
+    }
+    .hotel-card-swiper .swiper-button-prev,
+    .hotel-card-swiper .swiper-button-next {
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+    }
 </style>
 {% endblock %}
 
@@ -222,18 +240,46 @@
             {% for item in hoteis %}
             <article class="lodging-card flex flex-col justify-between">
                 <div>
-                    <!-- Imagem / Banner -->
-                    <div class="lodging-banner">
-                        {% if item.object.banner %}
-                        <img src="{{ item.object.banner.url }}" alt="{{ item.object.nome }}" loading="lazy">
-                        {% else %}
-                        <div class="w-full h-full bg-slate-200 flex items-center justify-center">
-                            <i data-lucide="image" class="w-12 h-12 text-slate-400"></i>
+                    <!-- Imagem / Banner (Carrossel Swiper se houver imagens na galeria) -->
+                    <div class="lodging-banner relative overflow-hidden group">
+                        {% if item.object.imagens.all %}
+                        <!-- Swiper Container -->
+                        <div class="swiper-container hotel-card-swiper w-full h-full">
+                            <div class="swiper-wrapper">
+                                <!-- Banner principal como primeiro slide -->
+                                {% if item.object.banner %}
+                                <div class="swiper-slide">
+                                    <img src="{{ item.object.banner.url }}" alt="{{ item.object.nome }}" class="w-full h-full object-cover" loading="lazy">
+                                </div>
+                                {% endif %}
+                                <!-- Imagens da Galeria -->
+                                {% for img in item.object.imagens.all %}
+                                <div class="swiper-slide">
+                                    <img src="{{ img.url_imagem.url }}" alt="{{ item.object.nome }}" class="w-full h-full object-cover" loading="lazy">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <div class="swiper-pagination !bottom-2 !left-1/2 !-translate-x-1/2"></div>
+                            
+                            <!-- Arrow Controls (only visible on hover) -->
+                            <button type="button" class="swiper-button-prev !w-6 !h-6 !bg-black/40 hover:!bg-black/60 !text-white !rounded-full !after:text-[8px] opacity-0 group-hover:opacity-100 transition-opacity !left-2 border-none cursor-pointer"></button>
+                            <button type="button" class="swiper-button-next !w-6 !h-6 !bg-black/40 hover:!bg-black/60 !text-white !rounded-full !after:text-[8px] opacity-0 group-hover:opacity-100 transition-opacity !right-2 border-none cursor-pointer"></button>
                         </div>
+                        {% else %}
+                            <!-- Single Image fallback -->
+                            {% if item.object.banner %}
+                            <img src="{{ item.object.banner.url }}" alt="{{ item.object.nome }}" class="w-full h-full object-cover" loading="lazy">
+                            {% else %}
+                            <div class="w-full h-full bg-slate-200 flex items-center justify-center">
+                                <i data-lucide="image" class="w-12 h-12 text-slate-400"></i>
+                            </div>
+                            {% endif %}
                         {% endif %}
                         
                         <!-- Badge Tipo -->
-                        <div class="absolute top-4 left-4">
+                        <div class="absolute top-4 left-4 z-10">
                             <span class="type-badge badge-{{ item.tipo }} font-bold shadow-sm">{{ item.tipo_label }}</span>
                         </div>
                     </div>
@@ -288,4 +334,31 @@
     </section>
 
 </main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Swipers for all hotel cards
+        document.querySelectorAll('.hotel-card-swiper').forEach(function(el) {
+            new Swiper(el, {
+                loop: true,
+                spaceBetween: 0,
+                effect: 'slide',
+                autoplay: {
+                    delay: 4000,
+                    disableOnInteraction: true,
+                },
+                pagination: {
+                    el: el.querySelector('.swiper-pagination'),
+                    clickable: true,
+                },
+                navigation: {
+                    nextEl: el.querySelector('.swiper-button-next'),
+                    prevEl: el.querySelector('.swiper-button-prev'),
+                },
+            });
+        });
+    });
+</script>
 {% endblock %}

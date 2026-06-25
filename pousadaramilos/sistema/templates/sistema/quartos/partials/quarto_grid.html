@@ -1,0 +1,98 @@
+<!-- Mensagens do Django (Notificações Flutuantes de Sucesso/Alerta no Grid) -->
+{% if messages %}
+    <div class="space-y-2 animate-in fade-in duration-300 mb-6">
+        {% for message in messages %}
+            <div class="p-4 rounded-xl text-xs font-semibold flex items-center gap-2 border
+                {% if 'success' in message.tags %}bg-green-500/10 text-green-600 border-green-500/20
+                {% else %}bg-amber-500/10 text-amber-600 border-amber-500/20{% endif %}">
+                <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mt-6 animate-in fade-in duration-300">
+    {% for q in categorias %}
+    <div class="group bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-navie-border rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-brand/40 dark:hover:border-brand/40 transition-all duration-300 flex flex-col justify-between">
+        
+        <!-- Bloco Superior -->
+        <div class="flex gap-4 p-4 text-left">
+            <!-- Miniatura da Imagem de Capa -->
+            <div class="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 dark:bg-white/5 shrink-0 border border-slate-100 dark:border-white/5">
+                <img src="{% if q.imagens.all %}{{ q.imagens.first.url_imagem.url }}{% else %}https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&auto=format&fit=crop&q=60{% endif %}" 
+                     alt="{{ q.nome }}"
+                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                
+                <!-- Badge de Contadores de Mídia -->
+                <div class="absolute bottom-1 right-1 flex items-center gap-1 bg-black/75 backdrop-blur-sm text-[8px] font-bold text-white px-1.5 py-0.5 rounded-lg border border-white/5">
+                    <span class="flex items-center gap-0.5"><i data-lucide="image" class="w-2.5 h-2.5"></i>{{ q.imagens.count }}</span>
+                    <span class="w-[0.5px] h-1.5 bg-white/20"></span>
+                    <span class="flex items-center gap-0.5"><i data-lucide="video" class="w-2.5 h-2.5"></i>{% if q.video_url %}1{% else %}0{% endif %}</span>
+                </div>
+            </div>
+
+            <!-- Dados da Acomodação -->
+            <div class="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                <div>
+                    <h5 class="font-bold text-slate-800 dark:text-white text-xs sm:text-sm truncate group-hover:text-brand transition-colors duration-200">{{ q.nome }}</h5>
+                    <p class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-350 leading-snug line-clamp-2 mt-1">{{ q.descricao|striptags }}</p>
+                </div>
+                <div class="flex items-baseline gap-1 mt-1.5">
+                    <span class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">diária</span>
+                    <span class="text-xs sm:text-sm font-black text-brand">R$ {{ q.preco_base }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ações -->
+        <div class="px-4 pb-4">
+            <hr class="border-slate-100 dark:border-white/5 mb-2.5">
+            <div class="flex gap-2">
+                <!-- Editar -->
+                <button hx-get="{% url 'sistema:partner_quarto_formulario' q.id %}" hx-target="#quartos-container" hx-swap="innerHTML"
+                        class="flex-1 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 border border-slate-100 dark:border-white/5 hover:scale-[1.02] active:scale-98 cursor-pointer">
+                    <i data-lucide="pencil" class="w-3 h-3 text-brand"></i>
+                    <span>Editar</span>
+                </button>
+                <!-- Excluir -->
+                <button type="button" 
+                        @click="$dispatch('open-delete-modal', { url: '{% url 'sistema:partner_quarto_deletar' q.id %}', name: '{{ q.nome }}' })"
+                        class="flex-1 bg-red-500/5 hover:bg-red-500/10 text-red-500 py-1.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 border border-red-500/10 hover:scale-[1.02] active:scale-98 cursor-pointer select-none">
+                    <i data-lucide="trash" class="w-3 h-3"></i>
+                    <span>Excluir</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 glass-card rounded-3xl select-none">
+        <span class="inline-flex p-4 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 mb-3"><i data-lucide="bed" class="w-6 h-6"></i></span>
+        <p class="text-sm font-bold text-slate-700 dark:text-slate-350">Nenhuma categoria de acomodação cadastrada para esta pousada.</p>
+        <p class="text-xs text-slate-400 mt-1">Utilize o botão acima para cadastrar a primeira.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Troca fora de fluxo (HTMX Out-of-Band) para re-injetar os botões de cabeçalho superiores -->
+<div style="display: none;" hx-swap-oob="innerHTML:#header_actions_area">
+    <div class="flex items-center gap-3 animate-in fade-in duration-300">
+        <button hx-get="{% url 'sistema:partner_quarto_formulario' %}" hx-target="#quartos-container" hx-swap="innerHTML"
+                class="bg-brand hover:bg-brand-burned text-brand-text px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md flex items-center justify-center gap-1.5 hover:scale-[1.02] cursor-pointer">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Adicionar Quarto</span>
+        </button>
+    </div>
+</div>
+
+<!-- Troca fora de fluxo (HTMX Out-of-Band) para restaurar o título do cabeçalho da listagem -->
+<div style="display: none;" hx-swap-oob="innerHTML:#header_title_area">
+    <div class="flex flex-col justify-center">
+        <h1 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white tracking-tight uppercase leading-none">
+            Categorias de Acomodação
+        </h1>
+        <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-tight mt-0.5 hidden sm:inline-block leading-none">
+            Gerencie quartos e diárias.
+        </span>
+    </div>
+</div>

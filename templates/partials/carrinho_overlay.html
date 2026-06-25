@@ -225,7 +225,7 @@
 </div>
 
 <!-- Modal de Login Seguro para Checkout (B2C Flat Opaque) -->
-<div id="cartLoginModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 transition-opacity duration-300 opacity-0 pointer-events-none">
+<div id="cartLoginModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 transition-opacity duration-300 opacity-0 pointer-events-none hidden">
     <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 max-w-md w-full mx-4 relative shadow-2xl transition-transform duration-300 scale-95 border border-slate-100 dark:border-slate-800" id="cartLoginModalContent">
         <!-- Botão Fechar -->
         <button onclick="closeCartLoginModal()" class="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer transition-all border border-slate-100 dark:border-slate-800">
@@ -303,6 +303,9 @@
     function abrirLoginModal() {
         const modal = document.getElementById('cartLoginModal');
         const content = document.getElementById('cartLoginModalContent');
+        modal.classList.remove('hidden');
+        // Force reflow for CSS transition to trigger correctly
+        modal.offsetHeight;
         modal.classList.remove('opacity-0', 'pointer-events-none');
         modal.classList.add('opacity-100');
         content.classList.remove('scale-95');
@@ -319,6 +322,12 @@
         modal.classList.add('opacity-0', 'pointer-events-none');
         content.classList.remove('scale-100');
         content.classList.add('scale-95');
+        // Add hidden class after fade-out transition completes (300ms)
+        setTimeout(() => {
+            if (modal.classList.contains('opacity-0')) {
+                modal.classList.add('hidden');
+            }
+        }, 300);
     }
 
     async function submitCartLogin(e) {

@@ -1,12 +1,13 @@
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import User
 from core.models import Empresa
-from hoteis.models import Local, Hotel, Quarto, UnidadeQuarto, ParceiroUsuario, Reserva
+from hoteis.models import Local, Hotel, Quarto, UnidadeQuarto, ParceiroUsuario, Reserva, HotelSecao, HotelSecaoItem
 from hoteis.views import partner_quarto_salvar
 from django.contrib.messages.storage.base import BaseStorage
 from unittest.mock import patch
 import json
 import datetime
+from decimal import Decimal
 
 
 class MockStorage(BaseStorage):
@@ -551,9 +552,16 @@ class CheckoutPaymentTestCase(TestCase):
         mock_response = mock_post.return_value
         mock_response.status_code = 201
         mock_response.json.return_value = {
-            'status': 'approved',
+            'status': 'processed',
             'status_detail': 'accredited',
-            'id': 1234567890
+            'id': 'ORDTST1234567890',
+            'transactions': {
+                'payments': [{
+                    'id': 'PAY12345',
+                    'status': 'processed',
+                    'status_detail': 'accredited'
+                }]
+            }
         }
         
         data = {
@@ -593,14 +601,21 @@ class CheckoutPaymentTestCase(TestCase):
         mock_response = mock_post.return_value
         mock_response.status_code = 201
         mock_response.json.return_value = {
-            'status': 'pending',
-            'status_detail': 'pending_waiting_transfer',
-            'id': 987654321,
-            'point_of_interaction': {
-                'transaction_data': {
-                    'qr_code': 'mock_pix_copy_paste_code_here',
-                    'qr_code_base64': 'mock_base64_image_data'
-                }
+            'status': 'action_required',
+            'status_detail': 'waiting_transfer',
+            'id': 'ORDTST987654321',
+            'transactions': {
+                'payments': [{
+                    'id': 'PAY98765',
+                    'status': 'action_required',
+                    'status_detail': 'waiting_transfer',
+                    'payment_method': {
+                        'id': 'pix',
+                        'type': 'bank_transfer',
+                        'qr_code': 'mock_pix_copy_paste_code_here',
+                        'qr_code_base64': 'mock_base64_image_data'
+                    }
+                }]
             }
         }
         
@@ -629,6 +644,187 @@ class CheckoutPaymentTestCase(TestCase):
         # Verify Reserva created as pending
         reserva = Reserva.objects.get(id=resp_json['reserva_id'])
         self.assertEqual(reserva.status, 'pendente')
+
+    @patch('requests.post')
+    def test_checkout_processar_post_card_declined(self, mock_post):
+        from hoteis.views import checkout_processar
+        
+        # Mock Mercado Pago Response to return an error (400 Bad Request)
+        mock_response = mock_post.return_value
+        mock_response.status_code = 400
+        mock_response.json.return_value = {
+            'message': 'Invalid card token.',
+            'cause': [{
+                'code': '2063',
+                'description': 'The card token is invalid or expired.'
+            }]
+        }
+        
+        data = {
+            'forma_pagamento': 'cartao',
+            'token': 'invalid_token',
+            'payment_method_id': 'visa',
+            'installments': 1
+        }
+        
+        request = self.factory.post(
+            '/carrinho/checkout/', 
+            data=json.dumps(data), 
+            content_type='application/json'
+        )
+        request.user = self.user
+        request.session = MockSession({'carrinho': self.cart_session})
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = checkout_processar(request)
+        self.assertEqual(response.status_code, 400)
+        
+        resp_json = json.loads(response.content)
+        self.assertFalse(resp_json['success'])
+        self.assertEqual(resp_json['error'], 'Pagamento Recusado: The card token is invalid or expired.')
+
+
+from hoteis.views import partner_secao_salvar, partner_secao_deletar, partner_secao_item_salvar, partner_secao_item_deletar
+
+class PartnerSecaoTestCase(TestCase):
+    databases = '__all__'
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='secao_partner', password='password123')
+        self.empresa = Empresa.objects.create(
+            nome_fantasia='Test CMS',
+            razao_social='Test CMS LTDA',
+            cnpj='33.444.555/0001-22',
+            categoria='hospedagem',
+            endereco='Av. Central, 100',
+            cidade='Tianguá',
+            estado='CE',
+            cep='62320-000',
+            email_contato='contato@test.com',
+            telefone_contato='88999999999'
+        )
+        self.local = Local.objects.create(nome='Test Local', endereco='Av. Central, 100', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(
+            empresa=self.empresa,
+            nome='Pousada CMS',
+            descricao='Pousada CMS Teste',
+            local=self.local,
+            slug='pousadacms'
+        )
+        self.parceiro = ParceiroUsuario.objects.create(
+            user=self.user,
+            hotel=self.hotel,
+            role='proprietario',
+            ativo=True
+        )
+
+    def test_create_and_delete_secao(self):
+        # 1. Create a section
+        data = {
+            'titulo': 'Atrações Sítio',
+            'subtitulo': 'Subtítulo',
+            'tipo': 'atracoes',
+            'ordem': '1',
+            'ativa': 'on'
+        }
+        request = self.factory.post('/hospedagens/secoes/salvar/', data)
+        request.user = self.user
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = partner_secao_salvar(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers.get('HX-Redirect'), '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes')
+        
+        secao = HotelSecao.objects.get(titulo='Atrações Sítio', hotel=self.hotel)
+        self.assertEqual(secao.tipo, 'atracoes')
+        self.assertEqual(secao.ordem, 1)
+        self.assertTrue(secao.ativa)
+
+        # 2. Add an item to this section
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        # Small mock image
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x00\x00\x00\x21\xf9\x04'
+            b'\x01\x0a\x00\x01\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02'
+            b'\x02\x4c\x01\x00\x3b'
+        )
+        uploaded_image = SimpleUploadedFile('test.gif', small_gif, content_type='image/gif')
+        
+        item_data = {
+            'secao_id': secao.id,
+            'titulo': 'Voo Livre',
+            'descricao': 'Voe de parapente',
+            'preco': '150.00',
+            'link_cta': 'https://sitiodobosco.com.br',
+            'ordem': '2',
+            'imagem': uploaded_image
+        }
+        
+        item_request = self.factory.post('/hospedagens/secoes/itens/salvar/', item_data)
+        item_request.user = self.user
+        item_request.FILES['imagem'] = uploaded_image
+        setattr(item_request, '_messages', MockStorage(request))
+        
+        item_response = partner_secao_item_salvar(item_request)
+        self.assertEqual(item_response.status_code, 200)
+        
+        item = HotelSecaoItem.objects.get(titulo='Voo Livre', secao=secao)
+        self.assertEqual(item.preco, Decimal('150.00'))
+        self.assertEqual(item.link_cta, 'https://sitiodobosco.com.br')
+        self.assertEqual(item.ordem, 2)
+
+        # Cleanup files created during test
+        if item.imagem:
+            item.imagem.delete(save=False)
+
+    def test_vanity_url_context_has_destaques_personalizado(self):
+        # Create a destaques section
+        secao = HotelSecao.objects.create(
+            hotel=self.hotel,
+            titulo="Destaques Especiais",
+            tipo="destaques",
+            ativa=True
+        )
+        
+        # Access vanity url
+        from django.urls import reverse
+        response = self.client.get(reverse('hoteis:vanity_url', kwargs={'slug': self.hotel.slug}))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('destaques_personalizado', response.context)
+        self.assertEqual(response.context['destaques_personalizado'].id, secao.id)
+
+    def test_secao_cleanup_on_type_change(self):
+        # 1. Create a section with video and text
+        secao = HotelSecao.objects.create(
+            hotel=self.hotel,
+            titulo="Seção Vídeo",
+            tipo="video",
+            video_url="https://youtube.com/watch?v=123",
+            texto="Descrição do vídeo"
+        )
+        
+        # 2. Change layout type to 'galeria' which does not support video_url or texto
+        data = {
+            'titulo': 'Seção Vídeo',
+            'tipo': 'galeria',
+            'ordem': '0',
+            'ativa': 'on'
+        }
+        request = self.factory.post(f'/hospedagens/secoes/salvar/{secao.id}/', data)
+        request.user = self.user
+        setattr(request, '_messages', MockStorage(request))
+        
+        response = partner_secao_salvar(request, secao_id=secao.id)
+        self.assertEqual(response.status_code, 200)
+        
+        # Reload section
+        secao.refresh_from_db()
+        self.assertEqual(secao.tipo, 'galeria')
+        self.assertIsNone(secao.video_url)
+        self.assertIsNone(secao.texto)
+
+
 
 
 

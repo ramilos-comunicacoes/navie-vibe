@@ -395,12 +395,11 @@
 
     /* Regras exclusivas de posicionamento do conteúdo do hero para mobile e desktop */
     .hero-content-shift {
-        position: relative;
-        top: -2%;
+        padding-top: 4.5rem; /* Desloca para baixo para compensar o cabeçalho no mobile */
     }
     @media (min-width: 768px) {
         .hero-content-shift {
-            top: 0;
+            padding-top: 5.5rem; /* Desloca para baixo no desktop */
         }
     }
 
@@ -536,16 +535,10 @@
             <img id="hero-logo-img" src="{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain">
         </div>
         
-        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-xl mb-4">{{ hotel.nome }}</h1>
+        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-tight drop-shadow-2xl mb-4">{{ hotel.nome }}</h1>
         
         <!-- Localização e Informações de Check-in -->
         <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90 mb-6 sm:mb-8">
-            {% if hotel.horario_inicio %}
-            <span class="hero-badge">
-                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-4 h-4"></i></span> Check-in {{ hotel.horario_inicio|time:"H:i" }}
-            </span>
-            {% endif %}
-            
             <span class="hero-badge">
                 <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-4 h-4"></i></span> {{ hotel.local.cidade }} / {{ hotel.local.estado }}
             </span>
@@ -565,33 +558,37 @@
                 </div>
 
                 <!-- Campo 2: Hóspedes (Dropdown Customizado) -->
-                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors" 
+                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors cursor-pointer" 
+                     style="position: relative;"
                      x-data="{ openGuests: false, guests: 2, guestsLabel: '2 Hóspedes' }" 
+                     @click="openGuests = !openGuests"
                      @click.outside="openGuests = false">
-                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center">Hóspedes</label>
-                    <button type="button" @click="openGuests = !openGuests"
-                            class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 cursor-pointer bg-transparent border-none outline-none w-full select-none text-center">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center cursor-pointer">Hóspedes</label>
+                    <div class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 bg-transparent border-none outline-none w-full select-none text-center">
                         <span x-text="guestsLabel" class="truncate font-bold"></span>
-                    </button>
+                    </div>
                     <input type="hidden" id="search-guests" :value="guests">
 
-                    <!-- Dropdown de Hóspedes -->
+                    <!-- Dropdown de Hóspedes (Centralizado e com largura reduzida usando inline style) -->
                     <div x-show="openGuests" x-cloak
-                         x-transition:enter="transition ease-out duration-150"
-                         x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave="transition ease-in duration-100"
-                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                         x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
-                         class="absolute left-0 bg-white border border-slate-200 rounded-2xl shadow-2xl p-1.5 max-h-60 overflow-y-auto no-scrollbar"
-                         style="display: none; top: calc(100% + 8px); z-index: 9999; min-width: 165px; width: max-content; max-width: 260px;">
-                        <template x-for="g in [1, 2, 3, 4, 5, 6, 7, '8 ou mais']">
-                            <button type="button" 
-                                    @click="guests = g; guestsLabel = (g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')); openGuests = false;"
-                                    class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
-                                <span x-text="g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')"></span>
-                            </button>
-                        </template>
+                         @click.stop=""
+                         style="display: none; position: absolute; left: 50%; transform: translateX(-50%); top: calc(100% + 8px); z-index: 9999; width: 140px;">
+                        <div x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave="transition ease-in duration-100"
+                             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                             x-transition:leave-end="opacity-0 -translate-y-2 scale-95"
+                             class="bg-white border border-slate-200 rounded-2xl shadow-2xl p-1 max-h-60 overflow-y-auto no-scrollbar"
+                             style="width: 100%;">
+                            <template x-for="g in [1, 2, 3, 4, 5, 6, 7, '8 ou mais']">
+                                <button type="button" 
+                                        @click="guests = g; guestsLabel = (g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')); openGuests = false;"
+                                        class="w-full text-left px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
+                                    <span x-text="g === 1 ? '1 Hóspede' : (typeof g === 'number' ? g + ' Hóspedes' : '8 ou mais Hóspedes')"></span>
+                                </button>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
@@ -635,6 +632,177 @@
         <div class="mt-8 md:mt-10">
             {% include 'hoteis/partials/tab_acomodacoes.html' %}
         </div>
+
+        <!-- Seções Dinâmicas Customizadas do Anfitrião -->
+        {% for secao in hotel.secoes.all %}
+            {% if secao.ativa and secao.tipo != 'destaques' %}
+                <div class="mt-16 border-t border-slate-150 pt-16 scroll-animate-left">
+                    <div class="mb-10">
+                        <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800">{{ secao.titulo }}</h3>
+                        {% if secao.subtitulo %}
+                            <p class="text-slate-450 mt-2 text-xs sm:text-sm font-semibold">{{ secao.subtitulo }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if secao.tipo == 'texto_imagem' %}
+                        <!-- Layout Lado a Lado (Texto + Imagem) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                            <div class="space-y-4">
+                                <div class="text-slate-600 leading-relaxed text-sm font-semibold whitespace-pre-line">
+                                    {{ secao.texto|safe }}
+                                </div>
+                                {% if secao.link_cta %}
+                                    <div class="pt-2">
+                                        <a href="{{ secao.link_cta }}" {% if secao.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
+                                           class="inline-flex items-center justify-center px-6 py-3 bg-action-blue hover:opacity-90 text-white rounded-2xl text-xs font-black shadow-sm transition active:scale-95">
+                                            Acessar / Saber Mais
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if secao.video %}
+                                <div class="rounded-3xl overflow-hidden shadow-lg border border-slate-100 aspect-video relative bg-slate-900">
+                                    <video src="{{ secao.video.url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                                    {% if secao.preco %}
+                                        <span class="absolute top-4 right-4 bg-action-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
+                                            R$ {{ secao.preco }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% elif secao.imagem %}
+                                <div class="rounded-3xl overflow-hidden shadow-lg border border-slate-100 relative">
+                                    {% if secao.link_cta %}
+                                        <a href="{{ secao.link_cta }}" {% if secao.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %} class="block">
+                                    {% endif %}
+                                    <img src="{{ secao.imagem.url }}" alt="{{ secao.titulo }}" class="w-full h-80 object-cover">
+                                    {% if secao.link_cta %}
+                                        </a>
+                                    {% endif %}
+                                    {% if secao.preco %}
+                                        <span class="absolute top-4 right-4 bg-action-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
+                                            R$ {{ secao.preco }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                    {% elif secao.tipo == 'galeria' %}
+                        <!-- Layout Grid de Fotos/Vídeos -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {% for item in secao.itens.all %}
+                                <div class="group relative rounded-3xl overflow-hidden shadow-sm border border-slate-100 aspect-[4/3] cursor-pointer">
+                                    {% if item.video %}
+                                        <video src="{{ item.video.url }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" autoplay loop muted playsinline></video>
+                                    {% elif item.imagem %}
+                                        <img src="{{ item.imagem.url }}" alt="{{ item.titulo }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                    {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">
+                                        <span class="text-xs font-bold text-white">{{ item.titulo }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    {% elif secao.tipo == 'atracoes' %}
+                        <!-- Layout Cards de Lazer/Atrações -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                            {% for item in secao.itens.all %}
+                                <div class="bg-slate-50 border border-slate-100 rounded-3xl overflow-hidden shadow-sm hover:-translate-y-1 transition duration-300 flex flex-col justify-between h-full">
+                                    <div>
+                                        <div class="h-48 overflow-hidden relative bg-slate-200">
+                                            {% if item.video %}
+                                                <video src="{{ item.video.url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                                            {% elif item.imagem %}
+                                                <img src="{{ item.imagem.url }}" alt="{{ item.titulo }}" class="w-full h-full object-cover">
+                                            {% endif %}
+                                            {% if item.preco %}
+                                                <span class="absolute top-4 right-4 bg-action-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
+                                                    R$ {{ item.preco }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="p-5 space-y-2">
+                                            <h4 class="text-base sm:text-lg font-bold text-slate-800">{{ item.titulo }}</h4>
+                                            <p class="text-xs text-slate-450 leading-relaxed line-clamp-3 font-semibold">{{ item.descricao|default:'' }}</p>
+                                        </div>
+                                    </div>
+                                    {% if item.link_cta %}
+                                        <div class="p-5 pt-0">
+                                            <a href="{{ item.link_cta }}" target="_blank" class="block w-full text-center py-3 bg-action-blue hover:opacity-90 text-white rounded-2xl text-xs font-black shadow-sm transition active:scale-95">
+                                                Acessar / Comprar
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    {% elif secao.tipo == 'video' %}
+                        <!-- Layout Vídeo Player -->
+                        <div class="max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-lg border border-slate-100 aspect-video relative">
+                            {% if secao.video %}
+                                <video class="w-full h-full object-cover" controls src="{{ secao.video.url }}"></video>
+                            {% elif secao.video_url %}
+                                {% if 'youtube.com' in secao.video_url or 'youtu.be' in secao.video_url %}
+                                    <iframe class="w-full h-full" src="{{ secao.video_url }}" frameborder="0" allowfullscreen></iframe>
+                                {% else %}
+                                    <video class="w-full h-full object-cover" controls src="{{ secao.video_url }}"></video>
+                                {% endif %}
+                            {% endif %}
+                            {% if secao.preco %}
+                                <span class="absolute top-4 right-4 bg-action-blue text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md">
+                                    R$ {{ secao.preco }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <!-- Seção Cross-Selling de Unidades do Grupo -->
+        {% if hotel.empresa and hotel.empresa.hoteis.count > 1 %}
+        <div class="mt-16 border-t border-slate-150 pt-16 scroll-animate-left">
+            <div class="mb-10 text-center md:text-left">
+                <span class="text-xs font-black text-brand uppercase tracking-widest">Nossa Rede</span>
+                <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1">Conheça nossas outras pousadas</h3>
+                <p class="text-slate-450 mt-2 text-xs sm:text-sm font-semibold">Hospedagens operadas com o mesmo selo de excelência e hospitalidade.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6">
+                {% for h in hotel.empresa.hoteis.all %}
+                    {% if h.id != hotel.id and h.status == 'ativo' %}
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:-translate-y-1 transition duration-300 flex flex-col justify-between h-full">
+                            <div>
+                                <div class="h-28 sm:h-36 md:h-40 lg:h-44 overflow-hidden relative bg-slate-200">
+                                    {% if h.logo %}
+                                        <img src="{{ h.logo.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover">
+                                    {% elif h.banner %}
+                                        <img src="{{ h.banner.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i data-lucide="building" class="w-8 h-8 sm:w-12 sm:h-12 text-slate-400"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="p-3 sm:p-5 space-y-1 sm:space-y-2">
+                                    <h4 class="text-xs sm:text-base font-bold text-slate-800 line-clamp-1">{{ h.nome }}</h4>
+                                    <p class="text-[10px] sm:text-xs text-slate-450 leading-relaxed line-clamp-2 sm:line-clamp-3 font-semibold">{{ h.descricao }}</p>
+                                </div>
+                            </div>
+                            <div class="p-3 sm:p-5 pt-0">
+                                <a href="{% url 'hoteis:detalhe' h.id %}" 
+                                   hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                   class="block w-full text-center py-2 sm:py-3 bg-action-blue hover:opacity-90 text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black shadow-sm transition active:scale-95">
+                                    Visitar Pousada
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </main>
 </div>
@@ -671,7 +839,7 @@
 
 <!-- SCRIPT DE INICIALIZAÇÃO DO MAPA B2C -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    (function() {
         let lat = parseFloat('{{ hotel.latitude|stringformat:"f"|default:"-4.004445" }}'.replace(',', '.'));
         let lon = parseFloat('{{ hotel.longitude|stringformat:"f"|default:"-40.990278" }}'.replace(',', '.'));
         
@@ -731,7 +899,7 @@
             mapaB2C.invalidateSize();
             mapaB2C.setView([lat, lon], 15);
         }, 300);
-    });
+    })();
 </script>
 
 {% include 'hoteis/quartos/modal_disponibilidade.html' %}
@@ -742,7 +910,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    (function() {
         lucide.createIcons();
 
         // On-Scroll Slide Animations for About/Location sections
@@ -870,6 +1038,6 @@
                 });
         };
         
-    });
+    })();
 </script>
 {% endblock %}

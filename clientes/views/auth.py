@@ -218,8 +218,17 @@ def api_registrar(request):
                 registro_user_agent=user_agent_str
             )
             
+        # Preserve the cart session data before login cycles/clears the session
+        carrinho_data = request.session.get('carrinho')
+            
         # Log the user in directly after successful registration
         login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        
+        # Restore the cart session data
+        if carrinho_data:
+            request.session['carrinho'] = carrinho_data
+            request.session.modified = True
+            
         return JsonResponse({'ok': True, 'redirect_url': '/clientes/painel/'})
 
     except IntegrityError:

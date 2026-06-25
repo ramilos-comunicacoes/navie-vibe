@@ -1,0 +1,258 @@
+{% load static %}
+
+<!-- Leaflet.js Assets (CSS e JS localizados via CDN oficial) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style>
+    /* Estilização para o mapa do modal */
+    #mapaSelector {
+        height: 260px;
+        width: 100%;
+        border-radius: 1rem;
+        z-index: 10;
+        border: 1.5px solid rgba(15, 23, 42, 0.08);
+    }
+    .dark #mapaSelector {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    /* Estilos do Leaflet no modo escuro */
+    .dark .leaflet-bar a, .dark .leaflet-control {
+        background-color: #0f172a !important;
+        color: #e2e8f0 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+</style>
+
+<div id="modalPousadaFormulario" class="fixed inset-0 flex items-center justify-center select-none p-4" style="z-index: 99999;">
+    <!-- Background overlay -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300 pointer-events-auto" onclick="document.getElementById('modal-container').innerHTML = '';"></div>
+    
+    <!-- Modal Panel -->
+    <div class="relative bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl flex flex-col max-h-[96vh] mx-4 border border-slate-200/50 dark:border-white/10 animate-in fade-in zoom-in-95 duration-200 pointer-events-auto">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-950/30 rounded-t-3xl shrink-0 flex justify-between items-center">
+            <h3 class="text-xs sm:text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                <span class="text-brand"><i data-lucide="building" class="w-4 h-4"></i></span>
+                <span>{% if pousada %}Configurar Pousada{% else %}Nova Pousada{% endif %}</span>
+            </h3>
+            <button type="button" onclick="document.getElementById('modal-container').innerHTML = '';" class="p-1.5 text-slate-400 hover:text-slate-650 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 rounded-full border-none bg-transparent cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form hx-post="{% url 'sistema:partner_pousada_salvar' %}" 
+              hx-target="#modal-container"
+              hx-swap="innerHTML"
+              hx-encoding="multipart/form-data"
+              class="flex flex-col flex-1 overflow-hidden">
+            {% csrf_token %}
+            {% if pousada %}
+                <input type="hidden" name="pousada_id" value="{{ pousada.id }}">
+            {% endif %}
+
+            <!-- Form Body -->
+            <div class="p-6 overflow-y-auto no-scrollbar flex-1 space-y-4 text-left">
+                <!-- Informações Básicas -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Nome da Pousada</label>
+                        <input type="text" name="nome" value="{{ pousada.nome|default:'' }}" required placeholder="Ex: Pousada Ramiros Serra"
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">CNPJ da Unidade</label>
+                        <input type="text" name="cnpj" value="{{ pousada.cnpj|default:'' }}" placeholder="Ex: 00.000.000/0001-00"
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Endereço Completo</label>
+                        <input type="text" name="endereco" value="{{ pousada.endereco|default:'' }}" required placeholder="Rua, Bairro, Cidade - UF"
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Cor Primária (HEX)</label>
+                        <div class="flex gap-2">
+                            <input type="color" name="cor_primaria_hex" value="{{ pousada.cor_primaria_hex|default:'#2563eb' }}" 
+                                   class="h-9 w-10 border border-slate-200/50 rounded-xl cursor-pointer bg-transparent">
+                            <input type="text" id="id_cor_hex_text" value="{{ pousada.cor_primaria_hex|default:'#2563eb' }}" readonly
+                                   class="modal-input-glass w-full rounded-xl px-2 py-2.5 text-[10px] font-mono font-bold text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">WhatsApp de Contato</label>
+                        <input type="text" name="telefone_whatsapp" value="{{ pousada.telefone_whatsapp|default:'' }}" required placeholder="DDD + Número"
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Latitude</label>
+                        <input type="text" name="mapa_latitude" id="id_mapa_latitude" value="{{ pousada.mapa_latitude|default:'' }}" readonly
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50/50 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5 px-1">Longitude</label>
+                        <input type="text" name="mapa_longitude" id="id_mapa_longitude" value="{{ pousada.mapa_longitude|default:'' }}" readonly
+                               class="modal-input-glass w-full rounded-xl px-4 py-2.5 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50/50 cursor-not-allowed">
+                    </div>
+                </div>
+                <!-- Imagem de Destaque (Brand) -->
+                <div class="space-y-1.5 px-1">
+                    <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1">Imagem de Destaque (Carrossel Público)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="file" name="imagem_destaque" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand/10 file:text-brand dark:file:bg-brand/20 hover:file:bg-brand/20 cursor-pointer">
+                        {% if pousada.imagem_destaque %}
+                            <div class="flex items-center gap-1.5 text-xs text-green-500" x-data="{ limpo: false }" x-show="!limpo">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                <span class="truncate max-w-[150px]">Ativa</span>
+                                <button type="button" @click="document.getElementById('limpar_imagem_input').value='true'; limpo=true;" class="ml-2 px-2 py-1 bg-red-500/10 text-red-500 rounded border border-red-500/20 text-[9px] hover:bg-red-500/20 transition-all font-bold border-none cursor-pointer">Remover</button>
+                            </div>
+                        {% endif %}
+                        <input type="hidden" name="limpar_imagem_destaque" id="limpar_imagem_input" value="false">
+                    </div>
+                </div>
+
+                <!-- Seletor de Mapa Leaflet -->
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center px-1">
+                        <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Localização Geográfica (Arraste o Marcador no Satélite)</label>
+                        <span class="text-[8px] font-bold text-brand uppercase">Leaflet + Esri Imagery</span>
+                    </div>
+                    <div id="mapaSelector"></div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-950/30 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-3 shrink-0 rounded-b-3xl">
+                <button type="button" onclick="document.getElementById('modal-container').innerHTML = '';" 
+                        class="px-4 py-2 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-white/10 text-xs font-bold rounded-xl transition-all cursor-pointer border-none">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="px-5 py-2 bg-brand text-brand-text hover:bg-brand-burned text-xs font-bold rounded-xl transition-all cursor-pointer border-none shadow-md">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inicialização do Mapa Leaflet -->
+<script>
+    (function() {
+        // Vincula a alteração da paleta de cores primárias ao input do tipo color
+        const colorPicker = document.querySelector('input[name="cor_primaria_hex"]');
+        const colorText = document.getElementById('id_cor_hex_text');
+        if (colorPicker && colorText) {
+            colorPicker.addEventListener('input', function(e) {
+                colorText.value = e.target.value;
+            });
+        }
+
+        // Executa o Lucide icons localmente
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // Inicialização do Leaflet.js
+        function startLeaflet() {
+            // Coordenadas iniciais:
+            // Tinguá (fallback para pousadas de serra/sertão): lat -22.5855, lng -43.4350
+            // Pedro II (fallback para pousada de praia): lat -4.4239, lng -41.4586
+            // Se já houver coordenadas salvas, utiliza as salvas.
+            let initLat = parseFloat("{{ pousada.mapa_latitude }}".replace(',', '.'));
+            let initLng = parseFloat("{{ pousada.mapa_longitude }}".replace(',', '.'));
+            
+            // Fallbacks inteligentes
+            if (isNaN(initLat) || isNaN(initLng)) {
+                const pousadaNome = "{{ pousada.nome|default:'' }}".toLowerCase();
+                if (pousadaNome.includes("praia") || pousadaNome.includes("pedro")) {
+                    initLat = -4.4239;
+                    initLng = -41.4586;
+                } else {
+                    initLat = -22.5855;
+                    initLng = -43.4350;
+                }
+            }
+
+            // Camada de Ruas (OpenStreetMap)
+            const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            });
+
+            // Camada de Satélite (Esri World Imagery)
+            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Imagens &copy; Esri'
+            });
+
+            const mapEl = document.getElementById('mapaSelector');
+            if (!mapEl) return;
+
+            // Inicializa mapa Leaflet
+            const leafletMap = L.map('mapaSelector', {
+                center: [initLat, initLng],
+                zoom: 16,
+                layers: [satelliteLayer], // Satélite padrão
+                zoomControl: true
+            });
+
+            // Adiciona o controle de camadas no canto superior direito
+            const baseMaps = {
+                "Satélite": satelliteLayer,
+                "Mapa de Ruas": osmLayer
+            };
+            L.control.layers(baseMaps, null, { collapsed: false }).addTo(leafletMap);
+
+            // Adiciona o marcador (pino) arrastável
+            const leafletMarker = L.marker([initLat, initLng], {
+                draggable: true
+            }).addTo(leafletMap);
+
+            // Função para atualizar os inputs ocultos/visíveis do Django
+            function updateCoordinatesInput(latlng) {
+                document.getElementById('id_mapa_latitude').value = latlng.lat.toFixed(7);
+                document.getElementById('id_mapa_longitude').value = latlng.lng.toFixed(7);
+            }
+
+            // Sincroniza coordenadas iniciais
+            updateCoordinatesInput({ lat: initLat, lng: initLng });
+
+            // Trata eventos de arraste do marcador
+            leafletMarker.on('dragend', function() {
+                updateCoordinatesInput(leafletMarker.getLatLng());
+            });
+
+            // Trata cliques no mapa (reposiciona o marcador e atualiza coordenadas)
+            leafletMap.on('click', function(e) {
+                leafletMarker.setLatLng(e.latlng);
+                updateCoordinatesInput(e.latlng);
+            });
+
+            // Força renderização e evita problemas de tiles cinzas no modal recém-aberto
+            setTimeout(function() {
+                leafletMap.invalidateSize();
+            }, 250);
+        }
+
+        // Garante que o Leaflet esteja carregado antes de inicializar o mapa
+        if (typeof L !== 'undefined') {
+            startLeaflet();
+        } else {
+            const checkInterval = setInterval(function() {
+                if (typeof L !== 'undefined') {
+                    clearInterval(checkInterval);
+                    startLeaflet();
+                }
+            }, 100);
+        }
+    })();
+</script>

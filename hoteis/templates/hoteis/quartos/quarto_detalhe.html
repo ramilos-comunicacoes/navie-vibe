@@ -481,6 +481,7 @@
 
                     <!-- Card mini do hotel -->
                     <a href="/hotel/{{ hotel.id }}/"
+                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
                        class="mt-4 flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-100
                               shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group/hotel-card">
                         {% if hotel.logo %}
@@ -558,7 +559,7 @@
 
 {% block extra_scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
     lucide.createIcons();
 
     // ── Array de imagens para lightbox ──────────────────────────────
@@ -670,12 +671,22 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Teclado
-    document.addEventListener('keydown', function(e) {
-        if (modal.classList.contains('hidden')) return;
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowLeft') navLightbox(-1);
-        if (e.key === 'ArrowRight') navLightbox(1);
-    });
+    if (!window.lightboxKeydownHandler) {
+        window.lightboxKeydownHandler = function(e) {
+            const activeModal = document.getElementById('lightboxModal');
+            if (!activeModal || activeModal.classList.contains('hidden')) return;
+            if (e.key === 'Escape') {
+                if (typeof window.closeLightbox === 'function') window.closeLightbox();
+            }
+            if (e.key === 'ArrowLeft') {
+                if (typeof window.navLightbox === 'function') window.navLightbox(-1);
+            }
+            if (e.key === 'ArrowRight') {
+                if (typeof window.navLightbox === 'function') window.navLightbox(1);
+            }
+        };
+        document.addEventListener('keydown', window.lightboxKeydownHandler);
+    }
 
     // ── WhatsApp ──────────────────────────────────────────────────────
     window.consultarWhatsApp = function() {
@@ -745,6 +756,6 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Erro ao processar requisição.');
         });
     };
-});
+})();
 </script>
 {% endblock %}

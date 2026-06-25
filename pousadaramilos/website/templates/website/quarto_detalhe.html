@@ -1,0 +1,404 @@
+{% extends 'base_public.html' %}
+{% load static %}
+
+{% block title %}{{ quarto.nome }} | {{ hotel.nome }}{% endblock %}
+
+{% block extra_head %}
+<!-- Injeção Dinâmica de Cores de Branding do Hotel -->
+<script>
+    (function() {
+        const rawColor = "{{ hotel.cor_primaria_hex|default:'#2563eb' }}";
+        let hex = rawColor.replace('#', '');
+        if (hex.length === 3) { hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; }
+        const r = parseInt(hex.substring(0, 2), 16) || 37;
+        const g = parseInt(hex.substring(2, 4), 16) || 99;
+        const b = parseInt(hex.substring(4, 6), 16) || 235;
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        let brandColor = "#" + hex;
+        let brandTextColor = "#ffffff";
+        let brandColorBurned = brandColor;
+        if (yiq >= 170) {
+            const f = 0.45;
+            brandColorBurned = "#" + ((1 << 24) + (Math.round(r*f) << 16) + (Math.round(g*f) << 8) + Math.round(b*f)).toString(16).slice(1);
+            brandTextColor = brandColorBurned;
+        }
+        document.documentElement.style.setProperty('--brand-color', brandColor);
+        document.documentElement.style.setProperty('--brand-text-color', brandTextColor);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r},${g},${b},0.12)`);
+    })();
+</script>
+
+<style>
+    /* Ocultar barras de rolagem nativas */
+    html, body {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none !important; }
+
+    :root { --navie-primary: var(--brand-color, #2563eb); }
+    .text-action-blue  { color: var(--brand-color-burned) !important; }
+    .bg-action-blue    { background-color: var(--brand-color) !important; color: var(--brand-text-color) !important; }
+    .border-action-blue{ border-color: var(--brand-color-burned) !important; }
+
+    /* Swiper Carrossel Cinemático */
+    .room-swiper {
+        width: 100%;
+        height: 380px;
+        overflow: visible !important;
+    }
+    @media (min-width: 768px) {
+        .room-swiper { height: 540px; }
+    }
+    .room-swiper .swiper-slide {
+        opacity: 0.55;
+        transform: scale(0.96);
+        transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .room-swiper .swiper-slide-active {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+    }
+
+    .video-card-carousel { position: relative; overflow: hidden; flex-shrink: 0; }
+
+    #lightboxModal { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    #lightboxModal img { border-radius: 1.25rem; box-shadow: 0 40px 80px rgba(0,0,0,0.6); }
+
+    .room-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 13px; border-radius: 9999px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.25);
+        font-size: 10px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.06em;
+        color: #fff;
+    }
+
+    .amenity-icon {
+        padding: 9px; border-radius: 12px;
+        background-color: var(--brand-color-alpha);
+        color: var(--brand-color-burned);
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sticky-sidebar { position: sticky; top: 6rem; }
+
+    .tag-pill-display {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 12px; border-radius: 9999px;
+        background-color: var(--brand-color-alpha);
+        color: var(--brand-color-burned);
+        font-size: 10px; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        border: 1px solid var(--brand-color-burned, rgba(37,99,235,0.3));
+    }
+
+    .com-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+    @media(min-width: 640px) { .com-grid { grid-template-columns: repeat(3, 1fr); } }
+
+    @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+    .progress-bar { animation: shimmer 2.4s ease-in-out infinite; width: 22%; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white min-h-screen pt-24 sm:pt-28">
+
+    <!-- Swiper de Mídias (Fotos e Vídeo Tour Local) -->
+    <div class="w-full bg-white relative group overflow-hidden -mt-4 md:-mt-8">
+        <div class="swiper room-swiper pb-8 md:pb-10 pt-0">
+            <div class="swiper-wrapper" id="room-gallery">
+
+                <!-- 1º Slide: Capa -->
+                {% if primeira_imagem %}
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[85vw] md:max-w-[60vw]" onclick="openLightbox(0)">
+                    <img src="{{ primeira_imagem.url_imagem.url }}" alt="{{ quarto.nome }}" class="h-[340px] md:h-[500px] w-auto max-w-[85vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl border border-white/10 transition-all duration-500 group-hover/photo:scale-[1.015]">
+                    <div class="absolute bottom-4 left-4 z-10">
+                        <span class="room-badge"><i data-lucide="crown" class="w-3 h-3"></i> Foto Principal</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 2º Slide: Vídeo Tour (Carregado do Servidor) -->
+                {% if quarto.video_arquivo or quarto.video_url %}
+                <div class="swiper-slide video-card-carousel rounded-[2rem] h-[340px] md:h-[500px] w-[425px] max-w-[85vw] md:w-[625px] md:max-w-[60vw] shadow-2xl border border-white/10 group/video">
+                    <video id="room-tour-video" autoplay muted loop playsinline class="w-full h-full object-cover">
+                        {% if quarto.video_arquivo %}
+                        <source src="{{ quarto.video_arquivo.url }}" type="video/mp4">
+                        {% elif quarto.video_url %}
+                        <source src="{{ quarto.video_url }}" type="video/mp4">
+                        {% endif %}
+                    </video>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20 pointer-events-none rounded-[2rem]"></div>
+                    
+                    <!-- Botão Som Reativo -->
+                    <button id="audio-toggle-btn" onclick="toggleAudio(event)" title="Ativar Som" class="absolute bottom-5 right-5 z-20 w-11 h-11 rounded-full bg-black/55 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all active:scale-90 border border-white/15">
+                        <i id="audio-icon" data-lucide="volume-x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                {% endif %}
+
+                <!-- 3º+ Slides: Fotos Adicionais -->
+                {% for img in outras_imagens %}
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[85vw] md:max-w-[60vw]" onclick="openLightbox({{ forloop.counter }})">
+                    <img src="{{ img.url_imagem.url }}" alt="{{ quarto.nome }}" class="h-[340px] md:h-[500px] w-auto max-w-[85vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl border border-white/10 transition-all duration-500">
+                    <div class="absolute bottom-4 left-4 z-10"><span class="room-badge">Foto {{ forloop.counter|add:1 }}</span></div>
+                </div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <!-- Setas do Swiper -->
+        <button onclick="scrollGallery(-1)" class="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 text-gray-900 shadow-xl backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all z-30"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+        <button onclick="scrollGallery(1)" class="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-white/90 text-gray-900 shadow-xl backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all z-30"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+
+        <div class="relative h-[2px] w-full bg-gray-100 overflow-hidden">
+            <div class="progress-bar h-full bg-gradient-to-r from-transparent via-action-blue to-transparent absolute top-0 left-0"></div>
+        </div>
+    </div>
+
+    <!-- Info Detalhada -->
+    <main class="relative z-30 bg-white rounded-t-[2.5rem] -mt-32 md:-mt-16 pt-6 md:pt-8 shadow-[0_-15px_40px_rgba(0,0,0,0.05)]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-14">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                <div class="lg:col-span-8 space-y-6">
+                    <div class="bg-white rounded-3xl p-6 md:p-10 shadow-xl border border-gray-100 text-left">
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="tag-pill-display font-black text-[10px] tracking-wider uppercase">
+                                <i data-lucide="map-pin" class="w-3 h-3 text-action-blue"></i>
+                                {% if "Serra" in hotel.nome %}
+                                    Pousada Serra - Tianguá, Tianguá - CE
+                                {% elif "Sertão" in hotel.nome or "Sertao" in hotel.nome %}
+                                    Pousada Ramilos Sertão, Tianguá - CE
+                                {% elif "Praia" in hotel.nome or "Correia" in hotel.nome %}
+                                    Pousada Luís Correia, Luís Correia - PI
+                                {% else %}
+                                    {{ hotel.nome }}
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <h1 class="text-3xl md:text-4xl font-black text-gray-900 leading-none">{{ quarto.nome }}</h1>
+                        <div class="mt-4 flex items-baseline gap-1.5">
+                            <span class="text-2xl md:text-3xl font-black text-action-blue">R$ {{ quarto.preco_base }}</span>
+                            <span class="text-sm font-bold text-gray-400">/ diária</span>
+                        </div>
+                        <p class="mt-6 text-sm text-gray-600 leading-relaxed font-medium">
+                            {{ quarto.descricao }}
+                        </p>
+
+                        {% if tags %}
+                        <div class="mt-8 pt-6 border-t border-gray-100">
+                            <span class="text-[10px] font-black uppercase text-gray-400 tracking-wider block mb-3">Tags Relacionadas</span>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in tags %}
+                                <span class="tag-pill-display"><i data-lucide="tag" class="w-2.5 h-2.5"></i>{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comodidades -->
+                    {% if comodidades %}
+                    <div class="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 text-left">
+                        <h2 class="text-xs font-black text-gray-900 mb-7 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <div class="w-1.5 h-5 bg-action-blue rounded-full"></div>Comodidades Inclusas
+                        </h2>
+                        <div class="com-grid">
+                            {% for com in comodidades %}
+                            <div class="flex items-center gap-3 text-sm font-semibold text-gray-600">
+                                <span class="amenity-icon">
+                                    {% if "Wi" in com or "wifi" in com %}
+                                        <i data-lucide="wifi" class="w-4 h-4"></i>
+                                    {% elif "Ar" in com or "ar" in com or "clima" in com %}
+                                        <i data-lucide="wind" class="w-4 h-4"></i>
+                                    {% elif "Caf" in com %}
+                                        <i data-lucide="coffee" class="w-4 h-4"></i>
+                                    {% elif "Frigobar" in com %}
+                                        <i data-lucide="cup-straw" class="w-4 h-4"></i>
+                                    {% else %}
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                    {% endif %}
+                                </span>
+                                {{ com }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Barra Lateral Sticky -->
+                <div class="lg:col-span-4">
+                    <div class="sticky-sidebar">
+                        <div class="bg-white rounded-3xl p-7 shadow-2xl border border-gray-100 text-left">
+                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Valor por Noite</span>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-4xl font-black text-gray-900 tracking-tighter">R$ {{ quarto.preco_base }}</span>
+                                <span class="text-xs font-bold text-gray-400">/ diária</span>
+                            </div>
+
+                            <div id="sidebar-summary-dates" class="my-4"></div>
+
+                            {% if carrinho and carrinho.quarto.id == quarto.id %}
+                            <button id="main-cta-button" disabled class="w-full bg-action-blue text-white font-black py-5 px-6 rounded-2xl flex items-center justify-center gap-3 opacity-80 cursor-not-allowed">
+                                <i data-lucide="shopping-cart" class="w-5 h-5"></i> No Carrinho
+                            </button>
+                            {% else %}
+                            <button id="main-cta-button" onclick="openAvailabilityModal()" class="w-full bg-action-blue text-white font-black py-5 px-6 rounded-2xl shadow-lg flex items-center justify-center gap-3 cursor-pointer">
+                                <i id="main-cta-icon" data-lucide="calendar-check" class="w-5 h-5"></i>
+                                <span id="main-cta-text">Ver Disponibilidade</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</div>
+
+<!-- Lightbox Nativo -->
+<div id="lightboxModal" class="fixed inset-0 bg-black/88 z-[200] hidden flex-col items-center justify-center" onclick="closeLightboxOnBgClick(event)">
+    <button onclick="closeLightbox()" class="absolute top-5 right-5 text-white/50 hover:text-white transition-colors z-10"><i data-lucide="x" class="w-9 h-9"></i></button>
+    <button onclick="navLightbox(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white z-10"><i data-lucide="chevron-left" class="w-6 h-6"></i></button>
+    <button onclick="navLightbox(1)" class="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white z-10"><i data-lucide="chevron-right" class="w-6 h-6"></i></button>
+    <div class="relative w-full h-full flex items-center justify-center p-6"><img id="lightboxImage" src="" class="max-w-full max-h-[88vh] object-contain animate-in zoom-in-95 duration-200"></div>
+    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 text-white/60 text-xs font-bold" id="lightbox-counter"></div>
+</div>
+
+{% include 'website/partials/modal_disponibilidade.html' %}
+{% include 'website/partials/modal_sucesso.html' %}
+
+<!-- Swiper JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.lucide) { lucide.createIcons(); }
+
+    const galleryImages = [
+        {% if primeira_imagem %}"{{ primeira_imagem.url_imagem.url }}",{% endif %}
+        {% for img in outras_imagens %}"{{ img.url_imagem.url }}",{% endfor %}
+    ].filter(Boolean);
+
+    const originalSlidesCount = document.querySelectorAll('.room-swiper .swiper-slide').length;
+    const shouldLoop = originalSlidesCount > 1;
+
+    const roomSwiper = new Swiper('.room-swiper', {
+        loop: shouldLoop,
+        centeredSlides: true,
+        slidesPerView: 'auto',
+        spaceBetween: 16,
+        slideToClickedSlide: true,
+        observer: true,
+        observeParents: true,
+        breakpoints: { 768: { spaceBetween: 24 } }
+    });
+
+    window.scrollGallery = function(dir) {
+        if (!roomSwiper) return;
+        dir === -1 ? roomSwiper.slidePrev() : roomSwiper.slideNext();
+    };
+
+    window.toggleAudio = function(event) {
+        event.stopPropagation();
+        const videos = document.querySelectorAll('video');
+        if (videos.length === 0) return;
+        const isMuted = videos[0].muted;
+        videos.forEach(v => v.muted = !isMuted);
+        
+        document.querySelectorAll('#audio-icon').forEach(icon => {
+            icon.setAttribute('data-lucide', !isMuted ? 'volume-2' : 'volume-x');
+        });
+        document.querySelectorAll('#audio-toggle-btn').forEach(btn => {
+            !isMuted ? btn.classList.add('bg-action-blue') : btn.classList.remove('bg-action-blue');
+        });
+        if (window.lucide) { lucide.createIcons(); }
+    };
+
+    let activeIndex = 0;
+    const modal = document.getElementById('lightboxModal');
+    const lbImg = document.getElementById('lightboxImage');
+    const lbCounter = document.getElementById('lightbox-counter');
+
+    function updateLightbox() {
+        if (galleryImages.length === 0) return;
+        lbImg.src = galleryImages[activeIndex];
+        lbCounter.textContent = (activeIndex + 1) + " / " + galleryImages.length;
+    }
+
+    window.openLightbox = function(index) {
+        activeIndex = index % galleryImages.length;
+        updateLightbox();
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    window.closeLightbox = function() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    };
+
+    window.closeLightboxOnBgClick = function(e) { if (e.target === modal) closeLightbox(); };
+
+    window.navLightbox = function(dir) {
+        activeIndex = (activeIndex + dir + galleryImages.length) % galleryImages.length;
+        updateLightbox();
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (modal.classList.contains('hidden')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') navLightbox(-1);
+        if (e.key === 'ArrowRight') navLightbox(1);
+    });
+
+    window.addToCartWorkflow = function() {
+        if (!selectedCheckIn || !selectedCheckOut) return;
+        
+        const checkinStr = `${selectedCheckIn.getFullYear()}-${String(selectedCheckIn.getMonth()+1).padStart(2,'0')}-${String(selectedCheckIn.getDate()).padStart(2,'0')}`;
+        const checkoutStr = `${selectedCheckOut.getFullYear()}-${String(selectedCheckOut.getMonth()+1).padStart(2,'0')}-${String(selectedCheckOut.getDate()).padStart(2,'0')}`;
+        
+        const formData = new FormData();
+        formData.append('checkin', checkinStr);
+        formData.append('checkout', checkoutStr);
+        
+        const csrfToken = '{{ csrf_token }}';
+        
+        fetch("{% url 'website:carrinho_adicionar' quarto.id %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessModal();
+                setTimeout(() => {
+                    window.location.href = "{% url 'website:home' %}?cart=1";
+                }, 2000);
+            } else {
+                alert(data.error);
+            }
+        });
+    };
+});
+</script>
+{% endblock %}
