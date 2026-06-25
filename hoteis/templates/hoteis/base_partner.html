@@ -650,9 +650,7 @@ x-data="{
             <!-- EXPANDIDO (Aberto ou no Hover) -->
             <div :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="items-center justify-center gap-3 w-full animate-in fade-in zoom-in duration-300">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-brand flex items-center justify-center text-white font-bold text-sm shadow-md">
-                        {{ hotel.nome|default:"NH"|slice:":2"|upper }}
-                    </div>
+                    <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-6 w-auto object-contain flex-shrink-0" title="Naviê Vibe">
                     <span class="text-brand-900 dark:text-white font-black tracking-tight text-sm truncate max-w-[110px]">
                         {{ hotel.nome|default:"Hospedagem" }}
                     </span>
@@ -669,9 +667,7 @@ x-data="{
 
             <!-- RECOLHIDO (Fechado) -->
             <div :class="sidebarMobileOpen ? 'hidden' : 'flex group-hover/sidebar:hidden'" class="flex-col items-center justify-center gap-2 w-full h-full py-2">
-                <div class="w-7 h-7 flex-shrink-0 rounded-md bg-brand flex items-center justify-center text-white font-bold text-[10px]" title="{{ hotel.nome }}">
-                    {{ hotel.nome|default:"NH"|slice:":2"|upper }}
-                </div>
+                <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-5 w-auto object-contain flex-shrink-0" title="Naviê Vibe">
                 
                 <div class="w-4 h-[2px] bg-slate-200 dark:bg-navie-border rounded-full shrink-0"></div>
                 
