@@ -236,7 +236,7 @@
                                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                hx-target="#quarto-mapa-container"
                                hx-swap="outerHTML"
-                               @submit="open = false; document.getElementById('modal-container').innerHTML = ''"
+                               hx-on::after-request="document.getElementById('modal-container').innerHTML = ''"
                                class="flex items-center gap-2">
                              
                              <input type="hidden" name="disponivel" :value="isAvailable ? 'true' : 'false'">
@@ -270,7 +270,7 @@
                                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                  hx-target="#quarto-mapa-container"
                                  hx-swap="outerHTML"
-                                 @click="open = false; document.getElementById('modal-container').innerHTML = ''"
+                                 hx-on::after-request="document.getElementById('modal-container').innerHTML = ''"
                                  class="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer">
                              <i data-lucide="log-out" class="w-4 h-4"></i>
                              <span>Confirmar Check-out</span>
@@ -290,7 +290,7 @@
                                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                  hx-target="#quarto-mapa-container"
                                  hx-swap="outerHTML"
-                                 @click="open = false; document.getElementById('modal-container').innerHTML = ''"
+                                 hx-on::after-request="document.getElementById('modal-container').innerHTML = ''"
                                  class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer">
                              <i data-lucide="check" class="w-4 h-4"></i>
                              <span>Concluir Limpeza & Liberar</span>
