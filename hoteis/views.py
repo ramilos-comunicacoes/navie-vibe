@@ -1453,7 +1453,7 @@ def ia_enviar_chat(request):
             resposta = "Para criar uma reserva, por favor indique o quarto e o nome do hóspede. Exemplo: *'Reservar o quarto 101 para Mateus de hoje a amanhã'*."
 
     # 6. Room Status / Availability Query
-    elif any(k in mensagem for k in ['livre', 'disponiv', 'ocupad', 'vago', 'status', 'quartos', 'como estão', 'situação']) and not any(k in mensagem for k in ['criar', 'adicionar']):
+    elif any(k in mensagem for k in ['livre', 'dispo', 'ocupa', 'vago', 'status', 'quarto', 'acomodação', 'chale', 'chalé', 'suite', 'suíte', 'como estão', 'situação', 'manuten', 'bloque', 'indisponi', 'limpez', 'limpa']) and not any(k in mensagem for k in ['criar', 'adicionar', 'reservar', 'reserva', 'checkout', 'check-out', 'liberar', 'desbloquear']):
         unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
         if unidade_match:
             quarto_num = unidade_match.group(1)
@@ -1487,7 +1487,7 @@ def ia_enviar_chat(request):
                 resposta = f"""
                 Aqui está o status atual do quarto solicitado:<br>
                 <div class="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-center justify-between shadow-sm mt-2">
-                    <div class="flex-1 min-w-0 mr-3">
+                    <div class="flex-1 min-w-0 mr-3 text-left">
                         <span class="text-[9px] font-black text-brand uppercase tracking-wider">{unidade.quarto.nome}</span>
                         <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider truncate mt-0.5">{unidade.identificador}</h4>
                         <p class="text-[10px] text-slate-400 mt-1 leading-tight break-words">{sub_desc}</p>
@@ -1504,23 +1504,23 @@ def ia_enviar_chat(request):
             unidades = list(unidades_qs)
             
             filter_desc = "gerais"
-            # Detect status filter
-            if any(k in mensagem for k in ['livre', 'livres', 'disponiv', 'vago', 'vagos']):
+            # Detect status filter using stems (unicode-safe)
+            if any(k in mensagem for k in ['livre', 'livres', 'dispo', 'vago', 'vagos']):
                 unidades = [u for u in unidades if u.status_mapa == 'livre']
                 filter_desc = "livres (disponíveis)"
-            elif any(k in mensagem for k in ['ocupad', 'alugad', 'cheio']):
+            elif any(k in mensagem for k in ['ocupa', 'aluga', 'cheio']):
                 unidades = [u for u in unidades if u.status_mapa == 'ocupado']
                 filter_desc = "ocupados"
-            elif any(k in mensagem for k in ['limpeza', 'sujo', 'limpar']):
+            elif any(k in mensagem for k in ['limpez', 'limpa', 'sujo']):
                 unidades = [u for u in unidades if u.status_mapa == 'limpeza']
                 filter_desc = "em limpeza"
-            elif any(k in mensagem for k in ['manutenção', 'manutencao', 'conserto', 'bloquead', 'interditad', 'indisponív', 'indisponiv']):
+            elif any(k in mensagem for k in ['manuten', 'bloque', 'interdit', 'indisponi']):
                 unidades = [u for u in unidades if u.status_mapa == 'indisponivel']
                 filter_desc = "em manutenção ou bloqueados"
 
             if unidades:
                 resposta = f"Aqui está o status das acomodações **{filter_desc}** na **{hotel.nome}**:<br>"
-                resposta += '<div class="grid grid-cols-2 gap-2.5 mt-3">'
+                resposta += '<div class="space-y-2 mt-3 w-full">'
                 for u in unidades:
                     st = u.status_mapa
                     if st == 'livre':
@@ -1532,7 +1532,7 @@ def ia_enviar_chat(request):
                         bg_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20"
                         text_class = "text-rose-600 dark:text-rose-400"
                         res = u.reserva_ativa
-                        hospede = res.hospede_nome.split()[0] if res and res.hospede_nome else "Hóspede"
+                        hospede = res.hospede_nome if res and res.hospede_nome else "Hóspede"
                         status_label = "Ocupado"
                         sub_desc = f"Hóspede: {hospede}"
                     elif st == 'limpeza':
@@ -1546,18 +1546,16 @@ def ia_enviar_chat(request):
                         motivo_str = u.get_motivo_indisponivel_display() if u.motivo_indisponivel else "Bloqueado"
                         status_label = motivo_str
                         sub_desc = u.justificativa_indisponivel or "Bloqueio operacional"
-                        if len(sub_desc) > 25:
-                            sub_desc = sub_desc[:22] + "..."
                     
                     resposta += f"""
-                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex flex-col justify-between shadow-sm">
-                        <div class="flex justify-between items-start gap-1">
-                            <span class="text-xs font-black text-slate-800 dark:text-white truncate">{u.identificador}</span>
-                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
-                                {status_label}
-                            </span>
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-center justify-between shadow-sm">
+                        <div class="flex flex-col min-w-0 mr-3 text-left">
+                            <span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider truncate">{u.identificador}</span>
+                            <span class="text-[9px] text-slate-400 dark:text-navie-textsec mt-0.5 truncate" title="{sub_desc}">{sub_desc}</span>
                         </div>
-                        <span class="text-[9px] text-slate-400 dark:text-navie-textsec mt-1 truncate" title="{sub_desc}">{sub_desc}</span>
+                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
+                            {status_label}
+                        </span>
                     </div>
                     """
                 resposta += '</div>'
