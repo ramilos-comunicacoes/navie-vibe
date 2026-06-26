@@ -7,7 +7,8 @@
     origReason: '{{ u.motivo_indisponivel|default:"manutencao" }}',
     customReason: '{{ u.justificativa_indisponivel|default:"" }}',
     origCustomReason: '{{ u.justificativa_indisponivel|default:"" }}',
-    isLimpeza: {% if u.status_mapa == 'limpeza' %}true{% else %}false{% endif %}
+    isLimpeza: {% if u.status_mapa == 'limpeza' %}true{% else %}false{% endif %},
+    reasonSelectOpen: false
 }" x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none" x-cloak>
     <!-- Backdrop Blur -->
     <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity pointer-events-auto" @click="open = false; document.getElementById('modal-container').innerHTML = ''"></div>
@@ -171,21 +172,52 @@
 
                      <!-- State Unavailable Form: Shown when isAvailable is False -->
                      <div x-show="!isAvailable" x-transition class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-4">
-                         <!-- Select do Motivo -->
-                         <div class="flex flex-col gap-2">
-                             <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Motivo da Indisponibilidade</label>
-                             <div class="relative">
-                                 <select x-model="reason" 
-                                         class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none cursor-pointer appearance-none pr-10">
-                                     <option value="limpeza" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Limpeza / Higienização</option>
-                                     <option value="manutencao" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Manutenção / Reparos</option>
-                                     <option value="outro" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Outro (Justificar abaixo)</option>
-                                 </select>
-                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
-                                     <i data-lucide="chevron-down" class="w-4.5 h-4.5"></i>
-                                 </div>
-                             </div>
-                         </div>
+                          <!-- Select do Motivo (Custom Styled Dropdown) -->
+                          <div class="flex flex-col gap-2">
+                              <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Motivo da Indisponibilidade</label>
+                              <div class="relative">
+                                  <button @click.stop="reasonSelectOpen = !reasonSelectOpen" 
+                                          type="button" 
+                                          class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none flex items-center justify-between cursor-pointer border border-slate-200/50 dark:border-white/5 text-left text-slate-700 dark:text-white">
+                                      <span x-text="reason === 'limpeza' ? 'Limpeza / Higienização' : (reason === 'manutencao' ? 'Manutenção / Reparos' : 'Outro (Justificar abaixo)')"></span>
+                                      <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 shrink-0 ml-1" :class="reasonSelectOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                  </button>
+                                  
+                                  <!-- Dropdown Options -->
+                                  <div x-show="reasonSelectOpen" 
+                                       @click.away="reasonSelectOpen = false"
+                                       x-transition:enter="transition ease-out duration-100"
+                                       x-transition:enter-start="opacity-0 scale-95"
+                                       x-transition:enter-end="opacity-100 scale-100"
+                                       x-transition:leave="transition ease-in duration-75"
+                                       x-transition:leave-start="opacity-100 scale-100"
+                                       x-transition:leave-end="opacity-0 scale-95"
+                                       class="absolute left-0 top-full mt-1.5 z-[120] w-full bg-white dark:bg-[#121212] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl overflow-hidden py-1.5"
+                                       style="display: none;">
+                                       
+                                      <button type="button" 
+                                              @click="reason = 'limpeza'; reasonSelectOpen = false" 
+                                              :class="reason === 'limpeza' ? 'bg-slate-100 dark:bg-white/10' : ''"
+                                              class="w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-slate-700 dark:text-white">
+                                          Limpeza / Higienização
+                                      </button>
+                                      <button type="button" 
+                                              @click="reason = 'manutencao'; reasonSelectOpen = false" 
+                                              :class="reason === 'manutencao' ? 'bg-slate-100 dark:bg-white/10' : ''"
+                                              class="w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-slate-700 dark:text-white">
+                                          Manutenção / Reparos
+                                      </button>
+                                      <button type="button" 
+                                              @click="reason = 'outro'; reasonSelectOpen = false" 
+                                              :class="reason === 'outro' ? 'bg-slate-100 dark:bg-white/10' : ''"
+                                              class="w-full text-left px-4 py-2.5 text-sm font-bold hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-slate-700 dark:text-white">
+                                          Outro (Justificar abaixo)
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
 
                          <!-- Justificativa -->
                          <div x-show="reason === 'outro' || reason === 'manutencao'" x-transition class="flex flex-col gap-2">
