@@ -6,10 +6,10 @@ x-data="{
     sidebarMobileOpen: false,
     sidebarExpanded: false,
     notificationsOpen: false,
-    activeTab: localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
+    activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
     quartosTab: localStorage.getItem('partner_quartos_tab') || 'mapa',
     viewMode: localStorage.getItem('partner_view_mode') || 'kanban',
-    configTab: localStorage.getItem('partner_config_tab') || 'site',
+    configTab: (new URLSearchParams(window.location.search)).get('config_tab') || localStorage.getItem('partner_config_tab') || 'site',
     estoqueTab: localStorage.getItem('partner_estoque_tab') || 'inventario',
     comprasMode: localStorage.getItem('partner_compras_mode') || 'list',
     comprasFormTab: localStorage.getItem('partner_compras_form_tab') || 'itens',
@@ -265,7 +265,7 @@ x-data="{
                 const style = document.createElement('style');
                 style.id = 'active-tab-bootstrap-style';
                 style.innerHTML = `
-                    [x-show^="activeTab === '"]:not([x-show*="activeTab === '${activeTab}'"]) {
+                    [x-show*="activeTab === "]:not([x-show*="${activeTab}"]) {
                         display: none !important;
                     }
                 `;
