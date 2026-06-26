@@ -1461,41 +1461,108 @@ def ia_enviar_chat(request):
             if unidade:
                 st = unidade.status_mapa
                 if st == 'livre':
-                    status_desc = "🟢 **Livre** (Pronto para check-in)"
+                    bg_class = "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20"
+                    text_class = "text-emerald-600 dark:text-emerald-400"
+                    status_label = "Livre"
+                    sub_desc = "Pronto para receber hóspedes"
                 elif st == 'ocupado':
+                    bg_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20"
+                    text_class = "text-rose-600 dark:text-rose-400"
                     res = unidade.reserva_ativa
                     hospede = res.hospede_nome if res else "Hóspede desconhecido"
-                    status_desc = f"🔴 **Ocupado** por {hospede} (Reserva até {res.data_checkout.strftime('%d/%m/%Y') if res else ''})"
+                    status_label = "Ocupado"
+                    sub_desc = f"Hóspede: {hospede} (até {res.data_checkout.strftime('%d/%m/%Y') if res else ''})"
                 elif st == 'limpeza':
-                    status_desc = "🧹 **Em Limpeza / Preparação**"
+                    bg_class = "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20"
+                    text_class = "text-amber-600 dark:text-amber-400"
+                    status_label = "Limpeza"
+                    sub_desc = "Aguardando higienização"
                 else:
+                    bg_class = "bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20"
+                    text_class = "text-slate-600 dark:text-slate-400"
                     motivo_str = unidade.get_motivo_indisponivel_display() if unidade.motivo_indisponivel else "Manutenção"
-                    just = f" - {unidade.justificativa_indisponivel}" if unidade.justificativa_indisponivel else ""
-                    status_desc = f"🚧 **Indisponível / Bloqueado** ({motivo_str}{just})"
-                
-                resposta = f"O **{unidade.identificador}** ({unidade.quarto.nome}) está atualmente com o status: {status_desc}."
+                    status_label = motivo_str
+                    sub_desc = unidade.justificativa_indisponivel or "Bloqueio operacional"
+
+                resposta = f"""
+                Aqui está o status atual do quarto solicitado:<br>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-center justify-between shadow-sm mt-2">
+                    <div class="flex-1 min-w-0 mr-3">
+                        <span class="text-[9px] font-black text-brand uppercase tracking-wider">{unidade.quarto.nome}</span>
+                        <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider truncate mt-0.5">{unidade.identificador}</h4>
+                        <p class="text-[10px] text-slate-400 mt-1 leading-tight break-words">{sub_desc}</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
+                        {status_label}
+                    </span>
+                </div>
+                """
             else:
                 resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
         else:
-            unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel).order_by('identificador')
-            if unidades.exists():
-                resposta = f"Aqui está o status atual das acomodações na **{hotel.nome}**:<br><br>"
+            unidades_qs = UnidadeQuarto.objects.filter(quarto__hotel=hotel).order_by('identificador')
+            unidades = list(unidades_qs)
+            
+            filter_desc = "gerais"
+            # Detect status filter
+            if any(k in mensagem for k in ['livre', 'livres', 'disponiv', 'vago', 'vagos']):
+                unidades = [u for u in unidades if u.status_mapa == 'livre']
+                filter_desc = "livres (disponíveis)"
+            elif any(k in mensagem for k in ['ocupad', 'alugad', 'cheio']):
+                unidades = [u for u in unidades if u.status_mapa == 'ocupado']
+                filter_desc = "ocupados"
+            elif any(k in mensagem for k in ['limpeza', 'sujo', 'limpar']):
+                unidades = [u for u in unidades if u.status_mapa == 'limpeza']
+                filter_desc = "em limpeza"
+            elif any(k in mensagem for k in ['manutenção', 'manutencao', 'conserto', 'bloquead', 'interditad', 'indisponív', 'indisponiv']):
+                unidades = [u for u in unidades if u.status_mapa == 'indisponivel']
+                filter_desc = "em manutenção ou bloqueados"
+
+            if unidades:
+                resposta = f"Aqui está o status das acomodações **{filter_desc}** na **{hotel.nome}**:<br>"
+                resposta += '<div class="grid grid-cols-2 gap-2.5 mt-3">'
                 for u in unidades:
                     st = u.status_mapa
                     if st == 'livre':
-                        status_desc = "🟢 *Livre*"
+                        bg_class = "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20"
+                        text_class = "text-emerald-600 dark:text-emerald-400"
+                        status_label = "Livre"
+                        sub_desc = u.quarto.nome
                     elif st == 'ocupado':
+                        bg_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20"
+                        text_class = "text-rose-600 dark:text-rose-400"
                         res = u.reserva_ativa
-                        hospede = res.hospede_nome if res else "Hóspede"
-                        status_desc = f"🔴 *Ocupado* (Hóspede: {hospede})"
+                        hospede = res.hospede_nome.split()[0] if res and res.hospede_nome else "Hóspede"
+                        status_label = "Ocupado"
+                        sub_desc = f"Hóspede: {hospede}"
                     elif st == 'limpeza':
-                        status_desc = "🧹 *Em Limpeza*"
+                        bg_class = "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20"
+                        text_class = "text-amber-600 dark:text-amber-400"
+                        status_label = "Limpeza"
+                        sub_desc = "Aguardando faxina"
                     else:
+                        bg_class = "bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20"
+                        text_class = "text-slate-600 dark:text-slate-400"
                         motivo_str = u.get_motivo_indisponivel_display() if u.motivo_indisponivel else "Bloqueado"
-                        status_desc = f"🚧 *Indisponível* ({motivo_str})"
-                    resposta += f"• **{u.identificador}** ({u.quarto.nome}): {status_desc}<br>"
+                        status_label = motivo_str
+                        sub_desc = u.justificativa_indisponivel or "Bloqueio operacional"
+                        if len(sub_desc) > 25:
+                            sub_desc = sub_desc[:22] + "..."
+                    
+                    resposta += f"""
+                    <div class="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-start gap-1">
+                            <span class="text-xs font-black text-slate-800 dark:text-white truncate">{u.identificador}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
+                                {status_label}
+                            </span>
+                        </div>
+                        <span class="text-[9px] text-slate-400 dark:text-navie-textsec mt-1 truncate" title="{sub_desc}">{sub_desc}</span>
+                    </div>
+                    """
+                resposta += '</div>'
             else:
-                resposta = f"Não há acomodações cadastradas para a pousada **{hotel.nome}**."
+                resposta = f"Não encontrei nenhuma acomodação com o status **{filter_desc}** na pousada **{hotel.nome}**."
 
     # 7. Create Task
     elif any(k in mensagem for k in ['criar', 'adicionar', 'marcar', 'atribuir', 'agendar', 'cadastrar']):
