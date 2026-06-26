@@ -1321,10 +1321,10 @@ def ia_enviar_chat(request):
                 motivo = 'outro'
                 motivo_desc = "Serviço Operacional"
                 
-                if any(k in mensagem for k in ['manutenção', 'manutencao', 'conserto', 'reparo', 'quebrado', 'vazamento']):
+                if any(k in mensagem for k in ['manutenção', 'manutencao', 'conserto', 'reparo', 'quebrado', 'vazamento', 'manut', 'amnut', 'anuten', 'manten', 'maten']):
                     motivo = 'manutencao'
                     motivo_desc = "Manutenção"
-                elif any(k in mensagem for k in ['limpeza', 'sujo', 'higieniza']):
+                elif any(k in mensagem for k in ['limpeza', 'sujo', 'higieniza', 'limpa', 'limpez', 'faxina']):
                     motivo = 'limpeza'
                     motivo_desc = "Limpeza"
                 
@@ -1520,7 +1520,7 @@ def ia_enviar_chat(request):
             resposta = "Para criar uma reserva, por favor indique o quarto e o nome do hóspede. Exemplo: *'Reservar o quarto 101 para Mateus de hoje a amanhã'*."
 
     # 6. Room Status / Availability Query
-    elif any(k in mensagem for k in ['livre', 'dispo', 'ocupa', 'vago', 'status', 'quarto', 'acomodação', 'chale', 'chalé', 'suite', 'suíte', 'como estão', 'situação', 'manuten', 'bloque', 'indisponi', 'limpez', 'limpa']) and not any(k in mensagem for k in ['criar', 'adicionar', 'reservar', 'reserva', 'checkout', 'check-out', 'liberar', 'desbloquear']):
+    elif any(k in mensagem for k in ['livre', 'dispo', 'ocupa', 'vago', 'status', 'quarto', 'acomodação', 'chale', 'chalé', 'suite', 'suíte', 'como estão', 'situação', 'manuten', 'manut', 'amnut', 'anuten', 'manten', 'maten', 'bloque', 'bloq', 'interdit', 'interd', 'indisponi', 'limpez', 'limpa', 'sujo', 'faxina']) and not any(k in mensagem for k in ['criar', 'adicionar', 'reservar', 'reserva', 'checkout', 'check-out', 'liberar', 'desbloquear']):
         unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
         if unidade_match:
             quarto_num = unidade_match.group(1)
@@ -1541,10 +1541,10 @@ def ia_enviar_chat(request):
             elif any(k in mensagem for k in ['ocupa', 'aluga', 'cheio']):
                 unidades = [u for u in unidades if u.status_mapa == 'ocupado']
                 filter_desc = "ocupados"
-            elif any(k in mensagem for k in ['limpez', 'limpa', 'sujo']):
+            elif any(k in mensagem for k in ['limpez', 'limpa', 'sujo', 'faxina']):
                 unidades = [u for u in unidades if u.status_mapa == 'limpeza']
                 filter_desc = "em limpeza"
-            elif any(k in mensagem for k in ['manuten', 'bloque', 'interdit', 'indisponi']):
+            elif any(k in mensagem for k in ['manuten', 'manut', 'amnut', 'anuten', 'manten', 'maten', 'bloque', 'bloq', 'interdit', 'interd', 'indisponi']):
                 unidades = [u for u in unidades if u.status_mapa == 'indisponivel']
                 filter_desc = "em manutenção ou bloqueados"
 
