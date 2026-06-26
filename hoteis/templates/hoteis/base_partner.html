@@ -1044,7 +1044,7 @@ x-data="{
                         <div x-show="open" x-transition.opacity style="display: none;"
                              class="absolute left-0 right-0 mt-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-navie-border shadow-xl p-1 flex flex-col gap-1 z-[99]">
                             {% for h in request.hoteis_autorizados %}
-                                <a href="?set_hotel={{ h.id }}" @click="configTab = 'site'"
+                                <a :href="'?set_hotel={{ h.id }}&tab=' + activeTab + (activeTab === 'configuracoes' ? '&config_tab=site' : '')"
                                    class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-colors"
                                    :class="(activeTab === 'configuracoes' && configTab === 'geral') ? 'text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand dark:hover:text-white' : ('{{ h.id }}' == '{{ hotel.id }}' ? 'text-brand bg-brand-50/80 dark:bg-white/10 dark:text-white' : 'text-slate-500 dark:text-navie-textsec hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand dark:hover:text-white')">
                                     <span class="truncate text-left">{{ h.nome }}</span>

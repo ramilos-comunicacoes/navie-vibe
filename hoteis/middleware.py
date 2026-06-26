@@ -19,7 +19,7 @@ class PartnerHotelMiddleware:
             hoteis_autorizados = []
             
             # Global roles can toggle active properties within the same company (Empresa)
-            if perfil.role in ['proprietario', 'gerente'] and perfil.hotel and perfil.hotel.empresa:
+            if (perfil.role in ['proprietario', 'gerente'] or request.user.is_superuser) and perfil.hotel and perfil.hotel.empresa:
                 empresa = perfil.hotel.empresa
                 hoteis_autorizados = Hotel.objects.filter(empresa=empresa, status='ativo')
                 

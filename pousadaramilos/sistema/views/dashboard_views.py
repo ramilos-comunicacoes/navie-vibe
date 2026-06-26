@@ -16,7 +16,7 @@ def obter_contexto_pousada(request):
     pousada_ativa = None
     
     # Regra 1: Funcionários (Gerentes, Recepcionistas, etc.) sempre usam a pousada vinculada
-    if request.user.pousada_vinculada:
+    if request.user.pousada_vinculada and not (request.user.role == 'DIRECAO' or request.user.is_superuser):
         pousada_ativa = request.user.pousada_vinculada
     else:
         # Regra 2: Admin global pode alternar via query string ?set_pousada=ID
