@@ -161,11 +161,25 @@ class UnidadeQuarto(models.Model):
     identificador = models.CharField(max_length=50, help_text="Ex: 101, Chale 01, Deck Master")
     ativa = models.BooleanField(default=True, db_index=True)
     
+    # Novos campos para gestão de disponibilidade operacional
+    disponivel = models.BooleanField(default=True, db_index=True)
+    motivo_indisponivel = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        choices=[('limpeza', 'Limpeza'), ('manutencao', 'Manutenção'), ('outro', 'Outro')]
+    )
+    justificativa_indisponivel = models.TextField(blank=True, null=True)
+    
     @property
     def status_mapa(self):
         from hoteis.models import Reserva, Tarefa
         if Reserva.objects.filter(unidade=self, status='hospedado').exists():
             return 'ocupado'
+        if not self.disponivel:
+            if self.motivo_indisponivel == 'limpeza':
+                return 'limpeza'
+            return 'indisponivel'
         if Tarefa.objects.filter(unidade=self, status__in=['todo', 'doing'], titulo__icontains='Limpeza').exists():
             return 'limpeza'
         return 'livre'

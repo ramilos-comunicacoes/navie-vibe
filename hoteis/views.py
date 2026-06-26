@@ -1848,6 +1848,73 @@ def partner_liberar_quarto(request, unidade_id):
 
 
 @login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_atualizar_disponibilidade_quarto(request, unidade_id):
+    """
+    Atualiza a disponibilidade de um quarto físico, gerencia ordens de serviço / tarefas
+    de limpeza/manutenção e retorna o mapa re-renderizado.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    from hoteis.models import UnidadeQuarto, Tarefa
+    unidade = get_object_or_404(UnidadeQuarto, id=unidade_id, quarto__hotel=hotel)
+    
+    disponivel_str = request.POST.get('disponivel', 'true')
+    disponivel = disponivel_str.lower() == 'true'
+    
+    unidade.disponivel = disponivel
+    if not disponivel:
+        motivo = request.POST.get('motivo_indisponivel')
+        justificativa = request.POST.get('justificativa_indisponivel', '').strip()
+        unidade.motivo_indisponivel = motivo
+        unidade.justificativa_indisponivel = justificativa
+        
+        # Criação de Tarefas operacionais correspondentes
+        if motivo == 'limpeza':
+            if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Limpeza').exists():
+                Tarefa.objects.create(
+                    hotel=hotel,
+                    titulo=f"Limpeza e Higienização - {unidade.identificador}",
+                    descricao="Solicitada manualmente via controle de disponibilidade.",
+                    prioridade='normal',
+                    status='todo',
+                    unidade=unidade
+                )
+        elif motivo == 'manutencao':
+            if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Manutenção').exists():
+                Tarefa.objects.create(
+                    hotel=hotel,
+                    titulo=f"Manutenção e Reparos - {unidade.identificador}",
+                    descricao=justificativa or "Manutenção solicitada manualmente via controle de disponibilidade.",
+                    prioridade='alta',
+                    status='todo',
+                    unidade=unidade
+                )
+        elif motivo == 'outro':
+            if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Serviço Operacional').exists():
+                Tarefa.objects.create(
+                    hotel=hotel,
+                    titulo=f"Serviço Operacional - {unidade.identificador}",
+                    descricao=justificativa or "Bloqueio operacional avulso.",
+                    prioridade='normal',
+                    status='todo',
+                    unidade=unidade
+                )
+    else:
+        unidade.motivo_indisponivel = None
+        unidade.justificativa_indisponivel = None
+        # Conclui tarefas operacionais ativas para liberar o quarto
+        Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing']).update(status='done')
+        
+    unidade.save()
+    
+    quartos = hotel.quartos.all()
+    return render(request, 'hoteis/quartos/partials/quarto_mapa.html', {'quartos': quartos})
+
+
+@login_required(login_url='hoteis:partner_login')
 def partner_detalhe_quarto_modal(request, unidade_id):
     """
     Exibe o modal de detalhes operacionais de um quarto físico, exibindo

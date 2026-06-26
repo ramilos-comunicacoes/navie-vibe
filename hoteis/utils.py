@@ -3,6 +3,9 @@ from django.db.models import Q
 from hoteis.models import UnidadeQuarto, Reserva, BloqueioQuarto, Quarto
 
 def verifica_disponibilidade_unidade(unidade, checkin, checkout):
+    if not unidade.ativa or not getattr(unidade, 'disponivel', True):
+        return False
+        
     # Check bloqueios
     bloqueios = BloqueioQuarto.objects.filter(
         unidade=unidade,
@@ -23,7 +26,7 @@ def verifica_disponibilidade_unidade(unidade, checkin, checkout):
 
 def checar_disponibilidade_quarto(quarto, checkin, checkout):
     """Retorna True se houver pelo menos uma unidade livre nesta categoria."""
-    unidades = quarto.unidades.filter(ativa=True)
+    unidades = quarto.unidades.filter(ativa=True, disponivel=True)
     if not unidades.exists(): return False # Sem unidades cadastradas
     
     for uni in unidades:

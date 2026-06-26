@@ -825,6 +825,127 @@ class PartnerSecaoTestCase(TestCase):
         self.assertIsNone(secao.texto)
 
 
+class PartnerQuartoDisponibilidadeTestCase(TestCase):
+    databases = '__all__'
+
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='partner_user_disp', password='password123')
+        self.empresa = Empresa.objects.create(
+            nome_fantasia='Test Hotel Co',
+            razao_social='Test Hotel Co LTDA',
+            cnpj='11.222.333/0001-44',
+            categoria='hospedagem'
+        )
+        self.local = Local.objects.create(nome='Local Test', endereco='Rua A, 1', cidade='Tianguá', estado='CE')
+        self.hotel = Hotel.objects.create(
+            empresa=self.empresa,
+            nome='Hotel Test',
+            local=self.local,
+            slug='hoteltest'
+        )
+        self.parceiro = ParceiroUsuario.objects.create(
+            user=self.user,
+            hotel=self.hotel,
+            role='proprietario',
+            ativo=True
+        )
+        self.quarto = Quarto.objects.create(
+            hotel=self.hotel,
+            nome='Chalé Luxo',
+            preco=250.00,
+            capacidade_pessoas=2
+        )
+        self.unidade = UnidadeQuarto.objects.create(
+            quarto=self.quarto,
+            identificador='Chalé 01',
+            ativa=True
+        )
+
+    def test_atualizar_disponibilidade_indisponivel_manutencao(self):
+        from hoteis.views import partner_atualizar_disponibilidade_quarto
+        from hoteis.models import Tarefa
+        
+        data = {
+            'disponivel': 'false',
+            'motivo_indisponivel': 'manutencao',
+            'justificativa_indisponivel': 'Ar condicionado quebrado'
+        }
+        
+        request = self.factory.post(f'/hospedagens/quartos/atualizar-disponibilidade/{self.unidade.id}/', data)
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_atualizar_disponibilidade_quarto(request, self.unidade.id)
+        self.assertEqual(response.status_code, 200)
+        
+        self.unidade.refresh_from_db()
+        self.assertFalse(self.unidade.disponivel)
+        self.assertEqual(self.unidade.motivo_indisponivel, 'manutencao')
+        self.assertEqual(self.unidade.justificativa_indisponivel, 'Ar condicionado quebrado')
+        self.assertEqual(self.unidade.status_mapa, 'indisponivel')
+        
+        # Check if task was created
+        task_exists = Tarefa.objects.filter(unidade=self.unidade, status='todo', titulo__icontains='Manutenção').exists()
+        self.assertTrue(task_exists)
+
+    def test_atualizar_disponibilidade_voltar_disponivel(self):
+        from hoteis.views import partner_atualizar_disponibilidade_quarto
+        from hoteis.models import Tarefa
+        
+        # Set to unavailable first
+        self.unidade.disponivel = False
+        self.unidade.motivo_indisponivel = 'limpeza'
+        self.unidade.save()
+        
+        # Create active clean task
+        task = Tarefa.objects.create(
+            hotel=self.hotel,
+            titulo="Limpeza e Preparação",
+            unidade=self.unidade,
+            status='todo'
+        )
+        
+        data = {
+            'disponivel': 'true'
+        }
+        
+        request = self.factory.post(f'/hospedagens/quartos/atualizar-disponibilidade/{self.unidade.id}/', data)
+        request.user = self.user
+        request.session = {}
+        
+        response = partner_atualizar_disponibilidade_quarto(request, self.unidade.id)
+        self.assertEqual(response.status_code, 200)
+        
+        self.unidade.refresh_from_db()
+        self.assertTrue(self.unidade.disponivel)
+        self.assertIsNone(self.unidade.motivo_indisponivel)
+        self.assertEqual(self.unidade.status_mapa, 'livre')
+        
+        # Check if task was marked done
+        task.refresh_from_db()
+        self.assertEqual(task.status, 'done')
+
+    def test_verifica_disponibilidade_unidade_checks_availability(self):
+        from hoteis.utils import verifica_disponibilidade_unidade, checar_disponibilidade_quarto
+        import datetime
+        
+        checkin = datetime.date.today()
+        checkout = checkin + datetime.timedelta(days=2)
+        
+        # Initially available
+        self.assertTrue(verifica_disponibilidade_unidade(self.unidade, checkin, checkout))
+        self.assertTrue(checar_disponibilidade_quarto(self.quarto, checkin, checkout))
+        
+        # Make unavailable
+        self.unidade.disponivel = False
+        self.unidade.save()
+        
+        self.assertFalse(verifica_disponibilidade_unidade(self.unidade, checkin, checkout))
+        self.assertFalse(checar_disponibilidade_quarto(self.quarto, checkin, checkout))
+
+
+
 
 
 
