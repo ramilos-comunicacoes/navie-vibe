@@ -1110,22 +1110,31 @@ def hotelaria(request):
 @login_required(login_url='hoteis:partner_login')
 def ia_enviar_chat(request):
     """
-    Assistant Naviê AI B2B - Conversational Task Engine.
-    ---------------------------------------------------
+    Assistant Naviê AI B2B - Conversational Task & Room Operations Engine.
+    ---------------------------------------------------------------------
     This controller receives a natural-language POST query from the hotel B2B interface 
     and simulates a fully autonomous, context-aware AI assistant. It actively parses 
-    user intents to read, schedule, and complete operational hotel tasks directly in the SQLite database.
+    user intents to read, schedule, and complete operational hotel tasks, manage room status 
+    (cleaning, maintenance, block/unblock), check room availability, create walk-in bookings, 
+    and perform checkouts directly in the SQLite database.
     
     INTENTS PARSED:
-    1. List Tasks ('listar', 'lista', 'tarefa', 'afazeres', 'pendente', 'hoje', 'urgente')
-       - Filters tasks by current hotel, date ("hoje"), priority ("urgente"), and active status.
-    2. Move/Update Task Status ('mudar', 'alterar', 'atualizar', 'concluir', 'fazer', 'fazendo', 'status')
-       - Extracts numerical Task ID and converts state to ('todo', 'doing', 'done').
-    3. Create Task ('criar', 'adicionar', 'marcar', 'atribuir', 'agendar')
-       - Resolves target dates ("hoje", "amanhã", or standard date strings).
-       - Automatically maps responsibility by looking up employee names inside the prompt.
-       - Maps room unit connection (e.g., "Suíte 101").
-       - Saves the newly created task to the database.
+    1. Room Status / Availability Query ('livre', 'disponiv', 'ocupad', 'vago', 'status', 'quartos', 'como estão', 'situação')
+       - Lists all rooms with their respective statuses (Livre, Ocupado, Limpeza, Indisponível), or detail for a specific room.
+    2. Room Checkout ('checkout', 'check-out', 'fechar conta', 'saída', 'saida')
+       - Marks the active hosted reservation for a unit as completed.
+    3. Block Room for Maintenance/Cleaning ('bloquear', 'interditar', 'indisponibilizar', 'indisponivel', 'indisponível')
+       - Sets availability to False, assigns a reason, and spawns the corresponding task.
+    4. Release Room ('liberar', 'desbloquear', 'disponibilizar', 'tornar disponível', 'tornar disponivel', 'ativar quarto')
+       - Sets availability to True, clears reasons, and completes active operational tasks for that room.
+    5. Book Room / Create Walk-in Reservation ('reservar', 'reserva', 'marcar hospedagem', 'agendar hospedagem', 'fazer reserva', 'nova reserva')
+       - Extracts guest name, dates (checkin/checkout), computes total price from base rates, creates walk-in Reserva and ReservaLog.
+    6. Move/Update Task Status ('conclua', 'concluir', 'feita', 'feito', 'pronto', 'concluída', 'mudar', 'alterar', 'atualizar', 'status', 'fazendo', 'progresso', 'fazer')
+       - Extracts task ID and updates status to todo, doing, or done.
+    7. Create Task ('criar', 'adicionar', 'marcar', 'atribuir', 'agendar')
+       - Spawns operational task for the staff, mapping dates, responsible team member, and room unit.
+    8. List Tasks ('listar', 'lista', 'tarefa', 'afazeres', 'pendente', 'hoje', 'urgente')
+       - Retrieves list of tasks with filters (e.g. today, high priority).
        
     INPUTS:
     - request: HttpRequest object
@@ -1148,44 +1157,347 @@ def ia_enviar_chat(request):
     
     import re
     from datetime import date, timedelta, datetime
-    from .models import Tarefa, UnidadeQuarto, ParceiroUsuario
+    from django.utils import timezone
+    from .models import Tarefa, UnidadeQuarto, ParceiroUsuario, Reserva, ReservaLog
     
     resposta = ""
     action_performed = False
     
-    # INTENT 1: Move/Update Task Status
-    if any(k in mensagem for k in ['conclua', 'concluir', 'feita', 'feito', 'pronto', 'concluída', 'mudar', 'alterar', 'atualizar', 'status', 'fazendo', 'progresso', 'fazer']):
-        # Look for task ID: "tarefa 5", "tarefa #5" or just a number
-        id_match = re.search(r'(?:tarefa\s+)?#?(\d+)', mensagem)
-        if id_match:
-            task_id = int(id_match.group(1))
-            tarefa = Tarefa.objects.filter(id=task_id, hotel=hotel).first()
-            if tarefa:
-                novo_status = None
-                status_label = ""
-                if any(k in mensagem for k in ['conclu', 'feita', 'feito', 'pronto', 'done']):
-                    novo_status = 'done'
-                    status_label = 'Concluído'
-                elif any(k in mensagem for k in ['fazendo', 'progresso', 'doing']):
-                    novo_status = 'doing'
-                    status_label = 'Em Progresso'
-                elif any(k in mensagem for k in ['fazer', 'todo', 'pendente']):
-                    novo_status = 'todo'
-                    status_label = 'A Fazer'
-                
-                if novo_status:
-                    tarefa.status = novo_status
-                    tarefa.save()
-                    action_performed = True
-                    resposta = f"Com certeza! Atualizei com sucesso o status da tarefa **#{tarefa.id} - {tarefa.titulo}** para **{status_label}** no banco de dados. *(Dica: Recarregue a página para atualizar o painel!)*"
-                else:
-                    resposta = f"Encontrei a tarefa **#{tarefa.id} - {tarefa.titulo}** (Status atual: {tarefa.get_status_display()}). Qual status deseja definir? (A Fazer, Em Progresso ou Concluído)"
-            else:
-                resposta = f"Desculpe, não encontrei nenhuma tarefa com o ID **#{task_id}** vinculada à pousada **{hotel.nome}**."
-        else:
-            resposta = "Para alterar o status de uma atividade, por favor informe o número/ID da tarefa. Exemplo: *'Marcar a tarefa 5 como concluída'*."
+    # -------------------------------------------------------------
+    # INTENT DETECTIONS
+    # -------------------------------------------------------------
+    
+    # Determine if it's a task status update
+    # Needs to match status keywords, containing a number (task ID) and NOT containing room operations keywords
+    id_match = re.search(r'(?:tarefa\s+)?#?(\d+)', mensagem)
+    is_task_status_update = False
+    if id_match:
+        # If it explicitly says 'tarefa' or if no room indicators are present in the text
+        if 'tarefa' in mensagem or not any(r in mensagem for r in ['quarto', 'suite', 'suíte', 'chale', 'chalé', 'reserva', 'checkout', 'check-out', 'bloquear', 'liberar', 'desbloquear']):
+            is_task_status_update = any(k in mensagem for k in ['conclua', 'concluir', 'feita', 'feito', 'pronto', 'concluída', 'mudar', 'alterar', 'atualizar', 'status', 'fazendo', 'progresso', 'fazer'])
+
+    # 1. Task Status Update
+    if is_task_status_update:
+        task_id = int(id_match.group(1))
+        tarefa = Tarefa.objects.filter(id=task_id, hotel=hotel).first()
+        if tarefa:
+            novo_status = None
+            status_label = ""
+            if any(k in mensagem for k in ['conclu', 'feita', 'feito', 'pronto', 'done']):
+                novo_status = 'done'
+                status_label = 'Concluído'
+            elif any(k in mensagem for k in ['fazendo', 'progresso', 'doing']):
+                novo_status = 'doing'
+                status_label = 'Em Progresso'
+            elif any(k in mensagem for k in ['fazer', 'todo', 'pendente']):
+                novo_status = 'todo'
+                status_label = 'A Fazer'
             
-    # INTENT 2: Create Task
+            if novo_status:
+                tarefa.status = novo_status
+                tarefa.save()
+                action_performed = True
+                resposta = f"Com certeza! Atualizei com sucesso o status da tarefa **#{tarefa.id} - {tarefa.titulo}** para **{status_label}** no banco de dados. *(Dica: Recarregue a página para atualizar o painel!)*"
+            else:
+                resposta = f"Encontrei a tarefa **#{tarefa.id} - {tarefa.titulo}** (Status atual: {tarefa.get_status_display()}). Qual status deseja definir? (A Fazer, Em Progresso ou Concluído)"
+        else:
+            resposta = f"Desculpe, não encontrei nenhuma tarefa com o ID **#{task_id}** vinculada à pousada **{hotel.nome}**."
+
+    # 2. Room Checkout
+    elif any(k in mensagem for k in ['checkout', 'check-out', 'fechar conta', 'saída', 'saida']) and any(r in mensagem for r in ['quarto', 'suite', 'suíte', 'chale', 'chalé', 'unidade']):
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                reserva = unidade.reserva_ativa
+                if reserva:
+                    reserva.status = 'concluido'
+                    reserva.checkout_realizado_em = timezone.now()
+                    reserva.save()
+                    
+                    ReservaLog.objects.create(
+                        reserva=reserva,
+                        usuario=request.user,
+                        acao='checkout',
+                        detalhes=f"Check-out realizado via assistente virtual Naviê AI pelo usuário {request.user.username}."
+                    )
+                    
+                    if not Tarefa.objects.filter(reserva=reserva, titulo__icontains="Limpeza").exists():
+                        Tarefa.objects.create(
+                            hotel=hotel,
+                            titulo=f"Limpeza e Preparação - {unidade.identificador}",
+                            descricao=f"Realizar limpeza pós-checkout da reserva #{str(reserva.id)[:8].upper()} do hóspede {reserva.hospede_nome}.",
+                            prioridade='alta',
+                            status='todo',
+                            unidade=unidade,
+                            reserva=reserva
+                        )
+                    
+                    action_performed = True
+                    resposta = f"Check-out da acomodação **{unidade.identificador}** (hóspede **{reserva.hospede_nome}**) concluído com sucesso! Uma tarefa de limpeza pós-checkout foi aberta para a equipe. *(Dica: Recarregue a página para atualizar o painel!)*"
+                else:
+                    resposta = f"O **{unidade.identificador}** não possui nenhuma reserva ativa (hospedado) no momento para fazer check-out."
+            else:
+                resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
+        else:
+            resposta = "Para fazer check-out de um quarto, por favor informe o número ou identificador dele. Exemplo: *'Checkout do quarto 101'*."
+
+    # 3. Block Room / Set Unavailable
+    elif any(k in mensagem for k in ['bloquear', 'interditar', 'indisponibilizar', 'indisponivel', 'indisponível']):
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                unidade.disponivel = False
+                motivo = 'outro'
+                motivo_desc = "Serviço Operacional"
+                
+                if any(k in mensagem for k in ['manutenção', 'manutencao', 'conserto', 'reparo', 'quebrado', 'vazamento']):
+                    motivo = 'manutencao'
+                    motivo_desc = "Manutenção"
+                elif any(k in mensagem for k in ['limpeza', 'sujo', 'higieniza']):
+                    motivo = 'limpeza'
+                    motivo_desc = "Limpeza"
+                
+                unidade.motivo_indisponivel = motivo
+                
+                justificativa = ""
+                quote_match = re.findall(r'"([^"]*)"', original_msg)
+                if quote_match:
+                    justificativa = quote_match[0].strip()
+                else:
+                    reason_match = re.search(r'(?:por|motivo|justificativa|devido a|de)\s+([^.\n]+)', mensagem)
+                    if reason_match:
+                        justificativa = reason_match.group(1).strip()
+                
+                unidade.justificativa_indisponivel = justificativa or "Bloqueio solicitado via chat Naviê AI."
+                unidade.save()
+                
+                # Create corresponding Task
+                if motivo == 'limpeza':
+                    if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Limpeza').exists():
+                        Tarefa.objects.create(
+                            hotel=hotel,
+                            titulo=f"Limpeza e Higienização - {unidade.identificador}",
+                            descricao=unidade.justificativa_indisponivel,
+                            prioridade='normal',
+                            status='todo',
+                            unidade=unidade
+                        )
+                elif motivo == 'manutencao':
+                    if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Manutenção').exists():
+                        Tarefa.objects.create(
+                            hotel=hotel,
+                            titulo=f"Manutenção e Reparos - {unidade.identificador}",
+                            descricao=unidade.justificativa_indisponivel,
+                            prioridade='alta',
+                            status='todo',
+                            unidade=unidade
+                        )
+                else:
+                    if not Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Serviço Operacional').exists():
+                        Tarefa.objects.create(
+                            hotel=hotel,
+                            titulo=f"Serviço Operacional - {unidade.identificador}",
+                            descricao=unidade.justificativa_indisponivel,
+                            prioridade='normal',
+                            status='todo',
+                            unidade=unidade
+                        )
+                
+                action_performed = True
+                resposta = f"Ok! O **{unidade.identificador}** foi bloqueado para **{motivo_desc}** no sistema.<br>Justificativa: *\"{unidade.justificativa_indisponivel}\"*.<br>*(Dica: Recarregue a página para atualizar o painel!)*"
+            else:
+                resposta = f"Desculpe, não encontrei a acomodação **{quarto_num}** na pousada **{hotel.nome}**."
+        else:
+            resposta = "Para bloquear um quarto, por favor informe o número ou identificador dele. Exemplo: *'Bloquear o quarto 101 por manutenção'*."
+
+    # 4. Release Room / Make Available
+    elif any(k in mensagem for k in ['liberar', 'desbloquear', 'disponibilizar', 'tornar disponível', 'tornar disponivel', 'ativar quarto']):
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                unidade.disponivel = True
+                unidade.motivo_indisponivel = None
+                unidade.justificativa_indisponivel = None
+                unidade.save()
+                
+                # Complete operational tasks linked to this unit
+                Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing']).update(status='done')
+                
+                action_performed = True
+                resposta = f"Excelente! O **{unidade.identificador}** foi liberado e está marcado como **Livre/Disponível**. As tarefas operacionais pendentes deste quarto foram concluídas. *(Dica: Recarregue a página para atualizar o painel!)*"
+            else:
+                resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
+        else:
+            resposta = "Para liberar um quarto, por favor informe o número ou identificador dele. Exemplo: *'Liberar o quarto 102'*."
+
+    # 5. Room Booking / Create Walk-in Reservation
+    elif any(k in mensagem for k in ['reservar', 'reserva', 'marcar hospedagem', 'agendar hospedagem', 'fazer reserva', 'nova reserva']):
+        hospede_nome = "Hóspede Avulso"
+        quotes = re.findall(r'"([^"]*)"', original_msg)
+        if len(quotes) >= 1:
+            hospede_nome = quotes[0].strip()
+        else:
+            name_match = re.search(r'(?:para|nome de|hóspede|hospede)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)*)', original_msg)
+            if name_match:
+                hospede_nome = name_match.group(1).strip()
+            else:
+                name_match_lc = re.search(r'(?:para|nome de|hóspede|hospede)\s+([a-zà-ú\s]+?)(?=\s+(?:de|do|desde|dia|em|no|com|q|$))', mensagem)
+                if name_match_lc:
+                    hospede_nome = name_match_lc.group(1).strip().title()
+        
+        # Parse Dates
+        dates_found = []
+        # YYYY-MM-DD
+        for d_str in re.findall(r'(\d{4}-\d{2}-\d{2})', mensagem):
+            try:
+                dates_found.append(datetime.strptime(d_str, '%Y-%m-%d').date())
+            except ValueError:
+                pass
+        # DD/MM/YYYY
+        for d_str in re.findall(r'(\d{2}/\d{2}/\d{4})', mensagem):
+            try:
+                dates_found.append(datetime.strptime(d_str, '%d/%m/%Y').date())
+            except ValueError:
+                pass
+        # DD/MM
+        if len(dates_found) < 2:
+            for d_str in re.findall(r'\b(\d{1,2})/(\d{1,2})\b', mensagem):
+                day = int(d_str[0])
+                month = int(d_str[1])
+                current_year = date.today().year
+                try:
+                    parsed_date = date(current_year, month, day)
+                    if parsed_date not in dates_found:
+                        dates_found.append(parsed_date)
+                except ValueError:
+                    pass
+        
+        # Relative shifts
+        if len(dates_found) < 2:
+            if 'hoje' in mensagem:
+                d = date.today()
+                if d not in dates_found:
+                    dates_found.append(d)
+            if 'amanhã' in mensagem or 'amanha' in mensagem:
+                d = date.today() + timedelta(days=1)
+                if d not in dates_found:
+                    dates_found.append(d)
+        
+        dates_found = sorted(list(set(dates_found)))
+        
+        if len(dates_found) >= 2:
+            checkin_date = dates_found[0]
+            checkout_date = dates_found[1]
+        elif len(dates_found) == 1:
+            checkin_date = dates_found[0]
+            checkout_date = checkin_date + timedelta(days=1)
+        else:
+            checkin_date = date.today()
+            checkout_date = checkin_date + timedelta(days=1)
+            
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                preco_diaria = unidade.quarto.preco
+                noites = (checkout_date - checkin_date).days
+                if noites <= 0:
+                    noites = 1
+                
+                valor_total = preco_diaria * noites
+                if unidade.quarto.tem_desconto_multidias and noites >= unidade.quarto.dias_minimos_desconto:
+                    desconto = (unidade.quarto.percentual_desconto / 100) * valor_total
+                    valor_total -= desconto
+                
+                res_status = 'confirmada'
+                if checkin_date <= date.today() and checkout_date > date.today():
+                    res_status = 'hospedado'
+                    
+                reserva = Reserva.objects.create(
+                    unidade=unidade,
+                    data_checkin=checkin_date,
+                    data_checkout=checkout_date,
+                    subtotal=preco_diaria * noites,
+                    taxas=0.00,
+                    valor_total=valor_total,
+                    status=res_status,
+                    canal_venda='walk-in',
+                    hospede_nome=hospede_nome,
+                    quantidade_hospedes=1
+                )
+                
+                ReservaLog.objects.create(
+                    reserva=reserva,
+                    usuario=request.user,
+                    acao='criar',
+                    detalhes=f"Reserva walk-in criada via assistente virtual Naviê AI pelo usuário {request.user.username}."
+                )
+                
+                action_performed = True
+                resposta = f"Sucesso! Criei uma reserva **{reserva.canal_venda.title()}** para **{hospede_nome}**:<br>" \
+                           f"• Acomodação: **{unidade.identificador}** ({unidade.quarto.nome})<br>" \
+                           f"• Período: **{checkin_date.strftime('%d/%m/%Y')}** a **{checkout_date.strftime('%d/%m/%Y')}** ({noites} noites)<br>" \
+                           f"• Valor Total: **R$ {valor_total:.2f}**<br>" \
+                           f"• Status: **{reserva.get_status_display()}**<br>" \
+                           f"*(Dica: Recarregue a página para ver a reserva no seu mapa de quartos!)*"
+            else:
+                resposta = f"Não encontrei o quarto/acomodação **{quarto_num}** cadastrado na pousada **{hotel.nome}**."
+        else:
+            resposta = "Para criar uma reserva, por favor indique o quarto e o nome do hóspede. Exemplo: *'Reservar o quarto 101 para Mateus de hoje a amanhã'*."
+
+    # 6. Room Status / Availability Query
+    elif any(k in mensagem for k in ['livre', 'disponiv', 'ocupad', 'vago', 'status', 'quartos', 'como estão', 'situação']) and not any(k in mensagem for k in ['criar', 'adicionar']):
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                st = unidade.status_mapa
+                if st == 'livre':
+                    status_desc = "🟢 **Livre** (Pronto para check-in)"
+                elif st == 'ocupado':
+                    res = unidade.reserva_ativa
+                    hospede = res.hospede_nome if res else "Hóspede desconhecido"
+                    status_desc = f"🔴 **Ocupado** por {hospede} (Reserva até {res.data_checkout.strftime('%d/%m/%Y') if res else ''})"
+                elif st == 'limpeza':
+                    status_desc = "🧹 **Em Limpeza / Preparação**"
+                else:
+                    motivo_str = unidade.get_motivo_indisponivel_display() if unidade.motivo_indisponivel else "Manutenção"
+                    just = f" - {unidade.justificativa_indisponivel}" if unidade.justificativa_indisponivel else ""
+                    status_desc = f"🚧 **Indisponível / Bloqueado** ({motivo_str}{just})"
+                
+                resposta = f"O **{unidade.identificador}** ({unidade.quarto.nome}) está atualmente com o status: {status_desc}."
+            else:
+                resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
+        else:
+            unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel).order_by('identificador')
+            if unidades.exists():
+                resposta = f"Aqui está o status atual das acomodações na **{hotel.nome}**:<br><br>"
+                for u in unidades:
+                    st = u.status_mapa
+                    if st == 'livre':
+                        status_desc = "🟢 *Livre*"
+                    elif st == 'ocupado':
+                        res = u.reserva_ativa
+                        hospede = res.hospede_nome if res else "Hóspede"
+                        status_desc = f"🔴 *Ocupado* (Hóspede: {hospede})"
+                    elif st == 'limpeza':
+                        status_desc = "🧹 *Em Limpeza*"
+                    else:
+                        motivo_str = u.get_motivo_indisponivel_display() if u.motivo_indisponivel else "Bloqueado"
+                        status_desc = f"🚧 *Indisponível* ({motivo_str})"
+                    resposta += f"• **{u.identificador}** ({u.quarto.nome}): {status_desc}<br>"
+            else:
+                resposta = f"Não há acomodações cadastradas para a pousada **{hotel.nome}**."
+
+    # 7. Create Task
     elif any(k in mensagem for k in ['criar', 'adicionar', 'marcar', 'atribuir', 'agendar', 'cadastrar']):
         data_vencimento = date.today()
         data_label = "hoje"
@@ -1197,7 +1509,6 @@ def ia_enviar_chat(request):
             data_vencimento = date.today() + timedelta(days=7)
             data_label = "daqui a uma semana"
         else:
-            # Look for YYYY-MM-DD
             date_match = re.search(r'(\d{4}-\d{2}-\d{2})', mensagem)
             if date_match:
                 try:
@@ -1206,7 +1517,6 @@ def ia_enviar_chat(request):
                 except ValueError:
                     pass
             else:
-                # Look for DD/MM/YYYY
                 date_match2 = re.search(r'(\d{2}/\d{2}/\d{4})', mensagem)
                 if date_match2:
                     try:
@@ -1215,7 +1525,6 @@ def ia_enviar_chat(request):
                     except ValueError:
                         pass
         
-        # Extract title
         titulo = ""
         quote_match = re.findall(r'"([^"]*)"', original_msg)
         if quote_match:
@@ -1269,7 +1578,7 @@ def ia_enviar_chat(request):
         resp_parts.append("*(Dica: Recarregue a página para ver a atividade no seu quadro de tarefas!)*")
         resposta = " ".join(resp_parts)
 
-    # INTENT 3: List Tasks
+    # 8. List Tasks
     elif any(k in mensagem for k in ['tarefa', 'afazeres', 'lista', 'listar', 'pendente', 'urgente', 'atividades']):
         real_tasks = Tarefa.objects.filter(hotel=hotel).order_by('data_vencimento')
         
@@ -1307,13 +1616,13 @@ def ia_enviar_chat(request):
         else:
             resposta = f"Não encontrei nenhuma tarefa {filter_desc} cadastrada para a **{hotel.nome}**."
 
-    # INTENT 4: Greeting & Finance Fallbacks
+    # 9. Greeting & Finance Fallbacks
     elif any(k in mensagem for k in ['olá', 'oi', 'bom dia', 'boa tarde', 'boa noite']):
-        resposta = f"Olá, **{request.user.first_name or request.user.username}**! Sou o seu assistente Naviê AI para a **{hotel.nome}**. Posso gerenciar tarefas operacionais em tempo real: experimente dizer *'criar faxina para amanhã'* ou *'quais tarefas pendentes?'*!"
+        resposta = f"Olá, **{request.user.first_name or request.user.username}**! Sou o seu assistente Naviê AI para a **{hotel.nome}**. Posso gerenciar tarefas operacionais e acomodações em tempo real: experimente dizer *'quais quartos estão livres?'*, *'reservar quarto 101 para Mateus'*, *'checkout do quarto 102'* ou *'bloquear quarto 105 para manutenção'*!"
     elif 'faturamento' in mensagem or 'financeiro' in mensagem or 'caixa' in mensagem or 'receita' in mensagem:
         resposta = "Consultando relatórios financeiros... Atualmente os lançamentos operacionais indicam faturamento positivo com fluxo de caixa sob controle neste mês. Para ver o detalhado, navegue até a aba 'Visão Geral / Financeiro'!"
     else:
-        resposta = "Entendido! Posso ajudar na organização operacional da pousada. Experimente me pedir para: *'listar as tarefas de hoje'*, *'marcar a tarefa 5 como concluída'* ou *'criar uma faxina para amanhã'*!"
+        resposta = "Entendido! Posso ajudar na organização operacional e gestão de acomodações da pousada. Experimente me pedir para: *'listar as tarefas de hoje'*, *'quais quartos estão livres?'*, *'reservar o quarto 101 para João Silva'* ou *'bloquear quarto 102 para manutenção'*!"
         
     context = {'resposta_ia': resposta}
     return render(request, 'hoteis/ia_chat_response.html', context)
@@ -1855,8 +2164,20 @@ def partner_liberar_quarto(request, unidade_id):
 @never_cache
 def partner_atualizar_disponibilidade_quarto(request, unidade_id):
     """
-    Atualiza a disponibilidade de um quarto físico, gerencia ordens de serviço / tarefas
-    de limpeza/manutenção e retorna o mapa re-renderizado.
+    Atualiza a disponibilidade operacional de um quarto físico específico da pousada e gerencia ordens de serviço.
+    
+    Parâmetros (via POST):
+    - unidade_id (int na URL): ID da unidade de quarto (UnidadeQuarto).
+    - disponivel (str): 'true' para liberar o quarto; 'false' para bloquear.
+    - motivo_indisponivel (str, se disponivel for 'false'): Escolha entre ['limpeza', 'manutencao', 'outro'].
+    - justificativa_indisponivel (str, opcional): Descrição textual com detalhes do motivo do bloqueio.
+    
+    Comportamento Operacional:
+    - Se liberado (disponivel='true'), limpa os campos de indisponibilidade e conclui (status='done') todas as tarefas pendentes vinculadas ao quarto.
+    - Se bloqueado (disponivel='false'), define o motivo e cria uma Tarefa pendente adequada (Limpeza, Manutenção ou Serviço Operacional) para a equipe.
+    
+    Retorno:
+    - Renderiza e retorna o fragmento HTMX 'hoteis/quartos/partials/quarto_mapa.html' atualizado.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse("Não autorizado", status=403)
@@ -1923,7 +2244,17 @@ def partner_atualizar_disponibilidade_quarto(request, unidade_id):
 def partner_detalhe_quarto_modal(request, unidade_id):
     """
     Exibe o modal de detalhes operacionais de um quarto físico, exibindo
-    abas de Ocupação e Ações/Liberação de forma reativa.
+    abas de Ocupação, Tarefas pendentes e Ações/Liberação de forma reativa.
+    
+    Parâmetros:
+    - unidade_id (int na URL): ID da unidade de quarto (UnidadeQuarto).
+    
+    Comportamento Operacional:
+    - Carrega a reserva ativa (se houver hóspede no quarto).
+    - Carrega todas as tarefas de limpeza pendentes vinculadas a esta unidade física.
+    
+    Retorno:
+    - Renderiza e retorna o modal HTML 'hoteis/quartos/partials/modal_detalhe_quarto.html'.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse("Não autorizado", status=403)
@@ -1953,7 +2284,18 @@ def partner_detalhe_quarto_modal(request, unidade_id):
 @never_cache
 def partner_checkout_quarto_mapa(request, reserva_id):
     """
-    Realiza o checkout de uma reserva ativa direto do mapa de quartos e retorna o mapa atualizado.
+    Realiza o check-out de uma reserva ativa direto do mapa de quartos e retorna o mapa atualizado.
+    
+    Parâmetros:
+    - reserva_id (int na URL): ID da reserva a ter o check-out efetuado.
+    
+    Comportamento Operacional:
+    - Atualiza a reserva para o status 'concluido' e define a data/hora real de check-out (checkout_realizado_em).
+    - Cria um log em ReservaLog documentando a ação.
+    - Cria automaticamente uma tarefa de limpeza pós-checkout ("Limpeza e Preparação - {quarto}") pendente para a equipe operacional.
+    
+    Retorno:
+    - Renderiza e retorna o fragmento HTMX 'hoteis/quartos/partials/quarto_mapa.html' atualizado.
     """
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse("Não autorizado", status=403)

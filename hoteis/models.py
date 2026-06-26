@@ -156,7 +156,22 @@ class QuartoImagem(models.Model):
         return f"Img {self.ordem} - {self.quarto.nome}"
 
 class UnidadeQuarto(models.Model):
-    """Representa a sala física real de uma categoria de quarto, ex: Quarto 101, Chale 2"""
+    """
+    Representa a sala física real (unidade individual/quarto específico) de uma categoria de quarto.
+    Exemplo: Quarto 101, Chale 2, Deck Master.
+    
+    Campos e Relacionamentos para Assistentes de IA:
+    - quarto (ForeignKey -> Quarto): A categoria do quarto (ex: Suíte Executiva), que define preço base e capacidade.
+    - identificador (CharField): O número ou nome visível da unidade física (ex: '101', 'Chalé 05').
+    - ativa (BooleanField): Indica se a unidade física está ativa e operante no sistema de vendas.
+    - disponivel (BooleanField): Status operacional do quarto para fins de check-in imediato ou estadia.
+    - motivo_indisponivel (CharField): Se disponivel for False, define a causa ('limpeza', 'manutencao', 'outro').
+    - justificativa_indisponivel (TextField): Observações ou detalhes adicionais da indisponibilidade.
+    
+    Propriedades Úteis para IA:
+    - status_mapa: Retorna o status consolidado da unidade em tempo real ('ocupado', 'limpeza', 'indisponivel', 'livre').
+    - reserva_ativa: Retorna o objeto Reserva ativo (hospedado) se o quarto estiver ocupado.
+    """
     quarto = models.ForeignKey(Quarto, on_delete=models.CASCADE, related_name='unidades')
     identificador = models.CharField(max_length=50, help_text="Ex: 101, Chale 01, Deck Master")
     ativa = models.BooleanField(default=True, db_index=True)
@@ -193,6 +208,37 @@ class UnidadeQuarto(models.Model):
         return f"{self.identificador} ({self.quarto.nome})"
 
 class Reserva(models.Model):
+    """
+    Representa uma reserva de hospedagem (booking) efetuada para uma unidade de quarto física específica.
+    Pode ter origem no marketplace (venda online) ou ser uma reserva direta criada na recepção (walk-in).
+    
+    Campos e Relacionamentos para Assistentes de IA:
+    - id (UUIDField): Chave primária única da reserva.
+    - usuario (ForeignKey -> User): Hóspede registrado no portal (opcional para walk-in).
+    - unidade (ForeignKey -> UnidadeQuarto): A unidade física de quarto reservada.
+    - data_checkin (DateField): Data agendada de chegada/entrada.
+    - data_checkout (DateField): Data agendada de partida/saída.
+    - subtotal (DecimalField): Valor bruto total das diárias.
+    - taxas (DecimalField): Taxas gerais incidentes.
+    - valor_total (DecimalField): Valor total pago/a pagar pelo hóspede.
+    - status (CharField): Estado atual da reserva:
+        * 'pendente': Aguardando confirmação ou pagamento.
+        * 'confirmada': Confirmada e aguardando check-in do hóspede.
+        * 'hospedado': Hóspede realizou check-in e está ocupando o quarto.
+        * 'concluido': Checkout realizado com sucesso. Estadia finalizada.
+        * 'cancelada': Reserva cancelada e unidade liberada.
+    - canal_venda (CharField): Origem da venda ('marketplace' ou 'walk-in').
+    - checkin_realizado_em (DateTimeField): Data e hora reais do check-in físico efetuado.
+    - checkout_realizado_em (DateTimeField): Data e hora reais do check-out físico efetuado.
+    - hospede_nome (CharField): Nome completo do hóspede titular da estadia.
+    - hospede_cpf, hospede_email, hospede_telefone, hospede_rg (CharField/EmailField): Dados pessoais de contato do hóspede.
+    - hospede_nacionalidade, hospede_profissao, hospede_endereco: Informações adicionais do hóspede para a FNRH.
+    - quantidade_hospedes (PositiveIntegerField): Quantidade total de pessoas inclusas na reserva.
+    - taxa_servico_plataforma, taxa_gateway, repasse_parceiro, ganho_liquido_plataforma: Métricas financeiras de controle administrativo.
+    
+    Propriedades Úteis para IA:
+    - noites: Retorna o número calculado de noites/diárias com base no checkin e checkout.
+    """
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
         ('confirmada', 'Confirmada'),
@@ -247,7 +293,16 @@ class Reserva(models.Model):
         return f"Reserva #{str(self.id)[:8].upper()} - {self.unidade.identificador}"
 
 class BloqueioQuarto(models.Model):
-    """Permite ao hotel bloquear datas por manutenção ou indisponibilidade"""
+    """
+    Permite ao hotel/pousada bloquear datas específicas de uma unidade física para reservas futuras,
+    seja por motivos de manutenção prolongada, reformas ou bloqueio estratégico.
+    
+    Campos para Assistentes de IA:
+    - unidade (ForeignKey -> UnidadeQuarto): A unidade física bloqueada.
+    - data_inicio (DateField): Data inicial do bloqueio.
+    - data_fim (DateField): Data final do bloqueio.
+    - motivo (CharField): Justificativa/motivo do bloqueio.
+    """
     unidade = models.ForeignKey(UnidadeQuarto, on_delete=models.CASCADE, related_name='bloqueios')
     data_inicio = models.DateField(db_index=True)
     data_fim = models.DateField(db_index=True)
