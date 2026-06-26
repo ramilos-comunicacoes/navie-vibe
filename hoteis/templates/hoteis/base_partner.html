@@ -218,26 +218,11 @@ x-data="{
             const theme = localStorage.getItem('theme') || 'light';
             const isDark = theme === 'glass' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             
-            const themeStyle = document.createElement('style');
-            themeStyle.id = 'theme-bootstrap-style';
             if (isDark) {
                 document.documentElement.classList.add('dark');
-                themeStyle.innerHTML = `
-                    html, body {
-                        background-color: #0f0f0f !important;
-                        color: #ffffff !important;
-                    }
-                `;
             } else {
                 document.documentElement.classList.remove('dark');
-                themeStyle.innerHTML = `
-                    html, body {
-                        background-color: #ffffff !important;
-                        color: #475569 !important;
-                    }
-                `;
             }
-            document.head.appendChild(themeStyle);
             
             // Oculta abas não ativas instantaneamente antes da renderização do DOM
             const activeTab = localStorage.getItem('partner_active_tab');
@@ -400,8 +385,23 @@ x-data="{
             overflow: hidden;
             scrollbar-gutter: auto;
             position: relative;
-            background-color: #ffffff;
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Prevent theme background flashing (FOUC) before Alpine initializes */
+        html:not(.dark), html:not(.dark) body {
+            background-color: #ffffff !important;
+            color: #475569 !important;
+        }
+        html.dark, html.dark body {
+            background-color: #0f0f0f !important;
+            color: #ffffff !important;
+        }
+        html.dark .theme-bg-light {
+            display: none !important;
+        }
+        html:not(.dark) .theme-bg-glass {
+            display: none !important;
         }
 
         /* --- Scrollbar Minimalista Premium --- */
@@ -630,11 +630,11 @@ x-data="{
 <body class="text-slate-600 dark:text-white font-sans antialiased flex min-h-screen selection:bg-brand-100 selection:text-brand-900 bg-white dark:bg-navie-bg relative">
 
     <!-- Fundo Limpo (Modo Claro) -->
-    <div x-show="theme === 'light'" class="fixed inset-0 z-0 pointer-events-none bg-white"></div>
+    <div x-show="theme === 'light'" class="fixed inset-0 z-0 pointer-events-none bg-white theme-bg-light"></div>
 
     <!-- MODO GLASS: Imagem de Fundo Dinâmica da Loja / Hotel -->
-    <div x-show="theme === 'glass'" x-transition.opacity.duration.1000ms 
-         class="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-navie-bg"
+    <div x-show="theme === 'glass'" 
+         class="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-navie-bg theme-bg-glass"
          style="display: none; height: 100dvh;">
         
         <div class="absolute inset-0 w-full h-full bg-black/45 z-10 backdrop-blur-[6px]"></div>
