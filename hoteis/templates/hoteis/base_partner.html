@@ -409,6 +409,16 @@ x-data="{
 
     <!-- Folha de Estilo Customizada (CSS Adicional de Vidro) -->
     <style>
+        /* Safe Area top alignment variable */
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 0px);
+        }
+        @media (max-width: 767px) {
+            :root {
+                --safe-area-top: max(24px, env(safe-area-inset-top, 0px));
+            }
+        }
+
         /* --- Estilos Globais e Reset --- */
         html, body { 
             margin: 0; 
@@ -635,6 +645,7 @@ x-data="{
             width: 288px; /* w-72 */
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out, width 0.3s ease-in-out;
+            padding-top: var(--safe-area-top);
         }
         .sidebar-spacer {
             display: none;
@@ -928,7 +939,7 @@ x-data="{
     <main class="flex-1 flex flex-col h-screen relative z-10 min-w-0 overflow-hidden" style="height: 100dvh;">
         
         <header class="bg-white/60 dark:bg-navie-glass backdrop-blur-md dark:backdrop-blur-[20px] border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 w-full flex-shrink-0 shadow-sm sticky top-0 z-[60] transition-colors"
-                style="height: calc(4.5rem + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px);">
+                style="height: calc(4.5rem + var(--safe-area-top)); padding-top: var(--safe-area-top);">
             
             <div class="flex items-center gap-4 shrink-0 mr-4">
                 <button @click="sidebarMobileOpen = !sidebarMobileOpen" class="md:hidden text-slate-500 dark:text-navie-textsec hover:text-brand transition-colors">
