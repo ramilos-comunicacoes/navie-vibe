@@ -1158,7 +1158,7 @@ def ia_enviar_chat(request):
     import re
     from datetime import date, timedelta, datetime
     from django.utils import timezone
-    from .models import Tarefa, UnidadeQuarto, ParceiroUsuario, Reserva, ReservaLog
+    from .models import Tarefa, UnidadeQuarto, ParceiroUsuario, Reserva, ReservaLog, HospedeReserva
     
     resposta = ""
     action_performed = False
@@ -1500,6 +1500,12 @@ def ia_enviar_chat(request):
                     quantidade_hospedes=1
                 )
                 
+                HospedeReserva.objects.create(
+                    reserva=reserva,
+                    ordem=1,
+                    nome=hospede_nome
+                )
+                
                 ReservaLog.objects.create(
                     reserva=reserva,
                     usuario=request.user,
@@ -1520,7 +1526,7 @@ def ia_enviar_chat(request):
             resposta = "Para criar uma reserva, por favor indique o quarto e o nome do hóspede. Exemplo: *'Reservar o quarto 101 para Mateus de hoje a amanhã'*."
 
     # 6. Room Status / Availability Query
-    elif any(k in mensagem for k in ['livre', 'dispo', 'ocupa', 'vago', 'status', 'quarto', 'acomodação', 'chale', 'chalé', 'suite', 'suíte', 'como estão', 'situação', 'manuten', 'manut', 'amnut', 'anuten', 'manten', 'maten', 'bloque', 'bloq', 'interdit', 'interd', 'indisponi', 'limpez', 'limpa', 'sujo', 'faxina']) and not any(k in mensagem for k in ['criar', 'adicionar', 'reservar', 'reserva', 'checkout', 'check-out', 'liberar', 'desbloquear']):
+    elif any(k in mensagem for k in ['livre', 'dispo', 'ocupa', 'vago', 'status', 'quarto', 'acomodação', 'chale', 'chalé', 'suite', 'suíte', 'como estão', 'situação', 'manuten', 'manut', 'amnut', 'anuten', 'manten', 'maten', 'bloque', 'bloq', 'interdit', 'interd', 'indisponi', 'limpez', 'limpa', 'sujo', 'faxina']) and not any(k in mensagem for k in ['criar', 'adicionar', 'reservar', 'reserva', 'checkout', 'check-out', 'liberar', 'desbloquear', 'cadastrar']):
         unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
         if unidade_match:
             quarto_num = unidade_match.group(1)
@@ -1548,10 +1554,141 @@ def ia_enviar_chat(request):
                 unidades = [u for u in unidades if u.status_mapa == 'indisponivel']
                 filter_desc = "em manutenção ou bloqueados"
 
+            # EXTRA FILTERS: Capacity (Pax)
+            num_map = {'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'tres': 3, 'três': 3, 'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10}
+            pax_match = re.search(r'(\d+|um|uma|dois|duas|três|tres|quatro|cinco|seis|sete|oito|nove|dez)\s*(?:pessoa|hóspede|hospede|cama|alguem|alguém|pax|leito)', mensagem)
+            pax = None
+            if pax_match:
+                val = pax_match.group(1)
+                pax = int(val) if val.isdigit() else num_map.get(val, None)
+            elif 'pessoa' in mensagem or 'hóspede' in mensagem or 'hospede' in mensagem:
+                digit_match = re.search(r'\b(\d+)\b', mensagem)
+                if digit_match:
+                    pax = int(digit_match.group(1))
+
+            if pax:
+                exact_units = [u for u in unidades if u.quarto.capacidade_pessoas == pax]
+                if exact_units:
+                    unidades = exact_units
+                else:
+                    unidades = [u for u in unidades if u.quarto.capacidade_pessoas >= pax]
+                filter_desc += f" para {pax} pessoas"
+
+            # EXTRA FILTERS: Amenities (Comodidades)
+            amenities_filters = []
+            if any(k in mensagem for k in ['ar condicionado', 'ar-condicionado', 'ar cond', 'climatiz', 'ar-cond']):
+                unidades = [u for u in unidades if any(x in (u.quarto.comodidades or '').lower() or x in (u.quarto.descricao or '').lower() or x in (u.quarto.seo_descricao or '').lower() for x in ['ar condicionado', 'ar-condicionado', 'ar cond', 'climatiz'])]
+                amenities_filters.append("ar-condicionado")
+            if any(k in mensagem for k in ['wifi', 'wi-fi', 'internet', 'fibra']):
+                unidades = [u for u in unidades if any(x in (u.quarto.comodidades or '').lower() or x in (u.quarto.descricao or '').lower() or x in (u.quarto.seo_descricao or '').lower() for x in ['wifi', 'wi-fi', 'internet', 'fibra'])]
+                amenities_filters.append("wi-fi")
+            if any(k in mensagem for k in ['frigobar', 'geladeira']):
+                unidades = [u for u in unidades if any(x in (u.quarto.comodidades or '').lower() or x in (u.quarto.descricao or '').lower() or x in (u.quarto.seo_descricao or '').lower() for x in ['frigobar', 'geladeira'])]
+                amenities_filters.append("frigobar")
+            if any(k in mensagem for k in ['hidro', 'jacuzzi', 'banheira']):
+                unidades = [u for u in unidades if any(x in (u.quarto.comodidades or '').lower() or x in (u.quarto.descricao or '').lower() or x in (u.quarto.seo_descricao or '').lower() for x in ['hidro', 'jacuzzi', 'banheira'])]
+                amenities_filters.append("hidromassagem/banheira")
+            if any(k in mensagem for k in ['piscina', 'vista']):
+                unidades = [u for u in unidades if any(x in (u.quarto.comodidades or '').lower() or x in (u.quarto.descricao or '').lower() or x in (u.quarto.seo_descricao or '').lower() for x in ['piscina', 'vista'])]
+                amenities_filters.append("piscina/vista")
+
+            if amenities_filters:
+                filter_desc += f" com {', '.join(amenities_filters)}"
+
+            # EXTRA FILTERS: Price limits
+            price_match = re.search(r'(?:até|ate|maximo|máximo|valor|preço|preco|diaria|diária)\s*(?:r\$)?\s*(\d+)', mensagem)
+            if price_match:
+                max_price = float(price_match.group(1))
+                if 'quarto' not in mensagem or max_price > 120:
+                    unidades = [u for u in unidades if u.quarto.preco <= max_price]
+                    filter_desc += f" com valor até R$ {max_price:.2f}"
+            elif any(k in mensagem for k in ['mais barato', 'mais em conta', 'menor preço', 'menor valor']):
+                unidades = sorted(unidades, key=lambda u: u.quarto.preco)
+                if unidades:
+                    cheapest_price = unidades[0].quarto.preco
+                    unidades = [u for u in unidades if u.quarto.preco == cheapest_price]
+                filter_desc += " de menor preço"
+
             if unidades:
                 resposta = formatar_quartos_grouped(unidades, hotel.nome, f"Aqui está o status das acomodações **{filter_desc}** na **{hotel.nome}**:")
             else:
                 resposta = f"Não encontrei nenhuma acomodação com o status **{filter_desc}** na pousada **{hotel.nome}**."
+
+    # 8. Register / Update Guest (Cadastrar Hóspede / Dados)
+    elif any(k in mensagem for k in ['cadastrar hóspede', 'cadastrar hospede', 'dados do hóspede', 'dados do hospede', 'preencher dados', 'adicionar acompanhante', 'registrar hóspede', 'registrar hospede', 'cadastrar pessoa']):
+        unidade_match = re.search(r'(?:quarto|suite|suíte|chale|chalé|unidade)\s*(\d+)', mensagem)
+        if unidade_match:
+            quarto_num = unidade_match.group(1)
+            unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
+            if unidade:
+                reserva = unidade.reserva_ativa
+                if not reserva:
+                    reserva = Reserva.objects.filter(unidade=unidade, status='confirmada').order_by('data_checkin').first()
+                
+                if reserva:
+                    nome = "Acompanhante"
+                    quotes = re.findall(r'"([^"]*)"', original_msg)
+                    if quotes:
+                        nome = quotes[0].strip()
+                    else:
+                        name_match = re.search(r'(?:nome|chamado|hóspede|hospede|pessoa|para)\s+([A-ZÀ-Ú][a-zà-ú]+(?:\s+[A-ZÀ-Ú][a-zà-ú]+)*)', original_msg)
+                        if name_match:
+                            nome = name_match.group(1).strip()
+                            
+                    cpf_match = re.search(r'\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b', original_msg)
+                    cpf = cpf_match.group(0) if cpf_match else ""
+                    
+                    email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', original_msg)
+                    email = email_match.group(0) if email_match else ""
+                    
+                    tel_match = re.search(r'\b(?:\(?\d{2}\)?\s*)?\d{4,5}-?\d{4}\b', original_msg)
+                    tel = tel_match.group(0) if tel_match else ""
+                    
+                    is_acompanhante = 'acompanhante' in mensagem or 'novo hóspede' in mensagem or 'nova pessoa' in mensagem
+                    if is_acompanhante:
+                        from django.db.models import Max
+                        max_ordem = reserva.hospedes.aggregate(Max('ordem'))['ordem__max'] or 1
+                        hospede = HospedeReserva.objects.create(
+                            reserva=reserva,
+                            ordem=max_ordem + 1,
+                            nome=nome,
+                            cpf=cpf,
+                            email=email,
+                            telefone=tel
+                        )
+                        msg_sucesso = f"Adicionei o acompanhante **{nome}** à reserva da acomodação **{unidade.identificador}**."
+                    else:
+                        hospede, created = HospedeReserva.objects.get_or_create(
+                            reserva=reserva,
+                            ordem=1,
+                            defaults={'nome': nome}
+                        )
+                        if not created and nome != "Acompanhante":
+                            hospede.nome = nome
+                        if cpf:
+                            hospede.cpf = cpf
+                        if email:
+                            hospede.email = email
+                        if tel:
+                            hospede.telefone = tel
+                        hospede.save()
+                        
+                        if nome != "Acompanhante":
+                            reserva.hospede_nome = nome
+                            reserva.save()
+                        msg_sucesso = f"Dados do hóspede titular **{hospede.nome}** atualizados com sucesso para a acomodação **{unidade.identificador}**."
+                        
+                    action_performed = True
+                    resposta = f"Perfeito! {msg_sucesso}<br>" \
+                               f"• CPF: **{hospede.cpf or 'Não informado'}**<br>" \
+                               f"• E-mail: **{hospede.email or 'Não informado'}**<br>" \
+                               f"• Telefone: **{hospede.telefone or 'Não informado'}**"
+                else:
+                    resposta = f"A acomodação **{unidade.identificador}** não possui nenhuma reserva ativa ou futura confirmada para cadastrar hóspedes no momento."
+            else:
+                resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
+        else:
+            resposta = "Para cadastrar dados de um hóspede, por favor indique o quarto e os dados dele. Exemplo: *'Cadastrar hóspede do quarto 101 com nome \"Mateus Silva\" e CPF 123.456.789-00'*."
 
     # 7. Create Task
     elif any(k in mensagem for k in ['criar', 'adicionar', 'marcar', 'atribuir', 'agendar', 'cadastrar']):
