@@ -321,7 +321,6 @@ x-data="{
     <!-- Bibliotecas Mestre (Estilo e Interação) -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/alpinejs@3.13.5" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- PLUGINS PRESERVADOS DO BASE ORIGINAL PARA NÃO QUEBRAR O SISTEMA -->
@@ -614,8 +613,8 @@ x-data="{
 
 <body class="text-slate-600 dark:text-white font-sans antialiased flex min-h-screen selection:bg-brand-100 selection:text-brand-900 bg-white dark:bg-navie-bg relative">
 
-    <!-- Fundo de Partículas (Apenas no Modo Claro para dar leveza e dinamismo) -->
-    <div id="particles-js" x-show="theme === 'light'" x-transition.opacity.duration.700ms class="fixed inset-0 z-0 pointer-events-none bg-white"></div>
+    <!-- Fundo Limpo (Modo Claro) -->
+    <div x-show="theme === 'light'" class="fixed inset-0 z-0 pointer-events-none bg-white"></div>
 
     <!-- MODO GLASS: Imagem de Fundo Dinâmica da Loja / Hotel -->
     <div x-show="theme === 'glass'" x-transition.opacity.duration.1000ms 
@@ -1096,34 +1095,9 @@ x-data="{
     <!-- MODAL CONTAINER UNIFICADO PARA HTMX -->
     <div id="modal-container" class="fixed inset-0 z-[9999] pointer-events-none"></div>
 
-    <!-- Inicialização do Canvas Particles no Tema Claro -->
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if(typeof particlesJS !== 'undefined') {
-                particlesJS("particles-js", {
-                    "particles": {
-                        "number": { "value": 30, "density": { "enable": true, "value_area": 800 } },
-                        "color": { "value": "#94a3b8" },
-                        "shape": { "type": "circle" },
-                        "opacity": { "value": 0.2, "random": false },
-                        "size": { "value": 1.5, "random": true },
-                        "line_linked": { "enable": true, "distance": 150, "color": "#cbd5e1", "opacity": 0.3, "width": 1 },
-                        "move": { "enable": true, "speed": 1.2, "direction": "none", "random": true, "straight": false, "out_mode": "out", "bounce": false }
-                    },
-                    "interactivity": {
-                        "detect_on": "canvas",
-                        "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": false }, "resize": true },
-                        "modes": { "grab": { "distance": 180, "line_linked": { "opacity": 0.5 } } }
-                    },
-                    "retina_detect": true
-                });
-            }
-        });
-    </script>
-    
-    <script>
-        function formatMoedas() {
-            document.querySelectorAll('.moeda-br').forEach(el => {
+        function formatMoedas(root = document) {
+            root.querySelectorAll('.moeda-br').forEach(el => {
                 let raw = el.getAttribute('data-valor') || '';
                 let clean = raw.replace(/\s/g, '');
                 if (clean.includes(',') && clean.includes('.')) {
@@ -1171,7 +1145,8 @@ x-data="{
                 const config = event.detail.requestConfig;
                 if (config && config.verb === 'get') {
                     const url = config.path || (event.detail.pathInfo && event.detail.pathInfo.requestPath);
-                    if (url) {
+                    // SALVAGUARDA CONTRA DUPLICAÇÃO: Não salvar URLs vazias, hashtags ou a própria dashboard (/sistema/)
+                    if (url && url !== '#' && !url.includes('/sistema/')) {
                         localStorage.setItem('partner_open_modal_url', url);
                     }
                 }
@@ -1184,12 +1159,19 @@ x-data="{
         });
         
         document.body.addEventListener('htmx:afterSwap', (event) => {
-            lucide.createIcons();
-            if (typeof flatpickr !== 'undefined') {
-                flatpickr(".date-picker", { locale: "pt", dateFormat: "d/m/Y" });
-                flatpickr(".datetime-picker", { locale: "pt", enableTime: true, dateFormat: "d/m/Y H:i", disableMobile: "true" });
+            const target = event.detail.target;
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
             }
-            formatMoedas();
+            if (typeof flatpickr !== 'undefined' && target) {
+                target.querySelectorAll(".date-picker").forEach(el => {
+                    flatpickr(el, { locale: "pt", dateFormat: "d/m/Y" });
+                });
+                target.querySelectorAll(".datetime-picker").forEach(el => {
+                    flatpickr(el, { locale: "pt", enableTime: true, dateFormat: "d/m/Y H:i", disableMobile: "true" });
+                });
+            }
+            formatMoedas(target || document);
             initMascaraMonetaria();
         });
 
@@ -1207,10 +1189,13 @@ x-data="{
 
             // Restaurar o modal se houver URL salva no localStorage
             const savedModalUrl = localStorage.getItem('partner_open_modal_url');
-            if (savedModalUrl && typeof htmx !== 'undefined') {
+            // SALVAGUARDA CONTRA DUPLICAÇÃO: Só restaurar se não for a própria dashboard (/sistema/) ou hashtag
+            if (savedModalUrl && savedModalUrl !== '#' && !savedModalUrl.includes('/sistema/') && typeof htmx !== 'undefined') {
                 setTimeout(() => {
                     htmx.ajax('GET', savedModalUrl, '#modal-container');
                 }, 100);
+            } else {
+                localStorage.removeItem('partner_open_modal_url');
             }
         });
 
