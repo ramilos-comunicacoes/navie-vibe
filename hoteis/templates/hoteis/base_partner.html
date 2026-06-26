@@ -117,9 +117,11 @@ x-data="{
             document.documentElement.classList.remove('dark');
         }
         
-        // Remove a folha de estilo temporária de bootstrap das abas
-        const bootstrapStyle = document.getElementById('active-tab-bootstrap-style');
-        if (bootstrapStyle) bootstrapStyle.remove();
+        // Remove a folha de estilo temporária de bootstrap das abas após a compilação do Alpine.js
+        this.$nextTick(() => {
+            const bootstrapStyle = document.getElementById('active-tab-bootstrap-style');
+            if (bootstrapStyle) bootstrapStyle.remove();
+        });
         
         // Sincronizar URL inicial caso não tenha parâmetros
         try {
@@ -936,8 +938,8 @@ x-data="{
                 <div class="hidden md:flex flex-col" x-show="activeTab !== 'configuracoes'">
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
-                        <span x-show="activeTab === 'financeiro'">Financeiro</span>
-                        <div x-show="activeTab === 'quartos'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case">
+                        <span x-show="activeTab === 'financeiro'" style="display: none;">Financeiro</span>
+                        <div x-show="activeTab === 'quartos'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
                                     :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                                     class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none">
@@ -951,52 +953,52 @@ x-data="{
                                 <span>Categorias & Acomodações</span>
                             </button>
                         </div>
-                        <span x-show="activeTab === 'reservas'">Aprovações & Reservas</span>
-                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
+                        <span x-show="activeTab === 'reservas'" style="display: none;">Aprovações & Reservas</span>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container" style="display: none;">
                             <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
                                 Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp; Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp;
                             </div>
                         </div>
-                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container">
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container" style="display: none;">
                             <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
                                 Compras & Lotes de Almoxarifado &nbsp;&bull;&nbsp; Compras & Lotes de Almoxarifado &nbsp;&bull;&nbsp;
                             </div>
                         </div>
-                        <span x-show="activeTab === 'atividades'">Cronograma & Atividades da Equipe</span>
-                        <span x-show="activeTab === 'equipe'">Colaboradores & Acessos</span>
-                        <span x-show="activeTab === 'checkin'">Check-in / Validador</span>
-                        <span x-show="activeTab === 'ocupacao'">Mapa de Ocupação</span>
-                        <span x-show="activeTab === 'pedidos'">Pedidos de Hóspedes</span>
-                        <span x-show="activeTab === 'limpeza'">Quartos para Higienizar</span>
-                        <span x-show="activeTab === 'manutencao'">Ordens de Serviço Ativas</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'site'">Vitrine & Configurações do Site</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'">Configurações Gerais do Grupo</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'">Plano & Assinatura SaaS</span>
+                        <span x-show="activeTab === 'atividades'" style="display: none;">Cronograma & Atividades da Equipe</span>
+                        <span x-show="activeTab === 'equipe'" style="display: none;">Colaboradores & Acessos</span>
+                        <span x-show="activeTab === 'checkin'" style="display: none;">Check-in / Validador</span>
+                        <span x-show="activeTab === 'ocupacao'" style="display: none;">Mapa de Ocupação</span>
+                        <span x-show="activeTab === 'pedidos'" style="display: none;">Pedidos de Hóspedes</span>
+                        <span x-show="activeTab === 'limpeza'" style="display: none;">Quartos para Higienizar</span>
+                        <span x-show="activeTab === 'manutencao'" style="display: none;">Ordens de Serviço Ativas</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'site'" style="display: none;">Vitrine & Configurações do Site</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'" style="display: none;">Configurações Gerais do Grupo</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'" style="display: none;">Plano & Assinatura SaaS</span>
                     </h1>
                     <!-- Subtítulo Dinâmico do Cabeçalho (Ocultado no Mobile para manter respiro) -->
                     <div class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold hidden sm:block">
-                        <span x-show="activeTab === 'financeiro'">Histórico financeiro e fluxo de caixa em tempo real</span>
-                        <span x-show="activeTab === 'quartos' && quartosTab === 'categorias'">Cadastre, edite e organize categorias, quartos e tarifas do hotel</span>
-                        <span x-show="activeTab === 'reservas'">Histórico de reservas ativas dos clientes</span>
-                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
+                        <span x-show="activeTab === 'financeiro'" style="display: none;">Histórico financeiro e fluxo de caixa em tempo real</span>
+                        <span x-show="activeTab === 'quartos' && quartosTab === 'categorias'" style="display: none;">Cadastre, edite e organize categorias, quartos e tarifas do hotel</span>
+                        <span x-show="activeTab === 'reservas'" style="display: none;">Histórico de reservas ativas dos clientes</span>
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container" style="display: none;">
                             <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">
                                 Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp; Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp;
                             </div>
                         </div>
-                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container">
+                        <div x-show="activeTab === 'estoque' && estoqueTab === 'compras'" class="marquee-container" style="display: none;">
                             <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">
                                 Gerencie compras, dê entrada em mercadorias e lance custos no financeiro &nbsp;&bull;&nbsp; Gerencie compras, dê entrada em mercadorias e lance custos no financeiro &nbsp;&bull;&nbsp;
                             </div>
                         </div>
-                        <span x-show="activeTab === 'atividades'">Gestão operacional de limpeza, manutenção e recepção B2B</span>
-                        <span x-show="activeTab === 'equipe'">Quadro operacional da pousada e níveis de acesso</span>
-                        <span x-show="activeTab === 'checkin'">Validador dinâmico de estadias da plataforma Naviê</span>
-                        <span x-show="activeTab === 'ocupacao'">Status e ocupação de quartos físicos hoje</span>
-                        <span x-show="activeTab === 'pedidos'">Solicitações de serviços de quarto e recepção</span>
-                        <span x-show="activeTab === 'limpeza'">Cronograma de limpeza do dia pós check-out</span>
-                        <span x-show="activeTab === 'manutencao'">Manutenções preventivas e corretivas dos quartos</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'site'">Personalização visual, branding, contatos e geolocalização do seu hotel</span>
-                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'">Personalização visual, logotipo, banner e slogan da rede unificada do grupo</span>
+                        <span x-show="activeTab === 'atividades'" style="display: none;">Gestão operacional de limpeza, manutenção e recepção B2B</span>
+                        <span x-show="activeTab === 'equipe'" style="display: none;">Quadro operacional da pousada e níveis de acesso</span>
+                        <span x-show="activeTab === 'checkin'" style="display: none;">Validador dinâmico de estadias da plataforma Naviê</span>
+                        <span x-show="activeTab === 'ocupacao'" style="display: none;">Status e ocupação de quartos físicos hoje</span>
+                        <span x-show="activeTab === 'pedidos'" style="display: none;">Solicitações de serviços de quarto e recepção</span>
+                        <span x-show="activeTab === 'limpeza'" style="display: none;">Cronograma de limpeza do dia pós check-out</span>
+                        <span x-show="activeTab === 'manutencao'" style="display: none;">Manutenções preventivas e corretivas dos quartos</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'site'" style="display: none;">Personalização visual, branding, contatos e geolocalização do seu hotel</span>
+                        <span x-show="activeTab === 'configuracoes' && configTab === 'geral'" style="display: none;">Personalização visual, logotipo, banner e slogan da rede unificada do grupo</span>
                     </div>
                 </div>
 
