@@ -6,7 +6,8 @@
     reason: '{{ u.motivo_indisponivel|default:"manutencao" }}',
     origReason: '{{ u.motivo_indisponivel|default:"manutencao" }}',
     customReason: '{{ u.justificativa_indisponivel|default:"" }}',
-    origCustomReason: '{{ u.justificativa_indisponivel|default:"" }}'
+    origCustomReason: '{{ u.justificativa_indisponivel|default:"" }}',
+    isLimpeza: {% if u.status_mapa == 'limpeza' %}true{% else %}false{% endif %}
 }" x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none" x-cloak>
     <!-- Backdrop Blur -->
     <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity pointer-events-auto" @click="open = false; document.getElementById('modal-container').innerHTML = ''"></div>
@@ -54,46 +55,17 @@
              
              <!-- TAB 1: STATUS / DETALHES -->
              <div x-show="activeModalTab === 'ocupacao'" class="space-y-4">
-                 <!-- Status Badge -->
-                 <div class="flex items-center justify-between p-4 rounded-2xl
-                     {% if u.status_mapa == 'ocupado' %}bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400
-                     {% elif u.status_mapa == 'limpeza' %}bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400
-                     {% elif u.status_mapa == 'indisponivel' %}bg-slate-500/10 border border-slate-200/50 dark:border-white/10 text-slate-700 dark:text-slate-400
-                     {% else %}bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400{% endif %}">
-                     
-                     <div class="flex items-center gap-2.5">
-                         {% if u.status_mapa == 'ocupado' %}
+                 {% if u.status_mapa == 'ocupado' and reserva %}
+                     <!-- Status Badge -->
+                     <div class="flex items-center justify-between p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400">
+                         <div class="flex items-center gap-2.5">
                              <i data-lucide="user" class="w-5 h-5 text-rose-500"></i>
                              <div>
                                  <h4 class="text-xs font-black uppercase tracking-wider">Ocupado</h4>
                                  <p class="text-[10px] opacity-80 font-semibold mt-0.5">Hóspede hospedado ativo no quarto</p>
                              </div>
-                         {% elif u.status_mapa == 'limpeza' %}
-                             <i data-lucide="broom" class="w-5 h-5 text-amber-500 animate-pulse"></i>
-                             <div>
-                                 <h4 class="text-xs font-black uppercase tracking-wider">Em Limpeza</h4>
-                                 <p class="text-[10px] opacity-80 font-semibold mt-0.5">Quarto aguardando higienização</p>
-                             </div>
-                         {% elif u.status_mapa == 'indisponivel' %}
-                             <i data-lucide="ban" class="w-5 h-5 text-slate-500"></i>
-                             <div>
-                                 <h4 class="text-xs font-black uppercase tracking-wider">Indisponível / Bloqueado</h4>
-                                 <p class="text-[10px] opacity-80 font-semibold mt-0.5">
-                                     {% if u.motivo_indisponivel == 'manutencao' %}Manutenção
-                                     {% elif u.motivo_indisponivel == 'limpeza' %}Limpeza
-                                     {% else %}{{ u.justificativa_indisponivel|default:"Indisponível" }}{% endif %}
-                                 </p>
-                             </div>
-                         {% else %}
-                             <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
-                             <div>
-                                 <h4 class="text-xs font-black uppercase tracking-wider">Disponível</h4>
-                             </div>
-                         {% endif %}
+                         </div>
                      </div>
-                 </div>
-
-                 {% if u.status_mapa == 'ocupado' and reserva %}
                      <!-- Detalhes da Reserva -->
                      <div class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-4">
                          <div class="flex justify-between items-start pb-2 border-b border-slate-200/40 dark:border-white/5">
@@ -140,33 +112,36 @@
                          </div>
                      </div>
                  {% else %}
-                     <!-- Interactive Status Card with Switch (Emerald green when available, Amber yellow when unavailable) -->
-                     <div :class="isAvailable ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'"
-                          class="flex items-center justify-between p-5 rounded-3xl border transition-all duration-300">
-                          
-                          <div class="flex items-center gap-3">
-                              <!-- Green Check Icon -->
-                              <i x-show="isAvailable" data-lucide="check-circle" class="w-6 h-6 text-emerald-500 shrink-0"></i>
-                              <!-- Amber Ban Icon -->
-                              <i x-show="!isAvailable" data-lucide="ban" class="w-6 h-6 text-amber-500 shrink-0"></i>
-                              
-                              <div>
-                                  <h4 class="text-xs font-black uppercase tracking-wider" x-text="isAvailable ? 'Disponível' : 'Indisponível / Bloqueado'"></h4>
-                                  <p class="text-[10px] opacity-80 font-bold mt-0.5" 
-                                     x-text="isAvailable ? 'Quarto higienizado e pronto para receber' : (reason === 'manutencao' ? 'Bloqueado para Manutenção' : (reason === 'limpeza' ? 'Aguardando Limpeza' : (customReason || 'Bloqueado por outros motivos')))">
-                                  </p>
-                              </div>
-                          </div>
+                      <!-- Interactive Status Card with Switch (Emerald green when available, Amber yellow when in cleaning, Slate gray when blocked) -->
+                      <div :class="!isAvailable ? 'bg-slate-500/10 border-slate-200/50 dark:border-white/10 text-slate-700 dark:text-slate-400' : (isLimpeza ? 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400')"
+                           class="flex items-center justify-between p-5 rounded-3xl border transition-all duration-300">
+                           
+                           <div class="flex items-center gap-3">
+                               <!-- Green Check Icon -->
+                               <i x-show="isAvailable && !isLimpeza" data-lucide="check-circle" class="w-6 h-6 text-emerald-500 shrink-0"></i>
+                               <!-- Broom Icon -->
+                               <i x-show="isAvailable && isLimpeza" data-lucide="broom" class="w-6 h-6 text-amber-500 shrink-0 animate-pulse"></i>
+                               <!-- Slate Ban Icon -->
+                               <i x-show="!isAvailable" data-lucide="ban" class="w-6 h-6 text-slate-500 shrink-0"></i>
+                               
+                               <div>
+                                   <h4 class="text-xs font-black uppercase tracking-wider" 
+                                       x-text="!isAvailable ? 'Indisponível / Bloqueado' : (isLimpeza ? 'Em Limpeza' : 'Disponível')"></h4>
+                                   <p class="text-[10px] opacity-80 font-bold mt-0.5" 
+                                      x-text="!isAvailable ? (reason === 'manutencao' ? 'Bloqueado para Manutenção' : (reason === 'limpeza' ? 'Aguardando Limpeza' : (customReason || 'Bloqueado por outros motivos'))) : (isLimpeza ? 'Quarto aguardando higienização' : 'Quarto higienizado e pronto para receber')">
+                                   </p>
+                               </div>
+                           </div>
 
-                          <!-- Switch Toggle (Standard Tailwind size: h-6, w-11, inner button h-5 w-5 translate-x-5) -->
-                          <button type="button" 
-                                  @click="isAvailable = !isAvailable"
-                                  :class="isAvailable ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'"
-                                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
-                              <span :class="isAvailable ? 'translate-x-5' : 'translate-x-0'"
-                                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                          </button>
-                     </div>
+                           <!-- Switch Toggle (Standard Tailwind size: h-6, w-11, inner button h-5 w-5 translate-x-5) -->
+                           <button type="button" 
+                                   @click="isAvailable = !isAvailable"
+                                   :class="isAvailable ? (isLimpeza ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-300 dark:bg-slate-700'"
+                                   class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                               <span :class="isAvailable ? 'translate-x-5' : 'translate-x-0'"
+                                     class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                           </button>
+                      </div>
 
                      <!-- If cleaning tasks exist, show them -->
                      {% if u.status_mapa == 'limpeza' and tarefas_limpeza %}
