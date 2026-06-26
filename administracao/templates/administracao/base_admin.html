@@ -88,7 +88,6 @@ x-data="{
     <!-- Bibliotecas Mestre -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/alpinejs@3.13.5" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Folha de Estilo Customizada -->
@@ -416,8 +415,8 @@ x-data="{
 
 <body class="text-slate-600 dark:text-white font-sans antialiased flex min-h-screen selection:bg-blue-100 selection:text-blue-900 bg-slate-50/50 dark:bg-navie-bg relative">
 
-    <!-- Fundo de Partículas (Apenas no Modo Claro) -->
-    <div id="particles-js" x-show="theme === 'light'" class="fixed inset-0 z-0 pointer-events-none bg-slate-50/40"></div>
+    <!-- Fundo Limpo (Modo Claro) -->
+    <div x-show="theme === 'light'" class="fixed inset-0 z-0 pointer-events-none bg-slate-50/40"></div>
 
     <!-- MODO GLASS: Imagem de Fundo Dinâmica -->
     <div x-show="theme === 'glass'" class="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-navie-bg" style="display: none; height: 100dvh;">
