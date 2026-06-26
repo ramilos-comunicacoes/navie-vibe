@@ -1314,7 +1314,7 @@ x-data="{
                     </div>
                 </div>
                 
-                <button @click="chatOpen = false" class="relative z-10 w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center transition-colors">
+                <button @click="chatOpen = false" class="relative z-10 w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 text-white flex items-center justify-center transition-colors md:hidden">
                     <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="minus" class="w-4 h-4"></i></span>
                 </button>
             </div>
@@ -1338,14 +1338,14 @@ x-data="{
                       hx-post="{% url 'hoteis:ia_enviar_chat' %}" 
                       hx-target="#chat-messages" 
                       hx-swap="beforeend"
-                      class="relative flex items-center w-full">
+                      class="relative flex items-center w-full md:flex md:items-stretch md:rounded-2xl md:overflow-hidden md:bg-slate-100/80 md:dark:bg-black/40 md:border md:border-transparent md:focus-within:border-brand/50 md:focus-within:bg-white md:dark:focus-within:bg-black/60 md:focus-within:ring-4 md:focus-within:ring-brand/10 md:transition-all md:shadow-none">
                     {% csrf_token %}
-                    <div class="relative flex-1">
+                    <div class="relative flex-1 md:static md:flex md:items-stretch md:w-full">
                         <textarea name="mensagem" required autocomplete="off" placeholder="Escreva sua pergunta..." rows="2"
                                   @keydown.enter.prevent="if (!$event.shiftKey) { $el.form.requestSubmit(); }"
-                                  class="w-full bg-slate-100/80 dark:bg-black/40 border border-transparent focus:border-brand/50 focus:bg-white dark:focus:bg-black/60 focus:ring-4 focus:ring-brand/10 rounded-2xl pl-4 pr-12 py-2.5 text-[13px] text-slate-800 dark:text-white transition-all shadow-inner resize-none custom-scrollbar leading-tight min-h-[44px] max-h-[120px]"></textarea>
+                                  class="w-full bg-slate-100/80 dark:bg-black/40 border border-transparent focus:border-brand/50 focus:bg-white dark:focus:bg-black/60 focus:ring-4 focus:ring-brand/10 rounded-2xl pl-4 pr-12 py-2.5 text-[13px] text-slate-800 dark:text-white transition-all shadow-inner resize-none custom-scrollbar leading-tight min-h-[44px] max-h-[120px] md:flex-1 md:bg-transparent md:border-0 md:focus:ring-0 md:focus:border-0 md:pl-4 md:pr-3 md:py-2.5 md:shadow-none"></textarea>
                         
-                        <button type="submit" class="absolute right-1.5 bottom-1.5 w-9 h-9 bg-brand hover:bg-brand/90 text-white rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md">
+                        <button type="submit" class="absolute right-1.5 bottom-1.5 w-9 h-9 bg-brand hover:bg-brand/90 text-white rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md md:static md:w-12 md:h-auto md:bg-brand md:hover:bg-brand/95 md:text-white md:rounded-none md:flex md:items-center md:justify-center md:transition-colors md:shrink-0 md:shadow-none">
                             <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="send" class="w-4 h-4 ml-0.5"></i></span>
                         </button>
                     </div>
