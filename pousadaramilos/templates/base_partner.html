@@ -606,7 +606,7 @@ x-data="{
                             Selecionar Unidade
                         </div>
                         {% for p in pousadas_list %}
-                            <a href="?{% for key, value in request.GET.items %}{% if key != 'set_pousada' %}{{ key }}={{ value }}&{% endif %}{% endfor %}set_pousada={{ p.id }}" 
+                            <a href="?set_pousada={{ p.id }}" 
                                class="dropdown-item {% if p.id == active_pousada.id %}text-brand bg-brand/5{% endif %}">
                                 <span>{{ p.nome }}</span>
                                 {% if p.id == active_pousada.id %}
