@@ -201,6 +201,59 @@ x-data="{
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Executa imediatamente no início do head para evitar FOUC/Clarão) -->
+    <script>
+        (function() {
+            // Sincroniza abas a partir de parâmetros na URL (tab e config_tab)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTab = urlParams.get('tab');
+            const urlConfigTab = urlParams.get('config_tab');
+            if (urlTab) {
+                localStorage.setItem('partner_active_tab', urlTab);
+            }
+            if (urlConfigTab) {
+                localStorage.setItem('partner_config_tab', urlConfigTab);
+            }
+
+            const theme = localStorage.getItem('theme') || 'light';
+            const isDark = theme === 'glass' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            const themeStyle = document.createElement('style');
+            themeStyle.id = 'theme-bootstrap-style';
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeStyle.innerHTML = `
+                    html, body {
+                        background-color: #0f0f0f !important;
+                        color: #ffffff !important;
+                    }
+                `;
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeStyle.innerHTML = `
+                    html, body {
+                        background-color: #ffffff !important;
+                        color: #475569 !important;
+                    }
+                `;
+            }
+            document.head.appendChild(themeStyle);
+            
+            // Oculta abas não ativas instantaneamente antes da renderização do DOM
+            const activeTab = localStorage.getItem('partner_active_tab');
+            if (activeTab) {
+                const style = document.createElement('style');
+                style.id = 'active-tab-bootstrap-style';
+                style.innerHTML = `
+                    [x-show^="activeTab === '"]:not([x-show*="activeTab === '${activeTab}'"]) {
+                        display: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        })();
+    </script>
+
     <!-- Cores Dinâmicas da Barra de Status do Celular -->
     <meta name="theme-color" content="#ffffff" id="theme-color-meta">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -572,58 +625,6 @@ x-data="{
         }
     </style>
 
-    <!-- HACK ANTI-FLASH & BOOTSTRAP TABS (Previne tela branca e flicker ao recarregar a página) -->
-    <script>
-        (function() {
-            // Sincroniza abas a partir de parâmetros na URL (tab e config_tab)
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlTab = urlParams.get('tab');
-            const urlConfigTab = urlParams.get('config_tab');
-            if (urlTab) {
-                localStorage.setItem('partner_active_tab', urlTab);
-            }
-            if (urlConfigTab) {
-                localStorage.setItem('partner_config_tab', urlConfigTab);
-            }
-
-            const theme = localStorage.getItem('theme') || 'light';
-            const isDark = theme === 'glass' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            
-            const themeStyle = document.createElement('style');
-            themeStyle.id = 'theme-bootstrap-style';
-            if (isDark) {
-                document.documentElement.classList.add('dark');
-                themeStyle.innerHTML = `
-                    html, body {
-                        background-color: #0f0f0f !important;
-                        color: #ffffff !important;
-                    }
-                `;
-            } else {
-                document.documentElement.classList.remove('dark');
-                themeStyle.innerHTML = `
-                    html, body {
-                        background-color: #ffffff !important;
-                        color: #475569 !important;
-                    }
-                `;
-            }
-            document.head.appendChild(themeStyle);
-            
-            // Oculta abas não ativas instantaneamente antes da renderização do DOM
-            const activeTab = localStorage.getItem('partner_active_tab');
-            if (activeTab) {
-                const style = document.createElement('style');
-                style.id = 'active-tab-bootstrap-style';
-                style.innerHTML = `
-                    [x-show^="activeTab === '"]:not([x-show*="activeTab === '${activeTab}'"]) {
-                        display: none !important;
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-        })();
-    </script>
 </head>
 
 <body class="text-slate-600 dark:text-white font-sans antialiased flex min-h-screen selection:bg-brand-100 selection:text-brand-900 bg-white dark:bg-navie-bg relative">
