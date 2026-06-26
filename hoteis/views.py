@@ -1848,6 +1848,78 @@ def partner_liberar_quarto(request, unidade_id):
 
 
 @login_required(login_url='hoteis:partner_login')
+def partner_detalhe_quarto_modal(request, unidade_id):
+    """
+    Exibe o modal de detalhes operacionais de um quarto físico, exibindo
+    abas de Ocupação e Ações/Liberação de forma reativa.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    from hoteis.models import UnidadeQuarto, Reserva, Tarefa
+    unidade = get_object_or_404(UnidadeQuarto, id=unidade_id, quarto__hotel=hotel)
+    
+    # Detalhes da reserva ativa se estiver ocupado
+    reserva = unidade.reserva_ativa
+    
+    # Tarefas de limpeza pendentes da unidade
+    tarefas_limpeza = Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Limpeza')
+    
+    context = {
+        'u': unidade,
+        'reserva': reserva,
+        'tarefas_limpeza': tarefas_limpeza,
+        'hotel': hotel,
+        'perfil': request.user.perfil_parceiro
+    }
+    return render(request, 'hoteis/quartos/partials/modal_detalhe_quarto.html', context)
+
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_checkout_quarto_mapa(request, reserva_id):
+    """
+    Realiza o checkout de uma reserva ativa direto do mapa de quartos e retorna o mapa atualizado.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    from hoteis.models import Reserva, UnidadeQuarto, Tarefa, ReservaLog
+    reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    
+    # Executa check-out
+    reserva.status = 'concluido'
+    from django.utils import timezone
+    reserva.checkout_realizado_em = timezone.now()
+    reserva.save()
+    
+    # Log action
+    ReservaLog.objects.create(
+        reserva=reserva,
+        usuario=request.user,
+        acao='checkout',
+        detalhes=f"Check-out realizado via mapa de quartos pelo usuário {request.user.username}."
+    )
+    
+    # Criar tarefa de limpeza pós-checkout se não existir
+    if not Tarefa.objects.filter(reserva=reserva, titulo__icontains="Limpeza").exists():
+        Tarefa.objects.create(
+            hotel=hotel,
+            titulo=f"Limpeza e Preparação - {reserva.unidade.identificador}",
+            descricao=f"Realizar limpeza pós-checkout da reserva #{str(reserva.id)[:8].upper()} do hóspede {reserva.hospede_nome}.",
+            prioridade='alta',
+            status='todo',
+            unidade=reserva.unidade,
+            reserva=reserva
+        )
+        
+    quartos = hotel.quartos.all()
+    return render(request, 'hoteis/quartos/partials/quarto_mapa.html', {'quartos': quartos})
+
+
+@login_required(login_url='hoteis:partner_login')
 @require_POST
 def partner_quarto_salvar(request):
     """
@@ -2790,6 +2862,15 @@ def partner_reserva_criar(request):
     data_inicio = date.today()
     data_fim = data_inicio + timedelta(days=1)
     
+    selected_unidade_id = request.GET.get('unidade_id')
+    selected_unidade_label = "Selecione..."
+    if selected_unidade_id:
+        try:
+            uni = UnidadeQuarto.objects.get(id=selected_unidade_id, quarto__hotel=hotel)
+            selected_unidade_label = f"{uni.quarto.nome} - {uni.identificador}"
+        except UnidadeQuarto.DoesNotExist:
+            selected_unidade_id = None
+            
     return render(request, 'hoteis/partials/modal_reserva_form.html', {
         'is_create': True,
         'hotel': hotel,
@@ -2799,7 +2880,9 @@ def partner_reserva_criar(request):
         'hospedes': [],
         'veiculo': None,
         'data_inicio': data_inicio,
-        'data_fim': data_fim
+        'data_fim': data_fim,
+        'selected_unidade_id': selected_unidade_id,
+        'selected_unidade_label': selected_unidade_label,
     })
 
 @login_required(login_url='hoteis:partner_login')

@@ -295,7 +295,7 @@ x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1.5">Escolher Acomodação</label>
-                            <div x-data="{ openUnidade: false, selectedUnidadeId: '{% if not is_create %}{{ reserva.unidade.id }}{% else %}{% endif %}', selectedUnidadeLabel: '{% if not is_create %}{{ reserva.unidade.quarto.nome }} - {{ reserva.unidade.identificador }}{% else %}Selecione...{% endif %}' }" class="relative w-full">
+                            <div x-data="{ openUnidade: false, selectedUnidadeId: '{% if not is_create %}{{ reserva.unidade.id }}{% elif selected_unidade_id %}{{ selected_unidade_id }}{% else %}{% endif %}', selectedUnidadeLabel: '{% if not is_create %}{{ reserva.unidade.quarto.nome }} - {{ reserva.unidade.identificador }}{% elif selected_unidade_label %}{{ selected_unidade_label }}{% else %}Selecione...{% endif %}' }" class="relative w-full">
                                 <button type="button" @click="openUnidade = !openUnidade" 
                                         class="w-full h-11 px-4 rounded-2xl modal-input-glass text-xs text-left flex justify-between items-center focus:outline-none">
                                     <span x-text="selectedUnidadeLabel" class="truncate"></span>

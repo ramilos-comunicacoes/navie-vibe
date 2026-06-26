@@ -24,7 +24,9 @@
                 {% for u in q.unidades.all %}
                     {% if u.ativa %}
                         <!-- Cubinho do Quarto -->
-                        <div class="relative group/room p-2 sm:p-3.5 rounded-xl sm:rounded-2xl flex flex-col justify-between items-center text-center border transition-all duration-300 min-h-[85px] sm:min-h-[105px]
+                        <div hx-get="{% url 'hoteis:partner_detalhe_quarto_modal' u.id %}"
+                             hx-target="#modal-container"
+                             class="relative group/room p-2 sm:p-3.5 rounded-xl sm:rounded-2xl flex flex-col justify-between items-center text-center border transition-all duration-300 min-h-[85px] sm:min-h-[105px] cursor-pointer hover:scale-[1.03] active:scale-95
                             {% if u.status_mapa == 'ocupado' %}
                                 bg-rose-500/5 dark:bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400 hover:border-rose-500/40
                             {% elif u.status_mapa == 'limpeza' %}
@@ -57,14 +59,9 @@
                                         {{ u.reserva_ativa.hospede_nome|default:"Hóspede" }}
                                     </span>
                                 {% elif u.status_mapa == 'limpeza' %}
-                                    <button hx-post="{% url 'hoteis:partner_liberar_quarto' u.id %}"
-                                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                                            hx-target="#quarto-mapa-container"
-                                            hx-swap="outerHTML"
-                                            class="w-full bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-0.5 sm:py-1 px-1 sm:px-2 rounded-lg sm:rounded-xl text-[7px] sm:text-[8px] uppercase tracking-wider transition-all flex items-center justify-center gap-0.5 hover:scale-[1.03] active:scale-95 cursor-pointer">
-                                        <i data-lucide="check" class="w-2 sm:w-2.5 h-2 sm:h-2.5"></i>
-                                        <span>Liberar</span>
-                                    </button>
+                                    <span class="block text-[7px] sm:text-[8px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                                        Limpeza
+                                    </span>
                                 {% else %}
                                     <span class="block text-[7px] sm:text-[8px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                                         Livre

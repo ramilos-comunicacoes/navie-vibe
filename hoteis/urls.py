@@ -30,6 +30,7 @@ urlpatterns = [
     path('hospedagens/quartos/salvar/', views.partner_quarto_salvar, name='partner_quarto_salvar'),
     path('hospedagens/quartos/deletar/<int:quarto_id>/', views.partner_quarto_deletar, name='partner_quarto_deletar'),
     path('hospedagens/quartos/liberar/<int:unidade_id>/', views.partner_liberar_quarto, name='partner_liberar_quarto'),
+    path('hospedagens/quartos/detalhe-modal/<int:unidade_id>/', views.partner_detalhe_quarto_modal, name='partner_detalhe_quarto_modal'),
     path('hospedagens/quartos/imagem/deletar/<int:imagem_id>/', views.partner_quarto_deletar_imagem, name='partner_quarto_deletar_imagem'),
     
     # Carrinho e Checkout (B2C)
@@ -47,6 +48,7 @@ urlpatterns = [
     path('hospedagens/reservas/<uuid:reserva_id>/salvar/', views.partner_reserva_salvar, name='partner_reserva_salvar'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkin/', views.partner_reserva_checkin, name='partner_reserva_checkin'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkout/', views.partner_reserva_checkout, name='partner_reserva_checkout'),
+    path('hospedagens/reservas/<uuid:reserva_id>/checkout-mapa/', views.partner_checkout_quarto_mapa, name='partner_checkout_quarto_mapa'),
     path('hospedagens/reservas/<uuid:reserva_id>/cancelar/', views.partner_reserva_cancelar, name='partner_reserva_cancelar'),
     
     # Atendimento ao Hóspede, Concierge & Consumo
