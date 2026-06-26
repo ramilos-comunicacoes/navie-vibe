@@ -1162,7 +1162,74 @@ def ia_enviar_chat(request):
     
     resposta = ""
     action_performed = False
-    
+
+    def formatar_quartos_grouped(unidades_list, hotel_nome, titulo_msg):
+        from collections import defaultdict
+        by_quarto = defaultdict(list)
+        for u in unidades_list:
+            by_quarto[u.quarto].append(u)
+            
+        html = f"{titulo_msg}<br>"
+        html += '<div class="space-y-3 mt-3 w-full">'
+        
+        for q, units in by_quarto.items():
+            units_sorted = sorted(units, key=lambda x: x.identificador)
+            primeira_img = q.imagens.first()
+            if primeira_img and primeira_img.url_imagem:
+                img_url = primeira_img.url_imagem.url
+            else:
+                nome_lc = q.nome.lower()
+                if any(k in nome_lc for k in ['single', 'solteiro', 'individual']):
+                    img_url = "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=200&auto=format&fit=crop&q=60"
+                elif any(k in nome_lc for k in ['casal', 'master', 'double', 'premium']):
+                    img_url = "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=200&auto=format&fit=crop&q=60"
+                else:
+                    img_url = "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=200&auto=format&fit=crop&q=60"
+                    
+            html += f"""
+            <div class="p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-start gap-3 text-left w-full shadow-sm">
+                <img src="{img_url}" class="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200/30 dark:border-white/10" alt="{q.nome}">
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider truncate">{q.nome}</h4>
+                    <p class="text-[9px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-none">Diária: R$ {q.preco:.2f} • {q.capacidade_pessoas} {'pessoa' if q.capacidade_pessoas == 1 else 'pessoas'}</p>
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+            """
+            
+            for u in units_sorted:
+                st = u.status_mapa
+                if st == 'livre':
+                    pill_class = "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                    title_tooltip = "Livre - Pronto para receber hóspedes"
+                elif st == 'ocupado':
+                    pill_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20 text-rose-600 dark:text-rose-400"
+                    res = u.reserva_ativa
+                    hospede = res.hospede_nome if res and res.hospede_nome else "Hóspede"
+                    checkout_date_str = res.data_checkout.strftime('%d/%m/%Y') if res and res.data_checkout else ""
+                    title_tooltip = f"Ocupado por {hospede} (Checkout: {checkout_date_str})" if checkout_date_str else f"Ocupado por {hospede}"
+                elif st == 'limpeza':
+                    pill_class = "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20 text-amber-600 dark:text-amber-400"
+                    title_tooltip = "Limpeza - Aguardando higienização"
+                else:
+                    pill_class = "bg-slate-500/10 dark:bg-slate-500/20 border-slate-300 dark:border-white/10 text-slate-600 dark:text-slate-400"
+                    motivo_str = u.get_motivo_indisponivel_display() if u.motivo_indisponivel else "Bloqueado"
+                    justif = u.justificativa_indisponivel or "Bloqueio operacional"
+                    title_tooltip = f"{motivo_str} - {justif}"
+                    
+                html += f"""
+                        <span class="px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider shrink-0 cursor-help transition-all hover:scale-105 {pill_class}" title="{title_tooltip}">
+                            {u.identificador}
+                        </span>
+                """
+                
+            html += """
+                    </div>
+                </div>
+            </div>
+            """
+            
+        html += '</div>'
+        return html
+
     # -------------------------------------------------------------
     # INTENT DETECTIONS
     # -------------------------------------------------------------
@@ -1459,44 +1526,7 @@ def ia_enviar_chat(request):
             quarto_num = unidade_match.group(1)
             unidade = UnidadeQuarto.objects.filter(identificador__icontains=quarto_num, quarto__hotel=hotel).first()
             if unidade:
-                st = unidade.status_mapa
-                if st == 'livre':
-                    bg_class = "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20"
-                    text_class = "text-emerald-600 dark:text-emerald-400"
-                    status_label = "Livre"
-                    sub_desc = "Pronto para receber hóspedes"
-                elif st == 'ocupado':
-                    bg_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20"
-                    text_class = "text-rose-600 dark:text-rose-400"
-                    res = unidade.reserva_ativa
-                    hospede = res.hospede_nome if res else "Hóspede desconhecido"
-                    status_label = "Ocupado"
-                    sub_desc = f"Hóspede: {hospede} (até {res.data_checkout.strftime('%d/%m/%Y') if res else ''})"
-                elif st == 'limpeza':
-                    bg_class = "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20"
-                    text_class = "text-amber-600 dark:text-amber-400"
-                    status_label = "Limpeza"
-                    sub_desc = "Aguardando higienização"
-                else:
-                    bg_class = "bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20"
-                    text_class = "text-slate-600 dark:text-slate-400"
-                    motivo_str = unidade.get_motivo_indisponivel_display() if unidade.motivo_indisponivel else "Manutenção"
-                    status_label = motivo_str
-                    sub_desc = unidade.justificativa_indisponivel or "Bloqueio operacional"
-
-                resposta = f"""
-                Aqui está o status atual do quarto solicitado:<br>
-                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-center justify-between shadow-sm mt-2">
-                    <div class="flex-1 min-w-0 mr-3 text-left">
-                        <span class="text-[9px] font-black text-brand uppercase tracking-wider">{unidade.quarto.nome}</span>
-                        <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider truncate mt-0.5">{unidade.identificador}</h4>
-                        <p class="text-[10px] text-slate-400 mt-1 leading-tight break-words">{sub_desc}</p>
-                    </div>
-                    <span class="px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
-                        {status_label}
-                    </span>
-                </div>
-                """
+                resposta = formatar_quartos_grouped([unidade], hotel.nome, "Aqui está o status do quarto solicitado:")
             else:
                 resposta = f"Não encontrei a acomodação **{quarto_num}** cadastrada na pousada **{hotel.nome}**."
         else:
@@ -1507,7 +1537,7 @@ def ia_enviar_chat(request):
             # Detect status filter using stems (unicode-safe)
             if any(k in mensagem for k in ['livre', 'livres', 'dispo', 'vago', 'vagos']):
                 unidades = [u for u in unidades if u.status_mapa == 'livre']
-                filter_desc = "livres (disponíveis)"
+                filter_desc = "livres"
             elif any(k in mensagem for k in ['ocupa', 'aluga', 'cheio']):
                 unidades = [u for u in unidades if u.status_mapa == 'ocupado']
                 filter_desc = "ocupados"
@@ -1519,46 +1549,7 @@ def ia_enviar_chat(request):
                 filter_desc = "em manutenção ou bloqueados"
 
             if unidades:
-                resposta = f"Aqui está o status das acomodações **{filter_desc}** na **{hotel.nome}**:<br>"
-                resposta += '<div class="space-y-2 mt-3 w-full">'
-                for u in unidades:
-                    st = u.status_mapa
-                    if st == 'livre':
-                        bg_class = "bg-emerald-500/10 dark:bg-emerald-500/20 border-emerald-500/20"
-                        text_class = "text-emerald-600 dark:text-emerald-400"
-                        status_label = "Livre"
-                        sub_desc = u.quarto.nome
-                    elif st == 'ocupado':
-                        bg_class = "bg-rose-500/10 dark:bg-rose-500/20 border-rose-500/20"
-                        text_class = "text-rose-600 dark:text-rose-400"
-                        res = u.reserva_ativa
-                        hospede = res.hospede_nome if res and res.hospede_nome else "Hóspede"
-                        status_label = "Ocupado"
-                        sub_desc = f"Hóspede: {hospede}"
-                    elif st == 'limpeza':
-                        bg_class = "bg-amber-500/10 dark:bg-amber-500/20 border-amber-500/20"
-                        text_class = "text-amber-600 dark:text-amber-400"
-                        status_label = "Limpeza"
-                        sub_desc = "Aguardando faxina"
-                    else:
-                        bg_class = "bg-slate-500/10 dark:bg-slate-500/20 border-slate-500/20"
-                        text_class = "text-slate-600 dark:text-slate-400"
-                        motivo_str = u.get_motivo_indisponivel_display() if u.motivo_indisponivel else "Bloqueado"
-                        status_label = motivo_str
-                        sub_desc = u.justificativa_indisponivel or "Bloqueio operacional"
-                    
-                    resposta += f"""
-                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 flex items-center justify-between shadow-sm">
-                        <div class="flex flex-col min-w-0 mr-3 text-left">
-                            <span class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider truncate">{u.identificador}</span>
-                            <span class="text-[9px] text-slate-400 dark:text-navie-textsec mt-0.5 truncate" title="{sub_desc}">{sub_desc}</span>
-                        </div>
-                        <span class="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider shrink-0 {bg_class} {text_class}">
-                            {status_label}
-                        </span>
-                    </div>
-                    """
-                resposta += '</div>'
+                resposta = formatar_quartos_grouped(unidades, hotel.nome, f"Aqui está o status das acomodações **{filter_desc}** na **{hotel.nome}**:")
             else:
                 resposta = f"Não encontrei nenhuma acomodação com o status **{filter_desc}** na pousada **{hotel.nome}**."
 
