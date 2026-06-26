@@ -1624,7 +1624,12 @@ def ia_enviar_chat(request):
     else:
         resposta = "Entendido! Posso ajudar na organização operacional e gestão de acomodações da pousada. Experimente me pedir para: *'listar as tarefas de hoje'*, *'quais quartos estão livres?'*, *'reservar o quarto 101 para João Silva'* ou *'bloquear quarto 102 para manutenção'*!"
         
-    context = {'resposta_ia': resposta}
+    # Converter markdown simples para HTML
+    resposta_html = resposta
+    resposta_html = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', resposta_html)
+    resposta_html = re.sub(r'\*(.*?)\*', r'<em>\1</em>', resposta_html)
+    
+    context = {'resposta_ia': resposta_html}
     return render(request, 'hoteis/ia_chat_response.html', context)
 
 
