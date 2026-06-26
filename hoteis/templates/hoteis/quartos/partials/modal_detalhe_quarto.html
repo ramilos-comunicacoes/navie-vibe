@@ -88,13 +88,9 @@
                              <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
                              <div>
                                  <h4 class="text-xs font-black uppercase tracking-wider">Disponível</h4>
-                                 <p class="text-[10px] opacity-80 font-semibold mt-0.5">Quarto higienizado e pronto para receber</p>
-                             </div>
-                         {% endif %}
+                         </div>
                      </div>
-                 </div>
 
-                 {% if u.status_mapa == 'ocupado' and reserva %}
                      <!-- Detalhes da Reserva -->
                      <div class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-4">
                          <div class="flex justify-between items-start pb-2 border-b border-slate-200/40 dark:border-white/5">
@@ -140,15 +136,43 @@
                              </button>
                          </div>
                      </div>
-                 {% elif u.status_mapa == 'limpeza' %}
-                     <!-- Detalhes de Limpeza -->
-                     <div class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-3">
-                         <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200/40 dark:border-white/5">
-                             <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-500"></i>
-                             <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Limpezas/Manutenções Pendentes</h5>
-                         </div>
-                         
-                         {% if tarefas_limpeza %}
+                 {% else %}
+                     <!-- Interactive Status Card with Switch (Emerald green when available, Amber yellow when unavailable) -->
+                     <div :class="isAvailable ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-400'"
+                          class="flex items-center justify-between p-5 rounded-3xl border transition-all duration-300">
+                          
+                          <div class="flex items-center gap-3">
+                              <!-- Green Check Icon -->
+                              <i x-show="isAvailable" data-lucide="check-circle" class="w-6 h-6 text-emerald-500 shrink-0"></i>
+                              <!-- Amber Ban Icon -->
+                              <i x-show="!isAvailable" data-lucide="ban" class="w-6 h-6 text-amber-500 shrink-0"></i>
+                              
+                              <div>
+                                  <h4 class="text-xs font-black uppercase tracking-wider" x-text="isAvailable ? 'Disponível' : 'Indisponível / Bloqueado'"></h4>
+                                  <p class="text-[10px] opacity-80 font-bold mt-0.5" 
+                                     x-text="isAvailable ? 'Quarto higienizado e pronto para receber' : (reason === 'manutencao' ? 'Bloqueado para Manutenção' : (reason === 'limpeza' ? 'Aguardando Limpeza' : (customReason || 'Bloqueado por outros motivos')))">
+                                  </p>
+                              </div>
+                          </div>
+
+                          <!-- Switch Toggle (Standard Tailwind size: h-6, w-11, inner button h-5 w-5 translate-x-5) -->
+                          <button type="button" 
+                                  @click="isAvailable = !isAvailable"
+                                  :class="isAvailable ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'"
+                                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                              <span :class="isAvailable ? 'translate-x-5' : 'translate-x-0'"
+                                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                          </button>
+                     </div>
+
+                     <!-- If cleaning tasks exist, show them -->
+                     {% if u.status_mapa == 'limpeza' and tarefas_limpeza %}
+                         <!-- Detalhes de Limpeza -->
+                         <div class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-3">
+                             <div class="flex items-center gap-1.5 pb-2 border-b border-slate-200/40 dark:border-white/5">
+                                 <i data-lucide="clipboard-list" class="w-4 h-4 text-amber-500"></i>
+                                 <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Limpezas/Manutenções Pendentes</h5>
+                             </div>
                              <div class="space-y-2">
                                  {% for t in tarefas_limpeza %}
                                      <div class="p-3 bg-white dark:bg-[#181818] border border-slate-100 dark:border-white/5 rounded-2xl flex items-center justify-between text-xs">
@@ -164,102 +188,60 @@
                                      </div>
                                  {% endfor %}
                              </div>
-                         {% else %}
-                             <p class="text-xs text-slate-500 italic">Nenhuma ordem de serviço ou tarefa de limpeza ativa no banco de dados para este quarto, mas seu status do mapa está setado para limpeza.</p>
-                         {% endif %}
+                         </div>
+                     {% endif %}
+
+                     <!-- State Unavailable Form: Shown when isAvailable is False -->
+                     <div x-show="!isAvailable" x-transition class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-4">
+                         <!-- Select do Motivo -->
+                         <div class="flex flex-col gap-2">
+                             <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Motivo da Indisponibilidade</label>
+                             <div class="relative">
+                                 <select x-model="reason" 
+                                         class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none cursor-pointer appearance-none pr-10">
+                                     <option value="limpeza" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Limpeza / Higienização</option>
+                                     <option value="manutencao" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Manutenção / Reparos</option>
+                                     <option value="outro" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Outro (Justificar abaixo)</option>
+                                 </select>
+                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
+                                     <i data-lucide="chevron-down" class="w-4.5 h-4.5"></i>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Justificativa -->
+                         <div x-show="reason === 'outro' || reason === 'manutencao'" x-transition class="flex flex-col gap-2">
+                             <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Descrição / Justificativa</label>
+                             <input type="text" 
+                                    x-model="customReason" 
+                                    placeholder="Ex: Vazamento no banheiro, pintura..." 
+                                    class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm outline-none focus:outline-none">
+                         </div>
+                     </div>
+
+                     <!-- Save Changes (Vzinho) -->
+                     <div x-show="isAvailable !== origIsAvailable || (!isAvailable && (reason !== origReason || ((reason === 'outro' || reason === 'manutencao') && customReason !== origCustomReason)))" 
+                          x-transition 
+                          class="flex justify-end items-center gap-2 pt-2">
+                         <form hx-post="{% url 'hoteis:partner_atualizar_disponibilidade_quarto' u.id %}"
+                               hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                               hx-target="#quarto-mapa-container"
+                               hx-swap="outerHTML"
+                               @submit="open = false; document.getElementById('modal-container').innerHTML = ''"
+                               class="flex items-center gap-2">
+                             
+                             <input type="hidden" name="disponivel" :value="isAvailable ? 'true' : 'false'">
+                             <input type="hidden" name="motivo_indisponivel" :value="reason">
+                             <input type="hidden" name="justificativa_indisponivel" :value="customReason">
+                             
+                             <span class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec">Salvar alterações?</span>
+                             <button type="submit" 
+                                     class="bg-brand text-white p-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md flex items-center justify-center cursor-pointer">
+                                  <i data-lucide="check" class="w-4.5 h-4.5"></i>
+                             </button>
+                         </form>
                      </div>
                  {% endif %}
-
-                  {% if u.status_mapa != 'ocupado' %}
-                  <!-- Gestão de Disponibilidade e Status -->
-                  <div class="p-5 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-4">
-                      <!-- Toggle Row -->
-                      <div class="flex items-center justify-between">
-                          <div class="flex flex-col">
-                              <span class="text-xs font-black text-slate-700 dark:text-slate-200 uppercase tracking-wider">Disponibilidade do Quarto</span>
-                              <span class="text-[10px] text-slate-400 dark:text-navie-textsec font-bold mt-0.5">Defina se o quarto está liberado para venda</span>
-                          </div>
-                          <!-- Switch Toggle -->
-                          <button type="button" 
-                                  @click="isAvailable = !isAvailable"
-                                  :class="isAvailable ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'"
-                                  class="relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
-                              <span :class="isAvailable ? 'translate-x-4.5' : 'translate-x-0'"
-                                    class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                          </button>
-                      </div>
-
-                      <!-- Se Disponível (true): Card Verde -->
-                      <div x-show="isAvailable" x-transition class="p-6 text-center bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-2xl">
-                          <span class="inline-flex p-3 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 mb-2">
-                              <i data-lucide="check-circle" class="w-5 h-5"></i>
-                          </span>
-                          <h5 class="text-xs font-black uppercase tracking-wider">Acomodação Disponível</h5>
-                          <p class="text-[10px] opacity-80 font-bold mt-1">Este quarto está limpo e disponível para ocupação imediata.</p>
-                      </div>
-
-                      <!-- Se Indisponível (false): Card Amarelo + Form de Preenchimento -->
-                      <div x-show="!isAvailable" x-transition class="space-y-4">
-                          <!-- Card Amarelo de Indisponibilidade -->
-                          <div class="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 rounded-2xl flex items-center gap-3">
-                              <i data-lucide="ban" class="w-5 h-5 text-amber-500"></i>
-                              <div>
-                                  <h5 class="text-xs font-black uppercase tracking-wider">Acomodação Indisponível</h5>
-                                  <p class="text-[10px] opacity-80 font-bold mt-0.5">Este quarto está bloqueado para novas reservas.</p>
-                              </div>
-                          </div>
-
-                          <!-- Select do Motivo (Estilo input-glass da barra de Pousada do sistema) -->
-                          <div class="flex flex-col gap-2">
-                              <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Motivo da Indisponibilidade</label>
-                              <div class="relative">
-                                  <select x-model="reason" 
-                                          class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-bold shadow-sm outline-none cursor-pointer appearance-none pr-10">
-                                      <option value="limpeza" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Limpeza / Higienização</option>
-                                      <option value="manutencao" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Manutenção / Reparos</option>
-                                      <option value="outro" class="bg-white dark:bg-[#121212] text-slate-800 dark:text-white">Outro (Justificar abaixo)</option>
-                                  </select>
-                                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
-                                      <i data-lucide="chevron-down" class="w-4.5 h-4.5"></i>
-                                  </div>
-                              </div>
-                          </div>
-
-                          <!-- Justificativa (Outro / Manutenção) -->
-                          <div x-show="reason === 'outro' || reason === 'manutencao'" x-transition class="flex flex-col gap-2">
-                              <label class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec uppercase tracking-wider">Descrição / Justificativa</label>
-                              <input type="text" 
-                                     x-model="customReason" 
-                                     placeholder="Ex: Vazamento no banheiro, pintura..." 
-                                     class="w-full input-glass rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm outline-none focus:outline-none">
-                          </div>
-                      </div>
-
-                      <!-- Botão Salvar (Vzinho) -->
-                      <div x-show="isAvailable !== origIsAvailable || (!isAvailable && (reason !== origReason || ((reason === 'outro' || reason === 'manutencao') && customReason !== origCustomReason)))" 
-                           x-transition 
-                           class="flex justify-end items-center gap-2 pt-2 border-t border-slate-100 dark:border-white/5">
-                          <form hx-post="{% url 'hoteis:partner_atualizar_disponibilidade_quarto' u.id %}"
-                                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                                hx-target="#quarto-mapa-container"
-                                hx-swap="outerHTML"
-                                @submit="open = false; document.getElementById('modal-container').innerHTML = ''"
-                                class="flex items-center gap-2">
-                              
-                              <input type="hidden" name="disponivel" :value="isAvailable ? 'true' : 'false'">
-                              <input type="hidden" name="motivo_indisponivel" :value="reason">
-                              <input type="hidden" name="justificativa_indisponivel" :value="customReason">
-                              
-                              <span class="text-[10px] font-bold text-slate-400 dark:text-navie-textsec">Salvar alterações?</span>
-                              <button type="submit" 
-                                      class="bg-brand text-white p-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md flex items-center justify-center cursor-pointer">
-                                  <i data-lucide="check" class="w-4.5 h-4.5"></i>
-                              </button>
-                          </form>
-                      </div>
-                  </div>
-                  {% endif %}
-
               </div>
              
              <!-- TAB 2: AÇÕES OPERACIONAIS -->
