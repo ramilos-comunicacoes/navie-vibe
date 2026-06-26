@@ -121,9 +121,33 @@ x-data="{
         const bootstrapStyle = document.getElementById('active-tab-bootstrap-style');
         if (bootstrapStyle) bootstrapStyle.remove();
         
-        // Persistir a aba ativa ao mudar
+        // Sincronizar URL inicial caso não tenha parâmetros
+        try {
+            const url = new URL(window.location.href);
+            if (!url.searchParams.has('tab')) {
+                url.searchParams.set('tab', this.activeTab);
+                if (this.activeTab === 'configuracoes') {
+                    url.searchParams.set('config_tab', this.configTab);
+                }
+                window.history.replaceState({}, '', url.toString());
+            }
+        } catch (e) {
+            console.error("Erro ao sincronizar URL inicial:", e);
+        }
+        
+        // Persistir a aba ativa ao mudar e atualizar a barra de endereço URL
         this.$watch('activeTab', value => {
             localStorage.setItem('partner_active_tab', value);
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.set('tab', value);
+                if (value !== 'configuracoes') {
+                    url.searchParams.delete('config_tab');
+                }
+                window.history.replaceState({}, '', url.toString());
+            } catch (e) {
+                console.error("Erro ao atualizar URL de abas:", e);
+            }
         });
         
         // Persistir o modo de visualização (kanban/calendario) ao mudar
@@ -131,9 +155,18 @@ x-data="{
             localStorage.setItem('partner_view_mode', value);
         });
         
-        // Persistir a sub-aba de configurações
+        // Persistir a sub-aba de configurações e atualizar URL se a aba ativa for configurações
         this.$watch('configTab', value => {
             localStorage.setItem('partner_config_tab', value);
+            if (this.activeTab === 'configuracoes') {
+                try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('config_tab', value);
+                    window.history.replaceState({}, '', url.toString());
+                } catch (e) {
+                    console.error("Erro ao atualizar URL de config_tab:", e);
+                }
+            }
         });
 
         // Persistir a sub-aba de estoque

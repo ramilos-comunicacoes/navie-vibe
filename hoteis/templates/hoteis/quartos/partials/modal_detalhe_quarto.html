@@ -216,7 +216,7 @@
                          
                          <button hx-get="{% url 'hoteis:partner_reserva_criar' %}?unidade_id={{ u.id }}"
                                  hx-target="#modal-container"
-                                 @click="open = false; document.getElementById('modal-container').innerHTML = ''"
+                                 @click="activeTab = 'reservas'"
                                  class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-4 rounded-2xl text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer">
                              <i data-lucide="plus" class="w-4 h-4"></i>
                              <span>Iniciar Nova Reserva</span>
