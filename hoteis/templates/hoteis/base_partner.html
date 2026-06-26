@@ -1268,7 +1268,9 @@ x-data="{
     <!-- ─────────────────────────────────────────────────────────────────
          ASSISTENTE VIRTUAL IN-APP HOTELEIRO (Chat Flutuante)
          ───────────────────────────────────────────────────────────────── -->
-    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }" class="fixed bottom-6 right-6 z-[9999] font-sans">
+    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }" 
+         class="fixed bottom-6 z-[9999] font-sans transition-all duration-300 ease-in-out"
+         :class="chatOpen ? 'right-6 md:right-[424px]' : 'right-6'">
         
         <!-- Botão Flutuante (FAB) -->
         <button @click="chatOpen = !chatOpen; if(chatOpen) setTimeout(scrollBottom, 100)" 
@@ -1290,13 +1292,13 @@ x-data="{
 
         <!-- Janela do Chat -->
         <div x-show="chatOpen" style="display: none;"
-             x-transition:enter="transition ease-out duration-300 transform origin-bottom-right"
-             x-transition:enter-start="opacity-0 scale-50 translate-y-10"
-             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-200 transform origin-bottom-right"
-             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-             x-transition:leave-end="opacity-0 scale-50 translate-y-10"
-             class="absolute bottom-16 right-0 w-[300px] sm:w-[340px] h-[450px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-white/10 flex flex-col overflow-hidden">
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
+             x-transition:enter-end="opacity-100 translate-y-0 md:translate-x-0"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="opacity-100 translate-y-0 md:translate-x-0"
+             x-transition:leave-end="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
+             class="absolute bottom-16 right-0 w-[300px] sm:w-[340px] h-[450px] md:fixed md:top-0 md:right-0 md:bottom-0 md:h-screen md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200/60 md:dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-white/10 flex flex-col overflow-hidden">
             
             <!-- Header do Chat -->
             <div class="h-[76px] bg-gradient-to-r from-brand to-brand/80 px-5 flex items-center justify-between shrink-0 relative overflow-hidden">
@@ -1331,26 +1333,29 @@ x-data="{
             </div>
 
             <!-- Formulário de Envio -->
-            <div class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10">
+            <div class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10 md:pb-6">
                 <form id="chat-form" 
                       hx-post="{% url 'hoteis:ia_enviar_chat' %}" 
                       hx-target="#chat-messages" 
                       hx-swap="beforeend"
-                      class="relative flex items-center">
+                      class="relative flex items-center w-full">
                     {% csrf_token %}
-                    <input type="text" name="mensagem" required autocomplete="off" placeholder="Escreva sua pergunta..." 
-                           class="w-full bg-slate-100/80 dark:bg-black/40 border border-transparent focus:border-brand/50 focus:bg-white dark:focus:bg-black/60 focus:ring-4 focus:ring-brand/10 rounded-full pl-5 pr-14 py-3 text-[13px] text-slate-800 dark:text-white transition-all shadow-inner">
-                    
-                    <button type="submit" class="absolute right-1.5 w-9 h-9 bg-brand hover:bg-brand/90 text-white rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md">
-                        <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="send" class="w-4 h-4 ml-0.5"></i></span>
-                    </button>
+                    <div class="relative flex-1">
+                        <textarea name="mensagem" required autocomplete="off" placeholder="Escreva sua pergunta..." rows="2"
+                                  @keydown.enter.prevent="if (!$event.shiftKey) { $el.form.requestSubmit(); }"
+                                  class="w-full bg-slate-100/80 dark:bg-black/40 border border-transparent focus:border-brand/50 focus:bg-white dark:focus:bg-black/60 focus:ring-4 focus:ring-brand/10 rounded-2xl pl-4 pr-12 py-2.5 text-[13px] text-slate-800 dark:text-white transition-all shadow-inner resize-none custom-scrollbar leading-tight min-h-[44px] max-h-[120px]"></textarea>
+                        
+                        <button type="submit" class="absolute right-1.5 bottom-1.5 w-9 h-9 bg-brand hover:bg-brand/90 text-white rounded-full flex items-center justify-center transition-transform hover:scale-105 shadow-md">
+                            <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="send" class="w-4 h-4 ml-0.5"></i></span>
+                        </button>
+                    </div>
                 </form>
             </div>
             
             <!-- Script Local do Chat -->
             <script>
                 document.getElementById('chat-form').addEventListener('htmx:beforeRequest', function(e) {
-                    const input = this.querySelector('input[name="mensagem"]');
+                    const input = this.querySelector('[name="mensagem"]');
                     const text = input.value;
                     const messagesArea = document.getElementById('chat-messages');
                     
