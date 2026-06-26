@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.views.decorators.cache import never_cache
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.contrib.auth.models import User
 from django.contrib import messages
@@ -662,6 +663,7 @@ def partner_auth(request):
     return render(request, 'hoteis/auth/partner_login.html')
 
 @login_required(login_url='hoteis:partner_login')
+@never_cache
 def partner_dashboard(request):
     """
     O painel B2B adaptativo do parceiro hoteleiro.
@@ -1826,6 +1828,7 @@ def partner_quarto_lista(request):
 
 
 @login_required(login_url='hoteis:partner_login')
+@never_cache
 def partner_liberar_quarto(request, unidade_id):
     """
     Marca as tarefas de limpeza pendentes da unidade como concluídas e re-renderiza o mapa de quartos.
@@ -1849,6 +1852,7 @@ def partner_liberar_quarto(request, unidade_id):
 
 @login_required(login_url='hoteis:partner_login')
 @require_POST
+@never_cache
 def partner_atualizar_disponibilidade_quarto(request, unidade_id):
     """
     Atualiza a disponibilidade de um quarto físico, gerencia ordens de serviço / tarefas
@@ -1915,6 +1919,7 @@ def partner_atualizar_disponibilidade_quarto(request, unidade_id):
 
 
 @login_required(login_url='hoteis:partner_login')
+@never_cache
 def partner_detalhe_quarto_modal(request, unidade_id):
     """
     Exibe o modal de detalhes operacionais de um quarto físico, exibindo
@@ -1945,6 +1950,7 @@ def partner_detalhe_quarto_modal(request, unidade_id):
 
 @login_required(login_url='hoteis:partner_login')
 @require_POST
+@never_cache
 def partner_checkout_quarto_mapa(request, reserva_id):
     """
     Realiza o checkout de uma reserva ativa direto do mapa de quartos e retorna o mapa atualizado.
