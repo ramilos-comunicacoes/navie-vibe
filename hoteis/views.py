@@ -1826,6 +1826,28 @@ def partner_quarto_lista(request):
 
 
 @login_required(login_url='hoteis:partner_login')
+def partner_liberar_quarto(request, unidade_id):
+    """
+    Marca as tarefas de limpeza pendentes da unidade como concluídas e re-renderiza o mapa de quartos.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    from hoteis.models import UnidadeQuarto, Tarefa
+    unidade = get_object_or_404(UnidadeQuarto, id=unidade_id, quarto__hotel=hotel)
+    
+    # Conclui todas as tarefas de limpeza pendentes da unidade
+    tarefas_limpeza = Tarefa.objects.filter(unidade=unidade, status__in=['todo', 'doing'], titulo__icontains='Limpeza')
+    for t in tarefas_limpeza:
+        t.status = 'done'
+        t.save()
+        
+    quartos = hotel.quartos.all()
+    return render(request, 'hoteis/quartos/partials/quarto_mapa.html', {'quartos': quartos})
+
+
+@login_required(login_url='hoteis:partner_login')
 @require_POST
 def partner_quarto_salvar(request):
     """

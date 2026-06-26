@@ -29,6 +29,7 @@ urlpatterns = [
     path('hospedagens/quartos/lista/', views.partner_quarto_lista, name='partner_quarto_lista'),
     path('hospedagens/quartos/salvar/', views.partner_quarto_salvar, name='partner_quarto_salvar'),
     path('hospedagens/quartos/deletar/<int:quarto_id>/', views.partner_quarto_deletar, name='partner_quarto_deletar'),
+    path('hospedagens/quartos/liberar/<int:unidade_id>/', views.partner_liberar_quarto, name='partner_liberar_quarto'),
     path('hospedagens/quartos/imagem/deletar/<int:imagem_id>/', views.partner_quarto_deletar_imagem, name='partner_quarto_deletar_imagem'),
     
     # Carrinho e Checkout (B2C)

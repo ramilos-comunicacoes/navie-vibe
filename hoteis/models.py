@@ -161,6 +161,20 @@ class UnidadeQuarto(models.Model):
     identificador = models.CharField(max_length=50, help_text="Ex: 101, Chale 01, Deck Master")
     ativa = models.BooleanField(default=True, db_index=True)
     
+    @property
+    def status_mapa(self):
+        from hoteis.models import Reserva, Tarefa
+        if Reserva.objects.filter(unidade=self, status='hospedado').exists():
+            return 'ocupado'
+        if Tarefa.objects.filter(unidade=self, status__in=['todo', 'doing'], titulo__icontains='Limpeza').exists():
+            return 'limpeza'
+        return 'livre'
+
+    @property
+    def reserva_ativa(self):
+        from hoteis.models import Reserva
+        return Reserva.objects.filter(unidade=self, status='hospedado').first()
+
     def __str__(self):
         return f"{self.identificador} ({self.quarto.nome})"
 

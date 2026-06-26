@@ -7,6 +7,7 @@ x-data="{
     sidebarExpanded: false,
     notificationsOpen: false,
     activeTab: localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
+    quartosTab: localStorage.getItem('partner_quartos_tab') || 'mapa',
     viewMode: localStorage.getItem('partner_view_mode') || 'kanban',
     configTab: localStorage.getItem('partner_config_tab') || 'site',
     estoqueTab: localStorage.getItem('partner_estoque_tab') || 'inventario',
@@ -661,7 +662,9 @@ x-data="{
                 {% if hotel.logo %}
                     <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="h-6 w-auto max-w-[64px] object-contain opacity-95 rounded-lg" title="{{ hotel.nome }}">
                 {% else %}
-                    <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-5 w-auto object-contain opacity-95" title="Naviê Vibe">
+                    <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-brand flex items-center justify-center text-white font-bold text-sm shadow-md" title="{{ hotel.nome }}">
+                        {{ hotel.nome|default:"NH"|slice:":2"|upper }}
+                    </div>
                 {% endif %}
             </div>
 
@@ -674,7 +677,9 @@ x-data="{
                 {% if hotel.logo %}
                     <img src="{{ hotel.logo.url }}" alt="{{ hotel.nome }}" class="h-5 w-auto max-w-[32px] object-contain opacity-80 rounded-md" title="{{ hotel.nome }}">
                 {% else %}
-                    <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-4 w-auto object-contain opacity-80" title="Naviê Vibe">
+                    <div class="w-7 h-7 flex-shrink-0 rounded-md bg-brand flex items-center justify-center text-white font-bold text-[10px]" title="{{ hotel.nome }}">
+                        {{ hotel.nome|default:"NH"|slice:":2"|upper }}
+                    </div>
                 {% endif %}
             </div>
         </div>
@@ -884,7 +889,20 @@ x-data="{
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
                         <span x-show="activeTab === 'financeiro'">Financeiro</span>
-                        <span x-show="activeTab === 'quartos'">Acomodações & Categorias</span>
+                        <div x-show="activeTab === 'quartos'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case">
+                            <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
+                                    :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none">
+                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="layout-grid" class="w-3.5 h-3.5"></i></span>
+                                <span>Mapa de Quartos</span>
+                            </button>
+                            <button type="button" @click="quartosTab = 'categorias'; localStorage.setItem('partner_quartos_tab', 'categorias')"
+                                    :class="quartosTab === 'categorias' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none">
+                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></span>
+                                <span>Categorias & Acomodações</span>
+                            </button>
+                        </div>
                         <span x-show="activeTab === 'reservas'">Aprovações & Reservas</span>
                         <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
                             <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
@@ -910,7 +928,8 @@ x-data="{
                     <!-- Subtítulo Dinâmico do Cabeçalho (Ocultado no Mobile para manter respiro) -->
                     <div class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold hidden sm:block">
                         <span x-show="activeTab === 'financeiro'">Histórico financeiro e fluxo de caixa em tempo real</span>
-                        <span x-show="activeTab === 'quartos'">Gerenciamento de tarifas e quartos do estabelecimento</span>
+                        <span x-show="activeTab === 'quartos' && quartosTab === 'mapa'">Visualização gráfica do status e limpeza dos quartos em tempo real</span>
+                        <span x-show="activeTab === 'quartos' && quartosTab === 'categorias'">Cadastre, edite e organize categorias, quartos e tarifas do hotel</span>
                         <span x-show="activeTab === 'reservas'">Histórico de reservas ativas dos clientes</span>
                         <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container">
                             <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">

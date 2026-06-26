@@ -51,7 +51,7 @@
     </div>
 
     <!-- Controles das Acomodações no Cabeçalho -->
-    <div x-show="activeTab === 'quartos'" class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300" x-transition.opacity>
+    <div x-show="activeTab === 'quartos' && quartosTab === 'categorias'" class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300" x-transition.opacity>
         <!-- Criar Promoção -->
         <button hx-get="#" hx-target="#modal-container"
                 class="hidden sm:flex bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-sm items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
@@ -224,7 +224,7 @@
 </div>
 
 <!-- Sub-cabeçalho Mobile para as abas de Quartos -->
-<div x-show="activeTab === 'quartos'" class="md:hidden bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2.5 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
+<div x-show="activeTab === 'quartos' && quartosTab === 'categorias'" class="md:hidden bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2.5 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
     <button hx-get="#" hx-target="#modal-container"
             class="bg-white dark:bg-white/5 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 py-2 px-3 rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center gap-1.5 w-1/2 hover:scale-[1.01] active:scale-95">
         <span class="flex items-center" style="pointer-events:none;"><i data-lucide="tag" class="w-3.5 h-3.5"></i></span>
@@ -1036,7 +1036,10 @@
          SEÇÃO QUARTOS (PROPRIETÁRIO / GERENTE)
          ───────────────────────────────────────────────────────────── -->
     <div x-show="activeTab === 'quartos'" class="space-y-6 animate-in fade-in duration-300" x-transition:enter="transition ease-out duration-300" style="display: none;">
-        <div id="quartos-container">
+        <div x-show="quartosTab === 'mapa'">
+            {% include 'hoteis/quartos/partials/quarto_mapa.html' %}
+        </div>
+        <div x-show="quartosTab === 'categorias'" id="quartos-container">
             {% include 'hoteis/quartos/partials/quarto_grid.html' %}
         </div>
     </div>
