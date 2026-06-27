@@ -289,6 +289,10 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_DOMAIN = '.navievibe.com'
 
+# Armazena mensagens na sessão do banco de dados (evita cookies duplicados/presos no navegador)
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+
 
 
 
