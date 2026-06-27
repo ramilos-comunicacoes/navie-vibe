@@ -9,9 +9,19 @@
     origCustomReason: '{{ u.justificativa_indisponivel|default:"" }}',
     isLimpeza: {% if u.status_mapa == 'limpeza' %}true{% else %}false{% endif %},
     reasonSelectOpen: false
-}" x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4" x-cloak>
+}" 
+x-init="
+    document.body.style.overflow = 'hidden';
+    $watch('open', value => {
+        if (!value) {
+            document.body.style.overflow = '';
+            setTimeout(() => { document.getElementById('modal-container').innerHTML = ''; }, 300);
+        }
+    });
+"
+x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" x-cloak>
     <!-- Backdrop Blur -->
-    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity pointer-events-auto" @click="open = false; document.getElementById('modal-container').innerHTML = ''"></div>
+    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity pointer-events-auto" @click="open = false"></div>
     
     <!-- Modal Content Card -->
     <div class="bg-white dark:bg-[#121212] rounded-3xl sm:rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-white/10 w-full max-w-xl overflow-hidden relative z-10 p-5 sm:p-8 transform transition-all duration-300 animate-in fade-in zoom-in-95 pointer-events-auto"
@@ -32,7 +42,7 @@
                      Acomodação {{ u.identificador }}
                  </h3>
              </div>
-             <button @click="open = false; document.getElementById('modal-container').innerHTML = ''" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition-colors">
+             <button @click="open = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition-colors">
                  <span class="flex items-center" style="pointer-events:none;"><i data-lucide="x" class="w-4 h-4"></i></span>
              </button>
          </div>
@@ -52,7 +62,7 @@
          </div>
          
          <!-- Content Body -->
-         <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-1 no-scrollbar">
+         <div class="space-y-6 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto pr-1 no-scrollbar overscroll-contain">
              
              <!-- TAB 1: STATUS / DETALHES -->
              <div x-show="activeModalTab === 'ocupacao'" class="space-y-4">
