@@ -2201,6 +2201,27 @@ def partner_salvar_configuracoes(request):
                 ordem=idx
             )
          
+    # Seção Sobre da Pousada
+    hotel.sobre_titulo = request.POST.get('sobre_titulo', hotel.sobre_titulo)
+    hotel.sobre_texto = request.POST.get('sobre_texto', hotel.sobre_texto)
+    hotel.sobre_midia_tipo = request.POST.get('sobre_midia_tipo', hotel.sobre_midia_tipo or 'imagem')
+    hotel.sobre_cor_fundo = request.POST.get('sobre_cor_fundo', hotel.sobre_cor_fundo or '#f8fafc')
+    hotel.sobre_cor_texto = request.POST.get('sobre_cor_texto', hotel.sobre_cor_texto or '#0f172a')
+    
+    if request.POST.get('remover_sobre_banner') == 'true':
+        hotel.sobre_banner = None
+    elif 'sobre_banner' in request.FILES:
+        hotel.sobre_banner = request.FILES['sobre_banner']
+        
+    if request.POST.get('remover_sobre_video') == 'true':
+        hotel.sobre_video = None
+    elif 'sobre_video' in request.FILES:
+        video_file_sobre = request.FILES['sobre_video']
+        if video_file_sobre.size > 8 * 1024 * 1024:
+            messages.error(request, "O vídeo da seção Sobre ultrapassa o limite de 8MB.")
+            return redirect('hoteis:partner_dashboard')
+        hotel.sobre_video = video_file_sobre
+
     hotel.save()
     messages.success(request, "Configurações do estabelecimento gravadas com sucesso!")
     return redirect('/hospedagens/sistema/?tab=configuracoes&config_tab=site')

@@ -59,6 +59,28 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     hero_video = models.FileField(upload_to='hoteis/videos/', null=True, blank=True, help_text="Vídeo curto em loop (MP4 de até 8MB)")
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Coordenada geográfica de latitude")
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True, help_text="Coordenada geográfica de longitude")
+    endereco_completo = models.CharField(max_length=500, blank=True, null=True, help_text="Endereço legível para o mapa")
+    como_chegar = models.TextField(blank=True, null=True, help_text="Instruções de como chegar, pontos de referência, etc.")
+
+    # Seção Sobre da Pousada Individual (Vitrine do Site)
+    sobre_titulo = models.CharField('Título da Seção Sobre', max_length=255, blank=True, null=True)
+    sobre_texto = models.TextField('Texto da Seção Sobre', blank=True, null=True)
+    sobre_midia_tipo = models.CharField(
+        'Tipo de Mídia do Sobre',
+        max_length=10,
+        default='imagem',
+        choices=[('imagem', 'Imagem'), ('video', 'Vídeo')]
+    )
+    sobre_banner = models.ImageField('Imagem do Sobre', upload_to='hoteis/sobre/', null=True, blank=True)
+    sobre_video = models.FileField(
+        'Vídeo do Sobre',
+        upload_to='hoteis/sobre_videos/',
+        null=True,
+        blank=True,
+        help_text="Vídeo curto em loop (MP4 de até 8MB)"
+    )
+    sobre_cor_fundo = models.CharField('Cor de Fundo do Sobre (Hex)', max_length=7, default='#f8fafc')
+    sobre_cor_texto = models.CharField('Cor do Texto do Sobre (Hex)', max_length=7, default='#0f172a')
     logo = models.ImageField(upload_to='hoteis/logos/', null=True, blank=True, help_text="Logo oficial da pousada")
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")

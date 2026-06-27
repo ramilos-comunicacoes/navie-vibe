@@ -491,6 +491,139 @@
     .flatpickr-day:hover {
         background: #f1f5f9 !important;
     }
+
+    /* ==========================================================================
+       SEÇÃO SOBRE: REGRAS ESPECÍFICAS DE ALINHAMENTO E ESPAÇAMENTO
+       ========================================================================== */
+
+    /* Regras Gerais da Seção Sobre */
+    .sobre-section-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        transition: all 0.5s ease-in-out;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+    @media (min-width: 768px) {
+        .sobre-section-wrapper {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+    }
+
+    /* Regras do Container de Alinhamento Flex */
+    .sobre-flex-container {
+        display: flex;
+        align-items: stretch; /* Garante que os filhos estiquem na altura total */
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Regras da Coluna de Conteúdo (Esquerda) */
+    .sobre-left-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Mantém o título no topo e o botão no fundo da seção */
+        height: 100%;
+        min-width: 0;
+    }
+
+    /* Regras de Texto Gerais */
+    #sobre-texto, #sobre-texto * {
+        font-family: 'Poppins', sans-serif !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* REGRAS DO SOBRE: MOBILE (Telas < 768px) */
+    @media (max-width: 767px) {
+        .sobre-section-wrapper:not(.h-auto) {
+            height: 38vh;
+            min-height: 190px;
+            max-height: 250px;
+        }
+        .sobre-flex-container {
+            padding-left: 24px; /* pl-6 equivalent: afasta da curva esquerda */
+            padding-right: 16px;
+        }
+        .sobre-left-column {
+            width: 44% !important;
+            padding-top: 40px !important;
+            padding-bottom: 24px !important;
+            padding-right: 12px !important;
+            justify-content: center !important;
+            gap: 8px;
+        }
+        .sobre-media-container {
+            width: 56% !important;
+        }
+        .sobre-media-gradient {
+            background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%) !important;
+        }
+        .sobre-title-wrapper {
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+        .sobre-title-line {
+            width: 4px;
+        }
+        #sobre-titulo {
+            font-size: 14px;
+        }
+        #sobre-texto {
+            font-size: 10px;
+            line-height: 1.6;
+        }
+        #sobre-readmore-btn {
+            margin-top: 8px;
+            font-size: 9px;
+        }
+    }
+
+    /* REGRAS DO SOBRE: DESKTOP (Telas >= 768px) */
+    @media (min-width: 768px) {
+        .sobre-section-wrapper:not(.h-auto) {
+            height: 30vh;
+            min-height: 220px;
+            max-height: 280px;
+        }
+        .sobre-flex-container {
+            padding-left: 24px; /* Alinha com o padding padrão md do site */
+            padding-right: 24px;
+        }
+        @media (min-width: 1280px) {
+            .sobre-flex-container {
+                padding-left: 48px; /* Alinha com o padding padrão xl do site */
+                padding-right: 48px;
+            }
+        }
+        .sobre-left-column {
+            width: 42%;
+            padding-top: 64px; /* Margem de cima exclusiva do título no desktop */
+            padding-bottom: 28px;
+            padding-right: 32px;
+        }
+        .sobre-title-wrapper {
+            margin-bottom: 12px;
+            gap: 6px;
+        }
+        .sobre-title-line {
+            width: 6px;
+        }
+        #sobre-titulo {
+            font-size: 20px;
+        }
+        #sobre-texto {
+            font-size: 13px;
+            line-height: 1.625;
+        }
+        #sobre-readmore-btn {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -617,8 +750,47 @@
     </div>
 </div>
 
-<!-- Fundo branco com borda superior sutil -->
-<div class="relative z-20 bg-white" style="border-radius: 1rem 1rem 0 0; margin-top: -6px;">
+<!-- Fundo branco com borda superior sutil e Seção Sobre -->
+<div class="relative z-20 bg-white shadow-xl rounded-t-xl md:rounded-t-2xl overflow-hidden" style="margin-top: -30px;">
+    
+    {% if hotel.sobre_titulo or hotel.sobre_texto or hotel.sobre_banner or hotel.sobre_video %}
+    <!-- SEÇÃO INSTITUCIONAL: SOBRE A POUSADA -->
+    <div id="sobre-section" class="sobre-section-wrapper"
+         style="--sobre-bg-color: {{ hotel.sobre_cor_fundo|default:'#f8fafc' }}; --sobre-text-color: {{ hotel.sobre_cor_texto|default:'#0f172a' }}; background-color: var(--sobre-bg-color); color: var(--sobre-text-color);">
+        
+        <!-- Conteúdo Alinhado ao Container -->
+        <div class="container mx-auto sobre-flex-container relative z-20">
+            <!-- Left side: Content (Title + Description) -->
+            <div class="sobre-left-column">
+                <div class="flex flex-col justify-start">
+                    <div class="flex items-stretch sobre-title-wrapper">
+                        <span class="sobre-title-line shrink-0" style="background-color: var(--sobre-text-color); border-radius: 9999px !important;"></span>
+                        <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
+                            {{ hotel.sobre_titulo|default:'Sobre a Pousada' }}
+                        </h2>
+                    </div>
+                    <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 md:line-clamp-5 transition-all duration-300">
+                        {% if hotel.sobre_texto %}{{ hotel.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa pousada e viva experiências únicas com o melhor conforto.</p>{% endif %}
+                    </div>
+                </div>
+                <!-- Botão Ler Mais -->
+                <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+                    Ler mais
+                </button>
+            </div>
+        </div>
+
+        <!-- Right side: Media (Blended with gradient) -->
+        <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10 bg-transparent">
+            <!-- Overlay Gradient -->
+            <div class="sobre-media-gradient absolute inset-0 z-20" style="background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
+            
+            <video id="sobre-media-video" src="{% if hotel.sobre_video %}{{ hotel.sobre_video.url }}{% endif %}" class="absolute inset-0 w-full h-full object-cover opacity-95 {% if hotel.sobre_midia_tipo != 'video' or not hotel.sobre_video %}hidden{% endif %}" autoplay loop muted playsinline></video>
+            <img id="sobre-media-img" src="{% if hotel.sobre_banner %}{{ hotel.sobre_banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}" alt="{{ hotel.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95 {% if hotel.sobre_midia_tipo == 'video' and hotel.sobre_video %}hidden{% endif %}">
+        </div>
+    </div>
+    {% endif %}
+
 <main class="container mx-auto px-4 md:px-6 xl:px-12 pt-8 pb-16 md:pt-10 md:pb-24">
     <div class="max-w-[90rem] mx-auto">
         
@@ -1037,7 +1209,53 @@
                     if (btnLoader) btnLoader.classList.add('hidden');
                 });
         };
+        // =====================================================================
+        // LÓGICA DO EXPANDER DA SEÇÃO SOBRE (Clamped text)
+        // =====================================================================
+        const sobreTextoEl = document.getElementById('sobre-texto');
+        const sobreBtnEl = document.getElementById('sobre-readmore-btn');
+        let isSobreExpanded = false;
+
+        function checkSobreTruncation() {
+            if (!sobreTextoEl || !sobreBtnEl) return;
+            // Se o scrollHeight for maior que o clientHeight E a seção não estiver expandida, mostre o botão
+            if (sobreTextoEl.scrollHeight > sobreTextoEl.clientHeight && !isSobreExpanded) {
+                sobreBtnEl.classList.remove('hidden');
+            } else if (!isSobreExpanded) {
+                sobreBtnEl.classList.add('hidden');
+            }
+        }
+
+        window.toggleSobreExpander = function() {
+            if (!sobreTextoEl || !sobreBtnEl) return;
+            const sectionEl = document.getElementById('sobre-section');
+            
+            isSobreExpanded = !isSobreExpanded;
+            
+            if (isSobreExpanded) {
+                sobreTextoEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
+                if (sectionEl) sectionEl.classList.add('h-auto');
+                sobreBtnEl.textContent = 'Ler menos';
+            } else {
+                sobreTextoEl.classList.add('line-clamp-4', 'md:line-clamp-5');
+                if (sectionEl) sectionEl.classList.remove('h-auto');
+                sobreBtnEl.textContent = 'Ler mais';
+                // Scroll back to top of section for better UX
+                if (sectionEl) {
+                    const yOffset = -80; // Offset para a navbar, ajustável
+                    const y = sectionEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({top: y, behavior: 'smooth'});
+                }
+            }
+        };
+
+        // Check on load and resize
+        window.addEventListener('load', checkSobreTruncation);
+        window.addEventListener('resize', checkSobreTruncation);
         
+        // Timeout just in case fonts/images load late
+        setTimeout(checkSobreTruncation, 500);
+
     })();
 </script>
 {% endblock %}
