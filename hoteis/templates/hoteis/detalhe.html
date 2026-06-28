@@ -1101,31 +1101,42 @@
             scrollObserver.observe(el);
         });
 
-        // Lucide icons are initialized below
-        
-        // 1. Instanciar Swipers (com delay para garantir que o DOM HTMX assentou)
-        setTimeout(() => {
-            if (document.querySelector('.hotel-swiper')) {
-                new Swiper('.hotel-swiper', {
-                    observer: true,
-                    observeParents: true,
-                    autoplay: { delay: 4000, disableOnInteraction: false },
-                    loop: true,
-                    pagination: { el: '.swiper-pagination', clickable: true },
-                });
-            }
-            
-            // Instancia os swipers das galerias dos quartos
-            document.querySelectorAll('.swiper:not(.hotel-swiper)').forEach(swiperEl => {
-                new Swiper(swiperEl, {
-                    observer: true,
-                    observeParents: true,
-                    loop: true, 
-                    autoplay: { delay: 3500, disableOnInteraction: false }, 
-                    pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+        // 1. Instanciar Swipers de forma robusta (com requestAnimationFrame e prevenção de dupla inicialização)
+        function initAllSwipers() {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Carrossel principal da pousada
+                    const hotelSwiperEl = document.querySelector('.hotel-swiper');
+                    if (hotelSwiperEl && !hotelSwiperEl.swiper) {
+                        new Swiper(hotelSwiperEl, {
+                            observer: true,
+                            observeParents: true,
+                            autoplay: { delay: 4000, disableOnInteraction: false },
+                            loop: true,
+                            pagination: { el: '.swiper-pagination', clickable: true },
+                        });
+                    }
+                    
+                    // Instancia os swipers das galerias dos quartos (excluindo os que se auto-inicializam)
+                    document.querySelectorAll('.swiper:not(.hotel-swiper):not(.highlights-swiper)').forEach(swiperEl => {
+                        if (swiperEl.swiper) return; // Evita dupla inicialização
+                        new Swiper(swiperEl, {
+                            observer: true,
+                            observeParents: true,
+                            loop: true, 
+                            autoplay: { delay: 3500, disableOnInteraction: false }, 
+                            pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+                        });
+                    });
                 });
             });
-        }, 150);
+        }
+
+        // Inicializa no carregamento inicial da página
+        initAllSwipers();
+
+        // Inicializa novamente após navegação/atualização do HTMX
+        document.addEventListener('htmx:afterSettle', initAllSwipers);
         
         // Modal Premium Control
         let modalTimer;
@@ -1249,12 +1260,21 @@
             }
         };
 
-        // Check on load and resize
+        // Check on load, resize, and HTMX transitions
         window.addEventListener('load', checkSobreTruncation);
         window.addEventListener('resize', checkSobreTruncation);
         
-        // Timeout just in case fonts/images load late
-        setTimeout(checkSobreTruncation, 500);
+        // Também verifica após o HTMX renderizar/assentar o conteúdo
+        document.addEventListener('htmx:afterSettle', () => {
+            setTimeout(checkSobreTruncation, 200);
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
+        
+        // Execuções tardias (fallback caso fontes/imagens demorem a renderizar)
+        setTimeout(checkSobreTruncation, 300);
+        setTimeout(checkSobreTruncation, 800);
 
     })();
 </script>

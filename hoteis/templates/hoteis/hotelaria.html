@@ -337,28 +337,36 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize Swipers for all hotel cards
-        document.querySelectorAll('.hotel-card-swiper').forEach(function(el) {
-            new Swiper(el, {
-                loop: true,
-                spaceBetween: 0,
-                effect: 'slide',
-                autoplay: {
-                    delay: 4000,
-                    disableOnInteraction: true,
-                },
-                pagination: {
-                    el: el.querySelector('.swiper-pagination'),
-                    clickable: true,
-                },
-                navigation: {
-                    nextEl: el.querySelector('.swiper-button-next'),
-                    prevEl: el.querySelector('.swiper-button-prev'),
-                },
+    (function() {
+        function initPage() {
+            // Initialize Swipers for all hotel cards
+            document.querySelectorAll('.hotel-card-swiper').forEach(function(el) {
+                if (el.swiper) return; // Evita dupla inicialização
+                new Swiper(el, {
+                    loop: true,
+                    spaceBetween: 0,
+                    effect: 'slide',
+                    autoplay: {
+                        delay: 4000,
+                        disableOnInteraction: true,
+                    },
+                    pagination: {
+                        el: el.querySelector('.swiper-pagination'),
+                        clickable: true,
+                    },
+                    navigation: {
+                        nextEl: el.querySelector('.swiper-button-next'),
+                        prevEl: el.querySelector('.swiper-button-prev'),
+                    },
+                });
             });
-        });
-    });
+        }
+
+        // Executa imediatamente
+        initPage();
+
+        // Executa em navegações HTMX
+        document.addEventListener('htmx:afterSettle', initPage);
+    })();
 </script>
 {% endblock %}

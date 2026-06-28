@@ -438,46 +438,57 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        lucide.createIcons();
+    (function() {
+        function initPage() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        const getOffset = () => {
-            const screenWidth = window.innerWidth;
-            if (screenWidth < 768) return 16;
-            const offset = (screenWidth - 1440) / 2 + 48; // 90rem = 1440px, 3rem = 48px
-            return Math.max(24, offset);
-        };
+            const getOffset = () => {
+                const screenWidth = window.innerWidth;
+                if (screenWidth < 768) return 16;
+                const offset = (screenWidth - 1440) / 2 + 48; // 90rem = 1440px, 3rem = 48px
+                return Math.max(24, offset);
+            };
 
-        // Configuração Padrão para Carrosséis de Experiências
-        const swiperConfig = {
-            slidesPerView: 'auto',
-            spaceBetween: 16,
-            loop: true,
-            autoplay: { delay: 4000, disableOnInteraction: false },
-            grabCursor: true,
-            slidesOffsetBefore: getOffset(),
-            slidesOffsetAfter: getOffset(),
-            breakpoints: {
-                768: {
-                    spaceBetween: 24
+            // Configuração Padrão para Carrosséis de Experiências
+            const swiperConfig = {
+                slidesPerView: 'auto',
+                spaceBetween: 16,
+                loop: true,
+                autoplay: { delay: 4000, disableOnInteraction: false },
+                grabCursor: true,
+                slidesOffsetBefore: getOffset(),
+                slidesOffsetAfter: getOffset(),
+                breakpoints: {
+                    768: {
+                        spaceBetween: 24
+                    }
                 }
-            }
-        };
+            };
 
-        // Inicializar os 4 Carrosséis Temáticos
-        if (document.querySelector('.shows-swiper')) new Swiper('.shows-swiper', swiperConfig);
-        if (document.querySelector('.pousadas-swiper')) new Swiper('.pousadas-swiper', swiperConfig);
-        if (document.querySelector('.restaurantes-swiper')) new Swiper('.restaurantes-swiper', swiperConfig);
-        if (document.querySelector('.cinema-swiper')) new Swiper('.cinema-swiper', swiperConfig);
+            // Inicializar os 4 Carrosséis Temáticos de forma segura
+            const sS = document.querySelector('.shows-swiper');
+            if (sS && !sS.swiper) new Swiper(sS, swiperConfig);
+            const pS = document.querySelector('.pousadas-swiper');
+            if (pS && !pS.swiper) new Swiper(pS, swiperConfig);
+            const rS = document.querySelector('.restaurantes-swiper');
+            if (rS && !rS.swiper) new Swiper(rS, swiperConfig);
+            const cS = document.querySelector('.cinema-swiper');
+            if (cS && !cS.swiper) new Swiper(cS, swiperConfig);
 
-        // Marquee inteligente: só anima se o texto transbordar o container
-        document.querySelectorAll('.local-marquee-container').forEach(function(container) {
-            const text = container.querySelector('.local-marquee-text');
-            if (text && text.scrollWidth > container.clientWidth) {
-                text.classList.add('is-overflowing');
-            }
-        });
-    });
+            // Marquee inteligente: só anima se o texto transbordar o container
+            document.querySelectorAll('.local-marquee-container').forEach(function(container) {
+                const text = container.querySelector('.local-marquee-text');
+                if (text && text.scrollWidth > container.clientWidth) {
+                    text.classList.add('is-overflowing');
+                }
+            });
+        }
+
+        // Executa imediatamente
+        initPage();
+
+        // Executa em navegações HTMX
+        document.addEventListener('htmx:afterSettle', initPage);
+    })();
 </script>
 {% endblock %}

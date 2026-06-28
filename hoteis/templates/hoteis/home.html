@@ -352,44 +352,53 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        lucide.createIcons();
+    (function() {
+        function initPage() {
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
-        // Inicializa o Swiper do Carrossel da Home
-        if (document.querySelector('.home-swiper')) {
-            new Swiper('.home-swiper', {
-                autoplay: { delay: 5000, disableOnInteraction: false },
-                loop: true,
-                effect: 'fade',
-                fadeEffect: { crossFade: true },
-            });
-        }
+            // Inicializa o Swiper do Carrossel da Home
+            const homeSwiperEl = document.querySelector('.home-swiper');
+            if (homeSwiperEl && !homeSwiperEl.swiper) {
+                new Swiper(homeSwiperEl, {
+                    autoplay: { delay: 5000, disableOnInteraction: false },
+                    loop: true,
+                    effect: 'fade',
+                    fadeEffect: { crossFade: true },
+                });
+            }
 
-        // Inicializa o Swiper de Cidades
-        if (document.querySelector('.cities-swiper')) {
-            const getOffset = () => {
-                const screenWidth = window.innerWidth;
-                if (screenWidth < 768) return 16;
-                const offset = (screenWidth - 1440) / 2 + 48; // 90rem = 1440px, 3rem = 48px
-                return Math.max(24, offset);
-            };
+            // Inicializa o Swiper de Cidades
+            const citiesSwiperEl = document.querySelector('.cities-swiper');
+            if (citiesSwiperEl && !citiesSwiperEl.swiper) {
+                const getOffset = () => {
+                    const screenWidth = window.innerWidth;
+                    if (screenWidth < 768) return 16;
+                    const offset = (screenWidth - 1440) / 2 + 48; // 90rem = 1440px, 3rem = 48px
+                    return Math.max(24, offset);
+                };
 
-            new Swiper('.cities-swiper', {
-                slidesPerView: 'auto',
-                spaceBetween: 16,
-                loop: true,
-                autoplay: { delay: 3500, disableOnInteraction: false },
-                grabCursor: true,
-                slidesOffsetBefore: getOffset(),
-                slidesOffsetAfter: getOffset(),
-                breakpoints: {
-                    768: {
-                        spaceBetween: 24
+                new Swiper(citiesSwiperEl, {
+                    slidesPerView: 'auto',
+                    spaceBetween: 16,
+                    loop: true,
+                    autoplay: { delay: 3500, disableOnInteraction: false },
+                    grabCursor: true,
+                    slidesOffsetBefore: getOffset(),
+                    slidesOffsetAfter: getOffset(),
+                    breakpoints: {
+                        768: {
+                            spaceBetween: 24
+                        }
                     }
-                }
-            });
+                });
+            }
         }
-    });
+
+        // Executa imediatamente
+        initPage();
+
+        // Executa em navegações HTMX
+        document.addEventListener('htmx:afterSettle', initPage);
+    })();
 </script>
 {% endblock %}
