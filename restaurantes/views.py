@@ -130,3 +130,48 @@ def partner_logout(request):
     auth_logout(request)
     messages.success(request, "Sessão encerrada com sucesso.")
     return redirect('restaurantes:partner_login')
+
+
+def restaurante_detalhe(request, slug):
+    """
+    Página pública (B2C) do restaurante — exibe o hero, atração do dia,
+    destaques do cardápio, mapa de localização e seção sobre.
+    """
+    from django.shortcuts import get_object_or_404
+    restaurante = get_object_or_404(Restaurante.objects.using('restaurantes'), slug=slug, ativo=True)
+
+    # Atração do Dia (mock até o sistema de gestão estar pronto)
+    class MockAtracao:
+        titulo = None
+        texto = None
+        banner = None
+        video = None
+        midia_tipo = 'imagem'
+        cor_fundo = '#0f172a'
+        cor_texto = '#ffffff'
+        whatsapp = None
+
+    atracao = MockAtracao()
+
+    # Pratos Mock (para preencher a seção de destaques enquanto não há gestão de cardápio)
+    class MockPrato:
+        def __init__(self, nome, categoria, descricao, imagem_url):
+            self.nome = nome
+            self.categoria = categoria
+            self.descricao = descricao
+            self.imagem_url = imagem_url
+
+    pratos_mock = [
+        MockPrato("Filé ao Molho Especial", "Prato Principal", "Filé mignon grelhado com molho de ervas frescas e acompanhamentos da estação.", "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Risoto de Cogumelos", "Entrada Premium", "Risoto cremoso preparado com mix de cogumelos frescos e parmesão artesanal.", "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Frango Assado da Serra", "Regional", "Frango caipira assado lentamente com temperos regionais e farofa de mandioca.", "https://images.unsplash.com/photo-1598103442097-8b74394b95c5?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Carne de Sol com Nata", "Clássico Nordestino", "Tradicional carne de sol grelhada servida com nata da terra e pirão.", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=800&q=80"),
+    ]
+
+    context = {
+        'restaurante': restaurante,
+        'atracao': atracao,
+        'pratos_mock': pratos_mock,
+    }
+    return render(request, 'restaurantes/restaurante_detalhe.html', context)

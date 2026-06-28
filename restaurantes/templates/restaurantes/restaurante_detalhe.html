@@ -1,0 +1,650 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ restaurante.nome }} - Naviê Restaurantes{% endblock %}
+
+{% block og_tags %}
+    <meta property="og:title" content="{{ restaurante.nome }} - Naviê Restaurantes">
+    <meta property="og:description" content="{% if restaurante.descricao %}{{ restaurante.descricao }}{% else %}Descubra sabores únicos e reserve sua mesa no {{ restaurante.nome }}.{% endif %}">
+    {% if restaurante.imagem %}
+        <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ restaurante.imagem.url }}">
+    {% endif %}
+    <meta property="og:type" content="website">
+{% endblock %}
+
+{% block extra_head %}
+<!-- Leaflet CSS & JS local -->
+<link rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>
+<script src="{% static 'js/leaflet.js' %}"></script>
+
+<!-- Injeção Dinâmica de Cores de Branding -->
+<script>
+    (function() {
+        const rawColor = "{{ restaurante.cor_primaria|default:'#e11d48' }}";
+        let hex = rawColor.replace('#', '');
+        if (hex.length === 3) { hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; }
+        const r = parseInt(hex.substring(0, 2), 16) || 225;
+        const g = parseInt(hex.substring(2, 4), 16) || 29;
+        const b = parseInt(hex.substring(4, 6), 16) || 72;
+        const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        let brandColor = "#" + hex;
+        let brandTextColor = "#ffffff";
+        let brandColorBurned = brandColor;
+        if (yiq >= 170) {
+            const factor = 0.45;
+            const dr = Math.max(0, Math.round(r * factor));
+            const dg = Math.max(0, Math.round(g * factor));
+            const db = Math.max(0, Math.round(b * factor));
+            brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+            brandTextColor = brandColorBurned;
+        }
+        document.documentElement.style.setProperty('--brand-color', brandColor);
+        document.documentElement.style.setProperty('--brand-text-color', brandTextColor);
+        document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--brand-color-alpha', `rgba(${r}, ${g}, ${b}, 0.15)`);
+        document.documentElement.style.setProperty('--brand-color-alpha-focus', `rgba(${r}, ${g}, ${b}, 0.25)`);
+        const rawSecColor = "{{ restaurante.cor_secundaria|default:'#f97316' }}";
+        let hexSec = rawSecColor.replace('#', '');
+        if (hexSec.length === 3) { hexSec = hexSec[0]+hexSec[0]+hexSec[1]+hexSec[1]+hexSec[2]+hexSec[2]; }
+        const sr = parseInt(hexSec.substring(0, 2), 16);
+        const sg = parseInt(hexSec.substring(2, 4), 16);
+        const sb = parseInt(hexSec.substring(4, 6), 16);
+        document.documentElement.style.setProperty('--brand-color-secondary', "#" + hexSec);
+        document.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+    })();
+</script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+    html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+    ::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+    * { scrollbar-width: none !important; }
+    [x-cloak] { display: none !important; }
+
+    :root { --navie-primary: var(--brand-color, #e11d48); }
+    .bg-action-blue { background-color: var(--brand-color) !important; color: var(--brand-text-color) !important; }
+    .text-action-blue { color: var(--brand-color-burned) !important; }
+    .border-action-blue { border-color: var(--brand-color-burned) !important; }
+    .text-action-secundario { color: var(--brand-color-secondary) !important; }
+    .border-action-secundario { border-color: var(--brand-color-secondary) !important; }
+    .bg-action-secundario { background-color: var(--brand-color-secondary) !important; }
+    .bg-action-secundario-alpha { background-color: var(--brand-color-secondary-alpha) !important; }
+
+    /* HERO */
+    @media (min-width: 768px) {
+        header.sticky { position: absolute !important; top: 0; left: 0; right: 0; background: transparent !important; border-bottom: none !important; box-shadow: none !important; z-index: 100 !important; }
+        header.sticky nav a, header.sticky .text-gray-600, header.sticky span, header.sticky button { color: rgba(255,255,255,0.95) !important; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        header.sticky nav a:hover { color: var(--brand-color) !important; }
+        header.sticky i[data-lucide] { color: rgba(255,255,255,0.95) !important; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        header.sticky img { filter: brightness(0) invert(1) !important; }
+    }
+    .hero-banner-rest { height: 480px !important; position: relative; }
+    @media (min-width: 768px) { .hero-banner-rest { height: 560px !important; } }
+    .hero-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: start; text-align: center; width: 100%; height: 100%; }
+    @media (max-width: 767px) {
+        .hero-banner-rest { height: 42vh !important; min-height: 290px !important; max-height: 355px !important; }
+        .hero-content-wrapper { padding-top: 8px !important; padding-bottom: 24px !important; justify-content: center !important; }
+        .hero-logo-box { width: 72px !important; height: 72px !important; margin-bottom: 2px !important; }
+        .hero-banner-rest h1 { font-size: 1.75rem !important; margin-bottom: 6px !important; }
+        .hero-banner-rest p { font-size: 0.8rem !important; margin-bottom: 12px !important; line-height: 1.4 !important; }
+    }
+    @media (min-width: 768px) {
+        .hero-content-wrapper { padding-top: 100px; padding-bottom: 24px; }
+        .hero-logo-box { width: 136px; height: 136px; margin-bottom: 12px; }
+    }
+
+    /* ATRAÇÃO DO DIA */
+    .atracao-section-wrapper { position: relative; width: 100%; overflow: hidden; transition: all 0.5s ease-in-out; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+    @media (min-width: 768px) { .atracao-section-wrapper { border-top-left-radius: 12px; border-top-right-radius: 12px; } }
+    .atracao-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
+    .atracao-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
+    @media (max-width: 767px) {
+        .atracao-section-wrapper:not(.h-auto) { height: 38vh; min-height: 190px; max-height: 250px; }
+        .atracao-flex-container { padding-left: 24px; padding-right: 16px; }
+        .atracao-left-column { width: 44% !important; padding-top: 40px !important; padding-bottom: 24px !important; padding-right: 12px !important; justify-content: center !important; gap: 8px; }
+        .atracao-media-container { width: 56% !important; }
+        .atracao-media-gradient { background: linear-gradient(to right, var(--atracao-bg-color) 0%, var(--atracao-bg-color) 12%, transparent 45%) !important; }
+        .atracao-title-wrapper { margin-bottom: 8px; gap: 8px; }
+        .atracao-title-line { width: 4px; }
+        #atracao-titulo { font-size: 14px; }
+        #atracao-texto { font-size: 10px; line-height: 1.6; }
+    }
+    @media (min-width: 768px) {
+        .atracao-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; }
+        .atracao-flex-container { padding-left: 24px; padding-right: 24px; }
+        .atracao-left-column { width: 42%; padding-top: 64px; padding-bottom: 28px; padding-right: 32px; }
+        .atracao-title-wrapper { margin-bottom: 12px; gap: 6px; }
+        .atracao-title-line { width: 6px; }
+        #atracao-titulo { font-size: 20px; }
+        #atracao-texto { font-size: 13px; line-height: 1.625; }
+    }
+    @media (min-width: 1280px) { .atracao-flex-container { padding-left: 48px; padding-right: 48px; } }
+
+    /* SOBRE */
+    .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; }
+    .sobre-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
+    .sobre-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
+    #sobre-texto, #sobre-texto * { font-family: 'Poppins', sans-serif !important; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important; }
+    @media (max-width: 767px) {
+        .sobre-section-wrapper:not(.h-auto) { height: 38vh; min-height: 190px; max-height: 250px; }
+        .sobre-flex-container { padding-left: 24px; padding-right: 16px; }
+        .sobre-left-column { width: 44% !important; padding-top: 40px !important; padding-bottom: 24px !important; padding-right: 12px !important; justify-content: center !important; gap: 8px; }
+        .sobre-media-container { width: 56% !important; }
+        .sobre-media-gradient { background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%) !important; }
+        .sobre-title-wrapper { margin-bottom: 8px; gap: 8px; }
+        .sobre-title-line { width: 4px; }
+        #sobre-titulo { font-size: 14px; }
+        #sobre-texto { font-size: 10px; line-height: 1.6; }
+        #sobre-readmore-btn { margin-top: 8px; font-size: 9px; }
+    }
+    @media (min-width: 768px) {
+        .sobre-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; }
+        .sobre-flex-container { padding-left: 24px; padding-right: 24px; }
+        .sobre-left-column { width: 42%; padding-top: 64px; padding-bottom: 28px; padding-right: 32px; }
+        .sobre-title-wrapper { margin-bottom: 12px; gap: 6px; }
+        .sobre-title-line { width: 6px; }
+        #sobre-titulo { font-size: 20px; }
+        #sobre-texto { font-size: 13px; line-height: 1.625; }
+        #sobre-readmore-btn { margin-top: 8px; font-size: 12px; }
+    }
+    @media (min-width: 1280px) { .sobre-flex-container { padding-left: 48px; padding-right: 48px; } }
+
+    .line-clamp-4 { display: -webkit-box !important; -webkit-line-clamp: 4 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
+    .line-clamp-none { display: block !important; -webkit-line-clamp: unset !important; overflow: visible !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none !important; }
+    .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+    .portal-desktop-grid { display: none !important; }
+    @media (min-width: 768px) { .portal-desktop-grid { display: grid !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ===================== HERO BANNER ===================== -->
+<div class="relative w-full bg-slate-950 hero-banner-rest">
+    <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden">
+        <div class="absolute inset-0 bg-black/60 z-10"></div>
+        {% if restaurante.hero_video and restaurante.hero_tipo == 'video' %}
+        <video src="{{ restaurante.hero_video.url }}" class="w-full h-full object-cover opacity-80" autoplay loop muted playsinline></video>
+        {% else %}
+        <img src="{% if restaurante.banner %}{{ restaurante.banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80{% endif %}"
+             alt="{{ restaurante.nome }}" class="w-full h-full object-cover opacity-80">
+        {% endif %}
+    </div>
+
+    <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
+        {% if restaurante.logo %}
+        <div class="hero-logo-box flex items-center justify-center shrink-0 select-none">
+            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl">
+        </div>
+        {% endif %}
+
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-tight drop-shadow-2xl mb-3">
+            {{ restaurante.nome }}
+        </h1>
+        <p class="text-sm md:text-lg text-white/90 max-w-2xl mb-6 font-medium leading-relaxed drop-shadow-md">
+            {% if restaurante.descricao %}{{ restaurante.descricao }}{% else %}Sabores únicos da Ibiapaba — reserve sua mesa e viva uma experiência gastronômica inesquecível.{% endif %}
+        </p>
+
+        <!-- FERRAMENTA DE RESERVA DE MESA -->
+        <div class="w-[92%] sm:w-full max-w-xl mx-auto z-[30] relative">
+            <form method="GET" action="" onsubmit="event.preventDefault(); verificarDisponibilidade();"
+                  class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]">
+
+                <!-- Data da Visita -->
+                <div class="flex flex-col text-center px-4 sm:px-8 py-2 sm:py-3 flex-[1.2] border-r border-slate-100 cursor-pointer rounded-l-full hover:bg-slate-50 transition-colors"
+                     onclick="abrirCalendarioData()">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate text-center w-full">Data da Visita</label>
+                    <input type="text" name="data" id="rest-data" placeholder="Selecione o dia" readonly
+                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full text-center focus:outline-none"
+                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;text-align:center!important;outline:none!important;">
+                </div>
+
+                <!-- Número de Pessoas -->
+                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors cursor-pointer"
+                     x-data="{ openGuests: false, guests: 2, guestsLabel: '2 Pessoas' }"
+                     @click="openGuests = !openGuests" @click.outside="openGuests = false">
+                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center cursor-pointer">Pessoas</label>
+                    <div class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 select-none text-center">
+                        <span x-text="guestsLabel" class="truncate font-bold"></span>
+                    </div>
+                    <input type="hidden" name="pessoas" id="rest-pessoas" :value="guestsLabel">
+                    <div x-show="openGuests" x-cloak @click.stop=""
+                         style="display:none;position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 8px);z-index:9999;width:140px;">
+                        <div x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
+                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                             class="bg-white border border-slate-200 rounded-2xl shadow-2xl p-1 max-h-60 overflow-y-auto no-scrollbar">
+                            <template x-for="g in [1, 2, 3, 4, 5, 6, 7, 8, '9 ou mais']">
+                                <button type="button"
+                                        @click="guests = g; guestsLabel = (g === 1 ? '1 Pessoa' : (typeof g === 'number' ? g + ' Pessoas' : '9 ou mais Pessoas')); openGuests = false;"
+                                        class="w-full text-left px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
+                                    <span x-text="g === 1 ? '1 Pessoa' : (typeof g === 'number' ? g + ' Pessoas' : '9 ou mais Pessoas')"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão Buscar -->
+                <button type="submit" id="rest-search-btn"
+                        class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
+                        title="Verificar Disponibilidade">
+                    <span id="rest-search-icon" class="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
+                            <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                    </span>
+                    <span id="rest-search-loader" class="hidden flex items-center justify-center">
+                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" style="color:var(--brand-text-color);">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== CONTEÚDO PRINCIPAL ===================== -->
+<div class="relative z-20 bg-white shadow-xl rounded-t-xl md:rounded-t-2xl overflow-hidden" style="margin-top:-30px;">
+
+    <!-- SEÇÃO: ATRAÇÃO DO DIA -->
+    <div id="atracao-section" class="atracao-section-wrapper"
+         style="--atracao-bg-color:{{ atracao.cor_fundo|default:'#0f172a' }};--atracao-text-color:{{ atracao.cor_texto|default:'#ffffff' }};background-color:var(--atracao-bg-color);color:var(--atracao-text-color);">
+        <div class="container mx-auto atracao-flex-container relative z-20">
+            <div class="atracao-left-column">
+                <div class="flex flex-col justify-start">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            Atração do Dia
+                        </span>
+                    </div>
+                    <div class="flex items-stretch atracao-title-wrapper">
+                        <span class="atracao-title-line shrink-0 rounded-full" style="background-color:var(--atracao-text-color);"></span>
+                        <h2 id="atracao-titulo" class="font-black tracking-wider leading-tight uppercase">
+                            {{ atracao.titulo|default:'Em Breve: Novas Atrações' }}
+                        </h2>
+                    </div>
+                    <div id="atracao-texto" class="font-medium opacity-90 pr-1 line-clamp-4 transition-all duration-300">
+                        {% if atracao.texto %}{{ atracao.texto|safe }}{% else %}<p>Fique atento às nossas programações especiais com shows ao vivo, noites temáticas e eventos gastronômicos exclusivos.</p>{% endif %}
+                    </div>
+                </div>
+                {% if restaurante.whatsapp %}
+                <a href="https://wa.me/{{ restaurante.whatsapp }}" target="_blank"
+                   class="self-start inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-extrabold px-5 py-2.5 rounded-full text-[10px] uppercase tracking-wider transition-all shadow-lg mt-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Reservar pelo WhatsApp
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        <!-- Mídia da Atração -->
+        <div class="atracao-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
+            <div class="atracao-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--atracao-bg-color) 0%, var(--atracao-bg-color) 20%, transparent 65%);"></div>
+            {% if atracao.video and atracao.midia_tipo == 'video' %}
+            <video src="{{ atracao.video.url }}" class="absolute inset-0 w-full h-full object-cover opacity-95" autoplay loop muted playsinline></video>
+            {% else %}
+            <img src="{% if atracao.banner %}{{ atracao.banner.url }}{% else %}https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=1920&q=80{% endif %}"
+                 alt="{{ atracao.titulo|default:'Atração' }}"
+                 class="absolute inset-0 w-full h-full object-cover opacity-95">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Resultados de Disponibilidade -->
+    <div id="resultados-rest-container" class="hidden container mx-auto px-4 md:px-6 xl:px-12 mt-6"></div>
+
+    <main class="container mx-auto px-4 md:px-6 xl:px-12 pt-10 md:pt-16 pb-10">
+
+        <!-- SEÇÃO: CARDÁPIO / CONTEÚDOS / PRATOS EM DESTAQUE -->
+        <div class="max-w-[90rem] mx-auto space-y-10 pb-6">
+
+            <!-- Desktop: Grid -->
+            <section class="w-full">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Nossos Destaques</h3>
+                        <p class="text-xs text-slate-400 font-bold mt-1">Pratos e experiências que não pode perder</p>
+                    </div>
+                </div>
+
+                <div class="portal-desktop-grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-6">
+                    {% for item in pratos_mock %}
+                    <div class="relative rounded-[2rem] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col bg-slate-900 aspect-[3/4]">
+                        <div class="absolute inset-0 w-full h-full">
+                            <img src="{{ item.imagem_url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.nome }}">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                        </div>
+                        <div class="relative z-10 mt-auto p-4 xl:p-5 flex flex-col items-start text-left w-full">
+                            <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2">{{ item.categoria }}</span>
+                            <h4 class="text-base xl:text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ item.nome }}</h4>
+                            <p class="text-[11px] xl:text-xs text-white/80 line-clamp-2 leading-relaxed w-full">{{ item.descricao }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Mobile: Carrossel 3D -->
+                <div class="block md:hidden -mx-4 w-[calc(100%+2rem)] mb-10"
+                     x-data="{ active: 1, total: {{ pratos_mock|length }}, autoPlayInterval: null,
+                         startAutoplay() { this.autoPlayInterval = setInterval(() => { this.active = (this.active % this.total) + 1; }, 3000); },
+                         stopAutoplay() { clearInterval(this.autoPlayInterval); },
+                         touchStartX: 0, touchEndX: 0,
+                         handleTouchStart(e) { this.touchStartX = e.changedTouches[0].screenX; this.stopAutoplay(); },
+                         handleTouchEnd(e) { this.touchEndX = e.changedTouches[0].screenX; const diff = this.touchStartX - this.touchEndX; if(Math.abs(diff)>40){ this.active = diff > 0 ? (this.active % this.total)+1 : (this.active===1 ? this.total : this.active-1); } this.startAutoplay(); }
+                     }"
+                     x-init="startAutoplay()"
+                     @touchstart="handleTouchStart($event)"
+                     @touchend="handleTouchEnd($event)"
+                     @mouseenter="stopAutoplay()"
+                     @mouseleave="startAutoplay()">
+                    <div class="relative w-full h-[360px] flex items-center justify-center overflow-hidden">
+                        {% for item in pratos_mock %}
+                        <div class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                             x-show="active === {{ forloop.counter }} || (active === 1 ? {{ forloop.counter }} === total : {{ forloop.counter }} === active - 1) || (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"
+                             :style="active === {{ forloop.counter }} ? 'transform:translateX(0) scale(1.05);z-index:30;opacity:1;' : (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1) ? 'transform:translateX(42%) scale(0.85);z-index:20;opacity:0.6;' : 'transform:translateX(-42%) scale(0.85);z-index:20;opacity:0.6;'">
+                            <div class="absolute inset-0 w-full h-full">
+                                <img src="{{ item.imagem_url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.nome }}">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                            </div>
+                            <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
+                                <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2">{{ item.categoria }}</span>
+                                <h4 class="text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ item.nome }}</h4>
+                                <p class="text-[10px] text-white/80 line-clamp-2 leading-relaxed w-full">{{ item.descricao }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="flex justify-center items-center gap-2 mt-1">
+                        {% for item in pratos_mock %}
+                        <button @click="active = {{ forloop.counter }}"
+                                :class="active === {{ forloop.counter }} ? 'w-6 h-1.5 rounded-full bg-action-secundario shadow-sm' : 'w-1.5 h-1.5 rounded-full bg-slate-300'"
+                                class="transition-all duration-300 border-none"></button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SEÇÃO: LOCALIZAÇÃO -->
+        <div class="mt-8 border-t border-slate-100 pt-8">
+            <div class="text-center max-w-2xl mx-auto mb-6 px-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">Nossa Localização</span>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Como nos encontrar</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed">Venha nos visitar! Localize-nos no mapa e planeje sua rota com facilidade.</p>
+            </div>
+
+            <div class="max-w-5xl mx-auto px-4 mb-10">
+                <div class="bg-white border border-slate-200/80 rounded-3xl p-5 md:p-6 shadow-lg w-full">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-stretch">
+                        <div class="col-span-12 md:col-span-5 md:row-start-1 flex flex-col gap-1 justify-center">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-action-blue mb-0.5 block">Restaurante</span>
+                            <div class="flex justify-between items-start gap-4">
+                                <h4 class="text-base md:text-lg font-black text-slate-900 leading-tight">{{ restaurante.nome }}</h4>
+                                <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0 select-none">
+                                    <button type="button" onclick="setMapType('roadmap')" id="btn-roadmap"
+                                            class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-600 bg-transparent">Mapa</button>
+                                    <button type="button" onclick="setMapType('satellite')" id="btn-satellite"
+                                            class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 shadow-sm">Satélite</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-12 md:col-span-5 md:row-start-2 flex flex-col justify-center">
+                            <div class="flex items-start gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                                <span class="p-2 rounded-xl bg-action-secundario-alpha text-action-secundario shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path></svg>
+                                </span>
+                                <div class="min-w-0">
+                                    <span class="block text-[8px] font-black uppercase tracking-wider text-slate-400 mb-1">Endereço</span>
+                                    <p class="text-xs text-slate-600 font-bold leading-relaxed break-words">{{ restaurante.endereco|default:'Endereço não informado' }}</p>
+                                    {% if restaurante.cidade_nome %}<p class="text-[10px] text-slate-400 font-medium mt-0.5">{{ restaurante.cidade_nome }}</p>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-12 md:col-span-7 md:row-start-1 md:row-span-3 rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 relative h-[280px] md:h-auto">
+                            <div id="mapaRestaurante" class="w-full h-full min-h-[280px] md:min-h-0 md:absolute md:inset-0 z-10"></div>
+                        </div>
+
+                        <div class="col-span-12 md:col-span-5 md:row-start-3 flex flex-col gap-2.5 justify-end">
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ restaurante.latitude|default:'-4.004445' }},{{ restaurante.longitude|default:'-40.990278' }}"
+                               target="_blank"
+                               class="w-full bg-action-secundario hover:opacity-90 text-white font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-none cursor-pointer shadow-md">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-3-3m3 3V9a6 6 0 0112 0v3"></path></svg>
+                                Abrir Rota no GPS / Google Maps
+                            </a>
+                            {% if restaurante.whatsapp %}
+                            <a href="https://wa.me/{{ restaurante.whatsapp }}" target="_blank"
+                               class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Pedir pelo WhatsApp
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO: SOBRE O RESTAURANTE -->
+        <div class="mt-8 border-t border-slate-100 pt-8">
+            <div id="sobre-section" class="sobre-section-wrapper rounded-3xl overflow-hidden"
+                 style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
+                <div class="container mx-auto sobre-flex-container relative z-20">
+                    <div class="sobre-left-column">
+                        <div class="flex flex-col justify-start">
+                            <div class="flex items-stretch sobre-title-wrapper">
+                                <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
+                                <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
+                                    {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
+                                </h2>
+                            </div>
+                            <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
+                                {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
+                            </div>
+                        </div>
+                        <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+                            Ler mais
+                        </button>
+                    </div>
+                </div>
+                <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
+                    <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
+                    {% if restaurante.sobre_video and restaurante.sobre_midia_tipo == 'video' %}
+                    <video src="{{ restaurante.sobre_video.url }}" class="absolute inset-0 w-full h-full object-cover opacity-95" autoplay loop muted playsinline></video>
+                    {% else %}
+                    <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
+                         alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- Modal de Calendário -->
+<div id="modal-calendario-rest" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+     onclick="if(event.target===this) fecharCalendario()">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-in zoom-in-95 duration-200">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-black text-slate-800 text-lg">Escolha o Dia da Visita</h3>
+            <button onclick="fecharCalendario()" class="p-2 rounded-xl hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div id="mini-calendar" class="w-full"></div>
+        <button onclick="confirmarData()" class="w-full mt-4 bg-action-blue text-white font-extrabold py-3 rounded-2xl text-sm uppercase tracking-wider border-none cursor-pointer hover:opacity-90 transition-all">
+            Confirmar Data
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function() {
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    // MAPA
+    let mapObj = null, roadmapLayer = null, satelliteLayer = null;
+    const lat = {{ restaurante.latitude|default:'-4.004445'|stringformat:'f' }};
+    const lon = {{ restaurante.longitude|default:'-40.990278'|stringformat:'f' }};
+
+    function initMap() {
+        if (typeof L === 'undefined') return;
+        roadmapLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
+        satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Imagens &copy; Esri' });
+        mapObj = L.map('mapaRestaurante', { center: [lat, lon], zoom: 15, layers: [satelliteLayer], scrollWheelZoom: false });
+        const redPin = L.icon({
+            iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='32' height='32'><path fill='%23ef4444' d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/></svg>",
+            iconSize: [32, 32], iconAnchor: [16, 32]
+        });
+        L.marker([lat, lon], { icon: redPin }).addTo(mapObj)
+            .bindPopup('<b>{{ restaurante.nome|escapejs }}</b><br>{{ restaurante.endereco|default:""| escapejs }}').openPopup();
+        setTimeout(() => mapObj.invalidateSize(), 500);
+    }
+
+    window.setMapType = function(type) {
+        if (!mapObj) return;
+        if (type === 'roadmap') { mapObj.removeLayer(satelliteLayer); mapObj.addLayer(roadmapLayer); }
+        else { mapObj.removeLayer(roadmapLayer); mapObj.addLayer(satelliteLayer); }
+        document.getElementById('btn-roadmap').className = type === 'roadmap'
+            ? 'px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 shadow-sm'
+            : 'px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-600 bg-transparent';
+        document.getElementById('btn-satellite').className = type === 'satellite'
+            ? 'px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 shadow-sm'
+            : 'px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-600 bg-transparent';
+    };
+
+    // CALENDÁRIO
+    let selectedDate = null;
+    let calendarYear = new Date().getFullYear();
+    let calendarMonth = new Date().getMonth();
+
+    function renderCalendar() {
+        const container = document.getElementById('mini-calendar');
+        if (!container) return;
+        const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const today = new Date(); today.setHours(0,0,0,0);
+        const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+        const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+        let html = `<div class="flex justify-between items-center mb-3">
+            <button onclick="prevMonth()" class="p-2 rounded-xl hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer text-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <span class="font-black text-slate-800 text-sm">${months[calendarMonth]} ${calendarYear}</span>
+            <button onclick="nextMonth()" class="p-2 rounded-xl hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer text-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-7 gap-0.5 mb-1">
+            ${['D','S','T','Q','Q','S','S'].map(d => `<div class="text-center text-[9px] font-black uppercase text-slate-400 py-1">${d}</div>`).join('')}
+        </div>
+        <div class="grid grid-cols-7 gap-0.5">`;
+
+        for (let i = 0; i < firstDay; i++) html += '<div></div>';
+        for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(calendarYear, calendarMonth, d);
+            const isPast = date < today;
+            const isSelected = selectedDate && date.getTime() === selectedDate.getTime();
+            const isToday = date.getTime() === today.getTime();
+            let cls = 'text-center text-xs py-1.5 rounded-xl cursor-pointer font-bold transition-all border-none ';
+            if (isPast) cls += 'text-slate-300 cursor-not-allowed bg-transparent';
+            else if (isSelected) cls += 'bg-action-blue text-white shadow-md';
+            else if (isToday) cls += 'border border-action-blue text-action-blue bg-transparent hover:bg-slate-50';
+            else cls += 'text-slate-700 hover:bg-slate-100 bg-transparent';
+            html += `<button ${isPast ? 'disabled' : `onclick="selectDate(${calendarYear}, ${calendarMonth}, ${d})"`} class="${cls}">${d}</button>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    window.selectDate = function(y, m, d) { selectedDate = new Date(y, m, d); renderCalendar(); };
+    window.prevMonth = function() { calendarMonth--; if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; } renderCalendar(); };
+    window.nextMonth = function() { calendarMonth++; if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; } renderCalendar(); };
+    window.abrirCalendarioData = function() { const m = document.getElementById('modal-calendario-rest'); if(m){ m.classList.remove('hidden'); renderCalendar(); } };
+    window.fecharCalendario = function() { const m = document.getElementById('modal-calendario-rest'); if(m) m.classList.add('hidden'); };
+    window.confirmarData = function() {
+        if (!selectedDate) return;
+        const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+        const mos = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+        const label = `${days[selectedDate.getDay()]}, ${selectedDate.getDate()} ${mos[selectedDate.getMonth()]}`;
+        const input = document.getElementById('rest-data');
+        if (input) input.value = label;
+        fecharCalendario();
+    };
+
+    // VERIFICAR DISPONIBILIDADE
+    window.verificarDisponibilidade = function() {
+        const dataInput = document.getElementById('rest-data');
+        const pessoasInput = document.getElementById('rest-pessoas');
+        const btn = document.getElementById('rest-search-btn');
+        const icon = document.getElementById('rest-search-icon');
+        const loader = document.getElementById('rest-search-loader');
+        const container = document.getElementById('resultados-rest-container');
+        if (!dataInput || !dataInput.value.trim()) { abrirCalendarioData(); return; }
+        if (btn) btn.disabled = true;
+        if (icon) icon.classList.add('hidden');
+        if (loader) loader.classList.remove('hidden');
+        setTimeout(() => {
+            const wpp = '{{ restaurante.whatsapp|default:"" }}';
+            const wppBtn = wpp ? `<a href="https://wa.me/${wpp}?text=Olá! Gostaria de reservar para ${dataInput.value} — ${pessoasInput ? pessoasInput.value : '2 Pessoas'}." target="_blank" class="shrink-0 bg-green-500 hover:bg-green-600 text-white font-extrabold px-4 py-2 rounded-xl text-[10px] uppercase tracking-wider border-none cursor-pointer transition-all">WhatsApp</a>` : '';
+            if (container) {
+                container.innerHTML = `
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-center gap-3 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                    <div class="flex-1">
+                        <p class="text-xs font-black text-amber-800">Sistema de Reservas em Preparação</p>
+                        <p class="text-[10px] text-amber-600 mt-0.5">Para reservas, entre em contato pelo WhatsApp indicando ${dataInput.value} e ${pessoasInput ? pessoasInput.value : '2 Pessoas'}.</p>
+                    </div>
+                    ${wppBtn}
+                </div>`;
+                container.classList.remove('hidden');
+                setTimeout(() => container.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            }
+            if (btn) btn.disabled = false;
+            if (icon) icon.classList.remove('hidden');
+            if (loader) loader.classList.add('hidden');
+        }, 600);
+    };
+
+    // SOBRE EXPANDER
+    let isSobreExpanded = false;
+    window.toggleSobreExpander = function() {
+        const textEl = document.getElementById('sobre-texto');
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        const sectionEl = document.getElementById('sobre-section');
+        if (!textEl || !btnEl || !sectionEl) return;
+        isSobreExpanded = !isSobreExpanded;
+        if (isSobreExpanded) {
+            textEl.classList.remove('line-clamp-4');
+            textEl.classList.add('line-clamp-none');
+            sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
+            btnEl.textContent = 'Ler menos';
+        } else {
+            textEl.classList.remove('line-clamp-none');
+            textEl.classList.add('line-clamp-4');
+            sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
+            btnEl.textContent = 'Ler mais';
+            sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
+    function initSobreExpander() {
+        const textEl = document.getElementById('sobre-texto');
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        if (!textEl || !btnEl) return;
+        setTimeout(() => { if (textEl.scrollHeight > textEl.clientHeight) btnEl.classList.remove('hidden'); }, 50);
+    }
+
+    initMap();
+    initSobreExpander();
+})();
+</script>
+{% endblock %}

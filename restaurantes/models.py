@@ -14,6 +14,30 @@ class Restaurante(models.Model):
     venda_online = models.BooleanField("Venda Online (Delivery/Reservas)", default=False)
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    # Branding
+    descricao = models.TextField("Descrição / Slogan", blank=True, null=True, help_text="Aparece no Hero da página pública")
+    logo = models.ImageField("Logo", upload_to='restaurantes/logos/', blank=True, null=True)
+    banner = models.ImageField("Banner / Hero", upload_to='restaurantes/banners/', blank=True, null=True)
+    cor_primaria = models.CharField("Cor Primária (Hex)", max_length=7, default='#e11d48', blank=True)
+    cor_secundaria = models.CharField("Cor Secundária (Hex)", max_length=7, default='#f97316', blank=True)
+
+    # Hero
+    hero_tipo = models.CharField("Tipo do Hero", max_length=10, choices=[('imagem','Imagem'),('video','Vídeo')], default='imagem')
+    hero_video = models.FileField("Vídeo do Hero", upload_to='restaurantes/videos/', blank=True, null=True)
+
+    # Geolocalização
+    latitude = models.FloatField("Latitude", blank=True, null=True)
+    longitude = models.FloatField("Longitude", blank=True, null=True)
+
+    # Seção Sobre
+    sobre_titulo = models.CharField("Título da Seção Sobre", max_length=150, blank=True, null=True)
+    sobre_texto = models.TextField("Texto da Seção Sobre", blank=True, null=True)
+    sobre_banner = models.ImageField("Imagem/Foto da Seção Sobre", upload_to='restaurantes/sobre/', blank=True, null=True)
+    sobre_video = models.FileField("Vídeo da Seção Sobre", upload_to='restaurantes/sobre/', blank=True, null=True)
+    sobre_midia_tipo = models.CharField("Tipo de Mídia do Sobre", max_length=10, choices=[('imagem','Imagem'),('video','Vídeo')], default='imagem')
+    sobre_cor_fundo = models.CharField("Cor de Fundo da Seção Sobre (Hex)", max_length=7, default='#f8fafc', blank=True)
+    sobre_cor_texto = models.CharField("Cor do Texto da Seção Sobre (Hex)", max_length=7, default='#0f172a', blank=True)
+
     class Meta:
         verbose_name = "Restaurante"
         verbose_name_plural = "Restaurantes"

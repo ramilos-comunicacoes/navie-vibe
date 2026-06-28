@@ -7,4 +7,5 @@ urlpatterns = [
     path('auth/', views.partner_auth, name='partner_login'),
     path('logout/', views.partner_logout, name='partner_logout'),
     path('sistema/', views.partner_dashboard, name='partner_dashboard'),
+    path('<slug:slug>/', views.restaurante_detalhe, name='restaurante_detalhe'),
 ]
