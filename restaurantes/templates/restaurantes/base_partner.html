@@ -1,6 +1,8 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-br" class="scroll-smooth" 
+      @open-drawer.window="drawerOpen = true"
+      @close-drawer.window="drawerOpen = false"
       x-data="{ 
           theme: localStorage.getItem('theme') || 'light', 
           sidebarMobileOpen: false,
@@ -8,9 +10,6 @@
           activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('restaurant_active_tab') || 'dashboard', 
           activeSubTab: (new URLSearchParams(window.location.search)).get('sub') || 'site',
           drawerOpen: false,
-      }"
-      @open-drawer.window="drawerOpen = true"
-      @close-drawer.window="drawerOpen = false"
           
           updateStatusColor() {
               const meta = document.getElementById('theme-color-meta');
