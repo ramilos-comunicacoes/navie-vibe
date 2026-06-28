@@ -316,12 +316,14 @@ def partner_salvar_atracao(request):
         video_file = request.FILES['video']
         if video_file.size > 8 * 1024 * 1024:
             messages.error(request, "O vídeo ultrapassa o limite de 8MB permitido.")
-            return redirect('/sistema/?tab=configuracoes&sub=destaques')
+            from django.urls import reverse
+            return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes&sub=destaques')
         atracao.video = video_file
         
     atracao.save(using='restaurantes')
     messages.success(request, "Atração salva com sucesso.")
-    return redirect('/sistema/?tab=configuracoes&sub=destaques')
+    from django.urls import reverse
+    return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes&sub=destaques')
 
 
 @login_required(login_url='restaurantes:partner_login')
@@ -349,7 +351,8 @@ def partner_deletar_atracao(request, atracao_id):
         
     atracao.delete(using='restaurantes')
     messages.success(request, "Atração excluída com sucesso.")
-    return redirect('/sistema/?tab=configuracoes&sub=destaques')
+    from django.urls import reverse
+    return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes&sub=destaques')
 
 
 def restaurante_detalhe(request, slug):
