@@ -180,6 +180,16 @@
                                 <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Pedidos / Salão</span>
                             </a>
                         </li>
+
+                        <!-- Configurações do Site -->
+                        <li>
+                            <a href="javascript:void(0)" @click="activeTab = 'configuracoes'" :class="activeTab === 'configuracoes' ? 'text-red-500 bg-red-500/10 dark:bg-red-500/15 font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-slate-100/50 dark:hover:bg-white/5'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                                <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                    <i data-lucide="settings" class="w-5 h-5"></i>
+                                </div>
+                                <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Configurações</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>
@@ -235,12 +245,14 @@
                             <span x-show="activeTab === 'cardapio'" style="display: none;">Cardápio Gastronômico</span>
                             <span x-show="activeTab === 'mesas'" style="display: none;">Reservas & Mesas</span>
                             <span x-show="activeTab === 'pedidos'" style="display: none;">Pedidos do Salão & Delivery</span>
+                            <span x-show="activeTab === 'configuracoes'" style="display: none;">Configurações do Estabelecimento</span>
                         </h1>
                         <div class="text-[10px] text-slate-450 dark:text-slate-400 mt-0.5 leading-tight font-bold hidden sm:block">
                             <span x-show="activeTab === 'dashboard'">Resumo operacional e métricas em tempo real</span>
                             <span x-show="activeTab === 'cardapio'" style="display: none;">Crie, edite e organize pratos e bebidas do restaurante</span>
                             <span x-show="activeTab === 'mesas'" style="display: none;">Gerencie a ocupação das mesas físicas e reservas de clientes</span>
                             <span x-show="activeTab === 'pedidos'" style="display: none;">Acompanhe comandas, andamento da cozinha e despacho de delivery</span>
+                            <span x-show="activeTab === 'configuracoes'" style="display: none;">Gerencie dados públicos, cores de branding e localização do restaurante</span>
                         </div>
                     </div>
                 </div>

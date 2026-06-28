@@ -121,4 +121,536 @@
         <p class="text-xs mt-1">Pronto para receber a tela de andamento de pedidos na cozinha (KDS) e comissionamento.</p>
     </div>
 </div>
+
+<!-- ABA DE CONFIGURAÇÕES -->
+<div x-show="activeTab === 'configuracoes'" class="space-y-6" x-transition:enter="transition ease-out duration-300" style="display: none;">
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <form id="form-salvar-configuracoes" action="{% url 'restaurantes:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- Coluna Esquerda/Centro: Dados do Restaurante -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Informações Básicas -->
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-red-500" data-lucide="store"></i>
+                        <span>Dados do Estabelecimento</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Nome do Restaurante</label>
+                            <input type="text" name="nome" value="{{ restaurante.nome }}" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Especialidade Culinária</label>
+                            <input type="text" name="especialidade" value="{{ restaurante.especialidade|default:'' }}" placeholder="Ex: Pizzaria, Massas, Regional" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Descrição / Slogan (Hero)</label>
+                        <textarea name="descricao" rows="2" placeholder="Slogan ou frase descritiva que aparece no topo da página pública..." class="w-full p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">{{ restaurante.descricao|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Contatos e WhatsApps -->
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-red-500" data-lucide="phone"></i>
+                        <span>Canais de Comunicação</span>
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Público</label>
+                            <input type="text" name="whatsapp" value="{{ restaurante.whatsapp|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Exibido na página pública para reservas/pedidos</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">E-mail de Contato</label>
+                            <input type="email" name="email_contato" value="{{ restaurante.email_contato|default:'' }}" placeholder="Ex: contato@restaurante.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">E-mail público do restaurante</p>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Privado (Naviê)</label>
+                            <input type="text" name="whatsapp_privado" value="{{ restaurante.whatsapp_privado|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Contato administrativo interno do Naviê</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Geolocalização & Mapa -->
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-white/5">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="map-pin"></i>
+                            <span>Geolocalização & Endereço</span>
+                        </h3>
+                        <!-- Alternador Mapa / Satélite -->
+                        <div class="flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200 dark:border-white/10 select-none">
+                            <button type="button" id="btn-toggle-sat-rest"
+                                    class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-sm">
+                                Satélite
+                            </button>
+                            <button type="button" id="btn-toggle-road-rest"
+                                    class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent">
+                                Mapa
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Inputs ocultos de latitude e longitude -->
+                    <input type="hidden" name="latitude" id="rest_lat" value="{% if restaurante.latitude %}{{ restaurante.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
+                    <input type="hidden" name="longitude" id="rest_lon" value="{% if restaurante.longitude %}{{ restaurante.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cidade (Nome)</label>
+                            <input type="text" name="cidade_nome" id="rest_cidade_nome" value="{{ restaurante.cidade_nome|default:'' }}" placeholder="Ex: Viçosa do Ceará" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Endereço Completo</label>
+                            <input type="text" name="endereco" id="rest_endereco" value="{{ restaurante.endereco|default:'' }}" placeholder="Ex: Sítio Lambedouro, S/N - Zona Rural" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                        </div>
+                    </div>
+
+                    <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex flex-col gap-2">
+                        <div class="flex justify-between gap-2">
+                            <button type="button" id="btn-auto-locate-rest" onclick="geolocalizarRestaurante()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
+                                <i data-lucide="locate" class="w-3.5 h-3.5"></i> <span>Achar Minha Localização</span>
+                            </button>
+                            <button type="button" onclick="centralizarCidadeRestaurante()" class="flex-1 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
+                                <i data-lucide="search" class="w-3.5 h-3.5"></i> <span>CENTRO DA CIDADE</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Leaflet Selector Container -->
+                        <div id="mapaSelectorRestaurante" class="w-full h-64 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 z-20"></div>
+                    </div>
+                    <p class="text-[9px] text-slate-400">Arraste o pin vermelho ou clique no mapa para indicar o local exato do estabelecimento.</p>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Identidade Visual / Cores e Mídias -->
+            <div class="space-y-6">
+                <!-- Branding & Cores -->
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-red-500" data-lucide="palette"></i>
+                        <span>Branding & Cores</span>
+                    </h3>
+
+                    <!-- Cor Primária -->
+                    <div x-data="colorPickerData('{{ restaurante.cor_primaria|default:'#e11d48' }}', 'cor_primaria_hex')" class="relative">
+                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Primária (Hex)</label>
+                        <div class="relative flex items-center max-w-[200px]">
+                            <button type="button" @click="open = !open"
+                                    :style="'background-color: ' + color"
+                                    class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                            </button>
+                            <input type="text" name="cor_primaria" id="cor_primaria_hex" x-model="color"
+                                   placeholder="#e11d48" maxlength="7"
+                                   class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                   @input="onHexInput($el.value)">
+                            <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                <i data-lucide="pipette" class="w-4 h-4"></i>
+                            </button>
+                            <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                        </div>
+
+                        <!-- Dropdown Presets -->
+                        <div x-show="open" @click.outside="open = false" x-transition
+                             class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                             style="display: none;">
+                            <div>
+                                <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                <div class="grid grid-cols-6 gap-2">
+                                    <template x-for="preset in presets">
+                                        <button type="button" @click="setPreset(preset)"
+                                                :style="'background-color: ' + preset"
+                                                :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cor Secundária -->
+                    <div x-data="colorPickerData('{{ restaurante.cor_secundaria|default:'#f97316' }}', 'cor_secundaria_hex')" class="relative">
+                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Secundária (Hex)</label>
+                        <div class="relative flex items-center max-w-[200px]">
+                            <button type="button" @click="open = !open"
+                                    :style="'background-color: ' + color"
+                                    class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                            </button>
+                            <input type="text" name="cor_secundaria" id="cor_secundaria_hex" x-model="color"
+                                   placeholder="#f97316" maxlength="7"
+                                   class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                   @input="onHexInput($el.value)">
+                            <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                <i data-lucide="pipette" class="w-4 h-4"></i>
+                            </button>
+                            <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                        </div>
+
+                        <!-- Dropdown Presets -->
+                        <div x-show="open" @click.outside="open = false" x-transition
+                             class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                             style="display: none;">
+                            <div>
+                                <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                <div class="grid grid-cols-6 gap-2">
+                                    <template x-for="preset in presets">
+                                        <button type="button" @click="setPreset(preset)"
+                                                :style="'background-color: ' + preset"
+                                                :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo & Banner -->
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-red-500" data-lucide="image"></i>
+                        <span>Mídias da Marca</span>
+                    </h3>
+
+                    <!-- Logo Upload -->
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Logo do Restaurante</label>
+                        <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-file-input').click()">
+                            
+                            <input type="file" id="logo-file-input" name="logo" accept="image/*" class="hidden"
+                                   onchange="previewImageFile(this, 'logo-preview')">
+                            
+                            <div id="logo-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.logo %}hidden{% endif %}">
+                                <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Logomarca</span>
+                            </div>
+
+                            <div id="logo-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.logo %}hidden{% endif %}">
+                                <img id="logo-preview-img" src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Logo preview">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                            onclick="event.stopPropagation(); clearUploadedFile('logo')">Apagar</button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="remover_logo" id="remover-logo-input" value="false">
+                        </div>
+                    </div>
+
+                    <!-- Banner Upload -->
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Banner Principal (Hero)</label>
+                        <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
+                            
+                            <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
+                                   onchange="previewImageFile(this, 'banner-preview')">
+                            
+                            <div id="banner-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.banner %}hidden{% endif %}">
+                                <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Banner Principal</span>
+                            </div>
+
+                            <div id="banner-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.banner %}hidden{% endif %}">
+                                <img id="banner-preview-img" src="{% if restaurante.banner %}{{ restaurante.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
+                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                            onclick="event.stopPropagation(); clearUploadedFile('banner')">Apagar</button>
+                                </div>
+                            </div>
+                            <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botão de Ação -->
+                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3.5 px-6 rounded-2xl text-xs uppercase tracking-widest shadow-md shadow-red-500/10 cursor-pointer border-none flex items-center justify-center gap-2 transition-all">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Salvar Configurações</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+    // Funções auxiliares para ColorPicker
+    function hexToHsl(hex) {
+        hex = hex.replace(/^#/, '');
+        if (hex.length === 3) { hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]; }
+        let r = parseInt(hex.substring(0, 2), 16) / 255 || 0;
+        let g = parseInt(hex.substring(2, 4), 16) / 255 || 0;
+        let b = parseInt(hex.substring(4, 6), 16) / 255 || 0;
+        let max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h, s, l = (max + min) / 2;
+        if (max === min) { h = s = 0; }
+        else {
+            let d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            const hex = Math.round(255 * color).toString(16);
+            return hex.padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function colorPickerData(initialColor, inputId) {
+        return {
+            open: false,
+            color: initialColor,
+            h: 0,
+            s: 100,
+            l: 50,
+            presets: ['#e11d48', '#f97316', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#f59e0b', '#14b8a6', '#6366f1', '#22c55e', '#475569'],
+            init() { this.syncHslFromHex(this.color); },
+            syncHslFromHex(hex) {
+                try {
+                    const hsl = hexToHsl(hex);
+                    this.h = hsl.h; this.s = hsl.s; this.l = hsl.l;
+                } catch(e) { console.log(e); }
+            },
+            updateFromHsl() {
+                this.color = hslToHex(parseInt(this.h), parseInt(this.s), parseInt(this.l));
+                this.dispatchUpdate();
+            },
+            setPreset(hex) {
+                this.color = hex; this.syncHslFromHex(hex); this.dispatchUpdate();
+            },
+            onHexInput(val) {
+                if (val.startsWith('#') && val.length === 7) {
+                    this.color = val; this.syncHslFromHex(val); this.dispatchUpdate();
+                }
+            },
+            onNativeInput(val) {
+                this.color = val; this.syncHslFromHex(val); this.dispatchUpdate();
+            },
+            triggerNativePicker() {
+                const picker = this.$el.querySelector('input[type="color"]');
+                if (picker) { picker.click(); }
+            },
+            dispatchUpdate() {
+                const hexInput = document.getElementById(inputId);
+                if (hexInput) {
+                    hexInput.value = this.color;
+                    hexInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                const nativePicker = this.$el.querySelector('input[type="color"]');
+                if (nativePicker) { nativePicker.value = this.color; }
+            }
+        };
+    }
+
+    // ── MAPA LEAFLET PARA RESTAURANTE ──
+    let restMap = null;
+    let restMarker = null;
+    let satLayer = null;
+    let roadLayer = null;
+    let redPin = null;
+
+    function inicializarMapaRestaurante() {
+        const inputLat = document.getElementById('rest_lat');
+        const inputLon = document.getElementById('rest_lon');
+        let lat = parseFloat(inputLat.value) || -4.004445;
+        let lon = parseFloat(inputLon.value) || -40.990278;
+
+        if (typeof L === 'undefined') return;
+
+        if (!redPin) {
+            redPin = L.icon({
+                iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36"><path fill="%23ef4444" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+        }
+
+        if (!restMap) {
+            let tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            if (document.documentElement.classList.contains('dark')) {
+                tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            }
+
+            roadLayer = L.tileLayer(tileUrl, {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 20
+            });
+
+            satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: 'Imagens &copy; Esri'
+            });
+
+            restMap = L.map('mapaSelectorRestaurante', {
+                center: [lat, lon],
+                zoom: 16,
+                layers: [satLayer] // Padrão: Satélite
+            });
+
+            restMarker = L.marker([lat, lon], {
+                draggable: true,
+                icon: redPin
+            }).addTo(restMap);
+
+            restMarker.on('dragend', function() {
+                const pos = restMarker.getLatLng();
+                inputLat.value = pos.lat.toFixed(6);
+                inputLon.value = pos.lng.toFixed(6);
+            });
+
+            restMap.on('click', function(e) {
+                restMarker.setLatLng(e.latlng);
+                inputLat.value = e.latlng.lat.toFixed(6);
+                inputLon.value = e.latlng.lng.toFixed(6);
+            });
+
+            // Toggle Layers
+            const btnSat = document.getElementById('btn-toggle-sat-rest');
+            const btnRoad = document.getElementById('btn-toggle-road-rest');
+
+            if (btnSat && btnRoad) {
+                btnSat.addEventListener('click', function() {
+                    restMap.removeLayer(roadLayer);
+                    restMap.addLayer(satLayer);
+                    btnSat.className = "px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-sm";
+                    btnRoad.className = "px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                });
+
+                btnRoad.addEventListener('click', function() {
+                    restMap.removeLayer(satLayer);
+                    restMap.addLayer(roadLayer);
+                    btnRoad.className = "px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-sm";
+                    btnSat.className = "px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent";
+                });
+            }
+        } else {
+            restMap.setView([lat, lon], 16);
+            restMarker.setLatLng([lat, lon]);
+        }
+    }
+
+    // Geolocalizar Restaurante
+    window.geolocalizarRestaurante = function() {
+        if (navigator.geolocation) {
+            const btn = document.getElementById('btn-auto-locate-rest');
+            const btnText = btn ? btn.querySelector('span') : null;
+            const originalText = btnText ? btnText.textContent : "Achar Minha Localização";
+            if (btnText) btnText.textContent = "Obtendo...";
+            if (btn) btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                document.getElementById('rest_lat').value = lat.toFixed(6);
+                document.getElementById('rest_lon').value = lon.toFixed(6);
+                if (restMap) {
+                    restMap.setView([lat, lon], 16);
+                    restMarker.setLatLng([lat, lon]);
+                }
+                if (btnText) btnText.textContent = originalText;
+                if (btn) btn.disabled = false;
+            }, () => {
+                alert("Não foi possível acessar a localização do dispositivo.");
+                if (btnText) btnText.textContent = originalText;
+                if (btn) btn.disabled = false;
+            }, { enableHighAccuracy: true });
+        }
+    };
+
+    // Centralizar Cidade
+    window.centralizarCidadeRestaurante = function() {
+        const cidade = document.getElementById('rest_cidade_nome').value || "{{ restaurante.cidade_nome|default:'' }}";
+        if (!cidade) { alert("Digite o nome da cidade primeiro."); return; }
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cidade + ', Ceará, Brasil')}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    document.getElementById('rest_lat').value = lat.toFixed(6);
+                    document.getElementById('rest_lon').value = lon.toFixed(6);
+                    if (restMap) {
+                        restMap.setView([lat, lon], 14);
+                        restMarker.setLatLng([lat, lon]);
+                    }
+                } else { alert("Cidade não encontrada."); }
+            }).catch(() => alert("Erro ao pesquisar cidade."));
+    };
+
+    // Upload & Previews
+    window.previewImageFile = function(input, previewId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(previewId + '-empty').classList.add('hidden');
+                document.getElementById(previewId + '-active').classList.remove('hidden');
+                document.getElementById(previewId + '-img').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+            
+            // Define input de remoção para false
+            const removeInput = document.getElementById('remover-' + previewId.replace('-preview', '') + '-input');
+            if (removeInput) removeInput.value = 'false';
+        }
+    };
+
+    window.clearUploadedFile = function(fieldName) {
+        const fileInput = document.getElementById(fieldName + '-file-input');
+        if (fileInput) fileInput.value = '';
+        
+        document.getElementById(fieldName + '-preview-empty').classList.remove('hidden');
+        document.getElementById(fieldName + '-preview-active').classList.add('hidden');
+        
+        const removeInput = document.getElementById('remover-' + fieldName + '-input');
+        if (removeInput) removeInput.value = 'true';
+    };
+
+    // Inicialização do mapa quando a tab de configurações é aberta
+    window.addEventListener('tab-changed', function(e) {
+        if (e.detail === 'configuracoes') {
+            setTimeout(() => {
+                inicializarMapaRestaurante();
+                if (restMap) restMap.invalidateSize();
+            }, 300);
+        }
+    });
+
+    // Inicialização direta caso a tab já seja configurações
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tab') === 'configuracoes' || localStorage.getItem('restaurant_active_tab') === 'configuracoes') {
+            setTimeout(inicializarMapaRestaurante, 500);
+        }
+    });
+</script>
+{% endblock %}
+

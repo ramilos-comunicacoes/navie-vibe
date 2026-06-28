@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
@@ -130,6 +131,116 @@ def partner_logout(request):
     auth_logout(request)
     messages.success(request, "Sessão encerrada com sucesso.")
     return redirect('restaurantes:partner_login')
+
+
+@login_required(login_url='restaurantes:partner_login')
+@require_POST
+def partner_salvar_configuracoes(request):
+    """
+    Grava as configurações de personalização visual, contatos e geolocalização do restaurante.
+    """
+    if not hasattr(request.user, 'perfil_restaurante'):
+        messages.error(request, "Acesso negado.")
+        return redirect('restaurantes:partner_login')
+        
+    perfil = request.user.perfil_restaurante
+    if perfil.role not in ['proprietario', 'gerente']:
+        messages.error(request, "Permissão insuficiente para alterar as configurações.")
+        return redirect('restaurantes:partner_dashboard')
+        
+    restaurante = perfil.restaurante
+    
+    # Atualização dos campos de texto e branding
+    restaurante.nome = request.POST.get('nome', restaurante.nome).strip()
+    restaurante.descricao = request.POST.get('descricao', restaurante.descricao).strip()
+    restaurante.especialidade = request.POST.get('especialidade', restaurante.especialidade).strip()
+    restaurante.cidade_nome = request.POST.get('cidade_nome', restaurante.cidade_nome).strip()
+    restaurante.endereco = request.POST.get('endereco', restaurante.endereco).strip()
+    
+    # WhatsApp público
+    raw_whatsapp = request.POST.get('whatsapp', '')
+    cleaned_whatsapp = ''.join(c for c in raw_whatsapp if c.isdigit())
+    if cleaned_whatsapp:
+        if len(cleaned_whatsapp) in [10, 11] and not cleaned_whatsapp.startswith('55'):
+            cleaned_whatsapp = '55' + cleaned_whatsapp
+        restaurante.whatsapp = cleaned_whatsapp
+    else:
+        restaurante.whatsapp = None
+        
+    # WhatsApp privado (Naviê)
+    raw_whatsapp_privado = request.POST.get('whatsapp_privado', '')
+    cleaned_whatsapp_privado = ''.join(c for c in raw_whatsapp_privado if c.isdigit())
+    if cleaned_whatsapp_privado:
+        if len(cleaned_whatsapp_privado) in [10, 11] and not cleaned_whatsapp_privado.startswith('55'):
+            cleaned_whatsapp_privado = '55' + cleaned_whatsapp_privado
+        restaurante.whatsapp_privado = cleaned_whatsapp_privado
+    else:
+        restaurante.whatsapp_privado = None
+
+    restaurante.email_contato = request.POST.get('email_contato', '').strip() or None
+    
+    restaurante.cor_primaria = request.POST.get('cor_primaria', restaurante.cor_primaria)
+    restaurante.cor_secundaria = request.POST.get('cor_secundaria', restaurante.cor_secundaria)
+    restaurante.hero_tipo = request.POST.get('hero_tipo', restaurante.hero_tipo)
+    
+    # Geolocalização
+    lat = request.POST.get('latitude', '').strip().replace(',', '.')
+    lon = request.POST.get('longitude', '').strip().replace(',', '.')
+    if lat and lat.lower() != 'none' and lat.lower() != 'nan':
+        try:
+            restaurante.latitude = float(lat)
+        except ValueError:
+            pass
+    if lon and lon.lower() != 'none' and lon.lower() != 'nan':
+        try:
+            restaurante.longitude = float(lon)
+        except ValueError:
+            pass
+
+    # Seção Sobre
+    restaurante.sobre_titulo = request.POST.get('sobre_titulo', '').strip() or None
+    restaurante.sobre_texto = request.POST.get('sobre_texto', '').strip() or None
+    restaurante.sobre_cor_fundo = request.POST.get('sobre_cor_fundo', '#f8fafc')
+    restaurante.sobre_cor_texto = request.POST.get('sobre_cor_texto', '#0f172a')
+    restaurante.sobre_midia_tipo = request.POST.get('sobre_midia_tipo', 'imagem')
+            
+    # Upload de arquivos e remoções
+    if request.POST.get('remover_banner') == 'true':
+        restaurante.banner = None
+    elif 'banner' in request.FILES:
+        restaurante.banner = request.FILES['banner']
+        
+    if request.POST.get('remover_logo') == 'true':
+        restaurante.logo = None
+    elif 'logo' in request.FILES:
+        restaurante.logo = request.FILES['logo']
+        
+    if request.POST.get('remover_sobre_banner') == 'true':
+        restaurante.sobre_banner = None
+    elif 'sobre_banner' in request.FILES:
+        restaurante.sobre_banner = request.FILES['sobre_banner']
+        
+    if request.POST.get('remover_sobre_video') == 'true':
+        restaurante.sobre_video = None
+    elif 'sobre_video' in request.FILES:
+        video_file = request.FILES['sobre_video']
+        if video_file.size > 8 * 1024 * 1024:
+            messages.error(request, "O vídeo da seção sobre ultrapassa o limite de 8MB permitido.")
+            return redirect('/sistema/?tab=configuracoes')
+        restaurante.sobre_video = video_file
+
+    if request.POST.get('remover_hero_video') == 'true':
+        restaurante.hero_video = None
+    elif 'hero_video' in request.FILES:
+        video_file = request.FILES['hero_video']
+        if video_file.size > 8 * 1024 * 1024:
+            messages.error(request, "O vídeo em loop do hero ultrapassa o limite de 8MB permitido.")
+            return redirect('/sistema/?tab=configuracoes')
+        restaurante.hero_video = video_file
+        
+    restaurante.save(using='restaurantes')
+    messages.success(request, "Configurações do restaurante salvas com sucesso.")
+    return redirect('/sistema/?tab=configuracoes')
 
 
 def restaurante_detalhe(request, slug):
