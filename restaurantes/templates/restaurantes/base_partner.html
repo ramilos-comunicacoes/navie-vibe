@@ -322,7 +322,7 @@
                     </button>
 
                     <!-- Botão de Salvar Contextual -->
-                    <button x-show="activeTab === 'configuracoes'" type="button" onclick="submeterFormularioAtivo()"
+                    <button x-show="activeTab === 'configuracoes' && activeSubTab === 'site'" type="button" onclick="submeterFormularioAtivo()"
                             class="bg-red-500 hover:bg-red-600 text-white font-black h-9 px-3 sm:px-4 rounded-xl text-xs uppercase tracking-wider border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-red-500/15 transition-all"
                             style="display: none;">
                         <i data-lucide="save" class="w-4 h-4 shrink-0"></i>
