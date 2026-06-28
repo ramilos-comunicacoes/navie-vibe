@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'financeiro',
     'estoque',
     'administracao',
+    'restaurantes',
 ]
 
 MIDDLEWARE = [
@@ -170,6 +171,14 @@ if USE_POSTGRES:
             'HOST': DB_HOST,
             'PORT': DB_PORT,
         },
+        'restaurantes': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'navievibe_restaurantes',
+            'USER': DB_USER,
+            'PASSWORD': DB_PASSWORD,
+            'HOST': DB_HOST,
+            'PORT': DB_PORT,
+        },
     }
 else:
     DATABASES = {
@@ -196,6 +205,10 @@ else:
         'parceiros': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db_parceiros.sqlite3',
+        },
+        'restaurantes': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db_restaurantes.sqlite3',
         },
     }
 
