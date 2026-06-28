@@ -3,7 +3,33 @@
 {% block title %}Gerenciamento de Hotelaria{% endblock %}
 
 {% block page_title %}Hotelaria & Pousadas{% endblock %}
-{% block page_subtitle %}Controle de estabelecimentos cadastrados, branding e contas de parceiros{% endblock %}
+{% block page_subtitle %}
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] font-black uppercase tracking-wider mt-1 text-slate-400 dark:text-navie-textsec">
+    <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+        <span>Total de Hotéis:</span>
+        <span class="text-slate-700 dark:text-white font-extrabold">{{ total_hoteis }}</span>
+    </div>
+    <div class="w-[1px] h-2.5 bg-slate-200 dark:bg-navie-border/60"></div>
+    <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        <span>Estabelecimentos Ativos:</span>
+        <span class="text-slate-700 dark:text-white font-extrabold">{{ hoteis_ativos }}</span>
+    </div>
+    <div class="w-[1px] h-2.5 bg-slate-200 dark:bg-navie-border/60"></div>
+    <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+        <span>Em Destaque:</span>
+        <span class="text-slate-700 dark:text-white font-extrabold">{{ hoteis_destaque }}</span>
+    </div>
+    <div class="w-[1px] h-2.5 bg-slate-200 dark:bg-navie-border/60"></div>
+    <div class="flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+        <span>Categorias de Quarto:</span>
+        <span class="text-slate-700 dark:text-white font-extrabold">{{ total_quartos }}</span>
+    </div>
+</div>
+{% endblock %}
 
 {% block header_actions %}
 <div class="flex items-center gap-2">
@@ -151,41 +177,13 @@
          }
      }">
     
-    <!-- SUB-CABEÇALHO COMPACTO E FIXO DE MÉTRICAS -->
-    <div x-show="viewMode === 'list'" class="glass-card rounded-2xl p-4 px-6 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold border border-slate-200/50 dark:border-navie-border/60 shadow-sm mb-6 sticky top-0 z-30">
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Total de Hotéis:</span>
-            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ total_hoteis }}</span>
-        </div>
-        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Estabelecimentos Ativos:</span>
-            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ hoteis_ativos }}</span>
-        </div>
-        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Em Destaque:</span>
-            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ hoteis_destaque }}</span>
-        </div>
-        <div class="h-4 w-[1px] bg-slate-200 dark:bg-navie-border hidden sm:block"></div>
-        <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-            <span class="text-slate-450 dark:text-slate-400 font-bold uppercase tracking-wider">Categorias de Quarto:</span>
-            <span class="font-extrabold text-slate-800 dark:text-white text-sm">{{ total_quartos }}</span>
-        </div>
-    </div>
+
 
     <!-- TELA 1: LISTAGEM DE POUSADAS -->
     <div x-show="viewMode === 'list'" class="space-y-6 animate-in fade-in duration-300">
         
         <div class="glass-card rounded-2xl shadow-sm overflow-hidden border border-slate-200/60 dark:border-navie-border">
-            <div class="p-6 border-b border-slate-200/50 dark:border-navie-border">
-                <h3 class="text-base font-bold text-slate-800 dark:text-white tracking-tight uppercase leading-none">Hotéis Cadastrados</h3>
-                <p class="text-xs text-slate-400 dark:text-slate-400 mt-1">Selecione uma hospedagem para gerenciar subdomínios, taxas do marketplace e tráfego</p>
-            </div>
+
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
