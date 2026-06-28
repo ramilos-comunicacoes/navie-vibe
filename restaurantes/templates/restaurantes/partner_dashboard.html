@@ -128,260 +128,356 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <form id="form-salvar-configuracoes" action="{% url 'restaurantes:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
-        {% csrf_token %}
-        
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <!-- Coluna Esquerda/Centro: Dados do Restaurante -->
-            <div class="lg:col-span-2 space-y-6">
-                <!-- Informações Básicas -->
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                        <i class="w-4 h-4 text-red-500" data-lucide="store"></i>
-                        <span>Dados do Estabelecimento</span>
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Nome do Restaurante</label>
-                            <input type="text" name="nome" value="{{ restaurante.nome }}" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Especialidade Culinária</label>
-                            <input type="text" name="especialidade" value="{{ restaurante.especialidade|default:'' }}" placeholder="Ex: Pizzaria, Massas, Regional" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Descrição / Slogan (Hero)</label>
-                        <textarea name="descricao" rows="2" placeholder="Slogan ou frase descritiva que aparece no topo da página pública..." class="w-full p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">{{ restaurante.descricao|default:'' }}</textarea>
-                    </div>
-                </div>
-
-                <!-- Contatos e WhatsApps -->
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                        <i class="w-4 h-4 text-red-500" data-lucide="phone"></i>
-                        <span>Canais de Comunicação</span>
-                    </h3>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Público</label>
-                            <input type="text" name="whatsapp" value="{{ restaurante.whatsapp|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Exibido na página pública para reservas/pedidos</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">E-mail de Contato</label>
-                            <input type="email" name="email_contato" value="{{ restaurante.email_contato|default:'' }}" placeholder="Ex: contato@restaurante.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">E-mail público do restaurante</p>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Privado (Naviê)</label>
-                            <input type="text" name="whatsapp_privado" value="{{ restaurante.whatsapp_privado|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Contato administrativo interno do Naviê</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Geolocalização & Mapa -->
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-4">
-                    <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-white/5">
-                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <i class="w-4 h-4 text-red-500" data-lucide="map-pin"></i>
-                            <span>Geolocalização & Endereço</span>
+    <!-- SUB-ABA: CONFIGURAÇÕES DO SITE -->
+    <div x-show="activeSubTab === 'site'">
+        <form id="form-salvar-configuracoes" action="{% url 'restaurantes:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                <!-- Coluna Esquerda/Centro: Dados do Restaurante -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Informações Básicas -->
+                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="store"></i>
+                            <span>Dados do Estabelecimento</span>
                         </h3>
-                        <!-- Alternador Mapa / Satélite -->
-                        <div class="flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200 dark:border-white/10 select-none">
-                            <button type="button" id="btn-toggle-sat-rest"
-                                    class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-sm">
-                                Satélite
-                            </button>
-                            <button type="button" id="btn-toggle-road-rest"
-                                    class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent">
-                                Mapa
-                            </button>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Nome do Restaurante</label>
+                                <input type="text" name="nome" value="{{ restaurante.nome }}" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Especialidade Culinária</label>
+                                <input type="text" name="especialidade" value="{{ restaurante.especialidade|default:'' }}" placeholder="Ex: Pizzaria, Massas, Regional" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Descrição / Slogan (Hero)</label>
+                            <textarea name="descricao" rows="2" placeholder="Slogan ou frase descritiva que aparece no topo da página pública..." class="w-full p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">{{ restaurante.descricao|default:'' }}</textarea>
                         </div>
                     </div>
 
-                    <!-- Inputs ocultos de latitude e longitude -->
-                    <input type="hidden" name="latitude" id="rest_lat" value="{% if restaurante.latitude %}{{ restaurante.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
-                    <input type="hidden" name="longitude" id="rest_lon" value="{% if restaurante.longitude %}{{ restaurante.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
+                    <!-- Contatos e WhatsApps -->
+                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="phone"></i>
+                            <span>Canais de Comunicação</span>
+                        </h3>
 
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Público</label>
+                                <input type="text" name="whatsapp" value="{{ restaurante.whatsapp|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Exibido na página pública para reservas/pedidos</p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">E-mail de Contato</label>
+                                <input type="email" name="email_contato" value="{{ restaurante.email_contato|default:'' }}" placeholder="Ex: contato@restaurante.com" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">E-mail público do restaurante</p>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">WhatsApp Privado (Naviê)</label>
+                                <input type="text" name="whatsapp_privado" value="{{ restaurante.whatsapp_privado|default:'' }}" placeholder="Ex: (88) 99999-9999" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                                <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Contato administrativo interno do Naviê</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Geolocalização & Mapa -->
+                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-white/5">
+                            <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                <i class="w-4 h-4 text-red-500" data-lucide="map-pin"></i>
+                                <span>Geolocalização & Endereço</span>
+                            </h3>
+                            <!-- Alternador Mapa / Satélite -->
+                            <div class="flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200 dark:border-white/10 select-none">
+                                <button type="button" id="btn-toggle-sat-rest"
+                                        class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold bg-white text-slate-800 dark:bg-slate-700 dark:text-white shadow-sm">
+                                    Satélite
+                                </button>
+                                <button type="button" id="btn-toggle-road-rest"
+                                        class="px-2.5 py-1 text-[9px] rounded-lg border-none transition-all cursor-pointer font-bold text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white bg-transparent">
+                                    Mapa
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Inputs ocultos de latitude e longitude -->
+                        <input type="hidden" name="latitude" id="rest_lat" value="{% if restaurante.latitude %}{{ restaurante.latitude|stringformat:"f" }}{% else %}-4.004445{% endif %}">
+                        <input type="hidden" name="longitude" id="rest_lon" value="{% if restaurante.longitude %}{{ restaurante.longitude|stringformat:"f" }}{% else %}-40.990278{% endif %}">
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cidade (Nome)</label>
+                                <input type="text" name="cidade_nome" id="rest_cidade_nome" value="{{ restaurante.cidade_nome|default:'' }}" placeholder="Ex: Viçosa do Ceará" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Endereço Completo</label>
+                                <input type="text" name="endereco" id="rest_endereco" value="{{ restaurante.endereco|default:'' }}" placeholder="Ex: Sítio Lambedouro, S/N - Zona Rural" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex flex-col gap-2">
+                            <div class="flex justify-between gap-2">
+                                <button type="button" id="btn-auto-locate-rest" onclick="geolocalizarRestaurante()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
+                                    <i data-lucide="locate" class="w-3.5 h-3.5"></i> <span>Achar Minha Localização</span>
+                                </button>
+                                <button type="button" onclick="centralizarCidadeRestaurante()" class="flex-1 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
+                                    <i data-lucide="search" class="w-3.5 h-3.5"></i> <span>CENTRO DA CIDADE</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Leaflet Selector Container -->
+                            <div id="mapaSelectorRestaurante" class="w-full h-64 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 z-20"></div>
+                        </div>
+                        <p class="text-[9px] text-slate-400">Arraste o pin vermelho ou clique no mapa para indicar o local exato do estabelecimento.</p>
+                    </div>
+                </div>
+
+                <!-- Coluna Direita: Identidade Visual / Cores e Mídias -->
+                <div class="space-y-6">
+                    <!-- Branding & Cores -->
+                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="palette"></i>
+                            <span>Branding & Cores</span>
+                        </h3>
+
+                        <!-- Cor Primária -->
+                        <div x-data="colorPickerData('{{ restaurante.cor_primaria|default:'#e11d48' }}', 'cor_primaria_hex')" class="relative">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Primária (Hex)</label>
+                            <div class="relative flex items-center max-w-[200px]">
+                                <button type="button" @click="open = !open"
+                                        :style="'background-color: ' + color"
+                                        class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                </button>
+                                <input type="text" name="cor_primaria" id="cor_primaria_hex" x-model="color"
+                                       placeholder="#e11d48" maxlength="7"
+                                       class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                       @input="onHexInput($el.value)">
+                                <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                    <i data-lucide="pipette" class="w-4 h-4"></i>
+                                </button>
+                                <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                            </div>
+
+                            <!-- Dropdown Presets -->
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                 class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                 style="display: none;">
+                                <div>
+                                    <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                    <div class="grid grid-cols-6 gap-2">
+                                        <template x-for="preset in presets">
+                                            <button type="button" @click="setPreset(preset)"
+                                                    :style="'background-color: ' + preset"
+                                                    :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                    class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cor Secundária -->
+                        <div x-data="colorPickerData('{{ restaurante.cor_secundaria|default:'#f97316' }}', 'cor_secundaria_hex')" class="relative">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Secundária (Hex)</label>
+                            <div class="relative flex items-center max-w-[200px]">
+                                <button type="button" @click="open = !open"
+                                        :style="'background-color: ' + color"
+                                        class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                </button>
+                                <input type="text" name="cor_secundaria" id="cor_secundaria_hex" x-model="color"
+                                       placeholder="#f97316" maxlength="7"
+                                       class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                       @input="onHexInput($el.value)">
+                                <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                    <i data-lucide="pipette" class="w-4 h-4"></i>
+                                </button>
+                                <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                            </div>
+
+                            <!-- Dropdown Presets -->
+                            <div x-show="open" @click.outside="open = false" x-transition
+                                 class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                 style="display: none;">
+                                <div>
+                                    <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                    <div class="grid grid-cols-6 gap-2">
+                                        <template x-for="preset in presets">
+                                            <button type="button" @click="setPreset(preset)"
+                                                    :style="'background-color: ' + preset"
+                                                    :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
+                                                    class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logo & Banner -->
+                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="image"></i>
+                            <span>Mídias da Marca</span>
+                        </h3>
+
+                        <!-- Logo Upload -->
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Logo do Restaurante</label>
+                            <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                 onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-file-input').click()">
+                                
+                                <input type="file" id="logo-file-input" name="logo" accept="image/*" class="hidden"
+                                       onchange="previewImageFile(this, 'logo-preview')">
+                                
+                                <div id="logo-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.logo %}hidden{% endif %}">
+                                    <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                    <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Logomarca</span>
+                                </div>
+
+                                <div id="logo-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.logo %}hidden{% endif %}">
+                                    <img id="logo-preview-img" src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Logo preview">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                        <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                onclick="event.stopPropagation(); clearUploadedFile('logo')">Apagar</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="remover_logo" id="remover-logo-input" value="false">
+                            </div>
+                        </div>
+
+                        <!-- Banner Upload -->
+                        <div class="space-y-2">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Banner Principal (Hero)</label>
+                            <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                 onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
+                                
+                                <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
+                                       onchange="previewImageFile(this, 'banner-preview')">
+                                
+                                <div id="banner-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.banner %}hidden{% endif %}">
+                                    <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                    <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Banner Principal</span>
+                                </div>
+
+                                <div id="banner-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.banner %}hidden{% endif %}">
+                                    <img id="banner-preview-img" src="{% if restaurante.banner %}{{ restaurante.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                        <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                onclick="event.stopPropagation(); clearUploadedFile('banner')">Apagar</button>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botão de submit real oculto -->
+                    <button type="submit" class="hidden">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- SUB-ABA: DESTAQUES (ATRAÇÕES DO DIA) -->
+    <div x-show="activeSubTab === 'destaques'" style="display: none;">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            <!-- Coluna Esquerda/Centro: Lista de Atrações Existentes -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
+                        <i class="w-4 h-4 text-red-500" data-lucide="sparkles"></i>
+                        <span>Atrações Cadastradas</span>
+                    </h3>
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cidade (Nome)</label>
-                            <input type="text" name="cidade_nome" id="rest_cidade_nome" value="{{ restaurante.cidade_nome|default:'' }}" placeholder="Ex: Viçosa do Ceará" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                        {% for atracao in atracoes %}
+                        <div class="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 flex flex-col justify-between gap-4 relative overflow-hidden group">
+                            <!-- Fundo de Cor Customizado -->
+                            <div class="absolute inset-0 opacity-10 pointer-events-none transition-opacity duration-300"
+                                 style="background-color: {{ atracao.cor_fundo|default:'#0f172a' }};">
+                            </div>
+                            
+                            <div class="flex gap-3 relative z-10">
+                                <!-- Miniatura da Mídia -->
+                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0 select-none">
+                                    {% if atracao.video and atracao.midia_tipo == 'video' %}
+                                    <video src="{{ atracao.video.url }}" class="w-full h-full object-cover" muted></video>
+                                    {% elif atracao.imagem %}
+                                    <img src="{{ atracao.imagem.url }}" class="w-full h-full object-cover" alt="Atração">
+                                    {% else %}
+                                    <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                        <i data-lucide="image" class="w-5 h-5"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/15">
+                                            {{ atracao.dia }}
+                                        </span>
+                                        {% if atracao.ativo %}
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/15">
+                                            Ativo
+                                        </span>
+                                        {% else %}
+                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-350/10 text-slate-500 border border-slate-350/15">
+                                            Inativo
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <h4 class="font-extrabold text-xs text-slate-800 dark:text-white mt-1.5 truncate">{{ atracao.titulo }}</h4>
+                                    <p class="text-[10px] text-slate-450 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                        {{ atracao.texto }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 border-t border-slate-100 dark:border-white/5 pt-3 relative z-10">
+                                <button type="button" 
+                                        onclick="editarAtracao({
+                                            id: '{{ atracao.id }}',
+                                            dia: '{{ atracao.dia|escapejs }}',
+                                            titulo: '{{ atracao.titulo|escapejs }}',
+                                            texto: '{{ atracao.texto|escapejs }}',
+                                            cor_fundo: '{{ atracao.cor_fundo|default:'#0f172a' }}',
+                                            cor_texto: '{{ atracao.cor_texto|default:'#ffffff' }}',
+                                            midia_tipo: '{{ atracao.midia_tipo }}',
+                                            ativo: {% if atracao.ativo %}true{% else %}false{% endif %},
+                                            imagem_url: '{% if atracao.imagem %}{{ atracao.imagem.url }}{% endif %}',
+                                            video_url: '{% if atracao.video %}{{ atracao.video.url }}{% endif %}'
+                                        })"
+                                        class="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer flex items-center justify-center gap-1">
+                                    <i data-lucide="pencil" class="w-3 h-3"></i> Editar
+                                </button>
+                                <a href="{% url 'restaurantes:partner_deletar_atracao' atracao.id %}" 
+                                   onclick="return confirm('Deseja realmente excluir esta atração?')"
+                                   class="flex-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center border border-red-550/15 decoration-none flex items-center justify-center gap-1">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir
+                                </a>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Endereço Completo</label>
-                            <input type="text" name="endereco" id="rest_endereco" value="{{ restaurante.endereco|default:'' }}" placeholder="Ex: Sítio Lambedouro, S/N - Zona Rural" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors">
+                        {% empty %}
+                        <div class="col-span-full py-8 text-center text-slate-400 dark:text-slate-500">
+                            <i data-lucide="sparkles" class="w-10 h-10 mx-auto mb-2 opacity-25"></i>
+                            <p class="font-bold text-xs uppercase tracking-wider">Nenhuma atração cadastrada</p>
+                            <p class="text-[10px] mt-1">Cadastre programações ao lado para que apareçam na página do restaurante.</p>
                         </div>
+                        {% endfor %}
                     </div>
-
-                    <div class="p-2 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex flex-col gap-2">
-                        <div class="flex justify-between gap-2">
-                            <button type="button" id="btn-auto-locate-rest" onclick="geolocalizarRestaurante()" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
-                                <i data-lucide="locate" class="w-3.5 h-3.5"></i> <span>Achar Minha Localização</span>
-                            </button>
-                            <button type="button" onclick="centralizarCidadeRestaurante()" class="flex-1 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-700 dark:text-white py-2 px-3 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 border-none cursor-pointer">
-                                <i data-lucide="search" class="w-3.5 h-3.5"></i> <span>CENTRO DA CIDADE</span>
-                            </button>
-                        </div>
-                        
-                        <!-- Leaflet Selector Container -->
-                        <div id="mapaSelectorRestaurante" class="w-full h-64 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 z-20"></div>
-                    </div>
-                    <p class="text-[9px] text-slate-400">Arraste o pin vermelho ou clique no mapa para indicar o local exato do estabelecimento.</p>
                 </div>
             </div>
-
-            <!-- Coluna Direita: Identidade Visual / Cores e Mídias -->
+            
+            <!-- Coluna Direita: Formulário de Cadastro/Edição -->
             <div class="space-y-6">
-                <!-- Branding & Cores -->
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                        <i class="w-4 h-4 text-red-500" data-lucide="palette"></i>
-                        <span>Branding & Cores</span>
-                    </h3>
-
-                    <!-- Cor Primária -->
-                    <div x-data="colorPickerData('{{ restaurante.cor_primaria|default:'#e11d48' }}', 'cor_primaria_hex')" class="relative">
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Primária (Hex)</label>
-                        <div class="relative flex items-center max-w-[200px]">
-                            <button type="button" @click="open = !open"
-                                    :style="'background-color: ' + color"
-                                    class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
-                            </button>
-                            <input type="text" name="cor_primaria" id="cor_primaria_hex" x-model="color"
-                                   placeholder="#e11d48" maxlength="7"
-                                   class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
-                                   @input="onHexInput($el.value)">
-                            <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
-                                <i data-lucide="pipette" class="w-4 h-4"></i>
-                            </button>
-                            <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
-                        </div>
-
-                        <!-- Dropdown Presets -->
-                        <div x-show="open" @click.outside="open = false" x-transition
-                             class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
-                             style="display: none;">
-                            <div>
-                                <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
-                                <div class="grid grid-cols-6 gap-2">
-                                    <template x-for="preset in presets">
-                                        <button type="button" @click="setPreset(preset)"
-                                                :style="'background-color: ' + preset"
-                                                :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
-                                                class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cor Secundária -->
-                    <div x-data="colorPickerData('{{ restaurante.cor_secundaria|default:'#f97316' }}', 'cor_secundaria_hex')" class="relative">
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Secundária (Hex)</label>
-                        <div class="relative flex items-center max-w-[200px]">
-                            <button type="button" @click="open = !open"
-                                    :style="'background-color: ' + color"
-                                    class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
-                            </button>
-                            <input type="text" name="cor_secundaria" id="cor_secundaria_hex" x-model="color"
-                                   placeholder="#f97316" maxlength="7"
-                                   class="w-full h-11 pl-12 pr-10 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
-                                   @input="onHexInput($el.value)">
-                            <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
-                                <i data-lucide="pipette" class="w-4 h-4"></i>
-                            </button>
-                            <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
-                        </div>
-
-                        <!-- Dropdown Presets -->
-                        <div x-show="open" @click.outside="open = false" x-transition
-                             class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
-                             style="display: none;">
-                            <div>
-                                <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
-                                <div class="grid grid-cols-6 gap-2">
-                                    <template x-for="preset in presets">
-                                        <button type="button" @click="setPreset(preset)"
-                                                :style="'background-color: ' + preset"
-                                                :class="color.toLowerCase() === preset.toLowerCase() ? 'ring-2 ring-red-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : ''"
-                                                class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Logo & Banner -->
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                        <i class="w-4 h-4 text-red-500" data-lucide="image"></i>
-                        <span>Mídias da Marca</span>
-                    </h3>
-
-                    <!-- Logo Upload -->
-                    <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Logo do Restaurante</label>
-                        <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
-                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('logo-file-input').click()">
-                            
-                            <input type="file" id="logo-file-input" name="logo" accept="image/*" class="hidden"
-                                   onchange="previewImageFile(this, 'logo-preview')">
-                            
-                            <div id="logo-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.logo %}hidden{% endif %}">
-                                <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
-                                <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Logomarca</span>
-                            </div>
-
-                            <div id="logo-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.logo %}hidden{% endif %}">
-                                <img id="logo-preview-img" src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Logo preview">
-                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
-                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
-                                            onclick="event.stopPropagation(); clearUploadedFile('logo')">Apagar</button>
-                                </div>
-                            </div>
-                            <input type="hidden" name="remover_logo" id="remover-logo-input" value="false">
-                        </div>
-                    </div>
-
-                    <!-- Banner Upload -->
-                    <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Banner Principal (Hero)</label>
-                        <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
-                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('banner-file-input').click()">
-                            
-                            <input type="file" id="banner-file-input" name="banner" accept="image/*" class="hidden"
-                                   onchange="previewImageFile(this, 'banner-preview')">
-                            
-                            <div id="banner-preview-empty" class="flex flex-col items-center justify-center text-center p-4 {% if restaurante.banner %}hidden{% endif %}">
-                                <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
-                                <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Banner Principal</span>
-                            </div>
-
-                            <div id="banner-preview-active" class="absolute inset-0 w-full h-full {% if not restaurante.banner %}hidden{% endif %}">
-                                <img id="banner-preview-img" src="{% if restaurante.banner %}{{ restaurante.banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Banner preview">
-                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
-                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
-                                            onclick="event.stopPropagation(); clearUploadedFile('banner')">Apagar</button>
-                                </div>
-                            </div>
-                            <input type="hidden" name="remover_banner" id="remover-banner-input" value="false">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botão de Ação -->
-                <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white font-black py-3.5 px-6 rounded-2xl text-xs uppercase tracking-widest shadow-md shadow-red-500/10 cursor-pointer border-none flex items-center justify-center gap-2 transition-all">
-                    <i data-lucide="save" class="w-4 h-4"></i>
-                    <span>Salvar Configurações</span>
-                </button>
-            </div>
         </div>
     </form>
 </div>
@@ -624,14 +720,145 @@
     };
 
     window.clearUploadedFile = function(fieldName) {
-        const fileInput = document.getElementById(fieldName + '-file-input');
+        const fileInput = document.getElementById(fieldName + '-file-input') || document.getElementById(fieldName + '-file');
         if (fileInput) fileInput.value = '';
         
-        document.getElementById(fieldName + '-preview-empty').classList.remove('hidden');
-        document.getElementById(fieldName + '-preview-active').classList.add('hidden');
+        const emptyEl = document.getElementById(fieldName + '-preview-empty');
+        const activeEl = document.getElementById(fieldName + '-preview-active');
+        
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        if (activeEl) activeEl.classList.add('hidden');
         
         const removeInput = document.getElementById('remover-' + fieldName + '-input');
         if (removeInput) removeInput.value = 'true';
+    };
+
+    window.previewVideoFile = function(input, previewId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(previewId + '-preview-empty').classList.add('hidden');
+                document.getElementById(previewId + '-preview-active').classList.remove('hidden');
+                const player = document.getElementById(previewId + '-preview-player');
+                player.src = e.target.result;
+                player.play();
+            };
+            reader.readAsDataURL(input.files[0]);
+            
+            const removeInput = document.getElementById('remover-' + previewId + '-input');
+            if (removeInput) removeInput.value = 'false';
+        }
+    };
+
+    window.editarAtracao = function(atracao) {
+        document.getElementById('atracao_id_input').value = atracao.id;
+        document.getElementById('atracao_dia_input').value = atracao.dia;
+        document.getElementById('atracao_titulo_input').value = atracao.titulo;
+        document.getElementById('atracao_texto_input').value = atracao.texto;
+        
+        // Cores (disparar evento customizado se necessário, ou alterar o valor dos inputs e pickers)
+        const bgInput = document.getElementById('atracao_cor_fundo_hex');
+        if (bgInput) {
+            bgInput.value = atracao.cor_fundo;
+            bgInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        const textInput = document.getElementById('atracao_cor_texto_hex');
+        if (textInput) {
+            textInput.value = atracao.cor_texto;
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        // Tipo de mídia
+        const rdmImagem = document.querySelector('input[name="midia_tipo"][value="imagem"]');
+        const rdmVideo = document.querySelector('input[name="midia_tipo"][value="video"]');
+        
+        // Disparar o clique do Alpine no radio button
+        if (atracao.midia_tipo === 'video') {
+            if (rdmVideo) {
+                rdmVideo.checked = true;
+                rdmVideo.dispatchEvent(new Event('change', { bubbles: true }));
+                rdmVideo.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        } else {
+            if (rdmImagem) {
+                rdmImagem.checked = true;
+                rdmImagem.dispatchEvent(new Event('change', { bubbles: true }));
+                rdmImagem.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        // Ativo
+        const checkAtivo = document.getElementById('atracao_ativo_input');
+        if (checkAtivo) {
+            checkAtivo.checked = atracao.ativo;
+        }
+
+        // Previews de Mídia
+        if (atracao.imagem_url) {
+            document.getElementById('atracao-imagem-preview-empty').classList.add('hidden');
+            document.getElementById('atracao-imagem-preview-active').classList.remove('hidden');
+            document.getElementById('atracao-imagem-preview-img').src = atracao.imagem_url;
+        } else {
+            document.getElementById('atracao-imagem-preview-empty').classList.remove('hidden');
+            document.getElementById('atracao-imagem-preview-active').classList.add('hidden');
+        }
+
+        if (atracao.video_url) {
+            document.getElementById('atracao-video-preview-empty').classList.add('hidden');
+            document.getElementById('atracao-video-preview-active').classList.remove('hidden');
+            document.getElementById('atracao-video-preview-player').src = atracao.video_url;
+        } else {
+            document.getElementById('atracao-video-preview-empty').classList.remove('hidden');
+            document.getElementById('atracao-video-preview-active').classList.add('hidden');
+        }
+
+        // Título do Formulário e botão de limpar
+        document.getElementById('form-atracao-title').querySelector('span').textContent = "Editar Atração";
+        document.getElementById('btn-limpar-atracao').classList.remove('hidden');
+        
+        // Rola até o formulário no mobile
+        if (window.innerWidth < 1024) {
+            document.getElementById('form-salvar-atracoes').scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    window.limparFormularioAtracao = function() {
+        document.getElementById('atracao_id_input').value = '';
+        document.getElementById('atracao_dia_input').value = '';
+        document.getElementById('atracao_titulo_input').value = '';
+        document.getElementById('atracao_texto_input').value = '';
+        
+        const bgInput = document.getElementById('atracao_cor_fundo_hex');
+        if (bgInput) {
+            bgInput.value = '#0f172a';
+            bgInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        const textInput = document.getElementById('atracao_cor_texto_hex');
+        if (textInput) {
+            textInput.value = '#ffffff';
+            textInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        const rdmImagem = document.querySelector('input[name="midia_tipo"][value="imagem"]');
+        if (rdmImagem) {
+            rdmImagem.checked = true;
+            rdmImagem.dispatchEvent(new Event('change', { bubbles: true }));
+            rdmImagem.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        const checkAtivo = document.getElementById('atracao_ativo_input');
+        if (checkAtivo) checkAtivo.checked = true;
+
+        document.getElementById('atracao-imagem-file').value = '';
+        document.getElementById('atracao-video-file').value = '';
+
+        document.getElementById('atracao-imagem-preview-empty').classList.remove('hidden');
+        document.getElementById('atracao-imagem-preview-active').classList.add('hidden');
+        document.getElementById('atracao-video-preview-empty').classList.remove('hidden');
+        document.getElementById('atracao-video-preview-active').classList.add('hidden');
+
+        document.getElementById('form-atracao-title').querySelector('span').textContent = "Nova Atração do Dia";
+        document.getElementById('btn-limpar-atracao').classList.add('hidden');
     };
 
     // Inicialização do mapa quando a tab de configurações é aberta

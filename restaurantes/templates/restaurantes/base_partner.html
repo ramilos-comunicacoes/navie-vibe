@@ -6,6 +6,7 @@
           sidebarMobileOpen: false,
           sidebarExpanded: false,
           activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('restaurant_active_tab') || 'dashboard', 
+          activeSubTab: (new URLSearchParams(window.location.search)).get('sub') || 'site',
           
           updateStatusColor() {
               const meta = document.getElementById('theme-color-meta');
@@ -35,8 +36,16 @@
               // Sync URL
               try {
                   const url = new URL(window.location.href);
+                  let changed = false;
                   if (!url.searchParams.has('tab')) {
                       url.searchParams.set('tab', this.activeTab);
+                      changed = true;
+                  }
+                  if (!url.searchParams.has('sub')) {
+                      url.searchParams.set('sub', this.activeSubTab);
+                      changed = true;
+                  }
+                  if (changed) {
                       window.history.replaceState({}, '', url.toString());
                   }
               } catch (e) {
@@ -53,6 +62,17 @@
                       console.error(e);
                   }
                   window.dispatchEvent(new CustomEvent('tab-changed', { detail: value }));
+              });
+
+              this.$watch('activeSubTab', value => {
+                  try {
+                      const url = new URL(window.location.href);
+                      url.searchParams.set('sub', value);
+                      window.history.replaceState({}, '', url.toString());
+                  } catch (e) {
+                      console.error(e);
+                  }
+                  window.dispatchEvent(new CustomEvent('subtab-changed', { detail: value }));
               });
           }
       }">
@@ -239,26 +259,55 @@
                         <i data-lucide="menu" class="w-6 h-6"></i>
                     </button>
                     
-                    <div class="flex flex-col">
+                    <div class="flex flex-col md:hidden" x-show="activeTab === 'configuracoes'">
+                        <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
+                            Configurações
+                        </h1>
+                    </div>
+
+                    <div class="flex flex-col" x-show="activeTab !== 'configuracoes'">
                         <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
                             <span x-show="activeTab === 'dashboard'">Painel do Parceiro</span>
                             <span x-show="activeTab === 'cardapio'" style="display: none;">Cardápio Gastronômico</span>
                             <span x-show="activeTab === 'mesas'" style="display: none;">Reservas & Mesas</span>
                             <span x-show="activeTab === 'pedidos'" style="display: none;">Pedidos do Salão & Delivery</span>
-                            <span x-show="activeTab === 'configuracoes'" style="display: none;">Configurações do Estabelecimento</span>
                         </h1>
                         <div class="text-[10px] text-slate-450 dark:text-slate-400 mt-0.5 leading-tight font-bold hidden sm:block">
                             <span x-show="activeTab === 'dashboard'">Resumo operacional e métricas em tempo real</span>
                             <span x-show="activeTab === 'cardapio'" style="display: none;">Crie, edite e organize pratos e bebidas do restaurante</span>
                             <span x-show="activeTab === 'mesas'" style="display: none;">Gerencie a ocupação das mesas físicas e reservas de clientes</span>
                             <span x-show="activeTab === 'pedidos'" style="display: none;">Acompanhe comandas, andamento da cozinha e despacho de delivery</span>
-                            <span x-show="activeTab === 'configuracoes'" style="display: none;">Gerencie dados públicos, cores de branding e localização do restaurante</span>
                         </div>
+                    </div>
+
+                    <!-- Alternador de sub-abas Desktop -->
+                    <div x-show="activeTab === 'configuracoes'" class="hidden md:flex items-center relative bg-slate-100 dark:bg-white/5 rounded-full p-1 border border-slate-200 dark:border-white/10 w-[280px] h-[38px] select-none shrink-0" style="display: none;">
+                        <div class="absolute top-1 bottom-1 left-1 rounded-full bg-red-500 shadow-md transition-all duration-300 ease-out"
+                             :style="activeSubTab === 'site' ? 'width: 136px; transform: translateX(0);' : 'width: 136px; transform: translateX(136px);'">
+                        </div>
+                        <button type="button" @click="activeSubTab = 'site'" 
+                                :class="activeSubTab === 'site' ? 'text-white font-black' : 'text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-white font-bold'"
+                                class="flex-1 text-[11px] uppercase tracking-wider text-center relative z-10 border-none bg-transparent cursor-pointer transition-colors py-1.5 duration-200">
+                            Configurações
+                        </button>
+                        <button type="button" @click="activeSubTab = 'destaques'" 
+                                :class="activeSubTab === 'destaques' ? 'text-white font-black' : 'text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-white font-bold'"
+                                class="flex-1 text-[11px] uppercase tracking-wider text-center relative z-10 border-none bg-transparent cursor-pointer transition-colors py-1.5 duration-200">
+                            Destaques
+                        </button>
                     </div>
                 </div>
 
                 <!-- Right Actions -->
                 <div class="flex items-center gap-4 flex-1 justify-end">
+                    <!-- Botão de Salvar Contextual -->
+                    <button x-show="activeTab === 'configuracoes'" type="button" onclick="submeterFormularioAtivo()"
+                            class="bg-red-500 hover:bg-red-600 text-white font-black h-9 px-3 sm:px-4 rounded-xl text-xs uppercase tracking-wider border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-red-500/15 transition-all"
+                            style="display: none;">
+                        <i data-lucide="save" class="w-4 h-4 shrink-0"></i>
+                        <span class="hidden sm:inline">Salvar</span>
+                    </button>
+
                     <!-- Theme toggler -->
                     <button @click="toggleTheme()" class="w-9 h-9 rounded-full bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-red-500 dark:hover:text-white transition-colors shadow-sm dark:shadow-none relative group" title="Alternar Tema">
                         <span x-show="theme === 'light'" class="flex items-center" style="pointer-events: none;"><i data-lucide="moon" class="w-4 h-4"></i></span>
@@ -271,6 +320,25 @@
                     </a>
                 </div>
             </header>
+
+            <!-- Sub-cabeçalho Mobile (só na aba de configurações no celular) -->
+            <div x-show="activeTab === 'configuracoes'" class="md:hidden bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 py-2 px-4 flex justify-center sticky top-[4.5rem] z-50" style="display: none;">
+                <div class="flex items-center relative bg-slate-100 dark:bg-white/5 rounded-full p-1 border border-slate-200 dark:border-white/10 w-full max-w-[320px] h-[36px] select-none shrink-0">
+                    <div class="absolute top-1 bottom-1 left-1 rounded-full bg-red-500 shadow-md transition-all duration-300 ease-out"
+                         :style="activeSubTab === 'site' ? 'width: calc(50% - 4px); transform: translateX(0);' : 'width: calc(50% - 4px); transform: translateX(100%);'">
+                    </div>
+                    <button type="button" @click="activeSubTab = 'site'" 
+                            :class="activeSubTab === 'site' ? 'text-white font-black' : 'text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-white font-bold'"
+                            class="flex-1 text-[10px] uppercase tracking-wider text-center relative z-10 border-none bg-transparent cursor-pointer transition-colors py-1 duration-200">
+                        Configurações
+                    </button>
+                    <button type="button" @click="activeSubTab = 'destaques'" 
+                            :class="activeSubTab === 'destaques' ? 'text-white font-black' : 'text-slate-500 hover:text-slate-800 dark:text-slate-450 dark:hover:text-white font-bold'"
+                            class="flex-1 text-[10px] uppercase tracking-wider text-center relative z-10 border-none bg-transparent cursor-pointer transition-colors py-1 duration-200">
+                        Destaques
+                    </button>
+                </div>
+            </div>
 
             <!-- Main Scrollable Pane -->
             <div class="flex-1 overflow-y-auto no-scrollbar p-6 relative z-10">
@@ -306,6 +374,35 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
+
+        window.submeterFormularioAtivo = function() {
+            // Sincroniza via URL ou busca o activeSubTab do Alpine
+            const urlParams = new URLSearchParams(window.location.search);
+            const subtab = urlParams.get('sub') || 'site';
+            
+            if (subtab === 'site') {
+                const form = document.getElementById('form-salvar-configuracoes');
+                if (form) {
+                    // Clica no botão de submit invisível do formulário para disparar HTML5 validation
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    } else {
+                        form.submit();
+                    }
+                }
+            } else if (subtab === 'destaques') {
+                const form = document.getElementById('form-salvar-atracoes');
+                if (form) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.click();
+                    } else {
+                        form.submit();
+                    }
+                }
+            }
+        };
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -5,7 +5,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
-from .models import RestauranteUsuario, Restaurante
+from .models import RestauranteUsuario, Restaurante, RestauranteAtracao
 
 def partner_auth(request):
     """
@@ -118,9 +118,13 @@ def partner_dashboard(request):
     perfil = request.user.perfil_restaurante
     restaurante = perfil.restaurante
     
+    # Atrações cadastradas
+    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante)
+    
     context = {
         'perfil': perfil,
         'restaurante': restaurante,
+        'atracoes': atracoes,
     }
     return render(request, 'restaurantes/partner_dashboard.html', context)
 
@@ -243,6 +247,89 @@ def partner_salvar_configuracoes(request):
     return redirect('/sistema/?tab=configuracoes')
 
 
+@login_required(login_url='restaurantes:partner_login')
+@require_POST
+def partner_salvar_atracao(request):
+    """
+    Cria ou atualiza uma atração do restaurante (B2B).
+    """
+    if not hasattr(request.user, 'perfil_restaurante'):
+        messages.error(request, "Acesso negado.")
+        return redirect('restaurantes:partner_login')
+        
+    perfil = request.user.perfil_restaurante
+    if perfil.role not in ['proprietario', 'gerente']:
+        messages.error(request, "Permissão insuficiente.")
+        return redirect('restaurantes:partner_dashboard')
+        
+    restaurante = perfil.restaurante
+    atracao_id = request.POST.get('atracao_id')
+    
+    if atracao_id:
+        # Edição
+        from django.shortcuts import get_object_or_404
+        atracao = get_object_or_404(RestauranteAtracao.objects.using('restaurantes'), id=atracao_id, restaurante=restaurante)
+    else:
+        # Criação
+        atracao = RestauranteAtracao(restaurante=restaurante)
+        
+    atracao.dia = request.POST.get('dia', '').strip()
+    atracao.titulo = request.POST.get('titulo', '').strip()
+    atracao.texto = request.POST.get('texto', '').strip()
+    atracao.cor_fundo = request.POST.get('cor_fundo', '#0f172a').strip()
+    atracao.cor_texto = request.POST.get('cor_texto', '#ffffff').strip()
+    atracao.midia_tipo = request.POST.get('midia_tipo', 'imagem')
+    atracao.ativo = request.POST.get('ativo') == 'true' or request.POST.get('ativo') == 'on' or True
+    
+    # Imagem
+    if request.POST.get('remover_imagem') == 'true':
+        atracao.imagem = None
+    elif 'imagem' in request.FILES:
+        atracao.imagem = request.FILES['imagem']
+        
+    # Vídeo
+    if request.POST.get('remover_video') == 'true':
+        atracao.video = None
+    elif 'video' in request.FILES:
+        video_file = request.FILES['video']
+        if video_file.size > 8 * 1024 * 1024:
+            messages.error(request, "O vídeo ultrapassa o limite de 8MB permitido.")
+            return redirect('/sistema/?tab=configuracoes&sub=destaques')
+        atracao.video = video_file
+        
+    atracao.save(using='restaurantes')
+    messages.success(request, "Atração salva com sucesso.")
+    return redirect('/sistema/?tab=configuracoes&sub=destaques')
+
+
+@login_required(login_url='restaurantes:partner_login')
+def partner_deletar_atracao(request, atracao_id):
+    """
+    Exclui uma atração do restaurante (B2B).
+    """
+    if not hasattr(request.user, 'perfil_restaurante'):
+        messages.error(request, "Acesso negado.")
+        return redirect('restaurantes:partner_login')
+        
+    perfil = request.user.perfil_restaurante
+    if perfil.role not in ['proprietario', 'gerente']:
+        messages.error(request, "Permissão insuficiente.")
+        return redirect('restaurantes:partner_dashboard')
+        
+    from django.shortcuts import get_object_or_404
+    atracao = get_object_or_404(RestauranteAtracao.objects.using('restaurantes'), id=atracao_id, restaurante=perfil.restaurante)
+    
+    # Deleta mídias físicas se houver
+    if atracao.imagem:
+        atracao.imagem.delete(save=False)
+    if atracao.video:
+        atracao.video.delete(save=False)
+        
+    atracao.delete(using='restaurantes')
+    messages.success(request, "Atração excluída com sucesso.")
+    return redirect('/sistema/?tab=configuracoes&sub=destaques')
+
+
 def restaurante_detalhe(request, slug):
     """
     Página pública (B2C) do restaurante — exibe o hero, atração do dia,
@@ -251,18 +338,21 @@ def restaurante_detalhe(request, slug):
     from django.shortcuts import get_object_or_404
     restaurante = get_object_or_404(Restaurante.objects.using('restaurantes'), slug=slug, ativo=True)
 
-    # Atração do Dia (mock até o sistema de gestão estar pronto)
-    class MockAtracao:
-        titulo = None
-        texto = None
-        banner = None
-        video = None
-        midia_tipo = 'imagem'
-        cor_fundo = '#0f172a'
-        cor_texto = '#ffffff'
-        whatsapp = None
-
-    atracao = MockAtracao()
+    # Busca as atrações ativas do restaurante
+    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante, ativo=True)
+    
+    # Fallback se não houver nenhuma cadastrada
+    if not atracoes.exists():
+        class MockAtracao:
+            titulo = "Em Breve: Novas Atrações"
+            texto = "Fique atento às nossas programações especiais com shows ao vivo, noites temáticas e eventos gastronômicos exclusivos."
+            banner = None
+            video = None
+            midia_tipo = 'imagem'
+            cor_fundo = '#0f172a'
+            cor_texto = '#ffffff'
+            dia = "Programação Especial"
+        atracoes = [MockAtracao()]
 
     # Pratos Mock (para preencher a seção de destaques enquanto não há gestão de cardápio)
     class MockPrato:
@@ -282,7 +372,7 @@ def restaurante_detalhe(request, slug):
 
     context = {
         'restaurante': restaurante,
-        'atracao': atracao,
+        'atracoes': atracoes,
         'pratos_mock': pratos_mock,
     }
     return render(request, 'restaurantes/restaurante_detalhe.html', context)

@@ -63,3 +63,25 @@ class RestauranteUsuario(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()} ({self.restaurante.nome})"
+
+
+class RestauranteAtracao(models.Model):
+    restaurante = models.ForeignKey(Restaurante, on_delete=models.CASCADE, related_name='atracoes', db_constraint=False)
+    dia = models.CharField("Dia da Atração", max_length=100, help_text="Ex: Sábado, 28/06, Todos os dias")
+    titulo = models.CharField("Título da Atração", max_length=255)
+    texto = models.TextField("Descrição da Atração")
+    imagem = models.ImageField("Imagem da Atração", upload_to='restaurantes/atracoes/', blank=True, null=True)
+    video = models.FileField("Vídeo da Atração", upload_to='restaurantes/atracoes/', blank=True, null=True)
+    midia_tipo = models.CharField("Tipo de Mídia", max_length=10, choices=[('imagem','Imagem'),('video','Vídeo')], default='imagem')
+    cor_fundo = models.CharField("Cor de Fundo (Hex)", max_length=7, default='#0f172a', blank=True)
+    cor_texto = models.CharField("Cor do Texto (Hex)", max_length=7, default='#ffffff', blank=True)
+    ativo = models.BooleanField("Ativo", default=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Atração do Restaurante"
+        verbose_name_plural = "Atrações do Restaurante"
+        ordering = ['-criado_em']
+
+    def __str__(self):
+        return f"{self.titulo} ({self.dia}) - {self.restaurante.nome}"
