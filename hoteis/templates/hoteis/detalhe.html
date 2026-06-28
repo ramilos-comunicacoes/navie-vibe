@@ -380,25 +380,64 @@
         }
     }
 
-    /* Ajuste de Altura do Hero B2C para evitar colapso e efeito espremido */
+    /* Ajuste de Altura do Hero B2C (Padronizado com o de grupos) */
     .hero-banner-b2c {
-        height: 400px !important;
-        overflow: visible !important;
+        height: 480px !important;
+        position: relative;
     }
     @media (min-width: 768px) {
         .hero-banner-b2c {
-            height: 550px !important;
-            overflow: visible !important;
+            height: 560px !important;
         }
     }
 
-    /* Regras exclusivas de posicionamento do conteúdo do hero para mobile e desktop */
-    .hero-content-shift {
-        padding-top: 4.5rem; /* Desloca para baixo para compensar o cabeçalho no mobile */
+    /* Posição do Conteúdo do Hero (Logo, Título e Busca) */
+    .hero-content-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: start;
+        text-align: center;
+        width: 100%;
+        height: 100%;
     }
+
+    /* REGRAS DO HERO: MOBILE (Telas < 768px) */
+    @media (max-width: 767px) {
+        .hero-banner-b2c {
+            height: 42vh !important;
+            min-height: 290px !important;
+            max-height: 355px !important;
+        }
+        .hero-content-wrapper {
+            padding-top: 8px !important;
+            padding-bottom: 24px !important;
+            justify-content: center !important;
+        }
+        #hero-logo-wrapper {
+            width: 72px !important;
+            height: 72px !important;
+            margin-bottom: 2px !important;
+        }
+        .hero-banner-b2c h1 {
+            font-size: 1.75rem !important;
+            margin-bottom: 6px !important;
+        }
+        .hero-banner-b2c .hero-badge-container {
+            margin-bottom: 12px !important;
+        }
+    }
+
+    /* REGRAS DO HERO: DESKTOP (Telas >= 768px) */
     @media (min-width: 768px) {
-        .hero-content-shift {
-            padding-top: 5.5rem; /* Desloca para baixo no desktop */
+        .hero-content-wrapper {
+            padding-top: 100px;
+            padding-bottom: 24px;
+        }
+        #hero-logo-wrapper {
+            width: 136px;
+            height: 136px;
+            margin-bottom: 12px;
         }
     }
 
@@ -501,13 +540,13 @@
         width: 100%;
         overflow: hidden;
         transition: all 0.5s ease-in-out;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
+        border-top-left-radius: 1.5rem !important;
+        border-top-right-radius: 1.5rem !important;
     }
     @media (min-width: 768px) {
         .sobre-section-wrapper {
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
+            border-top-left-radius: 2rem !important;
+            border-top-right-radius: 2rem !important;
         }
     }
 
@@ -651,7 +690,7 @@
 </div>
 
 <!-- HERO BANNER PREMIUM FULL-WIDTH -->
-<div class="relative w-full bg-slate-950 flex items-center justify-center hero-banner-b2c z-30">
+<div class="relative w-full bg-slate-950 hero-banner-b2c">
     <!-- Mídia de Fundo (Vídeo ou Imagem) com corte arredondado no mobile e reto no desktop -->
     <div class="absolute inset-0 w-full h-full z-0 select-none pointer-events-none overflow-hidden rounded-b-[1.5rem] md:rounded-none" id="hero-media-container">
         <div class="absolute inset-0 bg-black/50 z-10"></div>
@@ -659,24 +698,24 @@
         <img id="hero-media-img" src="{% if hotel.banner %}{{ hotel.banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}" alt="{{ hotel.nome }}" class="w-full h-full object-cover opacity-85 {% if hotel.hero_tipo == 'video' and hotel.hero_video %}hidden{% endif %}">
     </div>
 
-    <!-- Informações do Hotel sobre o Hero (Centralizado com deslocamento vertical no mobile) -->
-    <div class="container mx-auto px-4 relative z-20 flex flex-col items-center justify-center text-center pb-8 h-full hero-content-shift">
-        <div id="hero-logo-wrapper" class="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center shrink-0 select-none mb-6 {% if not hotel.logo %}hidden{% endif %}">
+    <!-- Conteúdo do Hero da Pousada (Padronizado com o Portal de Grupos) -->
+    <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
+        <div id="hero-logo-wrapper" class="flex items-center justify-center shrink-0 select-none mb-6 {% if not hotel.logo %}hidden{% endif %}">
             <img id="hero-logo-img" src="{% if hotel.logo %}{{ hotel.logo.url }}{% endif %}" alt="{{ hotel.nome }}" class="max-h-full max-w-full object-contain">
         </div>
         
-        <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tight leading-tight drop-shadow-2xl mb-4">{{ hotel.nome }}</h1>
+        <h1 class="text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-none drop-shadow-2xl mb-2">{{ hotel.nome }}</h1>
         
         <!-- Localização e Informações de Check-in -->
-        <div class="flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90 mb-6 sm:mb-8">
+        <div class="hero-badge-container flex flex-wrap items-center justify-center gap-3 md:gap-4 text-white/90 mb-4 sm:mb-6">
             <span class="hero-badge">
                 <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-4 h-4"></i></span> {{ hotel.local.cidade }} / {{ hotel.local.estado }}
             </span>
         </div>
 
         <!-- BARRA DE BUSCA HORIZONTAL COMPACTA (Estritamente posicionada abaixo da localização) -->
-        <div class="w-[92%] sm:w-full max-w-2xl lg:max-w-3xl mx-auto z-[60]">
-            <div class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]" style="position: relative;">
+        <div class="w-[92%] sm:w-full max-w-2xl lg:max-w-3xl mx-auto">
+            <form method="GET" action="" onsubmit="event.preventDefault(); buscarQuartosDisponiveis();" class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]" style="position: relative;">
                 
                 <!-- Campo 1: Período/Datas -->
                 <div class="flex flex-col text-center px-4 sm:px-8 py-2 sm:py-3 flex-[1.2] border-r border-slate-100 cursor-pointer rounded-l-full hover:bg-slate-50 transition-colors"
@@ -723,8 +762,7 @@
                 </div>
 
                 <!-- Botão Buscar Incorporado -->
-                <button type="button" id="hero-search-btn"
-                        onclick="buscarQuartosDisponiveis()"
+                <button type="submit" id="hero-search-btn"
                         class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
                         title="Buscar Acomodações">
                     <!-- Ícone de Busca -->
@@ -742,13 +780,12 @@
                         </svg>
                     </span>
                 </button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
-
 <!-- Fundo branco com borda superior sutil e Seção Sobre -->
-<div class="relative z-20 bg-white shadow-xl rounded-t-xl md:rounded-t-2xl overflow-hidden" style="margin-top: -30px;">
+<div class="relative z-20 bg-white shadow-xl rounded-t-[1.5rem] md:rounded-t-[2rem] overflow-hidden" style="margin-top: -30px;">
     
     {% if hotel.sobre_titulo or hotel.sobre_texto or hotel.sobre_banner or hotel.sobre_video %}
     <!-- SEÇÃO INSTITUCIONAL: SOBRE A POUSADA -->
@@ -1240,23 +1277,23 @@
         window.toggleSobreExpander = function() {
             if (!sobreTextoEl || !sobreBtnEl) return;
             const sectionEl = document.getElementById('sobre-section');
+            if (!sectionEl) return;
             
             isSobreExpanded = !isSobreExpanded;
             
             if (isSobreExpanded) {
                 sobreTextoEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
-                if (sectionEl) sectionEl.classList.add('h-auto');
+                sobreTextoEl.classList.add('line-clamp-none');
+                sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
                 sobreBtnEl.textContent = 'Ler menos';
             } else {
+                sobreTextoEl.classList.remove('line-clamp-none');
                 sobreTextoEl.classList.add('line-clamp-4', 'md:line-clamp-5');
-                if (sectionEl) sectionEl.classList.remove('h-auto');
+                sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
                 sobreBtnEl.textContent = 'Ler mais';
-                // Scroll back to top of section for better UX
-                if (sectionEl) {
-                    const yOffset = -80; // Offset para a navbar, ajustável
-                    const y = sectionEl.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                    window.scrollTo({top: y, behavior: 'smooth'});
-                }
+                
+                // Smooth scroll back to section top
+                sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         };
 
