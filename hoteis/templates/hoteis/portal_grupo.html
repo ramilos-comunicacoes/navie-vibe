@@ -1184,30 +1184,31 @@
     (function() {
         lucide.createIcons();
 
-        // Inicializa Swiper nos carrosséis de quartos de cada pousada
-        document.querySelectorAll('.hotel-rooms-swiper').forEach(el => {
-            new Swiper(el, {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
-                loop: false,
-                autoplay: false,
-                breakpoints: {
-                    640: { slidesPerView: 2.2, spaceBetween: 20 },
-                    1024: { slidesPerView: 3, spaceBetween: 24 },
-                    1280: { slidesPerView: 4, spaceBetween: 24 }
-                },
-                pagination: { el: el.querySelector('.swiper-pagination'), clickable: true }
+        // Inicializa Swipers (com delay para garantir que o DOM HTMX assentou)
+        setTimeout(() => {
+            document.querySelectorAll('.hotel-rooms-swiper').forEach(el => {
+                new Swiper(el, {
+                    slidesPerView: 1.2,
+                    spaceBetween: 16,
+                    loop: false,
+                    autoplay: false,
+                    breakpoints: {
+                        640: { slidesPerView: 2.2, spaceBetween: 20 },
+                        1024: { slidesPerView: 3, spaceBetween: 24 },
+                        1280: { slidesPerView: 4, spaceBetween: 24 }
+                    },
+                    pagination: { el: el.querySelector('.swiper-pagination'), clickable: true }
+                });
             });
-        });
 
-        // Inicializa Swiper nos cards de quarto individuais (para transição de fotos do quarto)
-        document.querySelectorAll('.swiper:not(.hotel-rooms-swiper)').forEach(swiperEl => {
-            new Swiper(swiperEl, {
-                loop: true, 
-                autoplay: { delay: 3500, disableOnInteraction: false }, 
-                pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+            document.querySelectorAll('.swiper:not(.hotel-rooms-swiper)').forEach(swiperEl => {
+                new Swiper(swiperEl, {
+                    loop: true, 
+                    autoplay: { delay: 3500, disableOnInteraction: false }, 
+                    pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+                });
             });
-        });
+        }, 150);
 
         window.buscarQuartosDisponiveisGrupo = function() {
             const datesInput = document.getElementById('search-dates');

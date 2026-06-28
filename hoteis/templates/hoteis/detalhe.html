@@ -1104,14 +1104,28 @@
 
         // Lucide icons are initialized below
         
-        // 1. Instanciar Swipers
-        if (document.querySelector('.hotel-swiper')) {
-            new Swiper('.hotel-swiper', {
-                autoplay: { delay: 4000, disableOnInteraction: false },
-                loop: true,
-                pagination: { el: '.swiper-pagination', clickable: true },
+        // 1. Instanciar Swipers (com delay para garantir que o DOM HTMX assentou)
+        setTimeout(() => {
+            if (document.querySelector('.hotel-swiper')) {
+                new Swiper('.hotel-swiper', {
+                    autoplay: { delay: 4000, disableOnInteraction: false },
+                    loop: true,
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                });
+            }
+            
+            // Instancia os swipers das galerias dos quartos
+            document.querySelectorAll('.quarto-card-home-style').forEach(card => {
+                const swiperEl = card.querySelector('.swiper');
+                if (swiperEl) {
+                    new Swiper(swiperEl, {
+                        loop: true, 
+                        autoplay: { delay: 3500, disableOnInteraction: false }, 
+                        pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+                    });
+                }
             });
-        }
+        }, 150);
         
         // Modal Premium Control
         let modalTimer;
@@ -1134,18 +1148,6 @@
                 closeModal();
             }, tempo);
         }
-
-        // Instancia os swipers das galerias dos quartos
-        document.querySelectorAll('.quarto-card-home-style').forEach(card => {
-            const swiperEl = card.querySelector('.swiper');
-            if (swiperEl) {
-                new Swiper(swiperEl, {
-                    loop: true, 
-                    autoplay: { delay: 3500, disableOnInteraction: false }, 
-                    pagination: { el: '.swiper-pagination', clickable: true }
-                });
-            }
-        });
 
         window.buscarQuartosDisponiveis = function() {
             const datesInput = document.getElementById('search-dates');
