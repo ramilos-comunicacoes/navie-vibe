@@ -491,42 +491,8 @@
     </main>
 </div>
 
-<!-- SEÇÃO SOBRE: full-width no desktop, card no mobile -->
-<!-- Mobile: dentro de um container com padding. Desktop: sem container, ocupa 100% da largura -->
-<div id="sobre-outer-wrapper" class="md:hidden">
-    <!-- Mobile: exibe como card com padding lateral -->
-    <div class="px-4 py-6 border-t border-slate-100">
-        <div id="sobre-section-mobile" class="sobre-section-wrapper rounded-3xl overflow-hidden"
-             style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
-            <div class="container mx-auto sobre-flex-container relative z-20">
-                <div class="sobre-left-column">
-                    <div class="flex flex-col justify-start">
-                        <div class="flex items-stretch sobre-title-wrapper">
-                            <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
-                            <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
-                                {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
-                            </h2>
-                        </div>
-                        <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
-                            {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
-                        </div>
-                    </div>
-                    <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
-                        Ler mais
-                    </button>
-                </div>
-            </div>
-            <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
-                <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%);"></div>
-                <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
-                     alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Desktop: Seção Sobre full-width sem card, de ponta a ponta, encostando no rodapé/parceiros -->
-<div id="sobre-section" class="hidden md:block sobre-section-wrapper"
+<!-- SEÇÃO SOBRE: de ponta a ponta, encostando nas margens e rodapé/parceiros -->
+<div id="sobre-section" class="sobre-section-wrapper"
      style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
     <div class="sobre-flex-container relative z-20">
         <div class="sobre-left-column">
