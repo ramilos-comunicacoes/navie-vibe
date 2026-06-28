@@ -645,15 +645,21 @@ x-data="{
             {% if messages %}
                 <div class="mb-6 space-y-2 max-w-4xl">
                     {% for message in messages %}
-                        <div class="p-4 rounded-xl text-sm font-semibold flex items-center gap-3 {% if message.tags == 'success' %}bg-green-500/15 border border-green-500/35 text-green-600 dark:text-green-400{% elif message.tags == 'error' %}bg-red-500/15 border border-red-500/35 text-red-600 dark:text-red-400{% else %}bg-blue-500/15 border border-blue-500/35 text-blue-600 dark:text-blue-400{% endif %}">
-                            {% if message.tags == 'success' %}
-                                <i data-lucide="check-circle" class="w-5 h-5 shrink-0"></i>
-                            {% elif message.tags == 'error' %}
-                                <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
-                            {% else %}
-                                <i data-lucide="info" class="w-5 h-5 shrink-0"></i>
-                            {% endif %}
-                            <span>{{ message }}</span>
+                        <div x-data="{ show: true }" x-show="show" x-transition 
+                             class="p-4 rounded-xl text-sm font-semibold flex items-center justify-between gap-3 {% if message.tags == 'success' %}bg-green-500/15 border border-green-500/35 text-green-600 dark:text-green-400{% elif message.tags == 'error' %}bg-red-500/15 border border-red-500/35 text-red-600 dark:text-red-400{% else %}bg-blue-500/15 border border-blue-500/35 text-blue-600 dark:text-blue-400{% endif %}">
+                            <div class="flex items-center gap-3">
+                                {% if message.tags == 'success' %}
+                                    <i data-lucide="check-circle" class="w-5 h-5 shrink-0"></i>
+                                {% elif message.tags == 'error' %}
+                                    <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+                                {% else %}
+                                    <i data-lucide="info" class="w-5 h-5 shrink-0"></i>
+                                {% endif %}
+                                <span>{{ message }}</span>
+                            </div>
+                            <button type="button" @click="show = false" class="text-current/60 hover:text-current bg-transparent border-none cursor-pointer flex p-1 rounded-lg hover:bg-current/10 transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
                         </div>
                     {% endfor %}
                 </div>

@@ -624,11 +624,16 @@ def hotel_salvar_configuracao_admin(request, pk):
             
         if not errors:
             try:
+                # Sanitize commas from localization format to allow float conversion
+                taxa_fixa_clean = taxa_fixa.replace(',', '.') if taxa_fixa else '0.0'
+                taxa_percentual_clean = taxa_percentual.replace(',', '.') if taxa_percentual else '0.0'
+                consumo_trafego_clean = consumo_trafego.replace(',', '.') if consumo_trafego else '0.0'
+                
                 hotel.slug = slug
-                hotel.taxa_fixa_navie = float(taxa_fixa) if taxa_fixa else 0.0
-                hotel.taxa_percentual_navie = float(taxa_percentual) if taxa_percentual else 0.0
+                hotel.taxa_fixa_navie = float(taxa_fixa_clean)
+                hotel.taxa_percentual_navie = float(taxa_percentual_clean)
                 hotel.limite_trafego_gb = int(limite_trafego) if limite_trafego else 100
-                hotel.consumo_trafego_gb = float(consumo_trafego) if consumo_trafego else 0.0
+                hotel.consumo_trafego_gb = float(consumo_trafego_clean)
                 hotel.venda_online = venda_online
                 hotel.usar_tarifas_faixa = usar_tarifas_faixa
                 hotel.status = status

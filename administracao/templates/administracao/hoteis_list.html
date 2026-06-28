@@ -13,7 +13,7 @@
         <span>Adicionar Hotel</span>
     </a>
     <!-- Salvar Alterações (apenas no formulário Geral de detalhes) -->
-    <button type="submit" form="hotel-config-form" x-show="viewMode === 'detail' && activeTab === 'cadastro'" style="display: none;" class="btn-header btn-header-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer border-none font-bold uppercase tracking-wider">
+    <button type="submit" form="hotel-config-form" x-show="selectedHotel && viewMode === 'detail' && activeTab === 'cadastro'" style="display: none;" class="btn-header btn-header-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer border-none font-bold uppercase tracking-wider">
         <i data-lucide="save" class="w-4 h-4"></i>
         <span>Salvar Alterações</span>
     </button>
@@ -276,170 +276,178 @@
         <div x-show="selectedHotel">
             
             <!-- ABA 1: GERAL & SUBDOMÍNIO -->
-            <div x-show="activeTab === 'cadastro'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-200">
-                <!-- Coluna Esquerda: Geral e Tráfego -->
-                <div class="space-y-6">
-                    <!-- Tráfego -->
-                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
-                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
-                            <i class="w-4 h-4 text-blue-500" data-lucide="activity"></i>
-                            <span>Monitoramento & Tráfego</span>
-                        </h3>
-                        <div class="grid grid-cols-2 gap-4 mb-6">
-                            <div @click="showRankingStats = !showRankingStats" 
-                                 class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl cursor-pointer hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all select-none group/views">
-                                <div class="flex justify-between items-center">
-                                    <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none group-hover/views:text-blue-500 transition-colors">Visualizações Totais</p>
-                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover/views:text-blue-500 transition-all" :class="showRankingStats ? 'rotate-180' : ''"></i>
-                                </div>
-                                <div class="flex items-baseline gap-2 mt-2">
-                                    <span class="text-2xl font-black text-slate-800 dark:text-white" x-text="selectedHotel.visualizacoes"></span>
-                                </div>
-                            </div>
-                            <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl">
-                                <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none">Subdomínio Ativo</p>
-                                <div class="flex items-center gap-1.5 mt-3">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                    <span class="text-xs font-bold text-slate-800 dark:text-white truncate" x-text="selectedHotel.slug + '.navievibe.com'"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="space-y-2.5">
-                            <div class="flex justify-between items-center text-xs">
-                                <span class="font-bold text-slate-700 dark:text-slate-250 uppercase tracking-wide">Tráfego de Dados Mensal</span>
-                                <span class="font-extrabold text-blue-600 dark:text-blue-400" x-text="parseFloat(selectedHotel.consumo_trafego_gb).toFixed(2) + ' GB / ' + selectedHotel.limite_trafego_gb + ' GB'"></span>
-                            </div>
-                            <div class="w-full bg-slate-100 dark:bg-black/40 rounded-full h-3 border border-slate-200/50 dark:border-navie-border/30 overflow-hidden p-0.5">
-                                <div class="h-2 rounded-full transition-all duration-500" 
-                                     :class="percentTrafego > 90 ? 'bg-rose-500' : (percentTrafego > 75 ? 'bg-amber-500' : 'bg-blue-600')"
-                                     :style="{ width: percentTrafego + '%' }"></div>
-                            </div>
-                            <div class="flex justify-between items-center text-[9px] font-bold text-slate-450 uppercase tracking-wider">
-                                <span x-text="percentTrafego + '% consumido'"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div x-show="activeTab === 'cadastro'" class="animate-in fade-in duration-200">
+                <form id="hotel-config-form" :action="selectedHotel.save_url" method="POST"
+                      @submit.prevent="if(!slugAvailable) { alert('Atenção: Por favor, escolha um subdomínio válido e disponível.'); return; } $el.submit();">
+                    {% csrf_token %}
+                    <!-- Campos invisíveis para as taxas no aba 1 para não perder no POST -->
+                    <input type="hidden" name="taxa_fixa_navie" :value="selectedHotel.taxa_fixa_navie">
+                    <input type="hidden" name="taxa_percentual_navie" :value="selectedHotel.taxa_percentual_navie">
+                    <input type="hidden" name="limite_trafego_gb" :value="selectedHotel.limite_trafego_gb">
+                    <input type="hidden" name="consumo_trafego_gb" :value="selectedHotel.consumo_trafego_gb">
+                    <input type="hidden" name="usar_tarifas_faixa" :value="selectedHotel.usar_tarifas_faixa ? 'on' : ''">
 
-                <!-- Coluna Direita: Geral Form, Suporte e Quartos -->
-                <div class="space-y-6">
-                    <!-- Configurações Gerais -->
-                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
-                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
-                            <i class="w-4 h-4 text-purple-500" data-lucide="settings"></i>
-                            <span>Configurações Básicas</span>
-                        </h3>
-                        <form id="hotel-config-form" :action="selectedHotel.save_url" method="POST" class="space-y-5"
-                              @submit.prevent="if(!slugAvailable) { alert('Atenção: Por favor, escolha um subdomínio válido e disponível.'); return; } $el.submit();">
-                            {% csrf_token %}
-                            <!-- Campos invisíveis para as taxas no aba 1 para não perder no POST -->
-                            <input type="hidden" name="taxa_fixa_navie" :value="selectedHotel.taxa_fixa_navie">
-                            <input type="hidden" name="taxa_percentual_navie" :value="selectedHotel.taxa_percentual_navie">
-                            <input type="hidden" name="limite_trafego_gb" :value="selectedHotel.limite_trafego_gb">
-                            <input type="hidden" name="consumo_trafego_gb" :value="selectedHotel.consumo_trafego_gb">
-                            <input type="hidden" name="usar_tarifas_faixa" :value="selectedHotel.usar_tarifas_faixa ? 'on' : ''">
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Subdomínio (Slug)</label>
-                                    <div class="relative">
-                                        <input type="text" name="slug" x-model="selectedHotel.slug" @input.debounce.500ms="checkSlug()" required 
-                                               class="w-full bg-slate-50/50 dark:bg-slate-900/50 border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white"
-                                               :class="slugAvailable ? 'border-slate-200 dark:border-navie-border' : 'border-rose-500 focus:ring-rose-500'">
-                                        
-                                        <!-- Loading indicator inside input -->
-                                        <span x-show="slugChecking" class="absolute right-3 top-2 flex items-center">
-                                            <svg class="animate-spin h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        </span>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Coluna Esquerda: Subdomínio, Tráfego e Suporte -->
+                        <div class="space-y-6">
+                            <!-- Card de Ajuste de Subdomínio & Status -->
+                            <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                                    <i class="w-4 h-4 text-purple-500" data-lucide="globe"></i>
+                                    <span>Ajuste de Subdomínio & Status</span>
+                                </h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Subdomínio (Slug)</label>
+                                        <div class="relative">
+                                            <input type="text" name="slug" x-model="selectedHotel.slug" @input.debounce.500ms="checkSlug()" required 
+                                                   class="w-full bg-slate-50/50 dark:bg-slate-900/50 border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-white"
+                                                   :class="slugAvailable ? 'border-slate-200 dark:border-navie-border' : 'border-rose-500 focus:ring-rose-500'">
+                                            
+                                            <!-- Loading indicator inside input -->
+                                            <span x-show="slugChecking" class="absolute right-3 top-2 flex items-center">
+                                                <svg class="animate-spin h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <!-- Feedback message -->
+                                        <p class="text-[10px] font-bold mt-1.5" 
+                                           :class="slugAvailable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
+                                           x-show="slugMessage" x-text="slugMessage"></p>
                                     </div>
-                                    <!-- Feedback message -->
-                                    <p class="text-[10px] font-bold mt-1.5" 
-                                       :class="slugAvailable ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
-                                       x-show="slugMessage" x-text="slugMessage"></p>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Status da Conta</label>
-                                    <select name="status" x-model="selectedHotel.status" class="w-full">
-                                        <option value="ativo">Ativo</option>
-                                        <option value="inativo">Inativo</option>
-                                    </select>
+                                    <div>
+                                        <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Status da Conta</label>
+                                        <select name="status" x-model="selectedHotel.status" class="w-full">
+                                            <option value="ativo">Ativo</option>
+                                            <option value="inativo">Inativo</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Canal de Vendas & Reservas (Marketplace vs WhatsApp Cards Selector) -->
-                            <div class="space-y-2 pb-2">
-                                <label class="block text-[10px] font-black uppercase text-slate-400 dark:text-navie-textsec tracking-wider mb-1.5">Canal de Vendas & Reservas</label>
+                            <!-- Tráfego -->
+                            <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                                    <i class="w-4 h-4 text-blue-500" data-lucide="activity"></i>
+                                    <span>Monitoramento & Tráfego</span>
+                                </h3>
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div @click="showRankingStats = !showRankingStats" 
+                                         class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl cursor-pointer hover:bg-slate-100/50 dark:hover:bg-white/5 transition-all select-none group/views">
+                                        <div class="flex justify-between items-center">
+                                            <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none group-hover/views:text-blue-500 transition-colors">Visualizações Totais</p>
+                                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover/views:text-blue-500 transition-all" :class="showRankingStats ? 'rotate-180' : ''"></i>
+                                        </div>
+                                        <div class="flex items-baseline gap-2 mt-2">
+                                            <span class="text-2xl font-black text-slate-800 dark:text-white" x-text="selectedHotel.visualizacoes"></span>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-navie-border/40 p-4 rounded-2xl">
+                                        <p class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-455 tracking-wider leading-none">Subdomínio Ativo</p>
+                                        <div class="flex items-center gap-1.5 mt-3">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                            <span class="text-xs font-bold text-slate-800 dark:text-white truncate" x-text="selectedHotel.slug + '.navievibe.com'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-2.5">
+                                    <div class="flex justify-between items-center text-xs">
+                                        <span class="font-bold text-slate-700 dark:text-slate-250 uppercase tracking-wide">Tráfego de Dados Mensal</span>
+                                        <span class="font-extrabold text-blue-600 dark:text-blue-400" x-text="parseFloat(selectedHotel.consumo_trafego_gb).toFixed(2) + ' GB / ' + selectedHotel.limite_trafego_gb + ' GB'"></span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 dark:bg-black/40 rounded-full h-3 border border-slate-200/50 dark:border-navie-border/30 overflow-hidden p-0.5">
+                                        <div class="h-2 rounded-full transition-all duration-500" 
+                                             :class="percentTrafego > 90 ? 'bg-rose-500' : (percentTrafego > 75 ? 'bg-amber-500' : 'bg-blue-600')"
+                                             :style="{ width: percentTrafego + '%' }"></div>
+                                    </div>
+                                    <div class="flex justify-between items-center text-[9px] font-bold text-slate-455 uppercase tracking-wider">
+                                        <span x-text="percentTrafego + '% consumido'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Canais de Atendimento -->
+                            <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
+                                    <i class="w-4 h-4 text-emerald-500" data-lucide="phone-call"></i>
+                                    <span>Atendimento Rápido</span>
+                                </h3>
+                                <div class="flex gap-3">
+                                    <a :href="'https://wa.me/' + (selectedHotel.whatsapp ? selectedHotel.whatsapp.replace(/\D/g,'') : '') + '?text=' + encodeURIComponent('Olá ' + selectedHotel.nome + ', aqui é a equipe de suporte da plataforma Naviê Vibe.')" 
+                                       target="_blank" 
+                                       class="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
+                                        <i class="w-4 h-4" data-lucide="phone"></i>
+                                        <span>WhatsApp</span>
+                                    </a>
+                                    <a :href="'mailto:' + selectedHotel.email + '?subject=' + encodeURIComponent('Suporte Técnico Naviê Vibe - ' + selectedHotel.nome)" 
+                                       class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
+                                        <i class="w-4 h-4" data-lucide="mail"></i>
+                                        <span>E-mail</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coluna Direita: Canal de Vendas -->
+                        <div class="space-y-6">
+                            <!-- Canal de Vendas & Reservas -->
+                            <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
+                                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-5 flex items-center gap-2">
+                                    <i class="w-4 h-4 text-purple-500" data-lucide="settings"></i>
+                                    <span>Canal de Vendas & Reservas</span>
+                                </h3>
                                 
-                                <!-- Hidden Checkbox input that syncs with selectedHotel.venda_online for form submission -->
-                                <input type="checkbox" name="venda_online" :checked="selectedHotel.venda_online" class="hidden" id="venda_online_hidden">
+                                <div class="space-y-2 pb-2">
+                                    <!-- Hidden Checkbox input that syncs with selectedHotel.venda_online for form submission -->
+                                    <input type="checkbox" name="venda_online" :checked="selectedHotel.venda_online" class="hidden" id="venda_online_hidden">
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <!-- Opção 1: WhatsApp -->
-                                    <div @click="selectedHotel.venda_online = false" 
-                                         :class="!selectedHotel.venda_online 
-                                                 ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-emerald-500/35' 
-                                                 : 'border-slate-200 dark:border-navie-border hover:border-slate-350 dark:hover:border-white/20 bg-transparent'"
-                                         class="border rounded-2xl p-4 cursor-pointer transition-all duration-300 flex items-start gap-3 select-none">
-                                        <div :class="!selectedHotel.venda_online ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500'" 
-                                             class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors">
-                                            <i data-lucide="message-square" class="w-4 h-4"></i>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <!-- Opção 1: WhatsApp -->
+                                        <div @click="selectedHotel.venda_online = false" 
+                                             :class="!selectedHotel.venda_online 
+                                                     ? 'border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/15 ring-2 ring-emerald-500/35' 
+                                                     : 'border-slate-200 dark:border-navie-border hover:border-slate-350 dark:hover:border-white/20 bg-transparent'"
+                                             class="border rounded-2xl p-4 cursor-pointer transition-all duration-300 flex items-start gap-3 select-none">
+                                            <div :class="!selectedHotel.venda_online ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500'" 
+                                                 class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                                                <i data-lucide="message-square" class="w-4 h-4"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p :class="!selectedHotel.venda_online ? 'text-emerald-700 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 font-bold'" 
+                                                   class="text-xs uppercase tracking-wide leading-none">Apenas WhatsApp</p>
+                                                <p class="text-[10px] text-slate-400 dark:text-slate-455 mt-1 leading-normal font-medium">As reservas serão direcionadas para o contato via WhatsApp.</p>
+                                            </div>
                                         </div>
-                                        <div class="min-w-0">
-                                            <p :class="!selectedHotel.venda_online ? 'text-emerald-700 dark:text-emerald-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 font-bold'" 
-                                               class="text-xs uppercase tracking-wide leading-none">Apenas WhatsApp</p>
-                                            <p class="text-[10px] text-slate-400 dark:text-slate-455 mt-1 leading-normal font-medium">As reservas serão direcionadas para o contato via WhatsApp.</p>
-                                        </div>
-                                    </div>
 
-                                    <!-- Opção 2: Marketplace / Online -->
-                                    <div @click="selectedHotel.venda_online = true" 
-                                         :class="selectedHotel.venda_online 
-                                                 ? 'border-blue-500 bg-blue-500/10 dark:bg-blue-500/15 ring-2 ring-blue-500/35' 
-                                                 : 'border-slate-200 dark:border-navie-border hover:border-slate-350 dark:hover:border-white/20 bg-transparent'"
-                                         class="border rounded-2xl p-4 cursor-pointer transition-all duration-300 flex items-start gap-3 select-none">
-                                        <div :class="selectedHotel.venda_online ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500'" 
-                                             class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors">
-                                            <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p :class="selectedHotel.venda_online ? 'text-blue-700 dark:text-blue-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 font-bold'" 
-                                               class="text-xs uppercase tracking-wide leading-none">Reserva Online (Marketplace)</p>
-                                            <p class="text-[10px] text-slate-400 dark:text-slate-455 mt-1 leading-normal font-medium">Permite reservas e pagamentos online direto pelo portal Naviê.</p>
+                                        <!-- Opção 2: Marketplace / Online -->
+                                        <div @click="selectedHotel.venda_online = true" 
+                                             :class="selectedHotel.venda_online 
+                                                     ? 'border-blue-500 bg-blue-500/10 dark:bg-blue-500/15 ring-2 ring-blue-500/35' 
+                                                     : 'border-slate-200 dark:border-navie-border hover:border-slate-350 dark:hover:border-white/20 bg-transparent'"
+                                             class="border rounded-2xl p-4 cursor-pointer transition-all duration-300 flex items-start gap-3 select-none">
+                                            <div :class="selectedHotel.venda_online ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-slate-500'" 
+                                                 class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                                                <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p :class="selectedHotel.venda_online ? 'text-blue-700 dark:text-blue-400 font-extrabold' : 'text-slate-700 dark:text-slate-300 font-bold'" 
+                                                   class="text-xs uppercase tracking-wide leading-none">Reserva Online (Marketplace)</p>
+                                                <p class="text-[10px] text-slate-400 dark:text-slate-455 mt-1 leading-normal font-medium">Permite reservas e pagamentos online direto pelo portal Naviê.</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-
-                    <!-- Canais de Atendimento -->
-                    <div class="glass-card rounded-2xl p-6 shadow-sm border border-slate-200/50 dark:border-navie-border/60">
-                        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-navie-border/40 pb-3 mb-4 flex items-center gap-2">
-                            <i class="w-4 h-4 text-emerald-500" data-lucide="phone-call"></i>
-                            <span>Atendimento Rápido</span>
-                        </h3>
-                        <div class="flex gap-3">
-                            <a :href="'https://wa.me/' + (selectedHotel.whatsapp ? selectedHotel.whatsapp.replace(/\D/g,'') : '') + '?text=' + encodeURIComponent('Olá ' + selectedHotel.nome + ', aqui é a equipe de suporte da plataforma Naviê Vibe.')" 
-                               target="_blank" 
-                               class="flex-1 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
-                                <i class="w-4 h-4" data-lucide="phone"></i>
-                                <span>WhatsApp</span>
-                            </a>
-                            <a :href="'mailto:' + selectedHotel.email + '?subject=' + encodeURIComponent('Suporte Técnico Naviê Vibe - ' + selectedHotel.nome)" 
-                               class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-650 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white rounded-xl py-2 px-4 text-xs font-black uppercase tracking-widest transition-all cursor-pointer border-none shadow-sm decoration-none">
-                                <i class="w-4 h-4" data-lucide="mail"></i>
-                                <span>E-mail</span>
-                            </a>
                         </div>
                     </div>
-                </div>
+                </form>
+            </div>
 
-                <!-- Ranking de Visualizações e Tempo de Permanência (Aparece ao clicar em Visualizações Totais) -->
-                <div x-show="showRankingStats" 
-                     x-transition:enter="transition ease-out duration-300"
+            <!-- Ranking de Visualizações e Tempo de Permanência (Aparece ao clicar em Visualizações Totais) -->
+            <div x-show="showRankingStats" 
+                 x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
                      x-transition:leave="transition ease-in duration-200"
