@@ -13,7 +13,7 @@
         <span>Adicionar Hotel</span>
     </a>
     <!-- Salvar Alterações (apenas no formulário Geral de detalhes) -->
-    <button type="submit" form="hotel-config-form" x-show="viewMode === 'detail' && activeTab === 'cadastro'" class="btn-header btn-header-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer border-none font-bold uppercase tracking-wider">
+    <button type="submit" form="hotel-config-form" x-show="viewMode === 'detail' && activeTab === 'cadastro'" style="display: none;" class="btn-header btn-header-primary text-xs py-2 px-4 inline-flex items-center gap-1.5 cursor-pointer border-none font-bold uppercase tracking-wider">
         <i data-lucide="save" class="w-4 h-4"></i>
         <span>Salvar Alterações</span>
     </button>
@@ -112,7 +112,7 @@
              window.dispatchEvent(new CustomEvent('hotel-selected', { detail: hotel }));
          },
 
-         async checkSlug() {
+         checkSlug() {
              if (!this.selectedHotel || !this.selectedHotel.slug) {
                  this.slugAvailable = false;
                  this.slugMessage = 'O subdomínio é obrigatório.';
@@ -122,18 +122,20 @@
              this.selectedHotel.slug = slug;
              
              this.slugChecking = true;
-             try {
-                 const response = await fetch('/api/hotel/verificar-subdominio/?slug=' + slug + '&exclude_id=' + this.selectedHotel.id);
-                 const data = await response.json();
-                 this.slugAvailable = data.disponivel;
-                 this.slugMessage = data.mensagem;
-             } catch (e) {
-                 console.error(e);
-                 this.slugAvailable = false;
-                 this.slugMessage = 'Erro ao verificar disponibilidade.';
-             } finally {
-                 this.slugChecking = false;
-             }
+             fetch('/api/hotel/verificar-subdominio/?slug=' + slug + '&exclude_id=' + this.selectedHotel.id)
+                 .then(response => response.json())
+                 .then(data => {
+                     this.slugAvailable = data.disponivel;
+                     this.slugMessage = data.mensagem;
+                 })
+                 .catch(e => {
+                     console.error(e);
+                     this.slugAvailable = false;
+                     this.slugMessage = 'Erro ao verificar disponibilidade.';
+                 })
+                 .finally(() => {
+                     this.slugChecking = false;
+                 });
          },
 
          init() {
@@ -716,8 +718,8 @@
                     {
                         nome: "{{ stat.nome|escapejs }}",
                         tipo: "{{ stat.tipo|escapejs }}",
-                        visualizacoes: {{ stat.visualizacoes }},
-                        tempo_medio: {{ stat.tempo_medio }}
+                        visualizacoes: parseInt("{{ stat.visualizacoes }}") || 0,
+                        tempo_medio: parseFloat("{{ stat.tempo_medio }}".replace(",", ".")) || 0.0
                     }{% if not forloop.last %},{% endif %}
                     {% endfor %}
                 ],
