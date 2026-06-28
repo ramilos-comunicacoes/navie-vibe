@@ -398,11 +398,7 @@
             
             <div class="grid grid-cols-1 gap-4">
                 {% for atracao in atracoes %}
-                <div class="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row gap-4 relative overflow-hidden group">
-                    <!-- Fundo de Cor Customizado -->
-                    <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none transition-opacity duration-300"
-                         style="background-color: {{ atracao.cor_fundo|default:'#0f172a' }};">
-                    </div>
+                <div class="atracao-card-b2b rounded-2xl p-4 flex flex-col sm:flex-row gap-4 relative overflow-hidden group">
                     
                     <!-- Miniatura da Mídia na Esquerda -->
                     <div class="w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0 select-none relative z-10">
@@ -443,6 +439,13 @@
                                     Inativo
                                 </span>
                                 {% endif %}
+                                
+                                <!-- Cores do Evento -->
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-150/40 dark:bg-white/5 text-slate-650 dark:text-slate-350 border border-slate-200/60 dark:border-white/10 flex items-center gap-1.5 select-none">
+                                    <span>Cores:</span>
+                                    <span class="w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/20 inline-block shadow-sm" style="background-color: {{ atracao.cor_fundo|default:'#0f172a' }};" title="Fundo"></span>
+                                    <span class="w-3.5 h-3.5 rounded-full border border-black/10 dark:border-white/20 inline-block shadow-sm" style="background-color: {{ atracao.cor_texto|default:'#ffffff' }};" title="Texto"></span>
+                                </span>
                             </div>
                             
                             <h4 class="font-extrabold text-sm text-slate-800 dark:text-white mt-1">{{ atracao.titulo }}</h4>
