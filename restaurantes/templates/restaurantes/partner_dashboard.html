@@ -380,270 +380,456 @@
 
                     <!-- Botão de submit real oculto -->
                     <button type="submit" class="hidden">Salvar</button>
-                </div>
-            </div>
-        </form>
-    </div>
-
     <!-- SUB-ABA: DESTAQUES (ATRAÇÕES DO DIA) -->
-    <div x-show="activeSubTab === 'destaques'" style="display: none;">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
-            <!-- Coluna Esquerda/Centro: Lista de Atrações Existentes -->
-            <div class="lg:col-span-2 space-y-4">
-                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
-                        <i class="w-4 h-4 text-red-500" data-lucide="sparkles"></i>
-                        <span>Atrações Cadastradas</span>
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {% for atracao in atracoes %}
-                        <div class="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 flex flex-col justify-between gap-4 relative overflow-hidden group">
-                            <!-- Fundo de Cor Customizado -->
-                            <div class="absolute inset-0 opacity-10 pointer-events-none transition-opacity duration-300"
-                                 style="background-color: {{ atracao.cor_fundo|default:'#0f172a' }};">
-                            </div>
-                            
-                            <div class="flex gap-3 relative z-10">
-                                <!-- Miniatura da Mídia -->
-                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0 select-none">
-                                    {% if atracao.video and atracao.midia_tipo == 'video' %}
-                                    <video src="{{ atracao.video.url }}" class="w-full h-full object-cover" muted></video>
-                                    {% elif atracao.imagem %}
-                                    <img src="{{ atracao.imagem.url }}" class="w-full h-full object-cover" alt="Atração">
-                                    {% else %}
-                                    <div class="w-full h-full flex items-center justify-center text-slate-400">
-                                        <i data-lucide="image" class="w-5 h-5"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-1.5 flex-wrap">
-                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/15">
-                                            {{ atracao.dia }}
-                                        </span>
-                                        {% if atracao.ativo %}
-                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/15">
-                                            Ativo
-                                        </span>
-                                        {% else %}
-                                        <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-350/10 text-slate-500 border border-slate-350/15">
-                                            Inativo
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                    <h4 class="font-extrabold text-xs text-slate-800 dark:text-white mt-1.5 truncate">{{ atracao.titulo }}</h4>
-                                    <p class="text-[10px] text-slate-450 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                                        {{ atracao.texto }}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="flex gap-2 border-t border-slate-100 dark:border-white/5 pt-3 relative z-10">
-                                <button type="button" 
-                                        onclick="editarAtracao({
-                                            id: '{{ atracao.id }}',
-                                            dia: '{{ atracao.dia|escapejs }}',
-                                            titulo: '{{ atracao.titulo|escapejs }}',
-                                            texto: '{{ atracao.texto|escapejs }}',
-                                            cor_fundo: '{{ atracao.cor_fundo|default:'#0f172a' }}',
-                                            cor_texto: '{{ atracao.cor_texto|default:'#ffffff' }}',
-                                            midia_tipo: '{{ atracao.midia_tipo }}',
-                                            ativo: {% if atracao.ativo %}true{% else %}false{% endif %},
-                                            imagem_url: '{% if atracao.imagem %}{{ atracao.imagem.url }}{% endif %}',
-                                            video_url: '{% if atracao.video %}{{ atracao.video.url }}{% endif %}'
-                                        })"
-                                        class="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer flex items-center justify-center gap-1">
-                                    <i data-lucide="pencil" class="w-3 h-3"></i> Editar
-                                </button>
-                                <a href="{% url 'restaurantes:partner_deletar_atracao' atracao.id %}" 
-                                   onclick="return confirm('Deseja realmente excluir esta atração?')"
-                                   class="flex-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center border border-red-550/15 decoration-none flex items-center justify-center gap-1">
-                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir
-                                </a>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="col-span-full py-8 text-center text-slate-400 dark:text-slate-500">
-                            <i data-lucide="sparkles" class="w-10 h-10 mx-auto mb-2 opacity-25"></i>
-                            <p class="font-bold text-xs uppercase tracking-wider">Nenhuma atração cadastrada</p>
-                            <p class="text-[10px] mt-1">Cadastre programações ao lado para que apareçam na página do restaurante.</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
+    <div x-show="activeSubTab === 'destaques'" style="display: none;" class="space-y-6">
+        
+        <!-- Lista de Atrações Existentes (Largura Cheia) -->
+        <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <i class="w-4 h-4 text-red-500" data-lucide="calendar-days"></i>
+                    <span>Atrações Cadastradas</span>
+                </h3>
             </div>
             
-            <!-- Coluna Direita: Formulário de Cadastro/Edição -->
-            <div class="space-y-6">
-                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
-                        <h3 id="form-atracao-title" class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                            <i class="w-4 h-4 text-red-500" data-lucide="sparkles"></i>
-                            <span>Nova Atração do Dia</span>
-                        </h3>
-                        <button type="button" id="btn-limpar-atracao" onclick="limparFormularioAtracao()"
-                                class="hidden text-[9px] font-black uppercase tracking-wider text-red-500 hover:text-red-650 bg-transparent border-none cursor-pointer">
-                            Nova / Limpar
-                        </button>
+            <div class="grid grid-cols-1 gap-4">
+                {% for atracao in atracoes %}
+                <div class="glass-card rounded-2xl p-4 border border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row gap-4 relative overflow-hidden group">
+                    <!-- Fundo de Cor Customizado -->
+                    <div class="absolute inset-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none transition-opacity duration-300"
+                         style="background-color: {{ atracao.cor_fundo|default:'#0f172a' }};">
                     </div>
                     
-                    <form id="form-salvar-atracoes" action="{% url 'restaurantes:partner_salvar_atracao' %}" method="POST" enctype="multipart/form-data" class="space-y-4">
-                        {% csrf_token %}
-                        <input type="hidden" name="atracao_id" id="atracao_id_input" value="">
-                        
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Dia / Período</label>
-                            <input type="text" name="dia" id="atracao_dia_input" placeholder="Ex: Sábado, Sexta, Todo Fim de Semana" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                    <!-- Miniatura da Mídia na Esquerda -->
+                    <div class="w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0 select-none relative z-10">
+                        {% if atracao.video and atracao.midia_tipo == 'video' %}
+                        <video src="{{ atracao.video.url }}" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                        {% elif atracao.imagem %}
+                        <img src="{{ atracao.imagem.url }}" class="w-full h-full object-cover" alt="Atração">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-slate-400">
+                            <i data-lucide="image" class="w-8 h-8"></i>
                         </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Título da Atração</label>
-                            <input type="text" name="titulo" id="atracao_titulo_input" placeholder="Ex: Acústico Voz & Violão" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Descrição da Atração</label>
-                            <textarea name="texto" id="atracao_texto_input" rows="3" placeholder="Escreva os detalhes da atração..." class="w-full p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required></textarea>
-                        </div>
-                        
-                        <!-- Cores da Atração -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Cor de Fundo -->
-                            <div x-data="colorPickerData('#0f172a', 'atracao_cor_fundo_hex')" class="relative">
-                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor de Fundo</label>
-                                <div class="relative flex items-center">
-                                    <button type="button" @click="open = !open"
-                                            :style="'background-color: ' + color"
-                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
-                                    </button>
-                                    <input type="text" name="cor_fundo" id="atracao_cor_fundo_hex" x-model="color"
-                                           class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
-                                           @input="onHexInput($el.value)">
-                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
-                                </div>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
-                                     style="display: none;">
-                                    <div>
-                                        <div class="grid grid-cols-6 gap-2">
-                                            <template x-for="preset in presets">
-                                                <button type="button" @click="setPreset(preset)"
-                                                        :style="'background-color: ' + preset"
-                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Informações do Card -->
+                    <div class="flex-1 flex flex-col justify-between min-w-0 relative z-10 font-sans">
+                        <div class="space-y-1.5">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <!-- Data Formatada -->
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-150/40 dark:bg-white/5 text-slate-600 dark:text-slate-350 border border-slate-200/60 dark:border-white/10 flex items-center gap-1">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i>
+                                    <span>{% if atracao.data %}{{ atracao.data|date:"d/m/Y" }}{% else %}{{ atracao.dia }}{% endif %}</span>
+                                </span>
+                                <!-- Horário -->
+                                {% if atracao.horario %}
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-150/40 dark:bg-white/5 text-slate-600 dark:text-slate-350 border border-slate-200/60 dark:border-white/10 flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-3 h-3"></i>
+                                    <span>{{ atracao.horario|time:"H:i" }}</span>
+                                </span>
+                                {% endif %}
+                                <!-- Status -->
+                                {% if atracao.ativo %}
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-green-500/10 text-green-500 border border-green-500/15">
+                                    Ativo
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-slate-350/10 text-slate-500 border border-slate-350/15">
+                                    Inativo
+                                </span>
+                                {% endif %}
                             </div>
                             
-                            <!-- Cor do Texto -->
-                            <div x-data="colorPickerData('#ffffff', 'atracao_cor_texto_hex')" class="relative">
-                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor do Texto</label>
-                                <div class="relative flex items-center">
-                                    <button type="button" @click="open = !open"
-                                            :style="'background-color: ' + color"
-                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
-                                    </button>
-                                    <input type="text" name="cor_texto" id="atracao_cor_texto_hex" x-model="color"
-                                           class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
-                                           @input="onHexInput($el.value)">
-                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
-                                </div>
-                                <div x-show="open" @click.outside="open = false" x-transition
-                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
-                                     style="display: none;">
-                                    <div>
-                                        <div class="grid grid-cols-6 gap-2">
-                                            <template x-for="preset in presets">
-                                                <button type="button" @click="setPreset(preset)"
-                                                        :style="'background-color: ' + preset"
-                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <h4 class="font-extrabold text-sm text-slate-800 dark:text-white mt-1">{{ atracao.titulo }}</h4>
+                            <p class="text-xs text-slate-650 dark:text-slate-400 leading-relaxed font-medium">
+                                {{ atracao.texto|safe }}
+                            </p>
                         </div>
                         
-                        <!-- Mídia da Atração -->
-                        <div x-data="{ tipoMidiaAtracao: 'imagem' }">
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Mídia da Atração</label>
-                            
-                            <div class="flex gap-2 mb-3">
-                                <label class="cursor-pointer flex-1">
-                                    <input type="radio" name="midia_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaAtracao" checked>
-                                    <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
-                                        Imagem
-                                    </div>
-                                </label>
-                                <label class="cursor-pointer flex-1">
-                                    <input type="radio" name="midia_tipo" value="video" class="peer hidden" x-model="tipoMidiaAtracao">
-                                    <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
-                                        Vídeo
-                                    </div>
-                                </label>
-                            </div>
-                            
-                            <!-- Imagem -->
-                            <div x-show="tipoMidiaAtracao === 'imagem'">
-                                <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
-                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-imagem-file').click()">
-                                    
-                                    <input type="file" id="atracao-imagem-file" name="imagem" accept="image/*" class="hidden"
-                                           onchange="previewImageFile(this, 'atracao-imagem')">
-                                    
-                                    <div id="atracao-imagem-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
-                                        <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
-                                        <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Imagem</span>
-                                    </div>
+                        <!-- Ações do Card -->
+                        <div class="flex gap-2 mt-4 pt-3 border-t border-slate-150/50 dark:border-white/5">
+                            <button type="button" 
+                                    onclick="editarAtracao({
+                                        id: '{{ atracao.id }}',
+                                        dia: '{% if atracao.data %}{{ atracao.data|date:"d/m/Y" }}{% else %}{{ atracao.dia }}{% endif %}',
+                                        data: '{% if atracao.data %}{{ atracao.data|date:"d/m/Y" }}{% endif %}',
+                                        horario: '{% if atracao.horario %}{{ atracao.horario|time:"H:i" }}{% endif %}',
+                                        titulo: '{{ atracao.titulo|escapejs }}',
+                                        texto: '{{ atracao.texto|escapejs }}',
+                                        cor_fundo: '{{ atracao.cor_fundo|default:'#0f172a' }}',
+                                        cor_texto: '{{ atracao.cor_texto|default:'#ffffff' }}',
+                                        midia_tipo: '{{ atracao.midia_tipo }}',
+                                        ativo: {% if atracao.ativo %}true{% else %}false{% endif %},
+                                        imagem_url: '{% if atracao.imagem %}{{ atracao.imagem.url }}{% endif %}',
+                                        video_url: '{% if atracao.video %}{{ atracao.video.url }}{% endif %}'
+                                    })"
+                                    class="bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white py-1.5 px-3.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors border-none cursor-pointer flex items-center justify-center gap-1">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Editar
+                            </button>
+                            <a href="{% url 'restaurantes:partner_deletar_atracao' atracao.id %}" 
+                               onclick="return confirm('Deseja realmente excluir esta atração?')"
+                               class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white py-1.5 px-3.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-colors text-center border border-red-550/15 decoration-none flex items-center justify-center gap-1">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-12 text-center text-slate-400 dark:text-slate-500">
+                    <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-2 opacity-25"></i>
+                    <p class="font-bold text-xs uppercase tracking-wider">Nenhuma atração cadastrada</p>
+                    <p class="text-[10px] mt-1">Clique no botão "+" no topo direito para cadastrar uma nova atração.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
-                                    <div id="atracao-imagem-preview-active" class="absolute inset-0 w-full h-full hidden">
-                                        <img id="atracao-imagem-preview-img" src="" class="w-full h-full object-cover" alt="Preview">
-                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
-                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
-                                                    onclick="event.stopPropagation(); clearUploadedFile('atracao-imagem')">Apagar</button>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="remover_imagem" id="remover-atracao-imagem-input" value="false">
-                                </div>
-                            </div>
-                            
-                            <!-- Vídeo -->
-                            <div x-show="tipoMidiaAtracao === 'video'" style="display: none;">
-                                <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
-                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-video-file').click()">
-                                    
-                                    <input type="file" id="atracao-video-file" name="video" accept="video/*" class="hidden"
-                                           onchange="previewVideoFile(this, 'atracao-video')">
-                                    
-                                    <div id="atracao-video-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
-                                        <i data-lucide="video" class="w-7 h-7 text-slate-400 mb-1"></i>
-                                        <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Vídeo</span>
-                                        <span class="text-[9px] text-slate-450 mt-1">MP4 de até 8MB</span>
-                                    </div>
+        <!-- GAVETA LATERAL: CADASTRO / EDIÇÃO DE ATRAÇÃO -->
+        <div x-show="drawerOpen" class="fixed inset-0 z-[100] flex justify-end" style="display: none;">
+            <!-- Backdrop escuro e desfocado -->
+            <div x-show="drawerOpen" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0"
+                 x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100"
+                 x-transition:leave-end="opacity-0"
+                 @click="drawerOpen = false"
+                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90]"></div>
+                 
+            <!-- Corpo da Gaveta -->
+            <div x-show="drawerOpen"
+                 x-transition:enter="transition ease-out duration-300 transform"
+                 x-transition:enter-start="translate-x-full"
+                 x-transition:enter-end="translate-x-0"
+                 x-transition:leave="transition ease-in duration-200 transform"
+                 x-transition:leave-start="translate-x-0"
+                 x-transition:leave-end="translate-x-full"
+                 class="relative w-full max-w-md bg-white dark:bg-slate-950 h-full shadow-2xl flex flex-col z-[100] border-l border-slate-200/50 dark:border-white/5 font-sans">
+                 
+                 <!-- Header da Gaveta -->
+                 <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                     <div>
+                         <h3 id="form-atracao-title" class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                             <i class="w-4 h-4 text-red-500" data-lucide="plus-circle"></i>
+                             <span>Nova Atração do Dia</span>
+                         </h3>
+                         <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">Preencha as informações da programação</p>
+                     </div>
+                     <button type="button" id="btn-limpar-atracao" onclick="limparFormularioAtracao()"
+                             class="hidden text-[9px] font-black uppercase tracking-wider text-red-500 hover:text-red-650 bg-transparent border-none cursor-pointer">
+                         Limpar
+                     </button>
+                     <button type="button" @click="drawerOpen = false" class="text-slate-400 hover:text-slate-650 dark:hover:text-white bg-transparent border-none cursor-pointer flex p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                         <i data-lucide="x" class="w-5 h-5"></i>
+                     </button>
+                 </div>
+                 
+                 <!-- Formulário / Conteúdo Rolável -->
+                 <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                     <form id="form-salvar-atracoes" action="{% url 'restaurantes:partner_salvar_atracao' %}" method="POST" enctype="multipart/form-data" class="space-y-5">
+                         {% csrf_token %}
+                         <input type="hidden" name="atracao_id" id="atracao_id_input" value="">
+                         
+                         <!-- Switcher Elegante para Ativo (Toggle Switch) -->
+                         <div class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
+                             <div class="flex flex-col">
+                                 <span class="text-[10px] font-black text-slate-700 dark:text-slate-350 uppercase tracking-widest">Status da Atração</span>
+                                 <span class="text-[9px] text-slate-400 mt-0.5">Define se a atração estará visível no site</span>
+                             </div>
+                             <label class="relative inline-flex items-center cursor-pointer select-none">
+                                 <input type="checkbox" name="ativo" id="atracao_ativo_input" checked class="sr-only peer">
+                                 <div class="w-11 h-6 bg-slate-300 dark:bg-white/10 rounded-full peer peer-focus:ring-2 peer-focus:ring-red-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                             </label>
+                         </div>
 
-                                    <div id="atracao-video-preview-active" class="absolute inset-0 w-full h-full hidden">
-                                        <video id="atracao-video-preview-player" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
-                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
-                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
-                                                    onclick="event.stopPropagation(); clearUploadedFile('atracao-video')">Apagar</button>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="remover_video" id="remover-atracao-video-input" value="false">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center gap-2 py-1">
-                            <input type="checkbox" name="ativo" id="atracao_ativo_input" checked class="w-4 h-4 text-red-500 border-slate-300 rounded focus:ring-red-500 cursor-pointer">
-                            <label for="atracao_ativo_input" class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest cursor-pointer">Atração Ativa</label>
-                        </div>
-                        
-                        <!-- Botão de submit oculto -->
-                        <button type="submit" class="hidden">Salvar</button>
+                         <!-- Data e Hora com Calendário Customizado -->
+                         <div class="grid grid-cols-2 gap-4">
+                             <!-- Data -->
+                             <div class="relative">
+                                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Data da Atração</label>
+                                 <div class="relative flex items-center">
+                                     <input type="text" name="data" id="atracao_data_input" readonly placeholder="Selecionar data"
+                                            class="w-full h-11 pl-10 pr-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white cursor-pointer focus:outline-none focus:border-red-500 transition-colors" required>
+                                     <i data-lucide="calendar" class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none"></i>
+                                 </div>
+                                 
+                                 <!-- Calendário Customizado Dropdown -->
+                                 <div id="calendario-atracao-dropdown" class="hidden absolute top-12 left-0 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-3.5 z-[110] space-y-3 font-sans w-[280px]">
+                                     <!-- Navegação do Mês -->
+                                     <div class="flex items-center justify-between text-xs font-black text-slate-850 dark:text-white uppercase tracking-wider">
+                                         <button type="button" id="cal-prev-month" class="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg border-none bg-transparent cursor-pointer text-slate-500"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                                         <span id="cal-month-year-label">Junho 2026</span>
+                                         <button type="button" id="cal-next-month" class="p-1 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg border-none bg-transparent cursor-pointer text-slate-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                                     </div>
+                                     
+                                     <!-- Cabeçalho dos Dias da Semana -->
+                                     <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                                         <span>D</span><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span>
+                                     </div>
+                                     
+                                     <!-- Grid de Dias -->
+                                     <div id="cal-days-grid" class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-700 dark:text-slate-350">
+                                         <!-- Renderizado dinamicamente via JS -->
+                                     </div>
+                                 </div>
+                             </div>
+                             
+                             <!-- Hora -->
+                             <div class="relative">
+                                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Horário</label>
+                                 <div class="relative flex items-center">
+                                     <input type="text" name="horario" id="atracao_horario_input" readonly placeholder="Selecionar hora"
+                                            class="w-full h-11 pl-10 pr-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white cursor-pointer focus:outline-none focus:border-red-500 transition-colors" required>
+                                     <i data-lucide="clock" class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none"></i>
+                                 </div>
+                                 
+                                 <!-- Seletor de Hora Customizado Dropdown -->
+                                 <div id="horario-atracao-dropdown" class="hidden absolute top-12 left-0 right-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl p-3 z-[110] space-y-2 font-sans w-[180px]">
+                                     <div class="flex items-center justify-between text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-white/5 pb-2">
+                                         <span>Horário</span>
+                                     </div>
+                                     <div class="grid grid-cols-2 gap-2 h-36 overflow-y-auto no-scrollbar text-center text-xs font-bold">
+                                         <!-- Horas -->
+                                         <div id="time-hours-list" class="space-y-1.5">
+                                             <!-- JS renderiza de 00 a 23 -->
+                                         </div>
+                                         <!-- Minutos -->
+                                         <div id="time-minutes-list" class="space-y-1.5 border-l border-slate-100 dark:border-white/5 pl-2">
+                                             <!-- JS renderiza de 00 a 55 em passos de 5 -->
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+
+                         <div>
+                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Título da Atração</label>
+                             <input type="text" name="titulo" id="atracao_titulo_input" placeholder="Ex: Acústico Voz & Violão" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                         </div>
+                         
+                         <!-- Descrição com Rich Text minimalista (Toolbar) -->
+                         <div>
+                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Descrição da Atração</label>
+                             <div class="border border-slate-200/80 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-black/20 overflow-hidden flex flex-col focus-within:border-red-500 transition-colors">
+                                 <!-- Toolbar Rich Text -->
+                                 <div class="flex items-center gap-1 p-2 bg-slate-100/50 dark:bg-white/5 border-b border-slate-200/50 dark:border-white/5">
+                                     <button type="button" onclick="formatarRichText('bold')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 border-none bg-transparent cursor-pointer text-slate-650 dark:text-slate-350 flex items-center justify-center font-bold" title="Negrito">B</button>
+                                     <button type="button" onclick="formatarRichText('italic')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 border-none bg-transparent cursor-pointer text-slate-650 dark:text-slate-350 flex items-center justify-center italic" title="Itálico">I</button>
+                                     <button type="button" onclick="formatarRichText('underline')" class="w-8 h-8 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 border-none bg-transparent cursor-pointer text-slate-650 dark:text-slate-350 flex items-center justify-center underline" title="Sublinhado">U</button>
+                                 </div>
+                                 <textarea name="texto" id="atracao_texto_input" rows="4" placeholder="Escreva os detalhes da atração..." class="w-full p-3.5 bg-transparent border-none text-xs font-bold text-slate-800 dark:text-white focus:outline-none" required></textarea>
+                             </div>
+                         </div>
+                         
+                         <!-- Cores da Atração (com HSL) -->
+                         <div class="grid grid-cols-2 gap-4">
+                             <!-- Cor de Fundo -->
+                             <div x-data="colorPickerData('#0f172a', 'atracao_cor_fundo_hex')" class="relative">
+                                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor de Fundo</label>
+                                 <div class="relative flex items-center">
+                                     <button type="button" @click="open = !open"
+                                             :style="'background-color: ' + color"
+                                             class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
+                                     </button>
+                                     <input type="text" name="cor_fundo" id="atracao_cor_fundo_hex" x-model="color"
+                                            class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                            @input="onHexInput($el.value)">
+                                     <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                 </div>
+                                 
+                                 <div x-show="open" @click.outside="open = false" x-transition
+                                      class="absolute right-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[110] space-y-4"
+                                      style="display: none;">
+                                     <div>
+                                         <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                         <div class="grid grid-cols-6 gap-2">
+                                             <template x-for="preset in presets">
+                                                 <button type="button" @click="setPreset(preset)"
+                                                         :style="'background-color: ' + preset"
+                                                         class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                             </template>
+                                         </div>
+                                     </div>
+                                     
+                                     <!-- HSL Sliders -->
+                                     <div class="border-t border-slate-100 dark:border-white/5 pt-3 space-y-3">
+                                         <div class="flex justify-between items-center text-[9px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-widest">
+                                             <span>Ajuste de Tom (HSL)</span>
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Matiz (Hue)</span>
+                                                 <span x-text="h + '°'"></span>
+                                             </div>
+                                             <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Saturação</span>
+                                                 <span x-text="s + '%'"></span>
+                                             </div>
+                                             <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Luminosidade</span>
+                                                 <span x-text="l + '%'"></span>
+                                             </div>
+                                             <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                             
+                             <!-- Cor do Texto -->
+                             <div x-data="colorPickerData('#ffffff', 'atracao_cor_texto_hex')" class="relative">
+                                 <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor do Texto</label>
+                                 <div class="relative flex items-center">
+                                     <button type="button" @click="open = !open"
+                                             :style="'background-color: ' + color"
+                                             class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
+                                     </button>
+                                     <input type="text" name="cor_texto" id="atracao_cor_texto_hex" x-model="color"
+                                            class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                            @input="onHexInput($el.value)">
+                                     <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                 </div>
+                                 
+                                 <div x-show="open" @click.outside="open = false" x-transition
+                                      class="absolute right-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[110] space-y-4"
+                                      style="display: none;">
+                                     <div>
+                                         <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                         <div class="grid grid-cols-6 gap-2">
+                                             <template x-for="preset in presets">
+                                                 <button type="button" @click="setPreset(preset)"
+                                                         :style="'background-color: ' + preset"
+                                                         class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                             </template>
+                                         </div>
+                                     </div>
+                                     
+                                     <!-- HSL Sliders -->
+                                     <div class="border-t border-slate-100 dark:border-white/5 pt-3 space-y-3">
+                                         <div class="flex justify-between items-center text-[9px] font-black text-slate-400 dark:text-slate-550 uppercase tracking-widest">
+                                             <span>Ajuste de Tom (HSL)</span>
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Matiz (Hue)</span>
+                                                 <span x-text="h + '°'"></span>
+                                             </div>
+                                             <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Saturação</span>
+                                                 <span x-text="s + '%'"></span>
+                                             </div>
+                                             <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    :style="'background: linear-gradient(to right, ' + hslToHex(h, 0, l) + ' 0%, ' + hslToHex(h, 100, l) + ' 100%);'">
+                                         </div>
+                                         <div class="space-y-1">
+                                             <div class="flex justify-between text-[9px] font-bold text-slate-400">
+                                                 <span>Luminosidade</span>
+                                                 <span x-text="l + '%'"></span>
+                                             </div>
+                                             <input type="range" min="15" max="85" x-model="l" @input="updateFromHsl()"
+                                                    class="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                                                    style="background: linear-gradient(to right, #000000 0%, #808080 50%, #ffffff 100%);">
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                         
+                         <!-- Mídia da Atração -->
+                         <div x-data="{ tipoMidiaAtracao: 'imagem' }">
+                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Mídia da Atração</label>
+                             
+                             <div class="flex gap-2 mb-3">
+                                 <label class="cursor-pointer flex-1">
+                                     <input type="radio" name="midia_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaAtracao" checked>
+                                     <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
+                                         Imagem
+                                     </div>
+                                 </label>
+                                 <label class="cursor-pointer flex-1">
+                                     <input type="radio" name="midia_tipo" value="video" class="peer hidden" x-model="tipoMidiaAtracao">
+                                     <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
+                                         Vídeo
+                                     </div>
+                                 </label>
+                             </div>
+                             
+                             <!-- Imagem -->
+                             <div x-show="tipoMidiaAtracao === 'imagem'">
+                                 <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                      onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-imagem-file').click()">
+                                     
+                                     <input type="file" id="atracao-imagem-file" name="imagem" accept="image/*" class="hidden"
+                                            onchange="previewImageFile(this, 'atracao-imagem')">
+                                     
+                                     <div id="atracao-imagem-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
+                                         <i data-lucide="upload" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                         <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Imagem</span>
+                                     </div>
+
+                                     <div id="atracao-imagem-preview-active" class="absolute inset-0 w-full h-full hidden">
+                                         <img id="atracao-imagem-preview-img" src="" class="w-full h-full object-cover" alt="Preview">
+                                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                             <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                     onclick="event.stopPropagation(); clearUploadedFile('atracao-imagem')">Apagar</button>
+                                         </div>
+                                     </div>
+                                     <input type="hidden" name="remover_imagem" id="remover-atracao-imagem-input" value="false">
+                                 </div>
+                             </div>
+                             
+                             <!-- Vídeo -->
+                             <div x-show="tipoMidiaAtracao === 'video'" style="display: none;">
+                                 <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                      onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-video-file').click()">
+                                     
+                                     <input type="file" id="atracao-video-file" name="video" accept="video/*" class="hidden"
+                                            onchange="previewVideoFile(this, 'atracao-video')">
+                                     
+                                     <div id="atracao-video-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
+                                         <i data-lucide="video" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                         <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Vídeo</span>
+                                         <span class="text-[9px] text-slate-400 mt-1">MP4 de até 8MB</span>
+                                     </div>
+
+                                     <div id="atracao-video-preview-active" class="absolute inset-0 w-full h-full hidden">
+                                         <video id="atracao-video-preview-player" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                             <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                     onclick="event.stopPropagation(); clearUploadedFile('atracao-video')">Apagar</button>
+                                         </div>
+                                     </div>
+                                     <input type="hidden" name="remover_video" id="remover-atracao-video-input" value="false">
+                                 </div>
+                             </div>
+                         </div>
+                         
+                         <!-- Botão de submit oculto -->
+                         <button type="submit" class="hidden">Salvar</button>
+                     </form>
+                 </div>
+            </div>
+        </div>
+    </div>class="hidden">Salvar</button>
                     </form>
                 </div>
             </div>
@@ -920,11 +1106,12 @@
 
     window.editarAtracao = function(atracao) {
         document.getElementById('atracao_id_input').value = atracao.id;
-        document.getElementById('atracao_dia_input').value = atracao.dia;
+        document.getElementById('atracao_data_input').value = atracao.data || '';
+        document.getElementById('atracao_horario_input').value = atracao.horario || '';
         document.getElementById('atracao_titulo_input').value = atracao.titulo;
         document.getElementById('atracao_texto_input').value = atracao.texto;
         
-        // Cores (disparar evento customizado se necessário, ou alterar o valor dos inputs e pickers)
+        // Cores
         const bgInput = document.getElementById('atracao_cor_fundo_hex');
         if (bgInput) {
             bgInput.value = atracao.cor_fundo;
@@ -939,19 +1126,15 @@
         // Tipo de mídia
         const rdmImagem = document.querySelector('input[name="midia_tipo"][value="imagem"]');
         const rdmVideo = document.querySelector('input[name="midia_tipo"][value="video"]');
-        
-        // Disparar o clique do Alpine no radio button
         if (atracao.midia_tipo === 'video') {
             if (rdmVideo) {
                 rdmVideo.checked = true;
                 rdmVideo.dispatchEvent(new Event('change', { bubbles: true }));
-                rdmVideo.dispatchEvent(new Event('input', { bubbles: true }));
             }
         } else {
             if (rdmImagem) {
                 rdmImagem.checked = true;
                 rdmImagem.dispatchEvent(new Event('change', { bubbles: true }));
-                rdmImagem.dispatchEvent(new Event('input', { bubbles: true }));
             }
         }
 
@@ -984,15 +1167,14 @@
         document.getElementById('form-atracao-title').querySelector('span').textContent = "Editar Atração";
         document.getElementById('btn-limpar-atracao').classList.remove('hidden');
         
-        // Rola até o formulário no mobile
-        if (window.innerWidth < 1024) {
-            document.getElementById('form-salvar-atracoes').scrollIntoView({ behavior: 'smooth' });
-        }
+        // Abre a gaveta lateral
+        window.dispatchEvent(new CustomEvent('open-drawer'));
     };
 
     window.limparFormularioAtracao = function() {
         document.getElementById('atracao_id_input').value = '';
-        document.getElementById('atracao_dia_input').value = '';
+        document.getElementById('atracao_data_input').value = '';
+        document.getElementById('atracao_horario_input').value = '';
         document.getElementById('atracao_titulo_input').value = '';
         document.getElementById('atracao_texto_input').value = '';
         
@@ -1011,7 +1193,6 @@
         if (rdmImagem) {
             rdmImagem.checked = true;
             rdmImagem.dispatchEvent(new Event('change', { bubbles: true }));
-            rdmImagem.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         const checkAtivo = document.getElementById('atracao_ativo_input');
@@ -1029,7 +1210,173 @@
         document.getElementById('btn-limpar-atracao').classList.add('hidden');
     };
 
-    // Inicialização do mapa quando a tab de configurações é aberta
+    // ── RICH TEXT FORMATTER ──
+    window.formatarRichText = function(tipo) {
+        const textarea = document.getElementById('atracao_texto_input');
+        if (!textarea) return;
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        const selectedText = text.substring(start, end);
+        
+        let replacement = '';
+        if (tipo === 'bold') {
+            replacement = `<b>${selectedText}</b>`;
+        } else if (tipo === 'italic') {
+            replacement = `<i>${selectedText}</i>`;
+        } else if (tipo === 'underline') {
+            replacement = `<u>${selectedText}</u>`;
+        }
+        
+        textarea.value = text.substring(0, start) + replacement + text.substring(end);
+        textarea.focus();
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length);
+    };
+
+    // ── CALENDÁRIO CUSTOMIZADO B2B ──
+    let currentCalDate = new Date();
+    const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+    function initCalendar() {
+        const dataInput = document.getElementById('atracao_data_input');
+        const dropdown = document.getElementById('calendario-atracao-dropdown');
+        if (!dataInput || !dropdown) return;
+        
+        dataInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            document.getElementById('horario-atracao-dropdown')?.classList.add('hidden');
+            renderCalendar();
+        });
+        
+        document.getElementById('cal-prev-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+            renderCalendar();
+        });
+        
+        document.getElementById('cal-next-month').addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+            renderCalendar();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== dataInput) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('cal-days-grid');
+        const label = document.getElementById('cal-month-year-label');
+        if (!grid || !label) return;
+        
+        grid.innerHTML = '';
+        const year = currentCalDate.getFullYear();
+        const month = currentCalDate.getMonth();
+        
+        label.textContent = `${monthNames[month]} ${year}`;
+        const firstDay = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        for (let i = 0; i < firstDay; i++) {
+            const span = document.createElement('span');
+            grid.appendChild(span);
+        }
+        
+        for (let day = 1; day <= totalDays; day++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = day;
+            btn.className = 'w-7 h-7 rounded-full border-none bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 text-slate-800 dark:text-white cursor-pointer font-bold transition-all text-center flex items-center justify-center mx-auto';
+            
+            const today = new Date();
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                btn.classList.add('ring-1', 'ring-red-500', 'text-red-500');
+            }
+            
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const formatDay = String(day).padStart(2, '0');
+                const formatMonth = String(month + 1).padStart(2, '0');
+                document.getElementById('atracao_data_input').value = `${formatDay}/${formatMonth}/${year}`;
+                document.getElementById('calendario-atracao-dropdown').classList.add('hidden');
+            });
+            
+            grid.appendChild(btn);
+        }
+    }
+
+    // ── SELETOR DE HORA CUSTOMIZADO B2B ──
+    let selectedHour = "20";
+    let selectedMinute = "00";
+
+    function initTimeSelector() {
+        const timeInput = document.getElementById('atracao_horario_input');
+        const dropdown = document.getElementById('horario-atracao-dropdown');
+        if (!timeInput || !dropdown) return;
+        
+        timeInput.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+            document.getElementById('calendario-atracao-dropdown')?.classList.add('hidden');
+            renderTimeSelector();
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== timeInput) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    function renderTimeSelector() {
+        const hoursList = document.getElementById('time-hours-list');
+        const minutesList = document.getElementById('time-minutes-list');
+        if (!hoursList || !minutesList) return;
+        
+        hoursList.innerHTML = '';
+        minutesList.innerHTML = '';
+        
+        for (let h = 0; h < 24; h++) {
+            const hStr = String(h).padStart(2, '0');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = hStr;
+            btn.className = `w-full py-1 text-center border-none bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer font-bold rounded-lg text-slate-800 dark:text-white ${selectedHour === hStr ? 'bg-red-500/10 text-red-500 dark:bg-red-500/20' : ''}`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedHour = hStr;
+                updateTimeInputValue();
+                renderTimeSelector();
+            });
+            hoursList.appendChild(btn);
+        }
+        
+        for (let m = 0; m < 60; m += 5) {
+            const mStr = String(m).padStart(2, '0');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = mStr;
+            btn.className = `w-full py-1 text-center border-none bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 cursor-pointer font-bold rounded-lg text-slate-800 dark:text-white ${selectedMinute === mStr ? 'bg-red-500/10 text-red-500 dark:bg-red-500/20' : ''}`;
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedMinute = mStr;
+                updateTimeInputValue();
+                renderTimeSelector();
+            });
+            minutesList.appendChild(btn);
+        }
+    }
+
+    function updateTimeInputValue() {
+        document.getElementById('atracao_horario_input').value = `${selectedHour}:${selectedMinute}`;
+    }
+
+    // Inicialização do mapa e seletores
     window.addEventListener('tab-changed', function(e) {
         if (e.detail === 'configuracoes') {
             setTimeout(() => {
@@ -1039,12 +1386,13 @@
         }
     });
 
-    // Inicialização direta caso a tab já seja configurações
     document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams(window.location.search);
         if (params.get('tab') === 'configuracoes' || localStorage.getItem('restaurant_active_tab') === 'configuracoes') {
             setTimeout(inicializarMapaRestaurante, 500);
         }
+        initCalendar();
+        initTimeSelector();
     });
 </script>
 {% endblock %}

@@ -279,7 +279,29 @@ def partner_salvar_atracao(request):
     atracao.cor_fundo = request.POST.get('cor_fundo', '#0f172a').strip()
     atracao.cor_texto = request.POST.get('cor_texto', '#ffffff').strip()
     atracao.midia_tipo = request.POST.get('midia_tipo', 'imagem')
-    atracao.ativo = request.POST.get('ativo') == 'true' or request.POST.get('ativo') == 'on' or True
+    atracao.ativo = request.POST.get('ativo') == 'true' or request.POST.get('ativo') == 'on'
+    
+    data_str = request.POST.get('data', '').strip()
+    horario_str = request.POST.get('horario', '').strip()
+    
+    if data_str:
+        from datetime import datetime
+        try:
+            atracao.data = datetime.strptime(data_str, '%d/%m/%Y').date()
+            atracao.dia = data_str
+        except ValueError:
+            pass
+    else:
+        atracao.data = None
+        
+    if horario_str:
+        from datetime import datetime
+        try:
+            atracao.horario = datetime.strptime(horario_str, '%H:%M').time()
+        except ValueError:
+            pass
+    else:
+        atracao.horario = None
     
     # Imagem
     if request.POST.get('remover_imagem') == 'true':
@@ -338,8 +360,13 @@ def restaurante_detalhe(request, slug):
     from django.shortcuts import get_object_or_404
     restaurante = get_object_or_404(Restaurante.objects.using('restaurantes'), slug=slug, ativo=True)
 
-    # Busca as atrações ativas do restaurante
-    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante, ativo=True)
+    # Busca as atrações ativas do restaurante (hoje em diante ou sem data)
+    from django.utils import timezone
+    from django.db.models import Q
+    today = timezone.localdate()
+    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(
+        Q(restaurante=restaurante, ativo=True) & (Q(data__gte=today) | Q(data__isnull=True))
+    ).order_by('data', 'horario', '-criado_em')
     
     # Fallback se não houver nenhuma cadastrada
     if not atracoes.exists():

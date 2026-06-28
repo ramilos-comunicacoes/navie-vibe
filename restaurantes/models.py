@@ -75,13 +75,15 @@ class RestauranteAtracao(models.Model):
     midia_tipo = models.CharField("Tipo de Mídia", max_length=10, choices=[('imagem','Imagem'),('video','Vídeo')], default='imagem')
     cor_fundo = models.CharField("Cor de Fundo (Hex)", max_length=7, default='#0f172a', blank=True)
     cor_texto = models.CharField("Cor do Texto (Hex)", max_length=7, default='#ffffff', blank=True)
+    data = models.DateField("Data da Atração", null=True, blank=True)
+    horario = models.TimeField("Horário da Atração", null=True, blank=True)
     ativo = models.BooleanField("Ativo", default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Atração do Restaurante"
         verbose_name_plural = "Atrações do Restaurante"
-        ordering = ['-criado_em']
+        ordering = ['data', 'horario', '-criado_em']
 
     def __str__(self):
         return f"{self.titulo} ({self.dia}) - {self.restaurante.nome}"
