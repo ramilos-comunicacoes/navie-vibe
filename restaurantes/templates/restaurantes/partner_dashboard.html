@@ -1,0 +1,124 @@
+{% extends 'restaurantes/base_partner.html' %}
+{% load static %}
+
+{% block title %}Dashboard Gastronômica{% endblock %}
+
+{% block painel_content %}
+<div class="space-y-6" x-show="activeTab === 'dashboard'">
+    <!-- Top Welcome Banner -->
+    <div class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+        <div>
+            <h2 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Bem-vindo, {{ request.user.first_name|default:request.user.username }}!</h2>
+            <p class="text-xs text-slate-450 dark:text-slate-400 mt-1 font-bold uppercase tracking-wider">Painel Operacional &bull; {{ restaurante.nome }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5 select-none animate-pulse">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Restaurante Ativo</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Quick Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Faturamento -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm">
+            <div class="flex justify-between items-center text-slate-400 dark:text-slate-500">
+                <span class="text-[10px] font-black uppercase tracking-wider">Faturamento Hoje</span>
+                <i data-lucide="dollar-sign" class="w-4 h-4"></i>
+            </div>
+            <div class="mt-2.5 flex items-baseline gap-1.5">
+                <span class="text-2xl font-black text-slate-800 dark:text-white">R$ 0,00</span>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 uppercase tracking-wider">Estudo de fluxo de caixa</p>
+        </div>
+
+        <!-- Card 2: Pedidos do Salão -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm">
+            <div class="flex justify-between items-center text-slate-400 dark:text-slate-500">
+                <span class="text-[10px] font-black uppercase tracking-wider">Pedidos Ativos</span>
+                <i data-lucide="chef-hat" class="w-4 h-4"></i>
+            </div>
+            <div class="mt-2.5 flex items-baseline gap-1.5">
+                <span class="text-2xl font-black text-slate-800 dark:text-white">0</span>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 uppercase tracking-wider">Comandas em andamento na cozinha</p>
+        </div>
+
+        <!-- Card 3: Reservas de Mesas -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm">
+            <div class="flex justify-between items-center text-slate-400 dark:text-slate-500">
+                <span class="text-[10px] font-black uppercase tracking-wider">Reservas de Mesas</span>
+                <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+            </div>
+            <div class="mt-2.5 flex items-baseline gap-1.5">
+                <span class="text-2xl font-black text-slate-800 dark:text-white">0</span>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 uppercase tracking-wider">Mesas reservadas para hoje</p>
+        </div>
+
+        <!-- Card 4: Tempo de Preparo -->
+        <div class="glass-card rounded-2xl p-5 border border-slate-200/50 dark:border-white/5 shadow-sm">
+            <div class="flex justify-between items-center text-slate-400 dark:text-slate-500">
+                <span class="text-[10px] font-black uppercase tracking-wider">Tempo Médio Preparo</span>
+                <i data-lucide="clock" class="w-4 h-4"></i>
+            </div>
+            <div class="mt-2.5 flex items-baseline gap-1.5">
+                <span class="text-2xl font-black text-slate-800 dark:text-white">0 min</span>
+            </div>
+            <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1.5 uppercase tracking-wider">Métrica de eficiência da cozinha</p>
+        </div>
+    </div>
+
+    <!-- Main Message / Status -->
+    <div class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-4 flex items-center gap-2">
+            <i class="w-4 h-4 text-red-500" data-lucide="settings-2"></i>
+            <span>Painel Gastronômico Configurado</span>
+        </h3>
+        
+        <div class="p-4 rounded-xl bg-slate-50/50 dark:bg-black/20 border border-slate-200/40 dark:border-white/5 text-sm leading-relaxed text-slate-650 dark:text-slate-300">
+            <p class="font-bold text-slate-800 dark:text-white mb-2">Estrutura Inicial Concluída</p>
+            <p>O super app gastronômico **Naviê Restaurantes** foi inicializado e integrado à arquitetura multi-database do projeto. Toda a base visual com suporte a temas reativos (claro e escuro/glass), barra lateral, links no rodapé e telas de autenticação com HTMX estão ativas.</p>
+            <p class="mt-2">Você pode começar a adicionar os modelos de pratos, categorias de cardápio, mesas e comandas diretamente no app `restaurantes` no seu próprio banco de dados isolado `db_restaurantes.sqlite3` / `navievibe_restaurantes` no PostgreSQL.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Placeholder screens for other tabs to allow testing side tabs in dashboard -->
+<div x-show="activeTab === 'cardapio'" style="display: none;" class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-4 flex items-center gap-2">
+        <i class="w-4 h-4 text-red-500" data-lucide="menu-square"></i>
+        <span>Cardápio do Restaurante</span>
+    </h3>
+    <div class="p-8 text-center text-slate-400 dark:text-slate-500">
+        <i data-lucide="soup" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
+        <p class="font-bold">Módulo de Cardápio</p>
+        <p class="text-xs mt-1">Pronto para receber o catálogo de entradas, pratos principais, sobremesas e bebidas.</p>
+    </div>
+</div>
+
+<div x-show="activeTab === 'mesas'" style="display: none;" class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-4 flex items-center gap-2">
+        <i class="w-4 h-4 text-red-500" data-lucide="calendar-check-2"></i>
+        <span>Mapa de Mesas & Reservas</span>
+    </h3>
+    <div class="p-8 text-center text-slate-400 dark:text-slate-500">
+        <i data-lucide="table" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
+        <p class="font-bold">Módulo de Mesas & Ocupação</p>
+        <p class="text-xs mt-1">Pronto para receber o mapa de salão e reservas dinâmicas.</p>
+    </div>
+</div>
+
+<div x-show="activeTab === 'pedidos'" style="display: none;" class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+    <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-4 flex items-center gap-2">
+        <i class="w-4 h-4 text-red-500" data-lucide="chef-hat"></i>
+        <span>Pedidos & Comandas de Salão</span>
+    </h3>
+    <div class="p-8 text-center text-slate-400 dark:text-slate-500">
+        <i data-lucide="utensils-crossed" class="w-12 h-12 mx-auto mb-3 opacity-30"></i>
+        <p class="font-bold">Módulo de Cozinha & Garçom</p>
+        <p class="text-xs mt-1">Pronto para receber a tela de andamento de pedidos na cozinha (KDS) e comissionamento.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Restaurante(models.Model):
     nome = models.CharField("Nome do Restaurante", max_length=255)
@@ -17,3 +18,19 @@ class Restaurante(models.Model):
 
     def __str__(self):
         return self.nome
+
+class RestauranteUsuario(models.Model):
+    ROLE_CHOICES = [
+        ('proprietario', 'Proprietário'),
+        ('gerente', 'Gerente'),
+        ('atendente', 'Atendente / Garçom'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_restaurante', db_constraint=False)
+    restaurante = models.ForeignKey(Restaurante, on_delete=models.CASCADE, related_name='equipe', db_constraint=False)
+    role = models.CharField(max_length=30, choices=ROLE_CHOICES, default='atendente')
+    cpf = models.CharField(max_length=14, unique=True, null=True, blank=True, help_text="Formato: 000.000.000-00")
+    ativo = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_role_display()} ({self.restaurante.nome})"

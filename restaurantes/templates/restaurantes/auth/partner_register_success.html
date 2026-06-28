@@ -1,0 +1,34 @@
+<div id="form-container" class="partner-form-wrapper" style="text-align: center; padding: 1.5rem 0.5rem;">
+    <!-- Icon -->
+    <div style="background-color: rgba(16, 185, 129, 0.1); width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem auto; border: 1px solid rgba(16, 185, 129, 0.25);">
+        <i data-lucide="check" style="width: 36px; height: 36px; color: #10b981;"></i>
+    </div>
+
+    <!-- Title & Desc -->
+    <h2 style="font-family: 'Poppins', sans-serif; font-size: 2.25rem; font-weight: 900; line-height: 1.25; color: #ffffff; margin: 0 0 0.75rem 0;">Solicitação Enviada!</h2>
+    <p style="font-size: 14.5px; color: #94a3b8; font-weight: 500; margin: 0 0 2rem 0; line-height: 1.6;">
+        Parabéns, **{{ responsavel }}**! A proposta para credenciar o restaurante **{{ nome_restaurante }}** foi encaminhada com sucesso.
+    </p>
+
+    <!-- Info Box -->
+    <div style="background-color: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 0.85rem; padding: 1.25rem; margin-bottom: 2.25rem; text-align: left;">
+        <h4 style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 0.08em; margin: 0 0 0.5rem 0;">O que acontece agora?</h4>
+        <p style="font-size: 12.5px; color: #64748b; margin: 0; line-height: 1.5;">
+            Nossa equipe comercial entrará em contato via **{{ email }}** ou pelo telefone fornecido para validar a documentação legal e ativar o seu painel de parceiro gastronômico.
+        </p>
+    </div>
+
+    <!-- Back Button -->
+    <button hx-get="{% url 'restaurantes:partner_login' %}?form=login" hx-target="#form-container" hx-swap="outerHTML" 
+            class="partner-btn-primary">
+        <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
+        <span>Voltar ao Login</span>
+    </button>
+
+    <!-- Re-initialize Lucide Icons on Swap -->
+    <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    </script>
+</div>

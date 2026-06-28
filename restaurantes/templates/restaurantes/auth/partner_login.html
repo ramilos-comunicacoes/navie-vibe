@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naviê Restaurantes - Portal de Negócios</title>
+    
+    <!-- CSS Fonts, Tailwind and Lucide -->
+    <link rel="stylesheet" href="{% static 'css/inter.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    
+    <!-- AlpineJS for interactive Toast notifications -->
+    <script src="https://unpkg.com/alpinejs@3.13.5" defer></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <style>
+        :root {
+            --b2b-bg: #090d16;
+            --b2b-slate-deep: #080c14;
+            --b2b-surface: #0f172a;
+            --b2b-border: rgba(255, 255, 255, 0.08);
+            --b2b-text: #f8fafc;
+            --b2b-muted: #64748b;
+            --b2b-primary: #ef4444; /* Vermelho/Laranja para Restaurantes */
+            --b2b-primary-hover: #dc2626;
+            --b2b-success: #10b981;
+            --b2b-error: #ef4444;
+        }
+
+        body {
+            background-color: var(--b2b-bg);
+            color: var(--b2b-text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        .split-layout {
+            display: flex;
+            min-height: 100vh;
+            width: 100vw;
+        }
+
+        .banner-side {
+            background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4rem 3.5rem;
+            width: 50%;
+            border-right: 1px solid var(--b2b-border);
+            box-sizing: border-box;
+        }
+
+        .banner-side::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.12) 0%, transparent 45%),
+                              radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%);
+            pointer-events: none;
+        }
+
+        .form-side {
+            background-color: var(--b2b-slate-deep);
+            width: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2.5rem;
+            box-sizing: border-box;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 992px) {
+            .banner-side {
+                display: none;
+            }
+            .form-side {
+                width: 100%;
+                padding: 2.5rem 1.5rem;
+            }
+        }
+
+        /* Forms Layout & Utility Styles */
+        .partner-form-wrapper {
+            width: 100%;
+            max-width: 440px;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        .register-mode {
+            max-width: 520px !important;
+        }
+
+        .partner-logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .partner-logo-text {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+
+        .partner-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+            text-align: left;
+        }
+
+        .partner-label {
+            font-size: 11.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+        }
+
+        .partner-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .partner-input-icon {
+            position: absolute;
+            left: 1.25rem;
+            color: #475569;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .partner-input-field {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--b2b-border);
+            border-radius: 0.85rem;
+            padding: 0.85rem 1.25rem 0.85rem 3rem;
+            color: var(--b2b-text);
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .partner-input-field:focus {
+            outline: none;
+            border-color: var(--b2b-primary);
+            background-color: rgba(15, 23, 42, 0.85);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        .partner-input-field:focus + .partner-input-icon {
+            color: var(--b2b-primary);
+        }
+
+        .partner-input-noicon {
+            width: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--b2b-border);
+            border-radius: 0.85rem;
+            padding: 0.85rem 1.25rem;
+            color: var(--b2b-text);
+            font-size: 13.5px;
+            font-weight: 500;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .partner-input-noicon:focus {
+            outline: none;
+            border-color: var(--b2b-primary);
+            background-color: rgba(15, 23, 42, 0.85);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        .partner-btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background-color: var(--b2b-primary);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.95rem 1.75rem;
+            border: none;
+            border-radius: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .partner-btn-primary:hover {
+            background-color: var(--b2b-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+        }
+
+        .partner-btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .partner-divider {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 1.75rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--b2b-border);
+            font-size: 13px;
+        }
+
+        .partner-link-btn {
+            background: none;
+            border: none;
+            color: var(--b2b-primary);
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .partner-link-btn:hover {
+            color: var(--b2b-primary-hover);
+            text-decoration: underline;
+        }
+
+        .partner-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 576px) {
+            .partner-grid-2 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+
+        .partner-alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border-radius: 0.85rem;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .partner-alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Split screen layout wrapper -->
+    <div class="split-layout">
+        
+        <!-- Left Side: Premium B2B Banner -->
+        <aside class="banner-side">
+            <!-- Brand logo -->
+            <a href="/" class="partner-logo-container">
+                <img src="{% static 'images/logo.png' %}" alt="Logo Naviê" style="height: 38px; filter: brightness(0) invert(1);">
+                <span class="partner-logo-text">
+                    <span style="color: #fca5a5;">Naviê</span> <span style="color: #ef4444;">Restaurantes</span>
+                </span>
+            </a>
+
+            <!-- Core Pitch text -->
+            <div style="max-width: 440px; margin: auto 0; text-align: left;">
+                <span style="background-color: rgba(239,68,68,0.15); color: #fca5a5; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; padding: 0.4rem 0.8rem; border-radius: 2rem; display: inline-block; margin-bottom: 1.5rem; border: 1px solid rgba(239,68,68,0.25);">Super App Gastronômico</span>
+                <h1 style="font-family: 'Poppins', sans-serif; font-size: 2.8rem; font-weight: 900; line-height: 1.15; color: #ffffff; margin: 0 0 1.25rem 0;">A cozinha do futuro no Naviê.</h1>
+                <p style="font-size: 15px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0;">Gerencie seu cardápio em tempo real, controle reservas de mesas, lance comandas de salão, receba pedidos para viagem e impulsione suas vendas no marketplace.</p>
+            </div>
+
+            <!-- Footer signature -->
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--b2b-border); padding-top: 1.5rem; color: #475569; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                <span>Serra da Ibiapaba</span>
+                <span>&copy; {% now "Y" %} Naviê Vibe</span>
+            </div>
+        </aside>
+
+        <!-- Right Side: Dynamic Form Container -->
+        <section class="form-side">
+            {% include 'restaurantes/auth/partner_login_form.html' %}
+        </section>
+        
+    </div>
+
+    <!-- Scripts CDN for Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<div id="form-container" class="partner-form-wrapper">
+    <!-- Header -->
+    <div style="text-align: left; margin-bottom: 2.25rem;">
+        <h2 style="font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 900; line-height: 1.2; color: #ffffff; margin: 0 0 0.5rem 0;">Entrar no Naviê Restaurantes</h2>
+        <p style="font-size: 13.5px; color: #64748b; font-weight: 500; margin: 0; line-height: 1.5;">Acesse o seu painel de gerenciamento gastronômico.</p>
+    </div>
+
+    <!-- Error Messages Injected via HTMX -->
+    {% if error_message %}
+    <div class="partner-alert partner-alert-error">
+        <i data-lucide="alert-circle" style="width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px;"></i>
+        <span>{{ error_message }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Login Form -->
+    <form hx-post="{% url 'restaurantes:partner_login' %}" hx-target="#form-container" hx-swap="outerHTML" style="display: flex; flex-direction: column; gap: 0.25rem;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="login">
+
+        <!-- Campo Usuário -->
+        <div class="partner-form-group">
+            <label class="partner-label">Usuário, E-mail ou CPF</label>
+            <div class="partner-input-wrapper">
+                <span data-lucide="user" class="partner-input-icon"></span>
+                <input type="text" name="username" required value="{{ username_entered|default:'' }}" placeholder="Digite suas credenciais" 
+                       class="partner-input-field">
+            </div>
+        </div>
+
+        <!-- Campo Senha -->
+        <div class="partner-form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <label class="partner-label">Senha de Acesso</label>
+                <a href="#" style="font-size: 12.5px; font-weight: 700; color: #ef4444; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Esqueceu?</a>
+            </div>
+            <div class="partner-input-wrapper">
+                <span data-lucide="lock" class="partner-input-icon"></span>
+                <input type="password" name="password" required placeholder="Digite sua senha secreta" 
+                       class="partner-input-field">
+            </div>
+        </div>
+
+        <!-- Botão Submeter -->
+        <button type="submit" class="partner-btn-primary" style="margin-top: 0.75rem;">
+            <span>Acessar Painel</span>
+            <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
+        </button>
+    </form>
+
+    <!-- Footer Switch Form -->
+    <div class="partner-divider">
+        <span style="color: #64748b; font-weight: 500;">Deseja cadastrar seu restaurante no Naviê?</span>
+        <button hx-get="{% url 'restaurantes:partner_login' %}?form=register" hx-target="#form-container" hx-swap="outerHTML" 
+                class="partner-link-btn" style="margin-left: 0.25rem;">
+            Solicitar Parceria
+        </button>
+    </div>
+
+    <!-- Re-initialize Lucide Icons on Swap -->
+    <script>
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    </script>
+</div>
