@@ -1115,15 +1115,12 @@
             }
             
             // Instancia os swipers das galerias dos quartos
-            document.querySelectorAll('.quarto-card-home-style').forEach(card => {
-                const swiperEl = card.querySelector('.swiper');
-                if (swiperEl) {
-                    new Swiper(swiperEl, {
-                        loop: true, 
-                        autoplay: { delay: 3500, disableOnInteraction: false }, 
-                        pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
-                    });
-                }
+            document.querySelectorAll('.swiper:not(.hotel-swiper)').forEach(swiperEl => {
+                new Swiper(swiperEl, {
+                    loop: true, 
+                    autoplay: { delay: 3500, disableOnInteraction: false }, 
+                    pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
+                });
             });
         }, 150);
         

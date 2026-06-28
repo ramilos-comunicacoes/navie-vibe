@@ -670,6 +670,7 @@
                                     <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
                                        hx-boost="true" hx-target="body" hx-swap="outerHTML"
                                        class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
                                        x-show="active === {{ forloop.counter }} || 
                                                (active === 1 ? {{ forloop.counter }} === 4 : {{ forloop.counter }} === active - 1) || 
                                                (active === 4 ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"
@@ -712,6 +713,7 @@
                                     <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
                                        hx-boost="true" hx-target="body" hx-swap="outerHTML"
                                        class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
                                        x-show="active === {{ idx }} || 
                                                (active === 1 ? {{ idx }} === 4 : {{ idx }} === active - 1) || 
                                                (active === 4 ? {{ idx }} === 1 : {{ idx }} === active + 1)"
@@ -822,6 +824,7 @@
                                     <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' item.hotel.id quarto.slug %}{% endif %}"
                                        hx-boost="true" hx-target="body" hx-swap="outerHTML"
                                        class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
+                                       style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
                                        x-show="active === {{ forloop.counter }} || 
                                                (active === 1 ? {{ forloop.counter }} === total : {{ forloop.counter }} === active - 1) || 
                                                (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"

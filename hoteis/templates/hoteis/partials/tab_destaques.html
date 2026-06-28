@@ -85,6 +85,7 @@
             <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
                 {% for item in destaques_personalizado.itens.all %}
                 <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
+                     style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
                      :style="active === {{ forloop.counter }} 
                             ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
                             : (active % total) + 1 === {{ forloop.counter }}
