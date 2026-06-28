@@ -1191,6 +1191,8 @@
         setTimeout(() => {
             document.querySelectorAll('.hotel-rooms-swiper').forEach(el => {
                 new Swiper(el, {
+                    observer: true,
+                    observeParents: true,
                     slidesPerView: 1.2,
                     spaceBetween: 16,
                     loop: false,
@@ -1206,6 +1208,8 @@
 
             document.querySelectorAll('.swiper:not(.hotel-rooms-swiper)').forEach(swiperEl => {
                 new Swiper(swiperEl, {
+                    observer: true,
+                    observeParents: true,
                     loop: true, 
                     autoplay: { delay: 3500, disableOnInteraction: false }, 
                     pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }

@@ -48,12 +48,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/head-support.js"></script>
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <script src="{% static 'js/htmx-head-support.js' %}"></script>
     <!-- Alpine.js (Carregado globalmente com defer) -->
-    <script src="https://unpkg.com/alpinejs@3.13.5/dist/cdn.min.js" defer></script>
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <!-- Lucide e Swiper JS globais no head para evitar race conditions no HTMX -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{% static 'js/lucide.min.js' %}"></script>
     <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
     <script>
         // O portal B2C público do Naviê Vibe utiliza tema claro fixo por design.

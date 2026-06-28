@@ -4,11 +4,10 @@
 {% block title %}Naviê Vibe - {{ hotel.nome }}{% endblock %}
 
 {% block extra_head %}
-<!-- Tailwind CSS CDN -->
-<script src="https://cdn.tailwindcss.com"></script>
+<!-- Tailwind CSS (Carregado globalmente no base.html) -->
 
 <!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{% static 'css/flatpickr.min.css' %}">
 
 <!-- Injeção Dinâmica de Cores de Branding no Site do Anfitrião -->
 <script>
@@ -630,8 +629,8 @@
 {% block content %}
 
 <!-- Folha de estilo e Scripts Leaflet para o mapa B2C -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<link rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>
+<script src="{% static 'js/leaflet.js' %}"></script>
 
 <!-- Modal Premium Notification -->
 <div id="aviso-modal" class="fixed inset-0 flex items-center justify-center z-[100] hidden" style="background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px);">
@@ -1077,8 +1076,8 @@
 
 {% block extra_scripts %}
 <!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="{% static 'js/flatpickr.js' %}"></script>
+<script src="{% static 'js/flatpickr-pt.js' %}"></script>
 <script>
     (function() {
         lucide.createIcons();
@@ -1108,6 +1107,8 @@
         setTimeout(() => {
             if (document.querySelector('.hotel-swiper')) {
                 new Swiper('.hotel-swiper', {
+                    observer: true,
+                    observeParents: true,
                     autoplay: { delay: 4000, disableOnInteraction: false },
                     loop: true,
                     pagination: { el: '.swiper-pagination', clickable: true },
@@ -1117,6 +1118,8 @@
             // Instancia os swipers das galerias dos quartos
             document.querySelectorAll('.swiper:not(.hotel-swiper)').forEach(swiperEl => {
                 new Swiper(swiperEl, {
+                    observer: true,
+                    observeParents: true,
                     loop: true, 
                     autoplay: { delay: 3500, disableOnInteraction: false }, 
                     pagination: { el: swiperEl.querySelector('.swiper-pagination'), clickable: true }
