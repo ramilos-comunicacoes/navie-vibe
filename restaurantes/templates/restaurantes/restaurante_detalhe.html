@@ -81,7 +81,8 @@
     }
     .hero-banner-rest { height: 480px !important; position: relative; }
     @media (min-width: 768px) { .hero-banner-rest { height: 560px !important; } }
-    .hero-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: start; text-align: center; width: 100%; height: 100%; }
+    /* MOBILE: hero centralizado verticalmente */
+    .hero-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%; }
     @media (max-width: 767px) {
         .hero-banner-rest { height: 42vh !important; min-height: 290px !important; max-height: 355px !important; }
         .hero-content-wrapper { padding-top: 8px !important; padding-bottom: 24px !important; justify-content: center !important; }
@@ -89,8 +90,13 @@
         .hero-banner-rest h1 { font-size: 1.75rem !important; margin-bottom: 6px !important; }
         .hero-banner-rest p { font-size: 0.8rem !important; margin-bottom: 12px !important; line-height: 1.4 !important; }
     }
+    /* DESKTOP: centraliza levando em conta o cabeçalho fixo (~64px) */
     @media (min-width: 768px) {
-        .hero-content-wrapper { padding-top: 100px; padding-bottom: 24px; }
+        .hero-content-wrapper {
+            padding-top: 64px; /* compensa a altura do header fixo */
+            padding-bottom: 0;
+            justify-content: center !important;
+        }
         .hero-logo-box { width: 136px; height: 136px; margin-bottom: 12px; }
     }
 
@@ -121,7 +127,7 @@
     }
     @media (min-width: 1280px) { .atracao-flex-container { padding-left: 48px; padding-right: 48px; } }
 
-    /* SOBRE */
+    /* SOBRE — mobile (card interno com altura fixa, estilo original) */
     .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; }
     .sobre-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
     .sobre-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
@@ -138,9 +144,12 @@
         #sobre-texto { font-size: 10px; line-height: 1.6; }
         #sobre-readmore-btn { margin-top: 8px; font-size: 9px; }
     }
+    /* SOBRE — desktop (full-width, sem card, se estende de ponta a ponta) */
     @media (min-width: 768px) {
-        .sobre-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; }
-        .sobre-flex-container { padding-left: 24px; padding-right: 24px; }
+        /* A seção sobre ocupa toda a largura da página no desktop */
+        #sobre-outer-wrapper { margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
+        .sobre-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; border-radius: 0 !important; }
+        .sobre-flex-container { padding-left: 48px; padding-right: 48px; }
         .sobre-left-column { width: 42%; padding-top: 64px; padding-bottom: 28px; padding-right: 32px; }
         .sobre-title-wrapper { margin-bottom: 12px; gap: 6px; }
         .sobre-title-line { width: 6px; }
@@ -148,7 +157,7 @@
         #sobre-texto { font-size: 13px; line-height: 1.625; }
         #sobre-readmore-btn { margin-top: 8px; font-size: 12px; }
     }
-    @media (min-width: 1280px) { .sobre-flex-container { padding-left: 48px; padding-right: 48px; } }
+    @media (min-width: 1280px) { .sobre-flex-container { padding-left: 80px; padding-right: 80px; } }
 
     .line-clamp-4 { display: -webkit-box !important; -webkit-line-clamp: 4 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
     .line-clamp-none { display: block !important; -webkit-line-clamp: unset !important; overflow: visible !important; }
@@ -430,41 +439,74 @@
             </div>
         </div>
 
-        <!-- SEÇÃO: SOBRE O RESTAURANTE -->
-        <div class="mt-8 border-t border-slate-100 pt-8">
-            <div id="sobre-section" class="sobre-section-wrapper rounded-3xl overflow-hidden"
-                 style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
-                <div class="container mx-auto sobre-flex-container relative z-20">
-                    <div class="sobre-left-column">
-                        <div class="flex flex-col justify-start">
-                            <div class="flex items-stretch sobre-title-wrapper">
-                                <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
-                                <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
-                                    {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
-                                </h2>
-                            </div>
-                            <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
-                                {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
-                            </div>
+    </main>
+</div>
+
+<!-- SEÇÃO SOBRE: full-width no desktop, card no mobile -->
+<!-- Mobile: dentro de um container com padding. Desktop: sem container, ocupa 100% da largura -->
+<div id="sobre-outer-wrapper" class="md:hidden">
+    <!-- Mobile: exibe como card com padding lateral -->
+    <div class="px-4 py-6 border-t border-slate-100">
+        <div id="sobre-section-mobile" class="sobre-section-wrapper rounded-3xl overflow-hidden"
+             style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
+            <div class="container mx-auto sobre-flex-container relative z-20">
+                <div class="sobre-left-column">
+                    <div class="flex flex-col justify-start">
+                        <div class="flex items-stretch sobre-title-wrapper">
+                            <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
+                            <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
+                                {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
+                            </h2>
                         </div>
-                        <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
-                            Ler mais
-                        </button>
+                        <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
+                            {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
+                        </div>
                     </div>
-                </div>
-                <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
-                    <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
-                    {% if restaurante.sobre_video and restaurante.sobre_midia_tipo == 'video' %}
-                    <video src="{{ restaurante.sobre_video.url }}" class="absolute inset-0 w-full h-full object-cover opacity-95" autoplay loop muted playsinline></video>
-                    {% else %}
-                    <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
-                         alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
-                    {% endif %}
+                    <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+                        Ler mais
+                    </button>
                 </div>
             </div>
+            <div class="sobre-media-container absolute right-[-2px] top-[-1px] bottom-[-1px] w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
+                <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%);"></div>
+                <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
+                     alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
+            </div>
         </div>
+    </div>
+</div>
 
-    </main>
+<!-- Desktop: Seção Sobre full-width sem card, de ponta a ponta, encostando no rodapé/parceiros -->
+<div id="sobre-section" class="hidden md:block sobre-section-wrapper"
+     style="--sobre-bg-color:{{ restaurante.sobre_cor_fundo|default:'#f8fafc' }};--sobre-text-color:{{ restaurante.sobre_cor_texto|default:'#0f172a' }};background-color:var(--sobre-bg-color);color:var(--sobre-text-color);">
+    <div class="sobre-flex-container relative z-20">
+        <div class="sobre-left-column">
+            <div class="flex flex-col justify-start">
+                <div class="flex items-stretch sobre-title-wrapper">
+                    <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
+                    <h2 id="sobre-titulo-desktop" class="font-black tracking-wider leading-tight uppercase">
+                        {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
+                    </h2>
+                </div>
+                <div id="sobre-texto-desktop" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
+                    {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
+                </div>
+            </div>
+            <button id="sobre-readmore-btn-desktop" type="button" onclick="toggleSobreExpanderDesktop()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+                Ler mais
+            </button>
+        </div>
+    </div>
+    <!-- Mídia Direita com gradiente -->
+    <div class="sobre-media-container absolute right-0 top-0 bottom-0 w-[48%] sm:w-[43%] overflow-hidden select-none pointer-events-none shrink-0 z-10">
+        <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
+        {% if restaurante.sobre_video and restaurante.sobre_midia_tipo == 'video' %}
+        <video src="{{ restaurante.sobre_video.url }}" class="absolute inset-0 w-full h-full object-cover opacity-95" autoplay loop muted playsinline></video>
+        {% else %}
+        <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
+             alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
+        {% endif %}
+    </div>
 </div>
 
 <!-- Modal de Calendário -->
@@ -614,33 +656,63 @@
         }, 600);
     };
 
-    // SOBRE EXPANDER
+    // SOBRE EXPANDER — Mobile
     let isSobreExpanded = false;
     window.toggleSobreExpander = function() {
         const textEl = document.getElementById('sobre-texto');
         const btnEl = document.getElementById('sobre-readmore-btn');
-        const sectionEl = document.getElementById('sobre-section');
+        const sectionEl = document.getElementById('sobre-section-mobile');
         if (!textEl || !btnEl || !sectionEl) return;
         isSobreExpanded = !isSobreExpanded;
         if (isSobreExpanded) {
             textEl.classList.remove('line-clamp-4');
             textEl.classList.add('line-clamp-none');
-            sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
+            sectionEl.classList.add('h-auto');
             btnEl.textContent = 'Ler menos';
         } else {
             textEl.classList.remove('line-clamp-none');
             textEl.classList.add('line-clamp-4');
-            sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
+            sectionEl.classList.remove('h-auto');
+            btnEl.textContent = 'Ler mais';
+            sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
+    // SOBRE EXPANDER — Desktop
+    let isSobreExpandedDesktop = false;
+    window.toggleSobreExpanderDesktop = function() {
+        const textEl = document.getElementById('sobre-texto-desktop');
+        const btnEl = document.getElementById('sobre-readmore-btn-desktop');
+        const sectionEl = document.getElementById('sobre-section');
+        if (!textEl || !btnEl || !sectionEl) return;
+        isSobreExpandedDesktop = !isSobreExpandedDesktop;
+        if (isSobreExpandedDesktop) {
+            textEl.classList.remove('line-clamp-4');
+            textEl.classList.add('line-clamp-none');
+            sectionEl.classList.add('h-auto');
+            btnEl.textContent = 'Ler menos';
+        } else {
+            textEl.classList.remove('line-clamp-none');
+            textEl.classList.add('line-clamp-4');
+            sectionEl.classList.remove('h-auto');
             btnEl.textContent = 'Ler mais';
             sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     };
 
     function initSobreExpander() {
-        const textEl = document.getElementById('sobre-texto');
-        const btnEl = document.getElementById('sobre-readmore-btn');
-        if (!textEl || !btnEl) return;
-        setTimeout(() => { if (textEl.scrollHeight > textEl.clientHeight) btnEl.classList.remove('hidden'); }, 50);
+        // Mobile
+        const textMobile = document.getElementById('sobre-texto');
+        const btnMobile = document.getElementById('sobre-readmore-btn');
+        if (textMobile && btnMobile) {
+            setTimeout(() => { if (textMobile.scrollHeight > textMobile.clientHeight) btnMobile.classList.remove('hidden'); }, 50);
+        }
+        // Desktop
+        const textDesktop = document.getElementById('sobre-texto-desktop');
+        const btnDesktop = document.getElementById('sobre-readmore-btn-desktop');
+        if (textDesktop && btnDesktop) {
+            setTimeout(() => { if (textDesktop.scrollHeight > textDesktop.clientHeight) btnDesktop.classList.remove('hidden'); }, 50);
+        }
     }
 
     initMap();
