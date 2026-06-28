@@ -137,7 +137,7 @@
                 <!-- Coluna Esquerda/Centro: Dados do Restaurante -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Informações Básicas -->
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
                         <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
                             <i class="w-4 h-4 text-red-500" data-lucide="store"></i>
                             <span>Dados do Estabelecimento</span>
@@ -161,7 +161,7 @@
                     </div>
 
                     <!-- Contatos e WhatsApps -->
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
                         <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
                             <i class="w-4 h-4 text-red-500" data-lucide="phone"></i>
                             <span>Canais de Comunicação</span>
@@ -187,7 +187,7 @@
                     </div>
 
                     <!-- Geolocalização & Mapa -->
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-4">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-4">
                         <div class="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100 dark:border-white/5">
                             <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                                 <i class="w-4 h-4 text-red-500" data-lucide="map-pin"></i>
@@ -241,7 +241,7 @@
                 <!-- Coluna Direita: Identidade Visual / Cores e Mídias -->
                 <div class="space-y-6">
                     <!-- Branding & Cores -->
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
                         <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
                             <i class="w-4 h-4 text-red-500" data-lucide="palette"></i>
                             <span>Branding & Cores</span>
@@ -321,7 +321,7 @@
                     </div>
 
                     <!-- Logo & Banner -->
-                    <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
                         <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
                             <i class="w-4 h-4 text-red-500" data-lucide="image"></i>
                             <span>Mídias da Marca</span>
@@ -391,7 +391,7 @@
             
             <!-- Coluna Esquerda/Centro: Lista de Atrações Existentes -->
             <div class="lg:col-span-2 space-y-4">
-                <div class="glass-card rounded-3xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
                     <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider pb-3 border-b border-slate-100 dark:border-white/5 flex items-center gap-2">
                         <i class="w-4 h-4 text-red-500" data-lucide="sparkles"></i>
                         <span>Atrações Cadastradas</span>
@@ -478,7 +478,175 @@
             
             <!-- Coluna Direita: Formulário de Cadastro/Edição -->
             <div class="space-y-6">
-        </div>
+                <div class="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-200/50 dark:border-white/5 shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-white/5 pb-3">
+                        <h3 id="form-atracao-title" class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                            <i class="w-4 h-4 text-red-500" data-lucide="sparkles"></i>
+                            <span>Nova Atração do Dia</span>
+                        </h3>
+                        <button type="button" id="btn-limpar-atracao" onclick="limparFormularioAtracao()"
+                                class="hidden text-[9px] font-black uppercase tracking-wider text-red-500 hover:text-red-650 bg-transparent border-none cursor-pointer">
+                            Nova / Limpar
+                        </button>
+                    </div>
+                    
+                    <form id="form-salvar-atracoes" action="{% url 'restaurantes:partner_salvar_atracao' %}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="atracao_id" id="atracao_id_input" value="">
+                        
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Dia / Período</label>
+                            <input type="text" name="dia" id="atracao_dia_input" placeholder="Ex: Sábado, Sexta, Todo Fim de Semana" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Título da Atração</label>
+                            <input type="text" name="titulo" id="atracao_titulo_input" placeholder="Ex: Acústico Voz & Violão" class="w-full h-11 px-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Descrição da Atração</label>
+                            <textarea name="texto" id="atracao_texto_input" rows="3" placeholder="Escreva os detalhes da atração..." class="w-full p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-red-500 transition-colors" required></textarea>
+                        </div>
+                        
+                        <!-- Cores da Atração -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Cor de Fundo -->
+                            <div x-data="colorPickerData('#0f172a', 'atracao_cor_fundo_hex')" class="relative">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor de Fundo</label>
+                                <div class="relative flex items-center">
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    <input type="text" name="cor_fundo" id="atracao_cor_fundo_hex" x-model="color"
+                                           class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                           @input="onHexInput($el.value)">
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Cor do Texto -->
+                            <div x-data="colorPickerData('#ffffff', 'atracao_cor_texto_hex')" class="relative">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor do Texto</label>
+                                <div class="relative flex items-center">
+                                    <button type="button" @click="open = !open"
+                                            :style="'background-color: ' + color"
+                                            class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer focus:outline-none z-10 flex-shrink-0">
+                                    </button>
+                                    <input type="text" name="cor_texto" id="atracao_cor_texto_hex" x-model="color"
+                                           class="w-full h-11 pl-12 pr-2 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 text-[10px] font-mono font-bold focus:outline-none uppercase text-slate-850 dark:text-white"
+                                           @input="onHexInput($el.value)">
+                                    <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                </div>
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                     class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                     style="display: none;">
+                                    <div>
+                                        <div class="grid grid-cols-6 gap-2">
+                                            <template x-for="preset in presets">
+                                                <button type="button" @click="setPreset(preset)"
+                                                        :style="'background-color: ' + preset"
+                                                        class="w-7 h-7 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-all focus:outline-none"></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mídia da Atração -->
+                        <div x-data="{ tipoMidiaAtracao: 'imagem' }">
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Mídia da Atração</label>
+                            
+                            <div class="flex gap-2 mb-3">
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="midia_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaAtracao" checked>
+                                    <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
+                                        Imagem
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer flex-1">
+                                    <input type="radio" name="midia_tipo" value="video" class="peer hidden" x-model="tipoMidiaAtracao">
+                                    <div class="py-2.5 rounded-xl border border-slate-200 dark:border-white/10 text-center peer-checked:border-red-500 peer-checked:bg-red-500/10 dark:peer-checked:bg-red-500/15 transition-all font-bold text-[10px] text-slate-500 dark:text-slate-400 peer-checked:text-red-500">
+                                        Vídeo
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Imagem -->
+                            <div x-show="tipoMidiaAtracao === 'imagem'">
+                                <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-imagem-file').click()">
+                                    
+                                    <input type="file" id="atracao-imagem-file" name="imagem" accept="image/*" class="hidden"
+                                           onchange="previewImageFile(this, 'atracao-imagem')">
+                                    
+                                    <div id="atracao-imagem-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
+                                        <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                        <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Imagem</span>
+                                    </div>
+
+                                    <div id="atracao-imagem-preview-active" class="absolute inset-0 w-full h-full hidden">
+                                        <img id="atracao-imagem-preview-img" src="" class="w-full h-full object-cover" alt="Preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                    onclick="event.stopPropagation(); clearUploadedFile('atracao-imagem')">Apagar</button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_imagem" id="remover-atracao-imagem-input" value="false">
+                                </div>
+                            </div>
+                            
+                            <!-- Vídeo -->
+                            <div x-show="tipoMidiaAtracao === 'video'" style="display: none;">
+                                <div class="relative w-full h-32 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-2xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-white/5 cursor-pointer group"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-video-file').click()">
+                                    
+                                    <input type="file" id="atracao-video-file" name="video" accept="video/*" class="hidden"
+                                           onchange="previewVideoFile(this, 'atracao-video')">
+                                    
+                                    <div id="atracao-video-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
+                                        <i data-lucide="video" class="w-7 h-7 text-slate-400 mb-1"></i>
+                                        <span class="text-xs font-bold text-slate-650 dark:text-slate-300">Subir Vídeo</span>
+                                        <span class="text-[9px] text-slate-450 mt-1">MP4 de até 8MB</span>
+                                    </div>
+
+                                    <div id="atracao-video-preview-active" class="absolute inset-0 w-full h-full hidden">
+                                        <video id="atracao-video-preview-player" class="w-full h-full object-cover" autoplay loop muted playsinline></video>
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition-opacity duration-250">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-md"
+                                                    onclick="event.stopPropagation(); clearUploadedFile('atracao-video')">Apagar</button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_video" id="remover-atracao-video-input" value="false">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 py-1">
+                            <input type="checkbox" name="ativo" id="atracao_ativo_input" checked class="w-4 h-4 text-red-500 border-slate-300 rounded focus:ring-red-500 cursor-pointer">
+                            <label for="atracao_ativo_input" class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest cursor-pointer">Atração Ativa</label>
+                        </div>
+                        
+                        <!-- Botão de submit oculto -->
+                        <button type="submit" class="hidden">Salvar</button>
+                    </form>
+                </div>
+            </div>
     </form>
 </div>
 {% endblock %}
