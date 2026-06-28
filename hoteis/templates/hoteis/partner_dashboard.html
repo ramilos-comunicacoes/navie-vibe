@@ -2506,9 +2506,146 @@
                                         <div class="space-y-2">
                                             <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Luminosidade</span>
                                             <input type="range" min="0" max="100" x-model="l" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, black, gray, white);">
+                                    </div>
+                                </div>
+
+                                <!-- Cor de Texto -->
+                                <div x-data="colorPickerData('{{ hotel.sobre_cor_texto|default:'#0f172a' }}', 'sobre_cor_texto_hotel_hex')" class="relative">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest b2b-label-gap">Cor do Texto da Seção</label>
+                                    <div class="relative flex items-center max-w-[200px]">
+                                        <button type="button" @click="open = !open"
+                                                :style="'background-color: ' + color"
+                                                class="absolute left-2.5 w-7 h-7 rounded-xl border border-black/10 dark:border-white/20 shadow-sm cursor-pointer hover:scale-105 transition-all focus:outline-none z-10 flex-shrink-0">
+                                        </button>
+                                        <input type="text" name="sobre_cor_texto" id="sobre_cor_texto_hotel_hex" x-model="color"
+                                               placeholder="#0f172a" maxlength="7"
+                                               class="w-full h-11 pl-12 pr-10 rounded-2xl input-glass text-xs font-mono font-bold focus:outline-none uppercase border border-slate-200 dark:border-navie-border/60 bg-transparent text-slate-800 dark:text-white"
+                                               @input="onHexInput($el.value)">
+                                        <button type="button" @click="triggerNativePicker()" class="absolute right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path d="m2 22 1-1h3l9-9-3-3-9 9v3z"/><path d="M12 2.5a2.5 2.5 0 0 1 5 0v3a2.5 2.5 0 0 1-5 0z"/><path d="m19 13 3-3-3-3"/></svg>
+                                        </button>
+                                        <input type="color" x-model="color" class="hidden" onclick="event.stopPropagation()" @input="onNativeInput($el.value)">
+                                    </div>
+                                    <div x-show="open" @click.outside="open = false" x-transition
+                                         class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-navie-border rounded-3xl shadow-2xl p-4 z-[100] space-y-4"
+                                         style="display: none;">
+                                        <div>
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest mb-2">Cores Recomendadas</span>
+                                            <div class="grid grid-cols-6 gap-2">
+                                                <template x-for="preset in presets">
+                                                    <button type="button" @click="setPreset(preset)"
+                                                            :style="'background-color: ' + preset"
+                                                            class="w-6 h-6 rounded-lg border border-black/10 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer focus:outline-none"></button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Matiz (Hue)</span>
+                                            <input type="range" min="0" max="360" x-model="h" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, red, yellow, green, cyan, blue, magenta, red);">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Saturação</span>
+                                            <input type="range" min="0" max="100" x-model="s" @input="updateFromHsl()" class="w-full h-1 rounded-lg appearance-none cursor-pointer focus:outline-none" :style="'background: linear-gradient(to right, #808080, hsl(' + h + ', 100%, 50%));'">
+                                        </div>
+                                        <div class="space-y-2">
+                                            <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Luminosidade</span>
+                                            <input type="range" min="0" max="100" x-model="l" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, black, gray, white);">
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- Mídia (Foto ou Vídeo) -->
+                            <div class="space-y-3">
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Escolha o Tipo de Mídia</label>
+                                <div class="flex gap-2">
+                                    <label class="cursor-pointer flex-1">
+                                        <input type="radio" name="sobre_midia_tipo" value="imagem" class="peer hidden" x-model="tipoMidiaSobreHotel">
+                                        <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                            FOTO ESTÁTICA
+                                        </div>
+                                    </label>
+                                    
+                                    <label class="cursor-pointer flex-1">
+                                        <input type="radio" name="sobre_midia_tipo" value="video" class="peer hidden" x-model="tipoMidiaSobreHotel">
+                                        <div class="px-4 py-3 rounded-2xl border border-slate-200/80 dark:border-navie-border text-center peer-checked:border-brand peer-checked:bg-brand-50/80 dark:peer-checked:bg-brand/20 transition-all font-bold text-xs text-slate-600 dark:text-navie-textsec peer-checked:text-brand dark:peer-checked:text-white">
+                                            VÍDEO EM LOOP (8MB MÁX)
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Foto Estática (Sobre) -->
+                                    <div x-show="tipoMidiaSobreHotel === 'imagem'" class="space-y-3">
+                                        <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Imagem de Destaque da Seção</label>
+                                        <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('sobre_banner_hotel-file-input').click()">
+                                            
+                                            <input type="file" id="sobre_banner_hotel-file-input" name="sobre_banner" accept="image/*" class="hidden"
+                                                   onclick="event.stopPropagation()"
+                                                   onchange="previewImageUnifiedHotel(this)">
+                                            
+                                            <!-- Empty State -->
+                                            <div id="sobre_banner-hotel-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.sobre_banner %}hidden{% else %}flex{% endif %}">
+                                                <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Imagem do Sobre</span>
+                                                <span class="text-[10px] text-slate-400 mt-1">PNG ou JPG de alta resolução</span>
+                                            </div>
+
+                                            <!-- Active State -->
+                                            <div id="sobre_banner-hotel-active-state" class="absolute inset-0 w-full h-full {% if not hotel.sobre_banner %}hidden{% endif %}">
+                                                <img id="sobre_banner-hotel-preview-img" src="{% if hotel.sobre_banner %}{{ hotel.sobre_banner.url }}{% endif %}" class="w-full h-full object-cover" alt="Sobre banner preview">
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                            onclick="event.stopPropagation(); clearUnifiedMediaHotel()">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Apagar</span>
+                                                    </button>
+                                                    <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="remover_sobre_banner" id="remover-sobre_banner-input-hotel" value="false">
+                                    </div>
+
+                                    <!-- Vídeo em Loop (Sobre) -->
+                                    <div x-show="tipoMidiaSobreHotel === 'video'" class="space-y-3" style="display:none;">
+                                        <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Vídeo de Destaque da Seção</label>
+                                        <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                             onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('sobre_video_hotel-file-input').click()">
+                                            
+                                            <input type="file" id="sobre_video_hotel-file-input" name="sobre_video" accept="video/*" class="hidden"
+                                                   onclick="event.stopPropagation()"
+                                                   onchange="previewLocalSobreVideoUnifiedHotel(this)">
+                                            
+                                            <!-- Empty State -->
+                                            <div id="sobre_video-hotel-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.sobre_video %}hidden{% else %}flex{% endif %}">
+                                                <i data-lucide="video" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Escolher Vídeo do Sobre</span>
+                                                <span class="text-[10px] text-slate-400 mt-1">MP4 de até 8MB</span>
+                                            </div>
+
+                                            <!-- Active State -->
+                                            <div id="sobre_video-hotel-active-state" class="absolute inset-0 w-full h-full {% if not hotel.sobre_video %}hidden{% endif %}">
+                                                <video id="sobre_video-hotel-preview-player" autoplay muted loop playsinline class="w-full h-full object-cover">
+                                                    {% if hotel.sobre_video %}
+                                                        <source src="{{ hotel.sobre_video.url }}" type="video/mp4">
+                                                    {% endif %}
+                                                </video>
+                                                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                                    <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                            onclick="event.stopPropagation(); clearSobreVideoUnifiedHotel()">
+                                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                        <span>Apagar</span>
+                                                    </button>
+                                                    <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="remover_sobre_video" id="remover-sobre_video-hotel-input" value="false">
+                                    </div>
+                                </div>
+                            </div>
                     </div>
 
 <!-- Mapa de Geolocalização (Largura Total na parte inferior) -->
@@ -3004,6 +3141,8 @@
             var activeHeroVideoLocalUrl = null;
             var activeBannerLocalUrl = null;
             var activeLogoLocalUrl = null;
+            var activeSobreBannerLocalUrlHotel = null;
+            var activeSobreVideoLocalUrlHotel = null;
 
             function hydrateHeroIframeVideo(iframeId) {
                 const iframe = document.getElementById(iframeId);
@@ -3060,6 +3199,36 @@
                                 }
                             }
 
+                            // Update Sobre media type (video vs image) for Hotel
+                            const sobreTipoVal = document.querySelector('#form-salvar-config input[name="sobre_midia_tipo"]:checked')?.value || 'imagem';
+                            const sobreVideoEl = doc.getElementById('sobre-media-video');
+                            const sobreImgEl = doc.getElementById('sobre-media-img');
+                            
+                            if (sobreVideoEl && sobreImgEl) {
+                                if (sobreTipoVal === 'video') {
+                                    sobreVideoEl.classList.remove('hidden');
+                                    sobreImgEl.classList.add('hidden');
+                                    
+                                    if (activeSobreVideoLocalUrlHotel) {
+                                        sobreVideoEl.src = activeSobreVideoLocalUrlHotel;
+                                    } else {
+                                        sobreVideoEl.src = "{% if hotel.sobre_video %}{{ hotel.sobre_video.url }}{% endif %}";
+                                    }
+                                    sobreVideoEl.load();
+                                    sobreVideoEl.play().catch(e => console.log('Autoplay blocked in sobre preview (Hotel)'));
+                                } else {
+                                    sobreVideoEl.classList.add('hidden');
+                                    sobreVideoEl.pause();
+                                    sobreImgEl.classList.remove('hidden');
+                                    
+                                    if (activeSobreBannerLocalUrlHotel) {
+                                        sobreImgEl.src = activeSobreBannerLocalUrlHotel;
+                                    } else {
+                                        sobreImgEl.src = "{% if hotel.sobre_banner %}{{ hotel.sobre_banner.url }}{% else %}https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80{% endif %}";
+                                    }
+                                }
+                            }
+
                             syncIframeTexts(doc);
                         }
                     } catch(e) {
@@ -3111,6 +3280,51 @@
                     
                     doc.documentElement.style.setProperty('--brand-color-secondary', rawColorSec);
                     doc.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
+                }
+
+                // 5. Sync Sobre Title and Text (Hotel)
+                const sobreTituloInput = document.getElementById('sobre_titulo_hotel');
+                if (sobreTituloInput) {
+                    const sobreH2 = doc.getElementById('sobre-titulo');
+                    if (sobreH2) {
+                        sobreH2.textContent = sobreTituloInput.value || "Sobre Nós";
+                    }
+                }
+                const sobreTextoInput = document.getElementById('sobre_texto_hotel_input');
+                if (sobreTextoInput) {
+                    const sobreDiv = doc.getElementById('sobre-texto');
+                    if (sobreDiv) {
+                        sobreDiv.innerHTML = sobreTextoInput.value || "Conteúdo institucional...";
+                        if (doc.defaultView && typeof doc.defaultView.initSobreExpander === 'function') {
+                            doc.defaultView.initSobreExpander();
+                        }
+                    }
+                }
+
+                // 6. Sync Sobre Custom Colors (Hotel)
+                const sobreFundoInput = document.getElementById('sobre_cor_fundo_hotel_hex');
+                if (sobreFundoInput && sobreFundoInput.value) {
+                    doc.documentElement.style.setProperty('--sobre-bg-color', sobreFundoInput.value);
+                    const iframeSec = doc.getElementById('sobre-section');
+                    if (iframeSec) {
+                        iframeSec.style.setProperty('--sobre-bg-color', sobreFundoInput.value);
+                    }
+                }
+                const sobreTextInput = document.getElementById('sobre_cor_texto_hotel_hex');
+                if (sobreTextInput && sobreTextInput.value) {
+                    doc.documentElement.style.setProperty('--sobre-text-color', sobreTextInput.value);
+                    const iframeSec = doc.getElementById('sobre-section');
+                    if (iframeSec) {
+                        iframeSec.style.setProperty('--sobre-text-color', sobreTextInput.value);
+                        const iframeH2 = doc.getElementById('sobre-titulo');
+                        if (iframeH2) {
+                            iframeH2.style.borderColor = sobreTextInput.value;
+                        }
+                    }
+                }
+                
+                if (doc.defaultView && typeof doc.defaultView.initSobreExpander === 'function') {
+                    doc.defaultView.initSobreExpander();
                 }
             }
 
@@ -3580,6 +3794,62 @@
                     const event = new Event('input', { bubbles: true });
                     hiddenInput.dispatchEvent(event);
                 }
+            }
+
+            function previewImageUnifiedHotel(input) {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewImg = document.getElementById('sobre_banner-hotel-preview-img');
+                        if (previewImg) {
+                            previewImg.src = e.target.result;
+                        }
+                        
+                        const activeState = document.getElementById('sobre_banner-hotel-active-state');
+                        if (activeState) {
+                            activeState.classList.remove('hidden');
+                        }
+                        
+                        const emptyState = document.getElementById('sobre_banner-hotel-empty-state');
+                        if (emptyState) {
+                            emptyState.classList.add('hidden');
+                            emptyState.classList.remove('flex');
+                        }
+                        
+                        document.getElementById('remover-sobre_banner-input-hotel').value = 'false';
+                        activeSobreBannerLocalUrlHotel = e.target.result;
+                        updateAllIframes();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+
+            function clearUnifiedMediaHotel() {
+                const previewImg = document.getElementById('sobre_banner-hotel-preview-img');
+                if (previewImg) {
+                    previewImg.src = '';
+                }
+                
+                const activeState = document.getElementById('sobre_banner-hotel-active-state');
+                if (activeState) {
+                    activeState.classList.add('hidden');
+                }
+                
+                const emptyState = document.getElementById('sobre_banner-hotel-empty-state');
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.classList.add('flex');
+                }
+                
+                const fileInput = document.getElementById('sobre_banner_hotel-file-input');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                
+                document.getElementById('remover-sobre_banner-input-hotel').value = 'true';
+                activeSobreBannerLocalUrlHotel = null;
+                updateAllIframes();
             }
 
             let activeSobreVideoLocalUrlHotel = null;
