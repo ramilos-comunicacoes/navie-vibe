@@ -531,7 +531,7 @@
                  </div>
                  
                  <!-- Formulário / Conteúdo Rolável -->
-                 <div class="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
+                 <div class="flex-1 overflow-y-auto p-6 pb-32 space-y-6 no-scrollbar">
                      <form id="form-salvar-atracoes" action="{% url 'restaurantes:partner_salvar_atracao' %}" method="POST" enctype="multipart/form-data" class="space-y-5">
                          {% csrf_token %}
                          <input type="hidden" name="atracao_id" id="atracao_id_input" value="">
@@ -644,7 +644,7 @@
                                  </div>
                                  
                                  <div x-show="open" @click.outside="open = false" x-transition
-                                      class="absolute right-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[110] space-y-4"
+                                      class="absolute left-0 top-14 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl p-4 z-[110] space-y-4"
                                       style="display: none;">
                                      <div>
                                          <span class="block text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Cores Recomendadas</span>
@@ -783,7 +783,7 @@
                                       onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('atracao-imagem-file').click()">
                                      
                                      <input type="file" id="atracao-imagem-file" name="imagem" accept="image/*" class="hidden"
-                                            onchange="previewImageFile(this, 'atracao-imagem')">
+                                            onchange="previewImageFile(this, 'atracao-imagem-preview')">
                                      
                                      <div id="atracao-imagem-preview-empty" class="flex flex-col items-center justify-center text-center p-4">
                                          <i data-lucide="upload" class="w-7 h-7 text-slate-400 mb-1"></i>
