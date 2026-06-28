@@ -2421,7 +2421,7 @@
                     <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5"
                          x-data="{ tipoMidiaSobreHotel: '{{ hotel.sobre_midia_tipo|default:'imagem' }}' }"
                          @change="setTimeout(updateAllIframes, 50)">
-<div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3">
                             <span class="p-2 rounded-2xl bg-brand/10 text-brand"><i data-lucide="info" class="w-5 h-5"></i></span>
                             <div>
                                 <h4 class="text-base font-bold text-slate-800 dark:text-white">Sobre a Pousada (Vitrine do Site)</h4>
@@ -2506,6 +2506,7 @@
                                         <div class="space-y-2">
                                             <span class="block text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Luminosidade</span>
                                             <input type="range" min="0" max="100" x-model="l" @input="updateFromHsl()" class="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer focus:outline-none" style="background: linear-gradient(to right, black, gray, white);">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -2646,9 +2647,8 @@
                                     </div>
                                 </div>
                             </div>
-                    </div>
-
-<!-- Mapa de Geolocalização (Largura Total na parte inferior) -->
+                        </div>
+                    </div><!-- Mapa de Geolocalização (Largura Total na parte inferior) -->
                     <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-4 w-full">
                         <div class="flex items-center justify-between flex-wrap gap-3 mb-2">
                             <div class="flex items-center gap-3">
