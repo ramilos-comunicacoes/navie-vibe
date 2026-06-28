@@ -140,10 +140,10 @@
             @mouseenter="sidebarExpanded = true" 
             @mouseleave="sidebarExpanded = false"
             :class="[
-                sidebarExpanded ? 'w-64 md:w-64' : 'w-0 md:w-20',
+                sidebarExpanded ? 'w-64' : 'w-0 md:w-20',
                 sidebarMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0'
             ]"
-            class="fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border-r border-slate-200/50 dark:border-white/5 transition-all duration-350 ease-out shrink-0 select-none group/sidebar overflow-hidden"
+            class="fixed inset-y-0 left-0 z-50 flex flex-col h-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border-r border-slate-200/50 dark:border-white/5 transition-all duration-350 ease-out shrink-0 select-none group/sidebar overflow-hidden"
         >
             <!-- Logo area -->
             <div class="h-[4.5rem] flex items-center px-4 border-b border-slate-200/50 dark:border-white/5 flex-shrink-0 bg-white/50 dark:bg-black/10">
@@ -263,7 +263,7 @@
         <!-- ─────────────────────────────────────────────────────────────────
              MAIN CONTENT AREA
              ───────────────────────────────────────────────────────────────── -->
-        <main class="flex-1 flex flex-col h-screen relative z-10 min-w-0 overflow-hidden" style="height: 100dvh;">
+        <main class="flex-1 flex flex-col h-screen relative z-10 min-w-0 overflow-hidden md:pl-20 transition-all duration-350" style="height: 100dvh;">
             
             <!-- Header bar -->
             <header class="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between px-6 w-full flex-shrink-0 shadow-sm sticky top-0 z-[60] transition-colors" style="height: 4.5rem;">

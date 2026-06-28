@@ -513,7 +513,7 @@
                  class="relative w-full max-w-md bg-white dark:bg-slate-950 h-full shadow-2xl flex flex-col z-[100] border-l border-slate-200/50 dark:border-white/5 font-sans">
                  
                  <!-- Header da Gaveta -->
-                 <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                 <div class="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between gap-4">
                      <div>
                          <h3 id="form-atracao-title" class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
                              <i class="w-4 h-4 text-red-500" data-lucide="plus-circle"></i>
@@ -521,18 +521,15 @@
                          </h3>
                          <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider">Preencha as informações da programação</p>
                      </div>
-                     <div class="flex items-center gap-3">
+                     <div class="flex items-center gap-3 shrink-0">
                          <button type="button" id="btn-limpar-atracao" onclick="limparFormularioAtracao()"
                                  class="hidden text-[9px] font-black uppercase tracking-wider text-red-500 hover:text-red-650 bg-transparent border-none cursor-pointer">
                              Limpar
                          </button>
                          <button type="button" onclick="document.getElementById('btn-submit-atracao-hidden').click()"
-                                 class="bg-red-500 hover:bg-red-600 text-white font-extrabold px-4 py-1.5 rounded-xl text-[10px] uppercase tracking-wider transition-all shadow-md cursor-pointer border-none flex items-center gap-1.5">
-                             <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                             <span>Salvar</span>
-                         </button>
-                         <button type="button" @click="drawerOpen = false" class="text-slate-400 hover:text-slate-650 dark:hover:text-white bg-transparent border-none cursor-pointer flex p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
-                             <i data-lucide="x" class="w-5 h-5"></i>
+                                 class="bg-red-500 hover:bg-red-650 text-white w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-md shadow-red-500/10 cursor-pointer border-none"
+                                 title="Salvar Atração">
+                             <i data-lucide="save" class="w-5 h-5 text-white"></i>
                          </button>
                      </div>
                  </div>
