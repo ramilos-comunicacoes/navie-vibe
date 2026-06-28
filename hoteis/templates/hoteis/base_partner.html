@@ -393,6 +393,69 @@ x-data="{
 
     <!-- Bibliotecas Mestre (Estilo e Interação) -->
     <script src="{% static 'js/htmx.min.js' %}"></script>
+
+    <!-- Color Picker utilitários + registro Alpine.data() ANTES do Alpine carregar.
+         alpine:init dispara antes que o Alpine processe o DOM (mesmo com queueMicrotask),
+         garantindo que colorPickerData esteja disponível para todos os x-data. -->
+    <script>
+        function hexToHsl(hex) {
+            hex = hex.replace(/^#/, '');
+            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+            let r = parseInt(hex.substring(0,2),16)/255||0;
+            let g = parseInt(hex.substring(2,4),16)/255||0;
+            let b = parseInt(hex.substring(4,6),16)/255||0;
+            let max = Math.max(r,g,b), min = Math.min(r,g,b);
+            let h, s, l = (max+min)/2;
+            if (max===min) { h=s=0; } else {
+                let d = max-min;
+                s = l>0.5 ? d/(2-max-min) : d/(max+min);
+                switch(max){
+                    case r: h=(g-b)/d+(g<b?6:0); break;
+                    case g: h=(b-r)/d+2; break;
+                    case b: h=(r-g)/d+4; break;
+                }
+                h/=6;
+            }
+            return {h:Math.round(h*360), s:Math.round(s*100), l:Math.round(l*100)};
+        }
+        function hslToHex(h,s,l) {
+            l/=100;
+            const a=s*Math.min(l,1-l)/100;
+            const f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0');};
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+        function colorPickerData(initialColor, inputId) {
+            return {
+                open: false, color: initialColor, h: 0, s: 100, l: 50,
+                presets: ['#f97316','#3b82f6','#10b981','#ef4444','#8b5cf6','#ec4899',
+                          '#f59e0b','#14b8a6','#6366f1','#06b6d4','#22c55e','#475569'],
+                init() { this.syncHslFromHex(this.color); },
+                syncHslFromHex(hex) {
+                    try { const hsl=hexToHsl(hex); this.h=hsl.h; this.s=hsl.s; this.l=hsl.l; } catch(e) {}
+                },
+                updateFromHsl() { this.color=hslToHex(parseInt(this.h),parseInt(this.s),parseInt(this.l)); this.dispatchUpdate(); },
+                setPreset(hex) { this.color=hex; this.syncHslFromHex(hex); this.dispatchUpdate(); },
+                onHexInput(val) { if(val.startsWith('#')&&val.length===7){ this.color=val; this.syncHslFromHex(val); this.dispatchUpdate(); } },
+                onNativeInput(val) { this.color=val; this.syncHslFromHex(val); this.dispatchUpdate(); },
+                triggerNativePicker() { const p=this.$el.querySelector('input[type="color"]'); if(p) p.click(); },
+                dispatchUpdate() {
+                    const el=document.getElementById(inputId);
+                    if(el){ el.value=this.color; el.dispatchEvent(new Event('input',{bubbles:true})); }
+                    const np=this.$el.querySelector('input[type="color"]'); if(np) np.value=this.color;
+                    if(typeof updateAllIframes==='function') updateAllIframes();
+                    if(typeof updateAllIframesGeral==='function') updateAllIframesGeral();
+                }
+            };
+        }
+        // Registrar via Alpine.data() quando o Alpine estiver pronto
+        document.addEventListener('alpine:init', () => {
+            if (typeof Alpine !== 'undefined' && Alpine.data) {
+                Alpine.data('colorPickerData', colorPickerData);
+            }
+        });
+    </script>
+
+    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <script src="{% static 'js/lucide.min.js' %}"></script>
 
     <!-- PLUGINS PRESERVADOS DO BASE ORIGINAL PARA NÃO QUEBRAR O SISTEMA -->
@@ -1421,14 +1484,9 @@ x-data="{
         {% endif %}
     </div>
     {% block extra_js %}{% endblock %}
-    <!-- Alpine carregado aqui (após todos os scripts do template) para que funções
-         globais como colorPickerData estejam disponíveis quando o Alpine inicializar -->
-    <script src="{% static 'js/alpine.min.js' %}"></script>
-    <!-- Re-inicializa os ícones Lucide após os scripts do template -->
+    <!-- Re-inicializa Lucide após os scripts do template filho -->
     <script>
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     </script>
 </body>
 </html>
