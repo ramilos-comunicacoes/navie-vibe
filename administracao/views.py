@@ -150,6 +150,9 @@ def documento_edit_view(request, pk):
 
 @superuser_required
 def hoteis_list_view(request):
+    from django.db.models import Count, Avg
+    from analytics.models import UserInteraction
+
     # Métricas da Hotelaria
     total_hoteis = Hotel.objects.count()
     hoteis_ativos = Hotel.objects.filter(status='ativo').count()
@@ -158,6 +161,58 @@ def hoteis_list_view(request):
     
     # Lista de hotéis
     hoteis = Hotel.objects.all().select_related('local').order_by('nome')
+    
+    # Adiciona estatísticas de visualização para cada hotel
+    for h in hoteis:
+        main_page = UserInteraction.objects.filter(
+            parent_id=str(h.id),
+            category='hospedagem',
+            interaction_type='page_view'
+        ).aggregate(
+            views_count=Count('id'),
+            avg_time=Avg('time_spent')
+        )
+        main_views = main_page['views_count'] or 0
+        main_avg_time = round(main_page['avg_time'] or 0, 1)
+
+        room_views = (
+            UserInteraction.objects.filter(
+                parent_id=str(h.id),
+                category='hospedagem',
+                interaction_type='item_detail'
+            )
+            .values('item_id')
+            .annotate(
+                views_count=Count('id'),
+                avg_time=Avg('time_spent')
+            )
+            .order_by('-views_count')
+        )
+        
+        quartos_dict = {str(q.id): q.nome for q in h.quartos.all()}
+        
+        stats_list = []
+        if main_views > 0:
+            stats_list.append({
+                'nome': 'Página Principal da Pousada',
+                'tipo': 'Site Público',
+                'visualizacoes': main_views,
+                'tempo_medio': main_avg_time,
+            })
+            
+        for stat in room_views:
+            q_id = stat['item_id']
+            if q_id:
+                q_nome = quartos_dict.get(q_id, f"Acomodação #{q_id}")
+                stats_list.append({
+                    'nome': q_nome,
+                    'tipo': 'Detalhe de Acomodação',
+                    'visualizacoes': stat['views_count'],
+                    'tempo_medio': round(stat['avg_time'] or 0, 1),
+                })
+                
+        stats_list.sort(key=lambda x: x['visualizacoes'], reverse=True)
+        h.ranking_stats = stats_list
     
     # Configuração Geral do Sistema
     config_sistema = ConfigSistema.objects.first()

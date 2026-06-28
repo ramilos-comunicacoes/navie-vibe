@@ -86,7 +86,7 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
     visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página do hotel")
     ordem = models.IntegerField(default=0, help_text="Ordem de exibição no portal unificado do grupo")
-    venda_online = models.BooleanField(default=True, help_text="Se ativado, permite reservas e pagamentos online pelo site. Se desativado, o botão de reserva direciona para contato via WhatsApp.")
+    venda_online = models.BooleanField(default=False, help_text="Se ativado, permite reservas e pagamentos online pelo site. Se desativado, o botão de reserva direciona para contato via WhatsApp.")
 
     # Configurações Administrativas do Marketplace (Naviê Vibe)
     taxa_fixa_navie = models.DecimalField(max_digits=10, decimal_places=2, default=15.00, help_text="Taxa fixa cobrada pelo Naviê por reserva (R$)")
