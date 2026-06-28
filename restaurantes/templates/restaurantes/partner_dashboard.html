@@ -533,7 +533,6 @@
                          </button>
                      </div>
                  </div>
-                 
                  <!-- Formulário / Conteúdo Rolável -->
                  <div class="flex-1 overflow-y-auto p-6 pb-32 space-y-6 no-scrollbar">
                      <form id="form-salvar-atracoes" action="{% url 'restaurantes:partner_salvar_atracao' %}" method="POST" enctype="multipart/form-data" class="space-y-5">
@@ -541,13 +540,15 @@
                          <input type="hidden" name="atracao_id" id="atracao_id_input" value="">
                          
                          <!-- Switcher Elegante para Ativo (Toggle Switch) -->
-                         <div class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
-                             <div class="flex flex-col">
-                                 <span class="text-[10px] font-black text-slate-700 dark:text-slate-350 uppercase tracking-widest">Status da Atração</span>
+                         <div x-data="{ ativo: true }" 
+                              :class="ativo ? 'bg-red-500/10 dark:bg-red-500/20 border-red-500/30 dark:border-red-500/40' : 'bg-slate-50 dark:bg-white/5 border-slate-100 dark:border-white/5'"
+                              class="flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-300">
+                             <div class="flex flex-col font-sans">
+                                 <span :class="ativo ? 'text-red-650 dark:text-red-400' : 'text-slate-700 dark:text-slate-350'" class="text-[10px] font-black uppercase tracking-widest transition-colors duration-300">Status da Atração</span>
                                  <span class="text-[9px] text-slate-400 mt-0.5">Define se a atração estará visível no site</span>
                              </div>
                              <label class="relative inline-flex items-center cursor-pointer select-none">
-                                 <input type="checkbox" name="ativo" id="atracao_ativo_input" checked class="sr-only peer">
+                                 <input type="checkbox" name="ativo" id="atracao_ativo_input" x-model="ativo" class="sr-only peer">
                                  <div class="w-11 h-6 bg-slate-300 dark:bg-white/10 rounded-full peer peer-focus:ring-2 peer-focus:ring-red-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
                              </label>
                          </div>
@@ -1146,6 +1147,7 @@
         const checkAtivo = document.getElementById('atracao_ativo_input');
         if (checkAtivo) {
             checkAtivo.checked = atracao.ativo;
+            checkAtivo.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Previews de Mídia
@@ -1200,7 +1202,10 @@
         }
 
         const checkAtivo = document.getElementById('atracao_ativo_input');
-        if (checkAtivo) checkAtivo.checked = true;
+        if (checkAtivo) {
+            checkAtivo.checked = true;
+            checkAtivo.dispatchEvent(new Event('change', { bubbles: true }));
+        }
 
         document.getElementById('atracao-imagem-file').value = '';
         document.getElementById('atracao-video-file').value = '';
