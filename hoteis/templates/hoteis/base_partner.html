@@ -393,7 +393,6 @@ x-data="{
 
     <!-- Bibliotecas Mestre (Estilo e Interação) -->
     <script src="{% static 'js/htmx.min.js' %}"></script>
-    <script src="{% static 'js/alpine.min.js' %}" defer></script>
     <script src="{% static 'js/lucide.min.js' %}"></script>
 
     <!-- PLUGINS PRESERVADOS DO BASE ORIGINAL PARA NÃO QUEBRAR O SISTEMA -->
@@ -1422,5 +1421,14 @@ x-data="{
         {% endif %}
     </div>
     {% block extra_js %}{% endblock %}
+    <!-- Alpine carregado aqui (após todos os scripts do template) para que funções
+         globais como colorPickerData estejam disponíveis quando o Alpine inicializar -->
+    <script src="{% static 'js/alpine.min.js' %}"></script>
+    <!-- Re-inicializa os ícones Lucide após os scripts do template -->
+    <script>
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
