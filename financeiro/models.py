@@ -239,7 +239,7 @@ class AnexoTransacao(models.Model):
 from core.models import Empresa
 
 class MercadoPagoConexao(models.Model):
-    empresa = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='mp_conexao')
+    empresa = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='mp_conexao', db_constraint=False)
     mp_user_id = models.CharField("ID da Conta Mercado Pago do Hoteleiro", max_length=100)
     access_token = models.CharField("Access Token do Parceiro", max_length=255)
     refresh_token = models.CharField("Refresh Token para Renovação", max_length=255)
