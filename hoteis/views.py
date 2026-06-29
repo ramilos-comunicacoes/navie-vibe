@@ -906,33 +906,32 @@ def partner_dashboard(request):
         curr += timedelta(days=1)
 
     unidades_data = []
-    if selected_quarto:
-        for uni in selected_quarto.unidades.filter(ativa=True):
-            res_uni = Reserva.objects.filter(
-                unidade=uni,
-                data_checkin__lt=data_fim,
-                data_checkout__gt=data_inicio
-            ).exclude(status='cancelada').order_by('data_checkin')
+    for uni in unidades:
+        res_uni = Reserva.objects.filter(
+            unidade=uni,
+            data_checkin__lt=data_fim,
+            data_checkout__gt=data_inicio
+        ).exclude(status='cancelada').order_by('data_checkin')
+        
+        reservas_list = []
+        for r in res_uni:
+            start_date = max(r.data_checkin, data_inicio)
+            end_date = min(r.data_checkout, data_fim)
+            dias_exibidos = (end_date - start_date).days
+            if dias_exibidos <= 0:
+                dias_exibidos = 1
+            offset_days = (start_date - data_inicio).days
             
-            reservas_list = []
-            for r in res_uni:
-                start_date = max(r.data_checkin, data_inicio)
-                end_date = min(r.data_checkout, data_fim)
-                dias_exibidos = (end_date - start_date).days
-                if dias_exibidos <= 0:
-                    dias_exibidos = 1
-                offset_days = (start_date - data_inicio).days
-                
-                r.gantt_left = offset_days * 14.2857
-                r.gantt_width = dias_exibidos * 14.2857
-                r.gantt_continua_antes = r.data_checkin < data_inicio
-                r.gantt_continua_depois = r.data_checkout > data_fim
-                reservas_list.append(r)
-                
-            unidades_data.append({
-                'unidade': uni,
-                'reservas': reservas_list
-            })
+            r.gantt_left = offset_days * 14.2857
+            r.gantt_width = dias_exibidos * 14.2857
+            r.gantt_continua_antes = r.data_checkin < data_inicio
+            r.gantt_continua_depois = r.data_checkout > data_fim
+            reservas_list.append(r)
+            
+        unidades_data.append({
+            'unidade': uni,
+            'reservas': reservas_list
+        })
     
     # Tarefas Reais
     tarefas_qs = Tarefa.objects.filter(hotel=hotel).select_related('responsavel', 'unidade', 'unidade__quarto').prefetch_related('responsavel__user')
