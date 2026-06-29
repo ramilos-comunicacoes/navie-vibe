@@ -976,10 +976,13 @@ def partner_dashboard(request):
     
     # 2. Métricas de Performance Hoteleira (ADR, RevPAR, Ocupação)
     unidades_count = max(1, UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True).count())
-    occupied_nights = Reserva.objects.filter(unidade__quarto__hotel=hotel, status__in=['hospedado', 'finalizada']).count()
+    occupied_nights = Reserva.objects.filter(unidade__quarto__hotel=hotel, status__in=['hospedado', 'concluido']).count()
     diarias_faturamento = transacoes_qs.filter(categoria='diarias').aggregate(models.Sum('valor'))['valor__sum'] or Decimal('0.00')
     
-    adr = diarias_faturamento / Decimal(max(1, occupied_nights))
+    if occupied_nights > 0:
+        adr = diarias_faturamento / Decimal(occupied_nights)
+    else:
+        adr = Decimal('0.00')
     # RevPAR baseado no faturamento total de diárias dos últimos 30 dias distribuído pela capacidade mestre
     revpar = diarias_faturamento / Decimal(unidades_count * 30)
     
@@ -3468,7 +3471,6 @@ def checkout_sucesso(request, reserva_id):
     })
 
 @login_required(login_url='hoteis:partner_login')
-@login_required(login_url='hoteis:partner_login')
 def partner_reserva_criar(request):
     if not hasattr(request.user, 'perfil_parceiro'):
         return HttpResponse("Não autorizado", status=403)
@@ -3933,6 +3935,15 @@ def partner_reserva_cancelar(request, reserva_id):
     
     reserva.status = 'cancelada'
     reserva.save()
+    
+    # Log de cancelamento
+    from .models import ReservaLog
+    ReservaLog.objects.create(
+        reserva=reserva,
+        usuario=request.user,
+        acao='cancelar',
+        detalhes=f"Reserva cancelada pelo usuário {request.user.username}."
+    )
     
     response = HttpResponse("""
         <script>
