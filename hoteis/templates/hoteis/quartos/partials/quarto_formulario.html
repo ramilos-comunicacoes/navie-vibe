@@ -651,11 +651,29 @@
     }
 
     // Chamado pelo onchange do input: acumula novos arquivos em localFiles[]
-    function previewLocalImages(input) {
+    async function previewLocalImages(input) {
         if (!input.files || input.files.length === 0) return;
 
         const savedCount = document.querySelectorAll('[id^="quarto-img-card-"]').length;
-        const newFiles = Array.from(input.files);
+        
+        // Conversão assíncrona para WebP no cliente para otimização
+        const rawFiles = Array.from(input.files);
+        const newFiles = [];
+        for (let i = 0; i < rawFiles.length; i++) {
+            const f = rawFiles[i];
+            if (f && f.type.startsWith('image/') && f.type !== 'image/webp') {
+                try {
+                    // convertImageToWebP é declarada globalmente no base_partner.html
+                    const webpFile = await convertImageToWebP(f);
+                    newFiles.push(webpFile);
+                } catch (err) {
+                    newFiles.push(f);
+                }
+            } else {
+                newFiles.push(f);
+            }
+        }
+
         const totalAfter = savedCount + localFiles.length + newFiles.length;
 
         if (totalAfter > 10) {
