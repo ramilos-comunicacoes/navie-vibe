@@ -143,14 +143,14 @@ x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 
                                </div>
                            </div>
 
-                           <!-- Switch Toggle (Standard Tailwind size: h-6, w-11, inner button h-5 w-5 translate-x-5) -->
-                           <button type="button" 
-                                   @click="isAvailable = !isAvailable"
-                                   :class="isAvailable ? (isLimpeza ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-300 dark:bg-slate-700'"
-                                   class="relative inline-flex h-6 w-11 min-w-[2.75rem] shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
-                               <span :class="isAvailable ? 'translate-x-5' : 'translate-x-0'"
-                                     class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
-                           </button>
+                            <button type="button" 
+                                    @click="isAvailable = !isAvailable"
+                                    :class="isAvailable ? (isLimpeza ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-300 dark:bg-slate-700'"
+                                    style="width: 44px !important; height: 24px !important; min-width: 44px !important; min-height: 24px !important; border-radius: 9999px !important; padding: 2px !important; display: inline-flex !important; align-items: center !important; position: relative !important; cursor: pointer !important; transition: background-color 0.2s ease-in-out !important; border: none !important; outline: none !important;"
+                                    class="shrink-0 focus:outline-none">
+                                <span :style="'width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; border-radius: 9999px !important; background-color: #ffffff !important; display: inline-block !important; transition: transform 0.2s ease-in-out !important; transform: translateX(' + (isAvailable ? '20px' : '0px') + ') !important;'"
+                                      class="pointer-events-none shadow ring-0"></span>
+                            </button>
                       </div>
 
                      <!-- If cleaning tasks exist, show them -->
