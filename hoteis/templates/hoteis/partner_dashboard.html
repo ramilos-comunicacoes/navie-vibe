@@ -1204,74 +1204,74 @@
 
         <!-- Aba 2: Linha do Tempo -->
         <div x-show="reservasTab === 'timeline'" class="w-full animate-in fade-in duration-300" style="display: none;">
-            <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-6">
-                <div class="flex items-center gap-3">
-                    <span class="p-2.5 rounded-2xl bg-brand/10 text-brand">
-                        <i data-lucide="clock" class="w-6 h-6"></i>
-                    </span>
-                    <div>
-                        <h4 class="text-base font-bold text-slate-800 dark:text-white">Linha do Tempo de Ocupação</h4>
-                        <p class="text-xs text-slate-400 font-medium">Visualização cronológica das estadias por quarto físico</p>
-                    </div>
+            
+            <!-- Subcabeçalho compacto colado ao topo do conteúdo -->
+            <div class="flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-white/5 mb-4">
+                <span class="p-1.5 rounded-xl bg-brand/10 text-brand flex items-center shrink-0">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                </span>
+                <div>
+                    <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Linha do Tempo de Ocupação</h4>
+                    <p class="text-[9px] text-slate-400 font-bold leading-none mt-0.5 sm:block hidden">Visualização cronológica das estadias por quarto físico</p>
                 </div>
-                
-                <!-- Grade de Gantt Cronológica Baseada nas Unidades de Quarto Reais -->
-                <div class="border border-slate-100 dark:border-navie-border rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-black/25">
-                    <div class="overflow-x-auto">
-                        <div class="min-w-[800px] divide-y divide-slate-100 dark:divide-white/5">
-                            <!-- Cabeçalho de Dias da Semana -->
-                            <div class="flex bg-slate-100/80 dark:bg-white/5 py-3 text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider">
-                                <div class="w-48 px-4 shrink-0">Acomodação</div>
-                                <div class="flex-1 grid grid-cols-7 gap-1 text-center">
-                                    <div>Seg (29/06)</div>
-                                    <div>Ter (30/06)</div>
-                                    <div>Qua (01/07)</div>
-                                    <div>Qui (02/07)</div>
-                                    <div>Sex (03/07)</div>
-                                    <div>Sáb (04/07)</div>
-                                    <div>Dom (05/07)</div>
-                                </div>
+            </div>
+            
+            <!-- Grade de Gantt Cronológica Baseada nas Unidades de Quarto Reais -->
+            <div class="border border-slate-100 dark:border-navie-border rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-black/25">
+                <div class="overflow-x-auto">
+                    <div class="min-w-[800px] divide-y divide-slate-100 dark:divide-white/5">
+                        <!-- Cabeçalho de Dias da Semana -->
+                        <div class="flex bg-slate-100/80 dark:bg-white/5 py-3 text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider">
+                            <div class="w-48 px-4 shrink-0">Acomodação</div>
+                            <div class="flex-1 grid grid-cols-7 gap-1 text-center">
+                                <div>Seg (29/06)</div>
+                                <div>Ter (30/06)</div>
+                                <div>Qua (01/07)</div>
+                                <div>Qui (02/07)</div>
+                                <div>Sex (03/07)</div>
+                                <div>Sáb (04/07)</div>
+                                <div>Dom (05/07)</div>
                             </div>
-                            
-                            <!-- Corpo de Acomodações e Barrinhas -->
-                            {% for uni in unidades %}
-                            <div class="flex items-center py-4 text-xs">
-                                <div class="w-48 px-4 shrink-0 font-bold text-slate-700 dark:text-white">
-                                    {{ uni.identificador }} ({{ uni.quarto.nome }})
-                                </div>
-                                <div class="flex-1 grid grid-cols-7 gap-1 relative h-8 items-center">
-                                    <!-- Background grid -->
-                                    <div class="absolute inset-y-0 left-0 right-0 grid grid-cols-7 gap-1 pointer-events-none">
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                        <div class="h-full"></div>
-                                    </div>
-                                    
-                                    <!-- Lógica simplificada de barras baseada nas reservas reais do quarto -->
-                                    {% for r in uni.reservas.all %}
-                                        {% if forloop.first %}
-                                        <div class="col-span-3 col-start-2 bg-brand/10 hover:bg-brand/20 dark:bg-brand/20 dark:hover:bg-brand/30 border border-brand/20 dark:border-brand/40 text-brand text-[10px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer">
-                                            <span class="truncate">Reserva #{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
-                                            <span class="shrink-0 text-[8px] bg-brand text-white px-1.5 py-0.5 rounded-md">{{ r.get_status_display }}</span>
-                                        </div>
-                                        {% endif %}
-                                    {% empty %}
-                                        <div class="col-span-7 text-center text-[10px] text-slate-400/80 font-black uppercase tracking-widest py-1 select-none">
-                                            Livre
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% empty %}
-                            <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
-                                Nenhuma acomodação cadastrada para este hotel.
-                            </div>
-                            {% endfor %}
                         </div>
+                        
+                        <!-- Corpo de Acomodações e Barrinhas -->
+                        {% for uni in unidades %}
+                        <div class="flex items-center py-4 text-xs">
+                            <div class="w-48 px-4 shrink-0 font-bold text-slate-700 dark:text-white">
+                                {{ uni.identificador }} ({{ uni.quarto.nome }})
+                            </div>
+                            <div class="flex-1 grid grid-cols-7 gap-1 relative h-8 items-center">
+                                <!-- Background grid -->
+                                <div class="absolute inset-y-0 left-0 right-0 grid grid-cols-7 gap-1 pointer-events-none">
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
+                                    <div class="h-full"></div>
+                                </div>
+                                
+                                <!-- Lógica simplificada de barras baseada nas reservas reais do quarto -->
+                                {% for r in uni.reservas.all %}
+                                    {% if forloop.first %}
+                                    <div class="col-span-3 col-start-2 bg-brand/10 hover:bg-brand/20 dark:bg-brand/20 dark:hover:bg-brand/30 border border-brand/20 dark:border-brand/40 text-brand text-[10px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer">
+                                        <span class="truncate">Reserva #{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
+                                        <span class="shrink-0 text-[8px] bg-brand text-white px-1.5 py-0.5 rounded-md">{{ r.get_status_display }}</span>
+                                    </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <div class="col-span-7 text-center text-[10px] text-slate-400/80 font-black uppercase tracking-widest py-1 select-none">
+                                        Livre
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
+                            Nenhuma acomodação cadastrada para este hotel.
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
