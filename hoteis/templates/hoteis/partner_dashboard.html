@@ -398,9 +398,9 @@
     </div>
 </div>
 
-<!-- Sub-cabeçalho Integrado para a Linha do Tempo de Reservas (Desktop e Mobile) -->
+<!-- Sub-cabeçalho Integrado para a Linha do Tempo de Reservas (Apenas Notebook / Tablet) -->
 <div x-show="activeTab === 'reservas' && reservasTab === 'timeline'" 
-     class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-6 py-2.5 flex items-center justify-between transition-all" 
+     class="hidden md:flex bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-6 py-2.5 items-center justify-between transition-all" 
      style="display: none;" 
      x-transition.opacity>
     
@@ -411,6 +411,25 @@
         <div>
             <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider leading-none">Linha do Tempo de Ocupação</h4>
             <p class="text-[9px] text-slate-400 font-bold leading-none mt-1 sm:block hidden">Visualização cronológica das estadias por quarto físico</p>
+        </div>
+    </div>
+</div>
+
+<!-- Terceiro Sub-cabeçalho Integrado: Dias da Semana da Linha do Tempo (Apenas Notebook / Tablet) -->
+<div x-show="activeTab === 'reservas' && reservasTab === 'timeline'" 
+     class="hidden md:flex bg-slate-50/80 dark:bg-white/5 border-b border-slate-200/50 dark:border-navie-border px-6 py-2.5 transition-all" 
+     style="display: none;" 
+     x-transition.opacity>
+    <div class="w-full flex text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider items-center select-none">
+        <div class="w-48 px-4 shrink-0 border-r border-slate-200 dark:border-white/10">Acomodação</div>
+        <div class="flex-1 grid grid-cols-7 gap-0 text-center divide-x divide-slate-200 dark:divide-white/10">
+            <div class="py-1">Seg (29/06)</div>
+            <div class="py-1">Ter (30/06)</div>
+            <div class="py-1">Qua (01/07)</div>
+            <div class="py-1">Qui (02/07)</div>
+            <div class="py-1">Sex (03/07)</div>
+            <div class="py-1">Sáb (04/07)</div>
+            <div class="py-1">Dom (05/07)</div>
         </div>
     </div>
 </div>
@@ -1219,66 +1238,54 @@
             </div>
         </div>
 
-        <!-- Aba 2: Linha do Tempo -->
-        <div x-show="reservasTab === 'timeline'" class="w-full animate-in fade-in duration-300 !mt-0" style="display: none;">
+        <!-- Aba 2: Linha do Tempo (Apenas Notebook / Tablet) -->
+        <div x-show="reservasTab === 'timeline'" class="hidden md:block w-full animate-in fade-in duration-300 !mt-0" style="display: none;">
             
-            <!-- Grade de Gantt Cronológica Baseada nas Unidades de Quarto Reais -->
-            <div class="border border-slate-100 dark:border-navie-border rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-black/25">
-                <div class="overflow-x-auto">
-                    <div class="min-w-[800px] divide-y divide-slate-100 dark:divide-white/5">
-                        <!-- Cabeçalho de Dias da Semana -->
-                        <div class="flex bg-slate-100/80 dark:bg-white/5 py-3 text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider">
-                            <div class="w-48 px-4 shrink-0">Acomodação</div>
-                            <div class="flex-1 grid grid-cols-7 gap-1 text-center">
-                                <div>Seg (29/06)</div>
-                                <div>Ter (30/06)</div>
-                                <div>Qua (01/07)</div>
-                                <div>Qui (02/07)</div>
-                                <div>Sex (03/07)</div>
-                                <div>Sáb (04/07)</div>
-                                <div>Dom (05/07)</div>
-                            </div>
+            <!-- Tabela Flat Estilo Planilha Excel (Linhas e divisórias bem marcadas) -->
+            <div class="overflow-x-auto border border-slate-200/60 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-black/10 select-none">
+                <div class="min-w-[800px] divide-y divide-slate-200 dark:divide-white/10">
+                    
+                    <!-- Corpo de Acomodações e Barrinhas -->
+                    {% for uni in unidades %}
+                    <div class="flex items-center hover:bg-slate-50/40 dark:hover:bg-white/5 transition-colors">
+                        <!-- Nome do quarto/unidade -->
+                        <div class="w-48 px-4 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3.5 h-full flex items-center min-h-[48px]">
+                            {{ uni.identificador }} ({{ uni.quarto.nome }})
                         </div>
                         
-                        <!-- Corpo de Acomodações e Barrinhas -->
-                        {% for uni in unidades %}
-                        <div class="flex items-center py-4 text-xs">
-                            <div class="w-48 px-4 shrink-0 font-bold text-slate-700 dark:text-white">
-                                {{ uni.identificador }} ({{ uni.quarto.nome }})
-                            </div>
-                            <div class="flex-1 grid grid-cols-7 gap-1 relative h-8 items-center">
-                                <!-- Background grid -->
-                                <div class="absolute inset-y-0 left-0 right-0 grid grid-cols-7 gap-1 pointer-events-none">
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="border-r border-slate-100 dark:border-white/5 h-full"></div>
-                                    <div class="h-full"></div>
-                                </div>
-                                
-                                <!-- Lógica simplificada de barras baseada nas reservas reais do quarto -->
+                        <!-- Grid de 7 dias com divisores verticais estilo Excel -->
+                        <div class="flex-1 grid grid-cols-7 gap-0 h-12 items-center relative divide-x divide-slate-200 dark:divide-white/10">
+                            <!-- Slots de Dias -->
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                            
+                            <!-- Desenho de Reservas Reais / Pílula Contínua sobreposta no grid -->
+                            <div class="absolute inset-0 flex items-center pointer-events-none px-1">
                                 {% for r in uni.reservas.all %}
                                     {% if forloop.first %}
-                                    <div class="col-span-3 col-start-2 bg-brand/10 hover:bg-brand/20 dark:bg-brand/20 dark:hover:bg-brand/30 border border-brand/20 dark:border-brand/40 text-brand text-[10px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer">
+                                    <div class="w-[42%] ml-[14.28%] pointer-events-auto z-10 bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/50 hover:border-brand text-brand text-[10px] font-black rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer">
                                         <span class="truncate">Reserva #{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
-                                        <span class="shrink-0 text-[8px] bg-brand text-white px-1.5 py-0.5 rounded-md">{{ r.get_status_display }}</span>
+                                        <span class="shrink-0 text-[8px] bg-brand text-white px-1.5 py-0.5 rounded font-black">{{ r.get_status_display }}</span>
                                     </div>
                                     {% endif %}
                                 {% empty %}
-                                    <div class="col-span-7 text-center text-[10px] text-slate-400/80 font-black uppercase tracking-widest py-1 select-none">
+                                    <div class="w-full text-center text-[9px] text-slate-400/80 font-black uppercase tracking-widest select-none">
                                         Livre
                                     </div>
                                 {% endfor %}
                             </div>
                         </div>
-                        {% empty %}
-                        <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
-                            Nenhuma acomodação cadastrada para este hotel.
-                        </div>
-                        {% endfor %}
                     </div>
+                    {% empty %}
+                    <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
+                        Nenhuma acomodação cadastrada para este hotel.
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
