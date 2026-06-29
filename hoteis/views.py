@@ -3193,8 +3193,8 @@ def checkout_processar(request):
         if not unidade_alocada:
             return JsonResponse({'success': False, 'error': 'Desculpe, a acomodação escolhida não possui mais vagas físicas disponíveis para este período.'}, status=400)
             
-        # 2. Conectar ao Mercado Pago (Checkout Transparente API)
-        url_mp = "https://api.mercadopago.com/v1/orders"
+        # 2. Conectar ao Mercado Pago (API de Pagamentos Transparente /v1/payments)
+        url_mp = "https://api.mercadopago.com/v1/payments"
         headers = {
             "Authorization": f"Bearer {settings.MERCADOPAGO_ACCESS_TOKEN}",
             "Content-Type": "application/json",
@@ -3207,11 +3207,8 @@ def checkout_processar(request):
         # Estrutura base do payer
         payer_email = titular_fnrh['email']
         if settings.DEBUG and not payer_email.endswith('@testuser.com'):
-            # Em ambiente local de desenvolvimento, caso o email inserido não seja de teste,
-            # forçamos o email do Usuário de Teste associado à aplicação para evitar o erro 
-            # "Unauthorized use of live credentials" do Mercado Pago.
             payer_email = "TESTUSER6095556049045318276@testuser.com"
-
+ 
         payer = {
             "email": payer_email,
             "first_name": titular_fnrh['nome'].split()[0],
@@ -3222,8 +3219,15 @@ def checkout_processar(request):
             }
         }
         
-        # Estrutura de pagamento segundo a API de Orders do Mercado Pago
-        amount_str = f"{fin['total_cliente']:.2f}"
+        # Estrutura de pagamento segundo a API /v1/payments do Mercado Pago
+        amount_total = float(fin['total_cliente'])
+        
+        payload_mp = {
+            "transaction_amount": amount_total,
+            "description": f"Reserva de Acomodação - {quarto.nome}",
+            "external_reference": f"reserva_{quarto.id}",
+            "payer": payer
+        }
         
         if forma_pagamento == 'cartao':
             token = data.get('token')
@@ -3233,39 +3237,34 @@ def checkout_processar(request):
             if not token:
                 return JsonResponse({'success': False, 'error': 'Token do cartão de crédito não foi gerado.'}, status=400)
                 
-            payment_data = {
-                "amount": amount_str,
-                "payment_method": {
-                    "id": payment_method_id,
-                    "type": "credit_card",
-                    "token": token,
-                    "installments": installments
-                }
-            }
+            payload_mp.update({
+                "token": token,
+                "installments": installments,
+                "payment_method_id": payment_method_id
+            })
         elif forma_pagamento == 'pix':
-            payment_data = {
-                "amount": amount_str,
-                "payment_method": {
-                    "id": "pix",
-                    "type": "bank_transfer"
-                }
-            }
+            payload_mp.update({
+                "payment_method_id": "pix"
+            })
             
-        payload_mp = {
-            "type": "online",
-            "processing_mode": "automatic",
-            "total_amount": amount_str,
-            "external_reference": f"reserva_{quarto.id}",
-            "payer": payer,
-            "transactions": {
-                "payments": [payment_data]
-            }
-        }
+        # Inserir Split de Pagamento caso o parceiro tenha conta conectada
+        conexao_mp = None
+        if quarto.hotel and quarto.hotel.empresa and hasattr(quarto.hotel.empresa, 'mp_conexao'):
+            conexao_mp = quarto.hotel.empresa.mp_conexao
+            
+        if conexao_mp:
+            payload_mp.update({
+                "application_fee": float(fin['taxa_servico']),
+                "splits": [
+                    {
+                        "collector_id": int(conexao_mp.mp_user_id),
+                        "amount": float(fin['repasse_parceiro'])
+                    }
+                ]
+            })
             
         try:
-            # Em ambiente de teste unitário, podemos mockar ou injetar chamadas simuladas caso a rede falhe
             print("MERCADO PAGO REQUEST URL:", url_mp, flush=True)
-            print("MERCADO PAGO HEADERS:", headers, flush=True)
             print("MERCADO PAGO PAYLOAD:", json.dumps(payload_mp, indent=2), flush=True)
             response = requests.post(url_mp, headers=headers, json=payload_mp, timeout=15)
             resp_data = response.json()
@@ -3277,7 +3276,6 @@ def checkout_processar(request):
             
         if response.status_code not in [200, 201]:
             error_message = resp_data.get('message', 'Erro desconhecido no gateway de pagamento.')
-            # Tratar caso o token esteja inválido ou sandbox dê erro
             if 'cause' in resp_data and resp_data['cause']:
                 error_message = resp_data['cause'][0].get('description', error_message)
             return JsonResponse({'success': False, 'error': f'Pagamento Recusado: {error_message}'}, status=400)
@@ -3285,7 +3283,6 @@ def checkout_processar(request):
         status_pagamento_raw = resp_data.get('status')
         status_detail = resp_data.get('status_detail')
         
-        # Mapeia o status da API /v1/orders para o equivalente da API anterior
         if status_pagamento_raw == 'processed':
             status_pagamento = 'approved'
         elif status_pagamento_raw == 'action_required':
@@ -4850,6 +4847,117 @@ def portal_grupo(request, slug=None):
         'filtros_ativos': filtros_ativos
     }
     return render(request, 'hoteis/portal_grupo.html', context)
+
+
+from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
+import requests
+from django.conf import settings
+from hoteis.models import MercadoPagoConexao
+
+@login_required
+def view_mp_conectar(request):
+    """
+    Inicia o fluxo OAuth com o Mercado Pago redirecionando o hoteleiro para autorizar o Naviê.
+    """
+    if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
+        messages.error(request, "Acesso restrito apenas para hotéis parceiros.")
+        return redirect('hoteis:partner_dashboard')
+        
+    client_id = getattr(settings, 'MERCADOPAGO_CLIENT_ID', '')
+    if not client_id:
+        messages.error(request, "Integração do Mercado Pago temporariamente indisponível (client_id ausente).")
+        return redirect('hoteis:partner_dashboard')
+        
+    # Obtém o host de forma dinâmica
+    host = request.get_host()
+    scheme = 'https' if request.is_secure() else 'http'
+    redirect_uri = f"{scheme}://{host}/hospedagens/financeiro/mp/callback/"
+    
+    # URL de autorização oficial do Mercado Pago
+    url_auth = (
+        f"https://auth.mercadopago.com/authorization"
+        f"?client_id={client_id}"
+        f"&response_type=code"
+        f"&platform_id=mp"
+        f"&redirect_uri={redirect_uri}"
+    )
+    return redirect(url_auth)
+
+
+@login_required
+def view_mp_callback(request):
+    """
+    Callback do OAuth do Mercado Pago. Recebe o 'code' da autorização e obtém os tokens permanentes.
+    """
+    if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
+        messages.error(request, "Acesso negado.")
+        return redirect('hoteis:partner_dashboard')
+        
+    hotel = request.user.perfil_parceiro.hotel
+    empresa = hotel.empresa
+    if not empresa:
+        messages.error(request, "Nenhuma empresa associada ao hotel logado.")
+        return redirect('hoteis:partner_dashboard')
+        
+    code = request.GET.get('code')
+    if not code:
+        error = request.GET.get('error_description') or request.GET.get('error') or "Autorização cancelada ou inválida."
+        messages.error(request, f"Conexão com Mercado Pago recusada: {error}")
+        return redirect('hoteis:partner_dashboard')
+        
+    client_id = getattr(settings, 'MERCADOPAGO_CLIENT_ID', '')
+    client_secret = getattr(settings, 'MERCADOPAGO_CLIENT_SECRET', '')
+    
+    host = request.get_host()
+    scheme = 'https' if request.is_secure() else 'http'
+    redirect_uri = f"{scheme}://{host}/hospedagens/financeiro/mp/callback/"
+    
+    # Solicita token ao Mercado Pago
+    url_token = "https://api.mercadopago.com/oauth/token"
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json"
+    }
+    data_payload = {
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": redirect_uri
+    }
+    
+    try:
+        response = requests.post(url_token, headers=headers, data=data_payload, timeout=15)
+        resp_data = response.json()
+        
+        if response.status_code != 200:
+            error_msg = resp_data.get('message') or resp_data.get('error_description') or 'Erro desconhecido.'
+            messages.error(request, f"Erro ao tokenizar conta com Mercado Pago: {error_msg}")
+            return redirect('hoteis:partner_dashboard')
+            
+        access_token = resp_data.get('access_token')
+        refresh_token = resp_data.get('refresh_token')
+        mp_user_id = resp_data.get('user_id')
+        expires_in = resp_data.get('expires_in', 15552000) # Expira em 180 dias por padrão
+        
+        # Salva ou atualiza a conexão no banco
+        conexao, created = MercadoPagoConexao.objects.update_or_create(
+            empresa=empresa,
+            defaults={
+                'mp_user_id': str(mp_user_id),
+                'access_token': access_token,
+                'refresh_token': refresh_token,
+                'token_expira_em': timezone.now() + timedelta(seconds=int(expires_in))
+            }
+        )
+        
+        messages.success(request, f"Sucesso! Sua conta Mercado Pago foi vinculada ao Naviê Vibe (ID: {mp_user_id}).")
+    except Exception as e:
+        messages.error(request, f"Falha de comunicação com o Mercado Pago: {str(e)}")
+        
+    return redirect('hoteis:partner_dashboard')
 
 
 

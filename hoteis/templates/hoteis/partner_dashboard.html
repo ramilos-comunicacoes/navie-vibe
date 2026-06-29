@@ -2705,6 +2705,68 @@
                     </div>
                 </div>
             </form>
+
+            <!-- Card: Gateway de Pagamento & Split (Mercado Pago) -->
+            <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2.5 rounded-2xl bg-blue-500/10 text-blue-500">
+                            <i data-lucide="wallet" class="w-6 h-6"></i>
+                        </span>
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                Recebimentos e Split Financeiro
+                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Mercado Pago</span>
+                            </h4>
+                            <p class="text-xs text-slate-400">Gerencie a conta onde você receberá o saldo integral das suas diárias</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        {% if hotel.empresa.mp_conexao %}
+                            <div class="flex items-center gap-2">
+                                <span class="flex h-2.5 w-2.5 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                </span>
+                                <span class="text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-wider">Conta Conectada</span>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                                <span class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Aguardando Conexão</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border space-y-3">
+                    <h5 class="text-xs font-bold text-slate-800 dark:text-white">Como funcionam os seus recebimentos:</h5>
+                    <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-disc pl-4 font-medium">
+                        <li>Você recebe <strong>100% do valor da diária</strong> cadastrado no sistema, diretamente na sua conta Mercado Pago.</li>
+                        <li>A taxa operacional de processamento do cartão/Pix é assumida e descontada pelo <strong>Naviê Vibe</strong>.</li>
+                        <li>A divisão é feita pelo gateway no exato momento em que o cliente realiza o pagamento.</li>
+                    </ul>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                    {% if hotel.empresa.mp_conexao %}
+                        <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                            ID da Carteira MP: <span class="font-bold text-slate-700 dark:text-white">{{ hotel.empresa.mp_conexao.mp_user_id }}</span>
+                        </div>
+                        <a href="{% url 'hoteis:mp_conectar' %}" class="px-5 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Reconectar / Mudar Conta
+                        </a>
+                    {% else %}
+                        <div class="text-xs text-slate-500 dark:text-slate-400">
+                            Para poder receber pagamentos de reservas de forma online no site, conecte sua conta do Mercado Pago.
+                        </div>
+                        <a href="{% url 'hoteis:mp_conectar' %}" class="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none shadow-md shadow-blue-500/10">
+                            <i data-lucide="link" class="w-4 h-4"></i> Conectar com o Mercado Pago
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <!-- SUB-ABA 2: ASSINATURA / PLANO / SAAS -->
