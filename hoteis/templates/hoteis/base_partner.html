@@ -9,6 +9,7 @@ x-data="{
     activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
     quartosTab: localStorage.getItem('partner_quartos_tab') || 'mapa',
     financeiroTab: localStorage.getItem('partner_financeiro_tab') || 'resumo',
+    reservasTab: localStorage.getItem('partner_reservas_tab') || 'mapa',
     viewMode: localStorage.getItem('partner_view_mode') || 'kanban',
     configTab: (new URLSearchParams(window.location.search)).get('config_tab') || localStorage.getItem('partner_config_tab') || 'site',
     estoqueTab: localStorage.getItem('partner_estoque_tab') || 'inventario',
@@ -161,6 +162,11 @@ x-data="{
         // Persistir a sub-aba do financeiro ao mudar
         this.$watch('financeiroTab', value => {
             localStorage.setItem('partner_financeiro_tab', value);
+        });
+        
+        // Persistir a sub-aba de reservas ao mudar
+        this.$watch('reservasTab', value => {
+            localStorage.setItem('partner_reservas_tab', value);
         });
         
         // Persistir a sub-aba de configurações e atualizar URL se a aba ativa for configurações
@@ -1032,7 +1038,20 @@ x-data="{
                                 <span>Categorias & Acomodações</span>
                             </button>
                         </div>
-                        <span x-show="activeTab === 'reservas'" style="display: none;">Aprovações & Reservas</span>
+                        <div x-show="activeTab === 'reservas'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
+                            <button type="button" @click="reservasTab = 'mapa'; localStorage.setItem('partner_reservas_tab', 'mapa')"
+                                    :class="reservasTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="layout-grid" class="w-3.5 h-3.5"></i></span>
+                                <span>Mapa de Cabanas</span>
+                            </button>
+                            <button type="button" @click="reservasTab = 'timeline'; localStorage.setItem('partner_reservas_tab', 'timeline')"
+                                    :class="reservasTab === 'timeline' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                                <span class="flex items-center" style="pointer-events:none;"><i data-lucide="clock" class="w-3.5 h-3.5"></i></span>
+                                <span>Linha do Tempo</span>
+                            </button>
+                        </div>
                         <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container" style="display: none;">
                             <div class="marquee-content font-black text-slate-800 dark:text-white text-xs sm:text-sm">
                                 Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp; Inventário & Catálogo de Produtos &nbsp;&bull;&nbsp;
@@ -1057,7 +1076,6 @@ x-data="{
                     <!-- Subtítulo Dinâmico do Cabeçalho (Ocultado no Mobile para manter respiro) -->
                     <div class="text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold hidden sm:block">
                         <span x-show="activeTab === 'financeiro'" style="display: none;">Histórico financeiro e fluxo de caixa em tempo real</span>
-                        <span x-show="activeTab === 'reservas'" style="display: none;">Histórico de reservas ativas dos clientes</span>
                         <div x-show="activeTab === 'estoque' && estoqueTab === 'inventario'" class="marquee-container" style="display: none;">
                             <div class="marquee-content text-[10px] text-slate-400 dark:text-navie-textsec font-bold">
                                 Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp; Auditoria física de inventário, controle de estoque mínimo e validades de lotes &nbsp;&bull;&nbsp;
