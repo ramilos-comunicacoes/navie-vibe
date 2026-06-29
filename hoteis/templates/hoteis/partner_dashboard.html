@@ -1245,9 +1245,9 @@
                     {% for uni_data in unidades_data %}
                     <div class="flex items-center hover:bg-slate-50/40 dark:hover:bg-white/5 transition-colors">
                         <!-- Nome do quarto/unidade -->
-                        <div class="w-36 px-3 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3 h-full flex items-center min-h-[48px] text-[10px] tracking-tight leading-tight uppercase">
+                        <div class="w-36 px-3 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3 h-full flex items-center min-h-[48px] text-[9px] tracking-tight leading-tight uppercase">
                             <span class="truncate" title="{{ uni_data.unidade.identificador }} ({{ uni_data.unidade.quarto.nome }})">
-                                {{ uni_data.unidade.identificador }}
+                                {{ uni_data.unidade.identificador }} - {{ uni_data.unidade.quarto.nome }}
                             </span>
                         </div>
                         

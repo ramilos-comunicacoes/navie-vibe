@@ -905,8 +905,15 @@ def partner_dashboard(request):
         dias_gantt.append(curr)
         curr += timedelta(days=1)
 
+    import re
+    def get_number(identificador):
+        nums = re.findall(r'\d+', identificador or '')
+        return int(nums[0]) if nums else 999999
+    
+    unidades_ordenadas = sorted(unidades, key=lambda u: get_number(u.identificador))
+
     unidades_data = []
-    for uni in unidades:
+    for uni in unidades_ordenadas:
         res_uni = Reserva.objects.filter(
             unidade=uni,
             data_checkin__lt=data_fim,
