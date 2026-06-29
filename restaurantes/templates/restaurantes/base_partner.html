@@ -442,6 +442,15 @@
                 }
             }
         };
+
+        // Intercepta erros globais de requisição do HTMX
+        document.addEventListener('htmx:responseError', function(e) {
+            if (e.detail.xhr.status === 413) {
+                alert("Erro: O arquivo enviado é muito grande. Por favor, verifique o tamanho do arquivo ou configure o Nginx da sua VPS.");
+            } else {
+                alert("Ocorreu um erro ao processar a requisição (Código: " + e.detail.xhr.status + ").");
+            }
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>
