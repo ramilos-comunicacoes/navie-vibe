@@ -231,7 +231,13 @@ def partner_salvar_configuracoes(request):
         if video_file.size > 8 * 1024 * 1024:
             messages.error(request, "O vídeo da seção sobre ultrapassa o limite de 8MB permitido.")
             from django.urls import reverse
-            return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
+            url_red = reverse('restaurantes:partner_dashboard') + '?tab=configuracoes'
+            if request.headers.get('HX-Request'):
+                from django.http import HttpResponse
+                response = HttpResponse()
+                response['HX-Redirect'] = url_red
+                return response
+            return redirect(url_red)
         restaurante.sobre_video = video_file
 
     if request.POST.get('remover_hero_video') == 'true':
@@ -241,13 +247,25 @@ def partner_salvar_configuracoes(request):
         if video_file.size > 8 * 1024 * 1024:
             messages.error(request, "O vídeo em loop do hero ultrapassa o limite de 8MB permitido.")
             from django.urls import reverse
-            return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
+            url_red = reverse('restaurantes:partner_dashboard') + '?tab=configuracoes'
+            if request.headers.get('HX-Request'):
+                from django.http import HttpResponse
+                response = HttpResponse()
+                response['HX-Redirect'] = url_red
+                return response
+            return redirect(url_red)
         restaurante.hero_video = video_file
         
     restaurante.save(using='restaurantes')
     messages.success(request, "Configurações do restaurante salvas com sucesso.")
     from django.urls import reverse
-    return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
+    url_red = reverse('restaurantes:partner_dashboard') + '?tab=configuracoes'
+    if request.headers.get('HX-Request'):
+        from django.http import HttpResponse
+        response = HttpResponse()
+        response['HX-Redirect'] = url_red
+        return response
+    return redirect(url_red)
 
 
 @login_required(login_url='restaurantes:partner_login')

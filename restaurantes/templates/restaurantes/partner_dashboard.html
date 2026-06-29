@@ -130,7 +130,7 @@
 
     <!-- SUB-ABA: CONFIGURAÇÕES DO SITE -->
     <div x-show="activeSubTab === 'site'">
-        <form id="form-salvar-configuracoes" action="{% url 'restaurantes:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form id="form-salvar-configuracoes" hx-post="{% url 'restaurantes:partner_salvar_configuracoes' %}" hx-encoding="multipart/form-data" class="space-y-6">
             {% csrf_token %}
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
