@@ -81,20 +81,21 @@
     }
     .hero-banner-rest { height: 480px !important; position: relative; }
     @media (min-width: 768px) { .hero-banner-rest { height: 560px !important; } }
-    /* MOBILE: hero centralizado verticalmente */
+    /* MOBILE: hero centralizado verticalmente e ligeiramente subido */
     .hero-content-wrapper { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%; }
     @media (max-width: 767px) {
         .hero-banner-rest { height: 42vh !important; min-height: 290px !important; max-height: 355px !important; }
-        .hero-content-wrapper { padding-top: 8px !important; padding-bottom: 24px !important; justify-content: center !important; }
+        .hero-content-wrapper { padding-top: 0px !important; padding-bottom: 24px !important; transform: translateY(-12px); justify-content: center !important; }
         .hero-logo-box { width: 72px !important; height: 72px !important; margin-bottom: 2px !important; }
         .hero-banner-rest h1 { font-size: 1.75rem !important; margin-bottom: 6px !important; }
         .hero-banner-rest p { font-size: 0.8rem !important; margin-bottom: 12px !important; line-height: 1.4 !important; }
     }
-    /* DESKTOP: centraliza levando em conta o cabeçalho fixo (~64px) */
+    /* DESKTOP: centraliza e sobe o conteúdo compensando o cabeçalho fixo */
     @media (min-width: 768px) {
         .hero-content-wrapper {
-            padding-top: 64px; /* compensa a altura do header fixo */
-            padding-bottom: 0;
+            padding-top: 48px;
+            padding-bottom: 32px;
+            transform: translateY(-28px);
             justify-content: center !important;
         }
         .hero-logo-box { width: 136px; height: 136px; margin-bottom: 12px; }
@@ -184,7 +185,7 @@
     <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
         {% if restaurante.logo %}
         <div class="hero-logo-box flex items-center justify-center shrink-0 select-none">
-            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl">
+            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl" style="filter: brightness(0) invert(1) !important;">
         </div>
         {% endif %}
 
