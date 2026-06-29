@@ -898,6 +898,13 @@ def partner_dashboard(request):
     pendentes_qtd = res_periodo_sel.filter(data_checkin__gte=data_inicio, data_checkin__lte=data_fim, status__in=['confirmada', 'pendente']).count()
     
     # 4. Colunas de Quarto Físico (Cabanas)
+    # 4. Colunas de Quarto Físico (Cabanas & Gantt Timeline)
+    dias_gantt = []
+    curr = data_inicio
+    for _ in range(7):
+        dias_gantt.append(curr)
+        curr += timedelta(days=1)
+
     unidades_data = []
     if selected_quarto:
         for uni in selected_quarto.unidades.filter(ativa=True):
@@ -907,9 +914,24 @@ def partner_dashboard(request):
                 data_checkout__gt=data_inicio
             ).exclude(status='cancelada').order_by('data_checkin')
             
+            reservas_list = []
+            for r in res_uni:
+                start_date = max(r.data_checkin, data_inicio)
+                end_date = min(r.data_checkout, data_fim)
+                dias_exibidos = (end_date - start_date).days
+                if dias_exibidos <= 0:
+                    dias_exibidos = 1
+                offset_days = (start_date - data_inicio).days
+                
+                r.gantt_left = offset_days * 14.2857
+                r.gantt_width = dias_exibidos * 14.2857
+                r.gantt_continua_antes = r.data_checkin < data_inicio
+                r.gantt_continua_depois = r.data_checkout > data_fim
+                reservas_list.append(r)
+                
             unidades_data.append({
                 'unidade': uni,
-                'reservas': res_uni
+                'reservas': reservas_list
             })
     
     # Tarefas Reais
@@ -1055,6 +1077,7 @@ def partner_dashboard(request):
         'hospedados_qtd': hospedados_qtd,
         'pendentes_qtd': pendentes_qtd,
         'unidades_data': unidades_data,
+        'dias_gantt': dias_gantt,
         
         # Central de Hóspedes & Pedidos B2B:
         'hospedes_ativos': hospedes_ativos,

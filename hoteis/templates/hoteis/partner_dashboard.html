@@ -421,15 +421,11 @@
      style="display: none;" 
      x-transition.opacity>
     <div class="w-full flex text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider items-center select-none">
-        <div class="w-48 px-4 shrink-0 border-r border-slate-200 dark:border-white/10">Acomodação</div>
+        <div class="w-36 px-4 shrink-0 border-r border-slate-200 dark:border-white/10 truncate">Acomodação</div>
         <div class="flex-1 grid grid-cols-7 gap-0 text-center divide-x divide-slate-200 dark:divide-white/10">
-            <div class="py-1">Seg (29/06)</div>
-            <div class="py-1">Ter (30/06)</div>
-            <div class="py-1">Qua (01/07)</div>
-            <div class="py-1">Qui (02/07)</div>
-            <div class="py-1">Sex (03/07)</div>
-            <div class="py-1">Sáb (04/07)</div>
-            <div class="py-1">Dom (05/07)</div>
+            {% for dia in dias_gantt %}
+            <div class="py-1">{{ dia|date:"D"|upper }} ({{ dia|date:"d/m" }})</div>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -1242,15 +1238,17 @@
         <div x-show="reservasTab === 'timeline'" class="hidden md:block w-full animate-in fade-in duration-300 !mt-0" style="display: none;">
             
             <!-- Tabela Flat Estilo Planilha Excel (Linhas e divisórias bem marcadas) -->
-            <div class="overflow-x-auto border border-slate-200/60 dark:border-white/10 rounded-2xl bg-white/40 dark:bg-black/10 select-none">
+            <div class="overflow-x-auto select-none border-b border-slate-200 dark:border-white/10">
                 <div class="min-w-[800px] divide-y divide-slate-200 dark:divide-white/10">
                     
                     <!-- Corpo de Acomodações e Barrinhas -->
-                    {% for uni in unidades %}
+                    {% for uni_data in unidades_data %}
                     <div class="flex items-center hover:bg-slate-50/40 dark:hover:bg-white/5 transition-colors">
                         <!-- Nome do quarto/unidade -->
-                        <div class="w-48 px-4 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3.5 h-full flex items-center min-h-[48px]">
-                            {{ uni.identificador }} ({{ uni.quarto.nome }})
+                        <div class="w-36 px-3 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3 h-full flex items-center min-h-[48px] text-[10px] tracking-tight leading-tight uppercase">
+                            <span class="truncate" title="{{ uni_data.unidade.identificador }} ({{ uni_data.unidade.quarto.nome }})">
+                                {{ uni_data.unidade.identificador }}
+                            </span>
                         </div>
                         
                         <!-- Grid de 7 dias com divisores verticais estilo Excel -->
@@ -1266,17 +1264,17 @@
                             
                             <!-- Desenho de Reservas Reais / Pílula Contínua sobreposta no grid -->
                             <div class="absolute inset-0 flex items-center pointer-events-none px-1">
-                                {% for r in uni.reservas.all %}
-                                    {% if forloop.first %}
-                                    <div class="w-[42%] ml-[14.28%] pointer-events-auto z-10 bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/50 hover:border-brand text-brand text-[10px] font-black rounded-xl px-3.5 py-2 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer">
-                                        <span class="truncate">Reserva #{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
-                                        <span class="shrink-0 text-[8px] bg-brand text-white px-1.5 py-0.5 rounded font-black">{{ r.get_status_display }}</span>
-                                    </div>
-                                    {% endif %}
+                                {% for r in uni_data.reservas %}
+                                <div style="left: {{ r.gantt_left|stringformat:".4f" }}%; width: {{ r.gantt_width|stringformat:".4f" }}%;"
+                                     class="absolute pointer-events-auto z-10 bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/50 hover:border-brand text-brand text-[9px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer"
+                                     title="Hóspede: {{ r.hospede_nome }} | Check-in: {{ r.data_checkin|date:'d/m' }} a {{ r.data_checkout|date:'d/m' }}">
+                                    <span class="truncate">#{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
+                                    <span class="shrink-0 text-[7px] bg-brand text-white px-1.5 py-0.5 rounded font-black">{{ r.get_status_display }}</span>
+                                </div>
                                 {% empty %}
-                                    <div class="w-full text-center text-[9px] text-slate-400/80 font-black uppercase tracking-widest select-none">
-                                        Livre
-                                    </div>
+                                <div class="w-full text-center text-[9px] text-slate-400/80 font-bold uppercase tracking-widest select-none">
+                                    Livre
+                                </div>
                                 {% endfor %}
                             </div>
                         </div>
