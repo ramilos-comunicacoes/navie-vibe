@@ -277,7 +277,7 @@
             <!-- ── COLUNA ESQUERDA: Detalhes ── -->
             <div class="lg:col-span-8 space-y-6">
 
-                <!-- Card: Nome, Preço e Atributos Rápidos -->
+                <!-- Card Único da Acomodação (Contém Nome, Atributos rápidos, Comodidades e Descrição) -->
                 <div class="bg-white rounded-3xl p-6 md:p-10 shadow-xl shadow-gray-100/80 border border-gray-100
                             animate-in fade-in slide-in-from-bottom-4 duration-500">
 
@@ -296,8 +296,9 @@
                         {{ quarto.nome }}
                     </h1>
 
-                    <!-- Preço destacado -->
+                    <!-- Preço destacado (com "A partir de") -->
                     <div class="mt-4 flex items-baseline gap-1.5">
+                        <span class="text-xs font-bold text-gray-400 mr-0.5">a partir de</span>
                         <span class="text-2xl md:text-3xl font-black text-action-blue">R$ {{ quarto.preco }}</span>
                         <span class="text-sm font-bold text-gray-400">/ noite</span>
                         {% if quarto.tem_desconto_multidias %}
@@ -320,70 +321,63 @@
                             Vídeo Tour Disponível
                         </div>
                         {% endif %}
-                        <div class="w-px h-4 bg-gray-200 my-auto hidden sm:block"></div>
-                        <div class="flex items-center gap-2 text-sm font-bold text-gray-600">
-                            <i data-lucide="images" class="w-4 h-4 text-slate-400"></i>
-                            {{ imagens_todas|length }} foto{% if imagens_todas|length != 1 %}s{% endif %} na galeria
+                    </div>
+
+                    <!-- Comodidades Inclusas -->
+                    {% if comodidades %}
+                    <div class="mt-8 pt-8 border-t border-gray-100">
+                        <h2 class="text-xs font-black text-gray-900 mb-7 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <div class="w-1.5 h-5 bg-action-blue rounded-full"></div>
+                            Comodidades Inclusas
+                        </h2>
+                        <div class="com-grid">
+                            {% for com in comodidades %}
+                            <div class="flex items-center gap-3 text-sm font-semibold text-gray-600">
+                                <span class="amenity-icon">
+                                    {% if "Wi" in com or "wifi" in com or "internet" in com %}
+                                        <i data-lucide="wifi" class="w-4 h-4"></i>
+                                    {% elif "Ar" in com or "Clima" in com %}
+                                        <i data-lucide="wind" class="w-4 h-4"></i>
+                                    {% elif "Café" in com or "café" in com %}
+                                        <i data-lucide="coffee" class="w-4 h-4"></i>
+                                    {% elif "TV" in com or "tv" in com or "Smart" in com %}
+                                        <i data-lucide="tv" class="w-4 h-4"></i>
+                                    {% elif "Frigobar" in com or "Mini" in com %}
+                                        <i data-lucide="thermometer" class="w-4 h-4"></i>
+                                    {% elif "Hidro" in com or "Banheira" in com %}
+                                        <i data-lucide="droplets" class="w-4 h-4"></i>
+                                    {% elif "Piscina" in com %}
+                                        <i data-lucide="waves" class="w-4 h-4"></i>
+                                    {% elif "Copa" in com or "Cozinha" in com %}
+                                        <i data-lucide="utensils" class="w-4 h-4"></i>
+                                    {% elif "Pet" in com %}
+                                        <i data-lucide="paw-print" class="w-4 h-4"></i>
+                                    {% else %}
+                                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                    {% endif %}
+                                </span>
+                                {{ com }}
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
-                </div>
+                    {% endif %}
 
-                <!-- Card: Comodidades -->
-                {% if comodidades %}
-                <div class="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100
-                            animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-                    <h2 class="text-xs font-black text-gray-900 mb-7 uppercase tracking-[0.2em] flex items-center gap-3">
-                        <div class="w-1.5 h-5 bg-action-blue rounded-full"></div>
-                        Comodidades Inclusas
-                    </h2>
-                    <div class="com-grid">
-                        {% for com in comodidades %}
-                        <div class="flex items-center gap-3 text-sm font-semibold text-gray-600">
-                            <span class="amenity-icon">
-                                {% if "Wi" in com or "wifi" in com or "internet" in com %}
-                                    <i data-lucide="wifi" class="w-4 h-4"></i>
-                                {% elif "Ar" in com or "Clima" in com %}
-                                    <i data-lucide="wind" class="w-4 h-4"></i>
-                                {% elif "Café" in com or "café" in com %}
-                                    <i data-lucide="coffee" class="w-4 h-4"></i>
-                                {% elif "TV" in com or "tv" in com or "Smart" in com %}
-                                    <i data-lucide="tv" class="w-4 h-4"></i>
-                                {% elif "Frigobar" in com or "Mini" in com %}
-                                    <i data-lucide="thermometer" class="w-4 h-4"></i>
-                                {% elif "Hidro" in com or "Banheira" in com %}
-                                    <i data-lucide="droplets" class="w-4 h-4"></i>
-                                {% elif "Piscina" in com %}
-                                    <i data-lucide="waves" class="w-4 h-4"></i>
-                                {% elif "Copa" in com or "Cozinha" in com %}
-                                    <i data-lucide="utensils" class="w-4 h-4"></i>
-                                {% elif "Pet" in com %}
-                                    <i data-lucide="paw-print" class="w-4 h-4"></i>
-                                {% else %}
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                {% endif %}
-                            </span>
-                            {{ com }}
+                    <!-- Descrição da Acomodação -->
+                    {% if quarto.descricao %}
+                    <div class="mt-8 pt-8 border-t border-gray-100">
+                        <h2 class="text-xs font-black text-gray-900 mb-6 uppercase tracking-[0.2em] flex items-center gap-3">
+                            <div class="w-1.5 h-5 bg-action-blue rounded-full"></div>
+                            Sobre esta Acomodação
+                        </h2>
+                        <div class="text-sm text-gray-600 font-medium leading-relaxed prose prose-sm max-w-none">
+                            {{ quarto.descricao|safe }}
                         </div>
-                        {% endfor %}
                     </div>
+                    {% endif %}
                 </div>
-                {% endif %}
 
-                <!-- Card: Descrição -->
-                {% if quarto.descricao %}
-                <div class="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100
-                            animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
-                    <h2 class="text-xs font-black text-gray-900 mb-6 uppercase tracking-[0.2em] flex items-center gap-3">
-                        <div class="w-1.5 h-5 bg-action-blue rounded-full"></div>
-                        Sobre esta Acomodação
-                    </h2>
-                    <div class="text-sm text-gray-600 font-medium leading-relaxed prose prose-sm max-w-none">
-                        {{ quarto.descricao|safe }}
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Card: Política de desconto progressivo -->
+                <!-- Política de desconto progressivo -->
                 {% if quarto.tem_desconto_multidias %}
                 <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-6 md:p-8
                             border border-green-100 shadow-sm animate-in fade-in duration-500 delay-200">
@@ -416,11 +410,14 @@
                             <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">
                                 Valor por Noite
                             </span>
-                            <div class="flex items-baseline gap-1">
-                                <span class="text-4xl font-black text-gray-900 tracking-tighter">
-                                    R$ {{ quarto.preco }}
-                                </span>
-                                <span class="text-xs font-bold text-gray-400">/ diária</span>
+                            <div class="flex flex-col gap-0.5">
+                                <span class="text-[10px] font-black text-action-blue uppercase tracking-wider block">a partir de</span>
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-4xl font-black text-gray-900 tracking-tighter">
+                                        R$ {{ quarto.preco }}
+                                    </span>
+                                    <span class="text-xs font-bold text-gray-400">/ diária</span>
+                                </div>
                             </div>
                             {% if quarto.tem_desconto_multidias %}
                             <p class="text-[10px] font-bold text-green-600 mt-1.5 flex items-center gap-1">
