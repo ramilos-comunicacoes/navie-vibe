@@ -71,7 +71,7 @@
     /* ── Galeria carrossel (Swiper Premium) ── */
     .room-swiper {
         width: 100%;
-        height: 380px; /* Altura fixa no mobile para travar o layout do Swiper */
+        height: 380px; /* Altura fixa no mobile */
         overflow: visible !important;
     }
     @media (min-width: 768px) {
@@ -80,13 +80,29 @@
         }
     }
     .room-swiper .swiper-slide {
+        width: 78vw !important; /* Largura unificada no mobile */
+        height: 340px !important;
         opacity: 0.55;
-        transform: scale(0.96);
+        transform: scale(0.95);
         transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
-        align-items: flex-start; /* Alinha todos os cards no topo */
+        align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        border-radius: 2rem;
+        overflow: hidden;
+    }
+    @media (min-width: 768px) {
+        .room-swiper .swiper-slide {
+            width: 60vw !important; /* Largura unificada no desktop */
+            height: 500px !important;
+        }
+    }
+    .room-swiper .swiper-slide img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 2rem !important;
     }
     .room-swiper .swiper-slide-active {
         opacity: 1 !important;
@@ -579,6 +595,8 @@
         spaceBetween: 16,
         slideToClickedSlide: true,
         loopedSlides: shouldLoop ? originalSlidesCount : undefined,
+        observer: true,
+        observeParents: true,
         breakpoints: {
             768: {
                 spaceBetween: 24,
