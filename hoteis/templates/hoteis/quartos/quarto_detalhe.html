@@ -69,19 +69,16 @@
     .border-action-blue{ border-color: var(--brand-color-burned) !important; }
 
     /* ── Galeria carrossel (Swiper Premium) ── */
+    /* ── Galeria carrossel (Swiper Premium) - Mobile ── */
     .room-swiper {
         width: 100%;
         height: 240px; /* Altura compacta no mobile */
         overflow: visible !important;
     }
-    @media (min-width: 768px) {
-        .room-swiper {
-            height: 480px; /* Altura no desktop */
-        }
-    }
     .room-swiper .swiper-slide {
-        width: auto !important; /* Largura proporcional baseada na imagem */
-        height: 100% !important; /* Altura máxima baseada no container */
+        width: auto !important;
+        height: 100% !important;
+        max-width: 78vw !important; /* Limita a largura para garantir fotos vizinhas visíveis */
         opacity: 0.55;
         transform: scale(0.94);
         transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -93,9 +90,9 @@
         overflow: hidden;
     }
     .room-swiper .swiper-slide img {
-        width: auto !important;
+        width: 100% !important;
         height: 100% !important;
-        object-fit: contain !important; /* Preserva a proporção e evita cortes na imagem */
+        object-fit: cover !important; /* Preenche a moldura preservando a proporção de aspecto */
         border-radius: 2rem !important;
     }
     .room-swiper .swiper-slide-active {
@@ -103,7 +100,7 @@
         transform: scale(1) !important;
     }
     
-    /* Configuração específica do Vídeo Tour para manter proporção vertical */
+    /* Configuração do Vídeo Tour no Mobile */
     .room-swiper .video-card-carousel {
         width: auto !important;
         height: 100% !important;
@@ -114,6 +111,16 @@
         height: 100% !important;
         object-fit: cover !important;
         border-radius: 2rem !important;
+    }
+
+    /* ── Regras Isoladas para Desktop ── */
+    @media (min-width: 768px) {
+        .room-swiper {
+            height: 480px; /* Altura no desktop */
+        }
+        .room-swiper .swiper-slide {
+            max-width: 60vw !important; /* Limita a largura no desktop */
+        }
     }
 
     /* ── Video card ── */
@@ -267,7 +274,7 @@
     <!-- ══════════════════════════════════════════════════════════════
          CONTEÚDO PRINCIPAL (SOBREPOSIÇÃO)
     ══════════════════════════════════════════════════════════════ -->
-    <main class="relative z-30 bg-white rounded-t-[2.5rem] -mt-32 md:-mt-16 pt-6 md:pt-8 shadow-[0_-15px_40px_rgba(0,0,0,0.05)]">
+    <main class="relative z-30 bg-white rounded-t-[2.5rem] -mt-2 md:-mt-16 pt-6 md:pt-8 shadow-[0_-15px_40px_rgba(0,0,0,0.05)]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 md:pb-14">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
