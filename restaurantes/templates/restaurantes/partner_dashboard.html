@@ -248,7 +248,7 @@
                         </h3>
 
                         <!-- Cor Primária -->
-                        <div x-data="colorPickerData('{{ restaurante.cor_primaria|default:'#e11d48' }}', 'cor_primaria_hex')" class="relative">
+                        <div x-data="colorPickerData('{{ restaurante.cor_primaria|default:'#e11d48' }}', 'cor_primaria_hex')" class="relative" :style="open ? 'z-index: 50;' : 'z-index: 10;'">
                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Primária (Hex)</label>
                             <div class="relative flex items-center max-w-[200px]">
                                 <button type="button" @click="open = !open"
@@ -317,7 +317,7 @@
                         </div>
 
                         <!-- Cor Secundária -->
-                        <div x-data="colorPickerData('{{ restaurante.cor_secundaria|default:'#f97316' }}', 'cor_secundaria_hex')" class="relative">
+                        <div x-data="colorPickerData('{{ restaurante.cor_secundaria|default:'#f97316' }}', 'cor_secundaria_hex')" class="relative" :style="open ? 'z-index: 50;' : 'z-index: 10;'">
                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Cor Secundária (Hex)</label>
                             <div class="relative flex items-center max-w-[200px]">
                                 <button type="button" @click="open = !open"
