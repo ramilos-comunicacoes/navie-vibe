@@ -458,29 +458,28 @@
         // Inicializa ícones Lucide
         lucide.createIcons();
 
-        // Máquina de Escrever Fluida e Premium
-        document.addEventListener("DOMContentLoaded", function() {
+        // Máquina de Escrever Fluida e Premium (Suporta carregamento síncrono e transições HTMX)
+        function initTypewriter() {
             const textToType = "Naviê Vibe";
             const element = document.getElementById("typewriter-text");
+            if (!element) return;
+            
+            // Impede múltiplos loops de digitação simultâneos no mesmo elemento
+            if (element.dataset.typewriterActive === "true") return;
+            element.dataset.typewriterActive = "true";
+            
             let index = 0;
             let isDeleting = false;
             
             function renderText(str) {
-                // Naviê = índices 0-4, espaço = 5, Vibe = 6-9
-                // Cada char recebe sua cor correta desde o início
-                let navie = 'Naviê'; // 5 chars
                 let result = '';
-                
                 for (let i = 0; i < str.length; i++) {
                     const ch = str[i];
                     if (i < 5) {
-                        // Parte "Naviê" -> azul escuro
                         result += `<span style="color:#1e3a8a">${ch}</span>`;
                     } else if (i === 5) {
-                        // espaço
                         result += ch;
                     } else {
-                        // Parte "Vibe" -> action-blue
                         result += `<span style="color:#2563eb">${ch}</span>`;
                     }
                 }
@@ -488,28 +487,31 @@
             }
             
             function typeLoop() {
-                // Pegando a parcela do texto baseado no index fluído
+                // Para o loop se o elemento sumir do DOM (ex: navegação)
+                if (!document.getElementById("typewriter-text")) return;
+                
                 const currentStr = textToType.substring(0, index);
                 element.innerHTML = renderText(currentStr);
                 
-                // Variância de velocidade pra ficar orgânico e premium
                 let speed = isDeleting ? 40 : 120 + Math.random() * 50;
                 
                 if (!isDeleting && index === textToType.length) {
-                    speed = 2500; // pausa longa lendo o final
+                    speed = 2500;
                     isDeleting = true;
                 } else if (isDeleting && index === 0) {
                     isDeleting = false;
-                    speed = 600; // respira fundo e recomeça
+                    speed = 600;
                 }
                 
                 index += isDeleting ? -1 : 1;
                 setTimeout(typeLoop, speed);
             }
             
-            // Inicia com um leve atraso
             setTimeout(typeLoop, 500);
-        });
+        }
+
+        document.addEventListener("DOMContentLoaded", initTypewriter);
+        document.addEventListener("htmx:afterSettle", initTypewriter);
     </script>
     <!-- Rastreamento de Analytics Naviê -->
     <script>
