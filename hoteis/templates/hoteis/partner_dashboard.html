@@ -397,6 +397,23 @@
         </div>
     </div>
 </div>
+
+<!-- Sub-cabeçalho Integrado para a Linha do Tempo de Reservas (Desktop e Mobile) -->
+<div x-show="activeTab === 'reservas' && reservasTab === 'timeline'" 
+     class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-6 py-2.5 flex items-center justify-between transition-all" 
+     style="display: none;" 
+     x-transition.opacity>
+    
+    <div class="flex items-center gap-2.5">
+        <span class="p-1.5 rounded-xl bg-brand/10 text-brand flex items-center shrink-0">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+        </span>
+        <div>
+            <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider leading-none">Linha do Tempo de Ocupação</h4>
+            <p class="text-[9px] text-slate-400 font-bold leading-none mt-1 sm:block hidden">Visualização cronológica das estadias por quarto físico</p>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block painel_content %}
@@ -1203,18 +1220,7 @@
         </div>
 
         <!-- Aba 2: Linha do Tempo -->
-        <div x-show="reservasTab === 'timeline'" class="w-full animate-in fade-in duration-300" style="display: none;">
-            
-            <!-- Subcabeçalho compacto colado ao topo do conteúdo -->
-            <div class="flex items-center gap-2 pb-2 border-b border-slate-200/50 dark:border-white/5 mb-4">
-                <span class="p-1.5 rounded-xl bg-brand/10 text-brand flex items-center shrink-0">
-                    <i data-lucide="clock" class="w-4 h-4"></i>
-                </span>
-                <div>
-                    <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Linha do Tempo de Ocupação</h4>
-                    <p class="text-[9px] text-slate-400 font-bold leading-none mt-0.5 sm:block hidden">Visualização cronológica das estadias por quarto físico</p>
-                </div>
-            </div>
+        <div x-show="reservasTab === 'timeline'" class="w-full animate-in fade-in duration-300 !mt-0" style="display: none;">
             
             <!-- Grade de Gantt Cronológica Baseada nas Unidades de Quarto Reais -->
             <div class="border border-slate-100 dark:border-navie-border rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-black/25">
