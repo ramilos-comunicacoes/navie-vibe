@@ -24,7 +24,7 @@ def view_mp_conectar(request):
     # Obtém o host de forma dinâmica
     host = request.get_host()
     scheme = 'https' if request.is_secure() else 'http'
-    redirect_uri = f"{scheme}://{host}/financeiro/mp/callback/"
+    redirect_uri = f"{scheme}://{host}/hospedagens/financeiro/mp/callback/"
     
     # URL de autorização oficial do Mercado Pago
     url_auth = (
@@ -63,7 +63,7 @@ def view_mp_callback(request):
     
     host = request.get_host()
     scheme = 'https' if request.is_secure() else 'http'
-    redirect_uri = f"{scheme}://{host}/financeiro/mp/callback/"
+    redirect_uri = f"{scheme}://{host}/hospedagens/financeiro/mp/callback/"
     
     # Solicita token ao Mercado Pago
     url_token = "https://api.mercadopago.com/oauth/token"
