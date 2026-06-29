@@ -164,18 +164,18 @@
     <!-- ══════════════════════════════════════════════════════════════
          HERO: Galeria Cinemática Interativa com Video 2º Card
     ══════════════════════════════════════════════════════════════ -->
-    <div class="w-full bg-white relative group -mt-4 md:-mt-8">
+    <div class="w-full bg-white relative group -mt-4 md:-mt-8" style="overflow: visible !important;">
 
         <!-- Swiper Container -->
-        <div class="swiper room-swiper pb-8 md:pb-10 pt-0">
+        <div class="swiper room-swiper pb-8 md:pb-10 pt-0" style="overflow: visible !important;">
             <div class="swiper-wrapper" id="room-gallery">
 
                 <!-- 1º CARD: Foto Principal -->
                 {% if primeira_imagem %}
-                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[85vw] md:max-w-[60vw]" onclick="openLightbox(0)">
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[78vw] md:max-w-[60vw]" onclick="openLightbox(0)">
                     <img src="{{ primeira_imagem.url_imagem.url }}"
                          alt="{{ quarto.nome }}"
-                         class="h-[340px] md:h-[500px] w-auto max-w-[85vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
+                         class="h-[340px] md:h-[500px] w-auto max-w-[78vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
                                 transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)]
                                 border border-white/10">
                     <!-- Badge Capa -->
@@ -187,7 +187,7 @@
 
                 <!-- 2º CARD: Vídeo Tour (Elemento Mestre) -->
                 {% if quarto.video_arquivo or quarto.video_url %}
-                <div class="swiper-slide video-card-carousel rounded-[2rem] h-[340px] md:h-[500px] w-[425px] max-w-[85vw] md:w-[625px] md:max-w-[60vw] shadow-2xl border border-white/10 group/video">
+                <div class="swiper-slide video-card-carousel rounded-[2rem] h-[340px] md:h-[500px] w-[425px] max-w-[78vw] md:w-[625px] md:max-w-[60vw] shadow-2xl border border-white/10 group/video">
                     <video id="room-tour-video"
                            autoplay muted loop playsinline
                            class="w-full h-full object-cover">
@@ -217,10 +217,10 @@
 
                 <!-- 3º+ CARDS: Demais Fotos da Galeria -->
                 {% for img in outras_imagens %}
-                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[85vw] md:max-w-[60vw]" onclick="openLightbox({{ forloop.counter }})">
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[78vw] md:max-w-[60vw]" onclick="openLightbox({{ forloop.counter }})">
                     <img src="{{ img.url_imagem.url }}"
                          alt="{{ quarto.nome }} - Foto {{ forloop.counter|add:1 }}"
-                         class="h-[340px] md:h-[500px] w-auto max-w-[85vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
+                         class="h-[340px] md:h-[500px] w-auto max-w-[78vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
                                 transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)]
                                 border border-white/10">
                     <!-- Badge número da foto -->
