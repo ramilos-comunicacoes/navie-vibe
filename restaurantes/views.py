@@ -230,7 +230,8 @@ def partner_salvar_configuracoes(request):
         video_file = request.FILES['sobre_video']
         if video_file.size > 8 * 1024 * 1024:
             messages.error(request, "O vídeo da seção sobre ultrapassa o limite de 8MB permitido.")
-            return redirect('/sistema/?tab=configuracoes')
+            from django.urls import reverse
+            return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
         restaurante.sobre_video = video_file
 
     if request.POST.get('remover_hero_video') == 'true':
@@ -239,12 +240,14 @@ def partner_salvar_configuracoes(request):
         video_file = request.FILES['hero_video']
         if video_file.size > 8 * 1024 * 1024:
             messages.error(request, "O vídeo em loop do hero ultrapassa o limite de 8MB permitido.")
-            return redirect('/sistema/?tab=configuracoes')
+            from django.urls import reverse
+            return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
         restaurante.hero_video = video_file
         
     restaurante.save(using='restaurantes')
     messages.success(request, "Configurações do restaurante salvas com sucesso.")
-    return redirect('/sistema/?tab=configuracoes')
+    from django.urls import reverse
+    return redirect(reverse('restaurantes:partner_dashboard') + '?tab=configuracoes')
 
 
 @login_required(login_url='restaurantes:partner_login')
