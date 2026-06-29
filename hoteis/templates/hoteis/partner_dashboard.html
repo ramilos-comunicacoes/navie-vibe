@@ -144,7 +144,25 @@
     </div>
 
     <!-- Controles do Financeiro no Cabeçalho -->
-    <div x-show="activeTab === 'financeiro'" class="flex items-center gap-2.5 sm:gap-3" x-transition.opacity style="display: none;">
+    <div x-show="activeTab === 'financeiro'" class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300" x-transition.opacity style="display: none;">
+        <!-- Alternador Fluxo / Mercado Pago -->
+        <div class="relative flex items-center p-0.5 sm:p-1 bg-slate-100/80 dark:bg-white/5 rounded-full border border-slate-200/50 dark:border-white/5 shadow-inner h-9 sm:h-10 w-48 sm:w-56 overflow-hidden">
+            <!-- Highlight deslizante -->
+            <div class="absolute top-0.5 bottom-0.5 left-0.5 rounded-full bg-white dark:bg-white/10 shadow-sm transition-all duration-300 ease-out"
+                 :style="financeiroTab === 'resumo' ? 'width: 48%; transform: translateX(0px);' : 'width: 48%; transform: translateX(104%);'"></div>
+            
+            <button type="button" @click="financeiroTab = 'resumo'"
+                    class="relative z-10 w-1/2 text-center text-[10px] sm:text-xs font-black transition-colors duration-300 border-none bg-transparent cursor-pointer py-1 sm:py-1.5"
+                    :class="financeiroTab === 'resumo' ? 'text-brand dark:text-white font-black' : 'text-slate-500 dark:text-navie-textsec font-bold'">
+                Resumo
+            </button>
+            <button type="button" @click="financeiroTab = 'mp'"
+                    class="relative z-10 w-1/2 text-center text-[10px] sm:text-xs font-black transition-colors duration-300 border-none bg-transparent cursor-pointer py-1 sm:py-1.5"
+                    :class="financeiroTab === 'mp' ? 'text-brand dark:text-white font-black' : 'text-slate-500 dark:text-navie-textsec font-bold'">
+                Mercado Pago
+            </button>
+        </div>
+
         <!-- Botão Novo Lançamento -->
         <button @click="$dispatch('open-novo-lancamento')"
                 data-ai-purpose="action-trigger"
@@ -394,7 +412,8 @@
          class="space-y-6" 
          x-transition:enter="transition ease-out duration-300">
         
-        <!-- KPIs Financeiros premium (DRE Operacional Mestre) -->
+        <div x-show="financeiroTab === 'resumo'" class="space-y-6 animate-in fade-in duration-300">
+            <!-- KPIs Financeiros premium (DRE Operacional Mestre) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div data-ai-element="kpi-card" data-ai-type="revenue" class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md relative overflow-hidden group hover:scale-[1.01] transition-transform duration-300">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-green-500/10 rounded-full blur-xl"></div>
@@ -576,6 +595,135 @@
                     </tbody>
                 </table>
 
+            </div>
+        </div>
+
+        <!-- Sub-aba do Mercado Pago -->
+        <div x-show="financeiroTab === 'mp'" class="space-y-6 animate-in fade-in duration-300" style="display: none;">
+            
+            <!-- Card de Conexão com Mercado Pago -->
+            <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span class="p-2.5 rounded-2xl bg-blue-500/10 text-blue-500">
+                            <i data-lucide="wallet" class="w-6 h-6"></i>
+                        </span>
+                        <div>
+                            <h4 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                                Recebimentos e Split Financeiro
+                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Mercado Pago</span>
+                            </h4>
+                            <p class="text-xs text-slate-400 font-medium">Gerencie a conta onde você receberá o saldo integral das suas diárias</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        {% if hotel.empresa.mp_conexao %}
+                            <div class="flex items-center gap-2">
+                                <span class="flex h-2.5 w-2.5 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                </span>
+                                <span class="text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-wider">Conta Conectada</span>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                                <span class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Aguardando Conexão</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border space-y-3">
+                    <h5 class="text-xs font-bold text-slate-800 dark:text-white">Como funcionam os seus recebimentos:</h5>
+                    <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-disc pl-4 font-medium leading-relaxed">
+                        <li>Você recebe <strong>100% do valor da diária</strong> cadastrado no sistema, diretamente na sua conta Mercado Pago.</li>
+                        <li>A comissão do Naviê Vibe e a taxa do gateway (cartão/Pix) são deduzidos da taxa de serviço da plataforma.</li>
+                        <li>A divisão é automática no exato momento em que o hóspede efetua o pagamento no site.</li>
+                    </ul>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                    {% if hotel.empresa.mp_conexao %}
+                        <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                            ID da Carteira MP: <span class="font-bold text-slate-700 dark:text-white">{{ hotel.empresa.mp_conexao.mp_user_id }}</span>
+                        </div>
+                        <a href="{% url 'financeiro:mp_conectar' %}" class="px-5 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Reconectar / Mudar Conta
+                        </a>
+                    {% else %}
+                        <div class="text-xs text-slate-500 dark:text-slate-400">
+                            Para poder receber pagamentos de reservas de forma online no site, conecte sua conta do Mercado Pago.
+                        </div>
+                        <a href="{% url 'financeiro:mp_conectar' %}" class="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none shadow-md shadow-blue-500/10">
+                            <i data-lucide="link" class="w-4 h-4"></i> Conectar com o Mercado Pago
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Simulador de Repasses Interativo -->
+            <div x-data="{ 
+                     simuladorPreco: 300,
+                     taxaPlataformaPorcentagem: 10,
+                     taxaGatewayPorcentagem: 3.5,
+                     get comissaoPlataforma() { return (this.simuladorPreco * (this.taxaPlataformaPorcentagem / 100)).toFixed(2); },
+                     get taxaGateway() { return (this.simuladorPreco * (this.taxaGatewayPorcentagem / 100)).toFixed(2); },
+                     get liquidoParceiro() { return (parseFloat(this.simuladorPreco || 0)).toFixed(2); },
+                     get liquidoNavie() { return (parseFloat(this.comissaoPlataforma) - parseFloat(this.taxaGateway)).toFixed(2); }
+                 }"
+                 class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-6 animate-in fade-in duration-500">
+                
+                <div class="flex items-center gap-3">
+                    <span class="p-2.5 rounded-2xl bg-brand/10 text-brand">
+                        <i data-lucide="calculator" class="w-6 h-6"></i>
+                    </span>
+                    <div>
+                        <h4 class="text-base font-bold text-slate-800 dark:text-white">Simulador de Divisão de Saldos (Split)</h4>
+                        <p class="text-xs text-slate-400 font-medium">Veja em tempo real quanto você recebe por cada diária vendida no site</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">Valor da Diária de Teste (R$)</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">R$</span>
+                                <input type="number" x-model.number="simuladorPreco" min="1" step="any"
+                                       class="bg-slate-50 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-white text-sm font-bold rounded-2xl pl-10 pr-4 py-3 shadow-inner outline-none w-full focus:border-brand transition-all">
+                            </div>
+                        </div>
+                        
+                        <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                            💡 No Naviê Vibe, a <strong>taxa de gateway do Mercado Pago é inteiramente absorvida pela plataforma</strong>. Você recebe integralmente o valor que cadastrar para a sua diária!
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-slate-100/50 dark:bg-black/35 rounded-3xl border border-slate-200/60 dark:border-navie-border space-y-4">
+                        <div class="flex justify-between items-center pb-3 border-b border-slate-200/60 dark:border-white/5">
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total pago pelo Hóspede</span>
+                            <span class="text-sm font-black text-slate-800 dark:text-white">R$ <span x-text="parseFloat(simuladorPreco || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></span>
+                        </div>
+                        <div class="flex justify-between items-center text-green-500 font-bold">
+                            <span class="text-xs">Repasse Líquido Hoteleiro (100% da diária)</span>
+                            <span class="text-base font-black">R$ <span x-text="parseFloat(liquidoParceiro).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                            <span>Taxa de Serviço Naviê Vibe</span>
+                            <span>R$ <span x-text="parseFloat(comissaoPlataforma).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-400 text-[11px]">
+                            <span>Taxa de Gateway do Mercado Pago (absorvida pelo Naviê)</span>
+                            <span class="font-mono">R$ <span x-text="parseFloat(taxaGateway).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></span>
+                        </div>
+                        <div class="flex justify-between items-center pt-3 border-t border-slate-200/60 dark:border-white/5 text-xs text-brand font-bold">
+                            <span>Ganho Líquido da Plataforma</span>
+                            <span>R$ <span x-text="parseFloat(liquidoNavie).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2706,67 +2854,6 @@
                 </div>
             </form>
 
-            <!-- Card: Gateway de Pagamento & Split (Mercado Pago) -->
-            <div class="relative z-20 bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md space-y-5">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <span class="p-2.5 rounded-2xl bg-blue-500/10 text-blue-500">
-                            <i data-lucide="wallet" class="w-6 h-6"></i>
-                        </span>
-                        <div>
-                            <h4 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                                Recebimentos e Split Financeiro
-                                <span class="px-2 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Mercado Pago</span>
-                            </h4>
-                            <p class="text-xs text-slate-400">Gerencie a conta onde você receberá o saldo integral das suas diárias</p>
-                        </div>
-                    </div>
-
-                    <div>
-                        {% if hotel.empresa.mp_conexao %}
-                            <div class="flex items-center gap-2">
-                                <span class="flex h-2.5 w-2.5 relative">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                                </span>
-                                <span class="text-xs font-black text-green-600 dark:text-green-400 uppercase tracking-wider">Conta Conectada</span>
-                            </div>
-                        {% else %}
-                            <div class="flex items-center gap-2">
-                                <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                                <span class="text-xs font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Aguardando Conexão</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-navie-border space-y-3">
-                    <h5 class="text-xs font-bold text-slate-800 dark:text-white">Como funcionam os seus recebimentos:</h5>
-                    <ul class="space-y-2 text-xs text-slate-600 dark:text-slate-400 list-disc pl-4 font-medium">
-                        <li>Você recebe <strong>100% do valor da diária</strong> cadastrado no sistema, diretamente na sua conta Mercado Pago.</li>
-                        <li>A taxa operacional de processamento do cartão/Pix é assumida e descontada pelo <strong>Naviê Vibe</strong>.</li>
-                        <li>A divisão é feita pelo gateway no exato momento em que o cliente realiza o pagamento.</li>
-                    </ul>
-                </div>
-
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-                    {% if hotel.empresa.mp_conexao %}
-                        <div class="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                            ID da Carteira MP: <span class="font-bold text-slate-700 dark:text-white">{{ hotel.empresa.mp_conexao.mp_user_id }}</span>
-                        </div>
-                        <a href="{% url 'financeiro:mp_conectar' %}" class="px-5 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/20 text-slate-800 dark:text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Reconectar / Mudar Conta
-                        </a>
-                    {% else %}
-                        <div class="text-xs text-slate-500 dark:text-slate-400">
-                            Para poder receber pagamentos de reservas de forma online no site, conecte sua conta do Mercado Pago.
-                        </div>
-                        <a href="{% url 'financeiro:mp_conectar' %}" class="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black transition-all flex items-center justify-center gap-2 border-none cursor-pointer text-decoration-none shadow-md shadow-blue-500/10">
-                            <i data-lucide="link" class="w-4 h-4"></i> Conectar com o Mercado Pago
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
         </div>
 
         <!-- SUB-ABA 2: ASSINATURA / PLANO / SAAS -->
