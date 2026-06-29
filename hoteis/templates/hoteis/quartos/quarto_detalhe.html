@@ -71,20 +71,20 @@
     /* ── Galeria carrossel (Swiper Premium) ── */
     .room-swiper {
         width: 100%;
-        height: 380px; /* Altura fixa no mobile */
+        height: 240px; /* Altura compacta no mobile */
         overflow: visible !important;
     }
     @media (min-width: 768px) {
         .room-swiper {
-            height: 540px; /* Altura fixa no desktop */
+            height: 480px; /* Altura no desktop */
         }
     }
     .room-swiper .swiper-slide {
-        width: 78vw !important; /* Largura unificada no mobile */
-        height: 340px !important;
+        width: auto !important; /* Largura proporcional baseada na imagem */
+        height: 100% !important; /* Altura máxima baseada no container */
         opacity: 0.55;
-        transform: scale(0.95);
-        transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        transform: scale(0.94);
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -92,21 +92,28 @@
         border-radius: 2rem;
         overflow: hidden;
     }
-    @media (min-width: 768px) {
-        .room-swiper .swiper-slide {
-            width: 60vw !important; /* Largura unificada no desktop */
-            height: 500px !important;
-        }
-    }
     .room-swiper .swiper-slide img {
-        width: 100% !important;
+        width: auto !important;
         height: 100% !important;
-        object-fit: cover !important;
+        object-fit: contain !important; /* Preserva a proporção e evita cortes na imagem */
         border-radius: 2rem !important;
     }
     .room-swiper .swiper-slide-active {
         opacity: 1 !important;
         transform: scale(1) !important;
+    }
+    
+    /* Configuração específica do Vídeo Tour para manter proporção vertical */
+    .room-swiper .video-card-carousel {
+        width: auto !important;
+        height: 100% !important;
+        aspect-ratio: 9/16 !important;
+    }
+    .room-swiper .video-card-carousel video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 2rem !important;
     }
 
     /* ── Video card ── */
@@ -188,22 +195,16 @@
 
                 <!-- 1º CARD: Foto Principal -->
                 {% if primeira_imagem %}
-                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[78vw] md:max-w-[60vw]" onclick="openLightbox(0)">
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative" onclick="openLightbox(0)">
                     <img src="{{ primeira_imagem.url_imagem.url }}"
                          alt="{{ quarto.nome }}"
-                         class="h-[340px] md:h-[500px] w-auto max-w-[78vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
-                                transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)]
-                                border border-white/10">
-                    <!-- Badge Capa -->
-                    <div class="absolute bottom-4 left-4 flex items-center gap-2 z-10">
-                        <span class="room-badge"><i data-lucide="crown" class="w-3 h-3"></i> Foto Principal</span>
-                    </div>
+                         class="shadow-2xl transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)] border border-white/10">
                 </div>
                 {% endif %}
 
                 <!-- 2º CARD: Vídeo Tour (Elemento Mestre) -->
                 {% if quarto.video_arquivo or quarto.video_url %}
-                <div class="swiper-slide video-card-carousel rounded-[2rem] h-[340px] md:h-[500px] w-[425px] max-w-[78vw] md:w-[625px] md:max-w-[60vw] shadow-2xl border border-white/10 group/video">
+                <div class="swiper-slide video-card-carousel rounded-[2rem] shadow-2xl border border-white/10 group/video">
                     <video id="room-tour-video"
                            autoplay muted loop playsinline
                            class="w-full h-full object-cover">
@@ -216,8 +217,6 @@
 
                     <!-- Overlay gradiente -->
                     <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/20 pointer-events-none rounded-[2rem]"></div>
-
-
 
                     <!-- Botão Mute/Unmute -->
                     <button id="audio-toggle-btn"
@@ -233,16 +232,10 @@
 
                 <!-- 3º+ CARDS: Demais Fotos da Galeria -->
                 {% for img in outras_imagens %}
-                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative w-auto max-w-[78vw] md:max-w-[60vw]" onclick="openLightbox({{ forloop.counter }})">
+                <div class="swiper-slide gallery-card cursor-zoom-in group/photo relative" onclick="openLightbox({{ forloop.counter }})">
                     <img src="{{ img.url_imagem.url }}"
                          alt="{{ quarto.nome }} - Foto {{ forloop.counter|add:1 }}"
-                         class="h-[340px] md:h-[500px] w-auto max-w-[78vw] md:max-w-[60vw] object-cover rounded-[2rem] shadow-2xl
-                                transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)]
-                                border border-white/10">
-                    <!-- Badge número da foto -->
-                    <div class="absolute bottom-4 left-4 z-10">
-                        <span class="room-badge">Foto {{ forloop.counter|add:1 }}</span>
-                    </div>
+                         class="shadow-2xl transition-all duration-500 group-hover/photo:scale-[1.015] group-hover/photo:shadow-[0_30px_60px_rgba(0,0,0,0.4)] border border-white/10">
                 </div>
                 {% endfor %}
 
@@ -597,6 +590,10 @@
         loopedSlides: shouldLoop ? originalSlidesCount : undefined,
         observer: true,
         observeParents: true,
+        autoplay: {
+            delay: 1500,
+            disableOnInteraction: false,
+        },
         breakpoints: {
             768: {
                 spaceBetween: 24,
