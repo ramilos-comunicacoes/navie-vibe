@@ -497,31 +497,38 @@
             });
         }
 
-        // Listener global para capturar uploads de arquivos e converter para WebP na hora
+        // Listener global para capturar uploads de arquivos e converter para WebP na hora (suporta múltiplos arquivos)
         document.addEventListener('change', async function(e) {
             const target = e.target;
             if (target.tagName === 'INPUT' && target.type === 'file') {
                 const files = target.files;
                 if (!files || files.length === 0) return;
 
-                const file = files[0];
-                if (file && file.type.startsWith('image/') && file.type !== 'image/webp') {
-                    if (target.dataset.converting === 'true') return;
-                    target.dataset.converting = 'true';
-                    
-                    try {
-                        const webpFile = await convertImageToWebP(file);
-                        
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(webpFile);
-                        target.files = dataTransfer.files;
-                        
-                        target.dispatchEvent(new Event('change', { bubbles: true }));
-                    } catch (err) {
-                        console.error("Erro ao otimizar imagem para WebP:", err);
-                    } finally {
-                        delete target.dataset.converting;
+                if (target.dataset.converting === 'true') return;
+                
+                let changed = false;
+                const dataTransfer = new DataTransfer();
+
+                target.dataset.converting = 'true';
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        if (file && file.type.startsWith('image/') && file.type !== 'image/webp') {
+                            const webpFile = await convertImageToWebP(file);
+                            dataTransfer.items.add(webpFile);
+                            changed = true;
+                        } else {
+                            dataTransfer.items.add(file);
+                        }
                     }
+                    if (changed) {
+                        target.files = dataTransfer.files;
+                        target.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                } catch (err) {
+                    console.error("Erro ao otimizar imagem para WebP:", err);
+                } finally {
+                    delete target.dataset.converting;
                 }
             }
         });

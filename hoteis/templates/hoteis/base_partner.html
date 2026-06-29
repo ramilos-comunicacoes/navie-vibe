@@ -1487,6 +1487,96 @@ x-data="{
     <!-- Re-inicializa Lucide após os scripts do template filho -->
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        // Intercepta erros globais de requisição do HTMX (como 413 arquivo muito grande)
+        document.addEventListener('htmx:responseError', function(e) {
+            if (e.detail.xhr.status === 413) {
+                alert("Erro: O arquivo enviado é muito grande. Por favor, verifique o tamanho do arquivo ou configure o Nginx da sua VPS.");
+            } else {
+                alert("Ocorreu um erro ao processar a requisição (Código: " + e.detail.xhr.status + ").");
+            }
+        });
+
+        // Conversão e Otimização de Imagens no Cliente para WebP
+        async function convertImageToWebP(file, maxWidth = 1200, quality = 0.8) {
+            return new Promise((resolve) => {
+                if (!file || !file.type.startsWith('image/') || file.type === 'image/webp') {
+                    resolve(file);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+                            const dotIdx = file.name.lastIndexOf('.');
+                            const baseName = dotIdx !== -1 ? file.name.substring(0, dotIdx) : file.name;
+                            const webpFile = new File([blob], `${baseName}.webp`, { type: 'image/webp' });
+                            resolve(webpFile);
+                        }, 'image/webp', quality);
+                    };
+                    img.onerror = () => resolve(file);
+                };
+                reader.onerror = () => resolve(file);
+            });
+        }
+
+        // Listener global para capturar uploads de arquivos e converter para WebP na hora (suporta múltiplos arquivos)
+        document.addEventListener('change', async function(e) {
+            const target = e.target;
+            if (target.tagName === 'INPUT' && target.type === 'file') {
+                const files = target.files;
+                if (!files || files.length === 0) return;
+
+                if (target.dataset.converting === 'true') return;
+                
+                let changed = false;
+                const dataTransfer = new DataTransfer();
+
+                target.dataset.converting = 'true';
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        if (file && file.type.startsWith('image/') && file.type !== 'image/webp') {
+                            const webpFile = await convertImageToWebP(file);
+                            dataTransfer.items.add(webpFile);
+                            changed = true;
+                        } else {
+                            dataTransfer.items.add(file);
+                        }
+                    }
+                    if (changed) {
+                        target.files = dataTransfer.files;
+                        target.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                } catch (err) {
+                    console.error("Erro ao otimizar imagem para WebP:", err);
+                } finally {
+                    delete target.dataset.converting;
+                }
+            }
+        });
     </script>
 </body>
 </html>
