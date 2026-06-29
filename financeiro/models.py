@@ -234,3 +234,17 @@ class AnexoTransacao(models.Model):
 
     def __str__(self):
         return f"{self.codigo} ({self.arquivo.name})"
+
+
+from core.models import Empresa
+
+class MercadoPagoConexao(models.Model):
+    empresa = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='mp_conexao')
+    mp_user_id = models.CharField("ID da Conta Mercado Pago do Hoteleiro", max_length=100)
+    access_token = models.CharField("Access Token do Parceiro", max_length=255)
+    refresh_token = models.CharField("Refresh Token para Renovação", max_length=255)
+    token_expira_em = models.DateTimeField("Data de Expiração do Token")
+    data_conexao = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"MP Conexão - {self.empresa.nome}"

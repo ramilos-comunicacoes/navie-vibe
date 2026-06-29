@@ -8,7 +8,7 @@ from .models import UserInteraction, CarrinhoStatus, RegistroConsumo
 from .analytics import limpar_historico_antigo, obter_perfil_interesses_usuario, registrar_consumo_unificado
 
 class TrackerMiddlewareTestCase(TestCase):
-    databases = {'default', 'hospedagem'}
+    databases = {'default', 'hospedagem', 'restaurantes'}
     
     def setUp(self):
         self.client = Client()

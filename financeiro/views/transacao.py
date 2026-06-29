@@ -5,7 +5,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from decimal import Decimal
 import datetime
-from .models import TransacaoFinanceira, AnexoTransacao
+from financeiro.models import TransacaoFinanceira, AnexoTransacao
 from hoteis.models import UnidadeQuarto, Reserva
 
 @login_required(login_url='hoteis:partner_login')
@@ -160,4 +160,3 @@ def criar_transacao_api(request):
         
     messages.success(request, f"Lançamento {transacao.codigo} registrado com sucesso!")
     return redirect('hoteis:partner_dashboard')
-
