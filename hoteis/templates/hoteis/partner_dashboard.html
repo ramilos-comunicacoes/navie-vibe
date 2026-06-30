@@ -66,10 +66,16 @@
     </div>
 
     <!-- Controles das Reservas no Cabeçalho -->
-    <div x-show="activeTab === 'reservas'" class="flex items-center gap-2 sm:gap-2.5" x-transition.opacity style="display: none;"
+    <div id="reservas-controle-cabecalho" x-show="activeTab === 'reservas'" class="flex items-center gap-2 sm:gap-2.5" x-transition.opacity style="display: none;"
          x-data="{
             quartoOpen: false,
             quartoLabel: '{{ selected_quarto.nome|default:"Geral (Todos)" }}',
+            calendarioOpen: false,
+            periodoLabel: '{{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}',
+            periodoTempLabel: '{{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}',
+            periodoValido: true,
+            tempDataInicio: '{{ data_inicio|date:"Y-m-d" }}',
+            tempDataFim: '{{ data_fim|date:"Y-m-d" }}',
             selectQuarto(id, label) {
                 this.quartoLabel = label;
                 this.quartoOpen = false;
@@ -81,6 +87,17 @@
                 } else {
                     htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
                 }
+            },
+            confirmarPeriodo() {
+                document.getElementById('filtro-data-inicio').value = this.tempDataInicio;
+                document.getElementById('filtro-data-fim').value = this.tempDataFim;
+                
+                const d1Parts = this.tempDataInicio.split('-');
+                const d2Parts = this.tempDataFim.split('-');
+                this.periodoLabel = `${d1Parts[2]}/${d1Parts[1]}/${d1Parts[0]} a ${d2Parts[2]}/${d2Parts[1]}/${d2Parts[0]}`;
+                
+                this.calendarioOpen = false;
+                window.triggerReservasRefresh();
             }
          }">
 
@@ -135,24 +152,67 @@
         <!-- Separador visual -->
         <div class="w-px h-6 bg-slate-200 dark:bg-white/10 hidden sm:block"></div>
 
-        <!-- Filtro de Período — Dois Botões Separados (Início / Fim) -->
-        <div class="flex items-center gap-1.5">
-            <div class="relative">
-                <input type="text" id="filtro-data-inicio" name="data_inicio"
-                       value="{{ data_inicio|date:'Y-m-d' }}"
-                       readonly
-                       class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[11px] font-black rounded-2xl pl-8 pr-3 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer w-[115px] sm:w-[125px] hover:border-brand/50 focus:border-brand transition-all">
-                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-brand pointer-events-none flex items-center"><i data-lucide="calendar" class="w-3.5 h-3.5"></i></span>
-            </div>
+        <!-- Filtro de Período Unificado com Botão Único e Modal Inline -->
+        <div class="relative flex items-center">
+            <button @click="calendarioOpen = true; $nextTick(() => { initDashboardFiltro(); })" type="button"
+                    class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-black rounded-2xl pl-3.5 pr-4 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all flex items-center gap-2">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand shrink-0"></i>
+                <span x-text="periodoLabel"></span>
+            </button>
+            <input type="hidden" id="filtro-data-inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}">
+            <input type="hidden" id="filtro-data-fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
+        </div>
 
-            <span class="text-slate-300 dark:text-white/20 text-xs font-black select-none">→</span>
-
-            <div class="relative">
-                <input type="text" id="filtro-data-fim" name="data_fim"
-                       value="{{ data_fim|date:'Y-m-d' }}"
-                       readonly
-                       class="bg-white dark:bg-white/5 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white text-[11px] font-black rounded-2xl pl-8 pr-3 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer w-[115px] sm:w-[125px] hover:border-brand/50 focus:border-brand transition-all">
-                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-brand pointer-events-none flex items-center"><i data-lucide="calendar" class="w-3.5 h-3.5"></i></span>
+        <!-- Modal de Seleção de Período (Flatpickr Range Inline) -->
+        <div x-show="calendarioOpen" x-cloak
+             class="fixed inset-0 z-[100] flex items-center justify-center p-4"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0">
+            
+            <!-- Overlay escuro com blur -->
+            <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" @click="calendarioOpen = false"></div>
+            
+            <!-- Conteúdo do Modal -->
+            <div class="bg-white dark:bg-[#121212] rounded-[28px] border border-slate-200/80 dark:border-white/10 shadow-2xl p-6 relative z-10 w-full max-w-[650px] animate-in zoom-in-95 duration-200 flex flex-col gap-4">
+                
+                <!-- Cabeçalho do Modal -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Selecionar Período de Ocupação</h4>
+                        <p class="text-[9px] sm:text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold">
+                            Clique na data inicial e na data final do período que deseja visualizar.
+                        </p>
+                    </div>
+                    <button @click="calendarioOpen = false" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                
+                <!-- Contêiner do Flatpickr Inline -->
+                <div class="flex justify-center bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-2xl p-4 overflow-hidden">
+                    <div id="calendario-range-inline" class="w-full flex justify-center"></div>
+                </div>
+                
+                <!-- Rodapé / Controles -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
+                    <div class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-navie-textsec">
+                        Selecionado: <span class="text-brand font-black" x-text="periodoTempLabel || 'Nenhum período selecionado'"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button @click="calendarioOpen = false" type="button"
+                                class="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                            Cancelar
+                        </button>
+                        <button @click="confirmarPeriodo()" type="button" :disabled="!periodoValido"
+                                class="px-5 py-2 bg-brand text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                            Aplicar Período
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -4679,49 +4739,73 @@
             }
         }
 
-        function initDashboardFiltro() {
+        window.initDashboardFiltro = function() {
             if (typeof flatpickr === 'undefined') return;
 
-            const elInicio = document.getElementById('filtro-data-inicio');
-            const elFim = document.getElementById('filtro-data-fim');
+            const container = document.getElementById('calendario-range-inline');
+            if (container) {
+                if (container._flatpickr) {
+                    container._flatpickr.destroy();
+                }
 
-            if (elInicio) {
-                flatpickr(elInicio, {
-                    locale: "pt",
-                    dateFormat: "Y-m-d",
-                    altInput: true,
-                    altFormat: "d/m/Y",
-                    defaultDate: "{{ data_inicio|date:'Y-m-d' }}",
-                    disableMobile: true,
-                    onChange: function(selectedDates, dateStr) {
-                        elInicio.value = dateStr;
-                        window.triggerReservasRefresh();
-                    }
-                });
-            }
+                const dInicio = document.getElementById('filtro-data-inicio')?.value || '';
+                const dFim = document.getElementById('filtro-data-fim')?.value || '';
 
-            if (elFim) {
-                flatpickr(elFim, {
+                flatpickr(container, {
                     locale: "pt",
+                    mode: "range",
+                    inline: true,
+                    showMonths: window.innerWidth >= 640 ? 2 : 1,
                     dateFormat: "Y-m-d",
-                    altInput: true,
-                    altFormat: "d/m/Y",
-                    defaultDate: "{{ data_fim|date:'Y-m-d' }}",
-                    disableMobile: true,
+                    defaultDate: [dInicio, dFim],
                     onChange: function(selectedDates, dateStr) {
-                        elFim.value = dateStr;
-                        window.triggerReservasRefresh();
+                        const alpineEl = document.getElementById('reservas-controle-cabecalho');
+                        if (alpineEl && window.Alpine) {
+                            const data = Alpine.$data(alpineEl);
+                            if (selectedDates.length === 2) {
+                                const d1 = selectedDates[0];
+                                const d2 = selectedDates[1];
+                                
+                                const label1 = d1.toLocaleDateString('pt-BR');
+                                const label2 = d2.toLocaleDateString('pt-BR');
+                                
+                                data.periodoTempLabel = `${label1} a ${label2}`;
+                                data.periodoValido = true;
+                                
+                                const y1 = d1.getFullYear();
+                                const m1 = String(d1.getMonth() + 1).padStart(2, '0');
+                                const r1 = String(d1.getDate()).padStart(2, '0');
+                                data.tempDataInicio = `${y1}-${m1}-${r1}`;
+                                
+                                const y2 = d2.getFullYear();
+                                const m2 = String(d2.getMonth() + 1).padStart(2, '0');
+                                const r2 = String(d2.getDate()).padStart(2, '0');
+                                data.tempDataFim = `${y2}-${m2}-${r2}`;
+                            } else {
+                                data.periodoValido = false;
+                                if (selectedDates.length === 1) {
+                                    data.periodoTempLabel = selectedDates[0].toLocaleDateString('pt-BR') + '...';
+                                } else {
+                                    data.periodoTempLabel = '';
+                                }
+                            }
+                        }
                     }
                 });
             }
         }
-        initDashboardFiltro();
+        window.initDashboardFiltro();
         
         // Se o HTMX redefinir os elementos, reinicializamos se necessário
         document.body.addEventListener('htmx:afterOnLoad', () => {
-            // Se o Lucide estiver disponível, reconstrói ícones
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
+            }
+        });
+
+        document.body.addEventListener('htmx:afterSwap', () => {
+            if (typeof window.initDashboardFiltro === 'function') {
+                window.initDashboardFiltro();
             }
         });
     });
