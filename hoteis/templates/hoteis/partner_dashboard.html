@@ -78,11 +78,8 @@
                 document.getElementById('hidden-quarto-id').value = id;
                 const inicio = document.getElementById('filtro-data-inicio')?.value || '';
                 const fim = document.getElementById('filtro-data-fim')?.value || '';
-                if (this.reservasTab === 'timeline') {
-                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
-                } else {
-                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
-                }
+                htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
+                htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
             },
             abrirModalCalendario() {
                 this.calendarioOpen = true;
@@ -4806,12 +4803,9 @@
             const inicio = document.getElementById('filtro-data-inicio')?.value || '';
             const fim = document.getElementById('filtro-data-fim')?.value || '';
             if (inicio && fim) {
-                const tab = window.Alpine ? Alpine.evaluate(document.body, 'reservasTab') : 'mapa';
-                if (tab === 'timeline') {
-                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
-                } else {
-                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
-                }
+                // Sempre atualiza as duas abas visuais do dashboard em paralelo
+                htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
+                htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
             }
         }
 
