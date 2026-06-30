@@ -1,3 +1,4 @@
+{% if request.META.HTTP_HX_REQUEST %}
 <!-- OOB Swap para atualizar os KPIs dinamicamente no sub-header -->
 <div id="kpi-sub-header" hx-swap-oob="true" x-show="activeTab === 'reservas'" class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 py-2 w-full flex-shrink-0 z-50 text-[10px] font-bold text-slate-500 dark:text-navie-textsec transition-colors" x-cloak>
     <div class="max-w-[1440px] mx-auto w-full flex items-center justify-start gap-4 sm:gap-6 select-none leading-none">
@@ -17,6 +18,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- Tabela Flat Estilo Gantt / Planilha (Linhas e divisórias verticais alinhadas) -->
 <div class="overflow-x-auto select-none border-b border-slate-200 dark:border-white/10">
