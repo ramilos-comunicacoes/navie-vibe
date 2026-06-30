@@ -3299,7 +3299,7 @@ def checkout_processar(request):
         if quarto.hotel and quarto.hotel.empresa and hasattr(quarto.hotel.empresa, 'mp_conexao'):
             conexao_mp = quarto.hotel.empresa.mp_conexao
             
-        if conexao_mp:
+        if conexao_mp and not (settings.DEBUG or getattr(settings, 'MERCADOPAGO_SANDBOX', False)):
             payload_mp.update({
                 "application_fee": float(fin['taxa_servico']),
                 "splits": [
