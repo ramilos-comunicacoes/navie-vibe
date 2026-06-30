@@ -323,7 +323,8 @@ def cidade_detalhe(request, cidade_slug):
     Exibe o portal de experiências B2C exclusivo de uma cidade da Ibiapaba.
     Exibe carrosséis temáticos para: Shows/Eventos, Pousadas, Restaurantes e Cinema.
     """
-    from .models import Cidade, Hotel, Restaurante
+    from .models import Cidade, Hotel
+    from restaurantes.models import Restaurante
     from eventos.models import Evento
     from cinema.models import Filme
     
@@ -416,7 +417,7 @@ def cidade_detalhe(request, cidade_slug):
         ]
 
     # 3. Restaurantes (Reais com fallback dinâmico)
-    restaurantes = list(Restaurante.objects.filter(cidade_nome__iexact=cidade.nome, ativo=True))
+    restaurantes = list(Restaurante.objects.using('restaurantes').filter(cidade_nome__iexact=cidade.nome, ativo=True))
     if not restaurantes:
         class MockRestaurante:
             def __init__(self, nome, especialidade, imagem_url, endereco, whatsapp):

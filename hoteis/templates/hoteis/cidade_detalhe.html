@@ -355,8 +355,14 @@
                     <div class="swiper-slide">
                         <div class="bg-white rounded-3xl overflow-hidden shadow-md border border-slate-100 group transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col h-full">
                             <div class="relative h-40 overflow-hidden select-none">
+                                {% if rest.slug %}
+                                    <a href="{% url 'restaurantes:restaurante_detalhe' slug=rest.slug %}" class="block w-full h-full">
+                                {% endif %}
                                 {% if rest.imagem %}
                                     <img src="{{ rest.imagem.url }}" alt="{{ rest.nome }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80';">
+                                {% endif %}
+                                {% if rest.slug %}
+                                    </a>
                                 {% endif %}
                                 <div class="absolute top-4 left-4 bg-slate-900/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
                                     <span class="text-[9px] font-black uppercase text-white tracking-widest">{{ rest.especialidade }}</span>
@@ -364,19 +370,28 @@
                             </div>
                             <div class="p-4 flex flex-col justify-between flex-grow">
                                 <div>
-                                    <h4 class="font-extrabold text-base text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1">{{ rest.nome }}</h4>
+                                    <h4 class="font-extrabold text-base text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1">
+                                        {% if rest.slug %}
+                                            <a href="{% url 'restaurantes:restaurante_detalhe' slug=rest.slug %}">{{ rest.nome }}</a>
+                                        {% else %}
+                                            {{ rest.nome }}
+                                        {% endif %}
+                                    </h4>
                                     <p class="text-xs text-slate-500 flex items-center gap-1.5">
                                         <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i></span>
                                         {{ rest.endereco|default:cidade.nome }}
                                     </p>
                                 </div>
-                                <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
-                                    {% if rest.whatsapp %}
-                                        <a href="https://wa.me/{{ rest.whatsapp }}" target="_blank" class="flex items-center gap-1.5 bg-green-50 hover:bg-green-600 text-green-600 hover:text-white font-extrabold px-4 py-2 rounded-full text-xs transition-all duration-300 w-full justify-center">
-                                            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="message-circle" class="w-4 h-4"></i></span> Pedir no WhatsApp
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex gap-2 items-center">
+                                    {% if rest.slug %}
+                                        <a href="{% url 'restaurantes:restaurante_detalhe' slug=rest.slug %}" class="flex-grow flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-extrabold py-2 px-3 rounded-full text-xs transition-all duration-300">
+                                            Cardápio & Reservas
                                         </a>
-                                    {% else %}
-                                        <span class="text-xs font-black text-slate-400">Atendimento Local</span>
+                                    {% endif %}
+                                    {% if rest.whatsapp %}
+                                        <a href="https://wa.me/{{ rest.whatsapp }}" target="_blank" class="flex items-center justify-center p-2 rounded-full bg-green-50 hover:bg-green-600 text-green-600 hover:text-white transition-all duration-300" title="Pedir no WhatsApp">
+                                            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
+                                        </a>
                                     {% endif %}
                                 </div>
                             </div>
