@@ -635,6 +635,57 @@ x-data="{
             color: #475569 !important;
         }
 
+        /* --- Estilos do Calendário Customizado Naviê Vibe (Dashboard & Site Público) --- */
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .cal-day-available {
+            color: #334155;
+            background-color: transparent;
+        }
+        .cal-day-available:hover {
+            background-color: #f1f5f9;
+            transform: scale(1.05);
+        }
+        .cal-day-selected {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+            font-weight: 900 !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .cal-day-in-range {
+            background-color: rgba(59, 130, 246, 0.12) !important;
+            color: #1d4ed8 !important;
+            border-radius: 6px !important;
+            font-weight: 800 !important;
+        }
+        .cal-day-empty {
+            pointer-events: none;
+            background-color: transparent;
+        }
+        .dark .cal-day-available {
+            color: #cbd5e1 !important;
+        }
+        .dark .cal-day-available:hover {
+            background-color: rgba(255,255,255,0.08) !important;
+        }
+        .dark .cal-day-selected {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
+        }
+        .dark .cal-day-in-range {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: #ffffff !important;
+        }
+
         /* Safe Area top alignment variable */
         :root {
             --safe-area-top: env(safe-area-inset-top, 0px);

@@ -72,11 +72,6 @@
             quartoLabel: '{{ selected_quarto.nome|default:"Geral (Todos)" }}',
             calendarioOpen: false,
             periodoLabel: '{{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}',
-            periodoTempLabel: '{{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}',
-            periodoValido: true,
-            tempDataInicio: '{{ data_inicio|date:"Y-m-d" }}',
-            tempDataFim: '{{ data_fim|date:"Y-m-d" }}',
-            passoInstrucao: 'Pronto para aplicar',
             selectQuarto(id, label) {
                 this.quartoLabel = label;
                 this.quartoOpen = false;
@@ -89,12 +84,34 @@
                     htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
                 }
             },
-            confirmarPeriodo() {
-                document.getElementById('filtro-data-inicio').value = this.tempDataInicio;
-                document.getElementById('filtro-data-fim').value = this.tempDataFim;
+            abrirModalCalendario() {
+                this.calendarioOpen = true;
+                this.$nextTick(() => {
+                    if (typeof window.inicializarCalendarioDashboard === 'function') {
+                        window.inicializarCalendarioDashboard();
+                    }
+                });
+            },
+            confirmarPeriodoDashboard() {
+                const checkin = window.dashSelectedCheckIn;
+                const checkout = window.dashSelectedCheckOut;
+                if (!checkin || !checkout) return;
                 
-                const d1Parts = this.tempDataInicio.split('-');
-                const d2Parts = this.tempDataFim.split('-');
+                const formatDate = (date) => {
+                    const d = String(date.getDate()).padStart(2, '0');
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const y = date.getFullYear();
+                    return `${y}-${m}-${d}`;
+                };
+                
+                const d1Str = formatDate(checkin);
+                const d2Str = formatDate(checkout);
+                
+                document.getElementById('filtro-data-inicio').value = d1Str;
+                document.getElementById('filtro-data-fim').value = d2Str;
+                
+                const d1Parts = d1Str.split('-');
+                const d2Parts = d2Str.split('-');
                 this.periodoLabel = `${d1Parts[2]}/${d1Parts[1]}/${d1Parts[0]} a ${d2Parts[2]}/${d2Parts[1]}/${d2Parts[0]}`;
                 
                 this.calendarioOpen = false;
@@ -155,7 +172,7 @@
 
         <!-- Filtro de Período Unificado com Botão Único e Modal Inline -->
         <div class="relative flex items-center">
-            <button @click="calendarioOpen = true; $nextTick(() => { initDashboardFiltro(); })" type="button"
+            <button @click="abrirModalCalendario()" type="button"
                     class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-black rounded-2xl pl-3.5 pr-4 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all flex items-center gap-2">
                 <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand shrink-0"></i>
                 <span x-text="periodoLabel"></span>
@@ -164,9 +181,9 @@
             <input type="hidden" id="filtro-data-fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
         </div>
 
-        <!-- Modal de Seleção de Período (Flatpickr Range Inline - Teleportado para o final do body) -->
+        <!-- Modal de Seleção de Período Customizado (Teleportado para o final do body) -->
         <template x-teleport="body">
-            <div x-show="calendarioOpen" x-cloak
+            <div id="dashboardCalendarioModal" x-show="calendarioOpen" x-cloak
                  class="fixed inset-0 z-[100] flex items-center justify-center p-4"
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0"
@@ -178,45 +195,99 @@
                 <!-- Overlay escuro com blur -->
                 <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" @click="calendarioOpen = false"></div>
                 
-                <!-- Conteúdo do Modal (Tamanho Compacto de Canal Único de 1 Mês, IDÊNTICO ao visual público guiado) -->
-                <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] border border-slate-200/80 dark:border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.3)] p-6 relative z-10 w-full max-w-[360px] animate-in zoom-in-95 duration-200 flex flex-col gap-4">
+                <!-- Modal Card (Grid Responsivo no Desktop) -->
+                <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] w-full max-w-md md:max-w-2xl mx-4 shadow-[0_30px_60px_rgba(0,0,0,0.3)] border border-slate-200/80 dark:border-white/10 flex flex-col md:grid md:grid-cols-12 relative overflow-hidden animate-in zoom-in-95 duration-200 z-10">
                     
-                    <!-- Cabeçalho do Modal (Premium Guiado) -->
-                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+                    <!-- Botão Fechar Redondo -->
+                    <button @click="calendarioOpen = false" type="button"
+                            title="Fechar"
+                            class="absolute top-4 right-4 w-9 h-9 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center transition-all z-50 cursor-pointer shadow-sm bg-white dark:bg-[#1a1a1a] text-slate-600 dark:text-white hover:scale-105 active:scale-95 focus:outline-none">
+                        <i data-lucide="x" class="w-4 h-4 font-black"></i>
+                    </button>
+
+                    <!-- ── CABEÇALHO E RODAPÉ (Área Direita no Desktop / Superior no Mobile) ── -->
+                    <div class="col-span-5 px-6 pt-8 pb-6 border-b md:border-b-0 md:border-l border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01] flex flex-col justify-between order-1 md:order-2">
+                        <!-- Instruções -->
                         <div>
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-brand/10 text-brand dark:bg-brand/20"
-                                  x-text="passoInstrucao">
-                                Selecione a data inicial (check-in)
+                            <span id="dash-calendar-instruction-badge" class="inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-brand/10 text-brand dark:bg-brand/20 mb-2">
+                                Check-in
                             </span>
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mt-1.5">Selecionar Período</h4>
+                            <h3 id="dash-calendar-title-instruction" class="text-sm font-black text-slate-800 dark:text-white leading-tight tracking-tight">
+                                Dia da entrada (check-in)
+                            </h3>
+                            <p id="dash-calendar-subtitle-instruction" class="text-[10px] text-slate-400 dark:text-navie-textsec font-bold mt-1">
+                                Selecione o dia do seu check-in no calendário
+                            </p>
                         </div>
-                        <button @click="calendarioOpen = false" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- Contêiner do Flatpickr Inline -->
-                    <div class="flex justify-center bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[1.5rem] p-3 overflow-hidden">
-                        <div id="calendario-range-inline" class="w-full flex justify-center"></div>
-                    </div>
-                    
-                    <!-- Rodapé / Controles -->
-                    <div class="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-white/5">
-                        <div class="bg-slate-50 dark:bg-white/[0.02] rounded-xl p-2.5 border border-slate-100 dark:border-white/5 text-center">
-                            <span class="text-[8px] font-black uppercase tracking-wider text-slate-400 block">Período de Visualização</span>
-                            <span class="text-[10px] sm:text-xs font-black text-slate-800 dark:text-white mt-0.5 block" x-text="periodoTempLabel || '-'"></span>
+
+                        <!-- Resumo e Confirmação -->
+                        <div class="flex flex-col gap-4 mt-6">
+                            <!-- Resumo das Datas Escolhidas -->
+                            <div class="grid grid-cols-11 items-center bg-white dark:bg-[#1a1a1a] rounded-2xl p-3 border border-slate-100 dark:border-white/5 shadow-sm">
+                                <div class="col-span-5 flex flex-col">
+                                    <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">Entrada</span>
+                                    <span id="dash-summary-checkin" class="text-[11px] font-black text-slate-800 dark:text-white mt-0.5">-</span>
+                                </div>
+                                <div class="col-span-1 flex justify-center">
+                                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-300"></i>
+                                </div>
+                                <div class="col-span-5 flex flex-col text-right">
+                                    <span class="text-[7px] font-black uppercase tracking-wider text-slate-400">Saída</span>
+                                    <span id="dash-summary-checkout" class="text-[11px] font-black text-slate-800 dark:text-white mt-0.5">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Botões de Ação -->
+                            <div class="flex items-center gap-2">
+                                <button @click="calendarioOpen = false" type="button"
+                                        class="flex-1 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 font-black py-3 rounded-xl transition-all text-xs text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5">
+                                    Cancelar
+                                </button>
+                                <button id="dash-btn-confirm-dates" 
+                                        disabled
+                                        @click="confirmarPeriodoDashboard()"
+                                        class="flex-1 text-white bg-brand hover:bg-brand/90 font-black py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-1.5 active:scale-95 text-xs cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
+                                    <i data-lucide="calendar-check" class="w-4 h-4"></i>
+                                    Confirmar
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button @click="calendarioOpen = false" type="button"
-                                    class="flex-1 px-4 py-2.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-center">
-                                Cancelar
+                    </div>
+
+                    <!-- ── CONTEÚDO CENTRAL: CALENDÁRIO (Área Esquerda no Desktop / Inferior no Mobile) ── -->
+                    <div class="col-span-7 p-6 flex flex-col bg-white dark:bg-[#121212] order-2 md:order-1">
+                        <!-- Navegação do Mês -->
+                        <div class="flex items-center justify-between mb-4">
+                            <button @click="navegarMesDashboard(-1)" type="button"
+                                    class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                                <i data-lucide="chevron-left" class="w-4 h-4"></i>
                             </button>
-                            <button @click="confirmarPeriodo()" type="button" :disabled="!periodoValido"
-                                    class="flex-1 px-4 py-2.5 bg-brand text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-brand/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed text-center">
-                                Aplicar Período
+                            <h4 id="dash-calendar-current-month" class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider">
+                                Junho 2026
+                            </h4>
+                            <button @click="navegarMesDashboard(1)" type="button"
+                                    class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer">
+                                <i data-lucide="chevron-right" class="w-4 h-4"></i>
                             </button>
                         </div>
+
+                        <!-- Grid de Dias da Semana -->
+                        <div class="grid grid-cols-7 gap-1 text-center text-[9px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider mb-2">
+                            <div>Dom</div>
+                            <div>Seg</div>
+                            <div>Ter</div>
+                            <div>Qua</div>
+                            <div>Qui</div>
+                            <div>Sex</div>
+                            <div>Sáb</div>
+                        </div>
+
+                        <!-- Grid de Dias -->
+                        <div id="dash-calendar-days-grid" class="grid grid-cols-7 gap-1.5 text-center text-xs">
+                            <!-- Inserido dinamicamente via Javascript -->
+                        </div>
                     </div>
+
                 </div>
             </div>
         </template>
@@ -4744,66 +4815,147 @@
             }
         }
 
-        window.initDashboardFiltro = function() {
-            if (typeof flatpickr === 'undefined') return;
+        let dashCalendarDate = new Date();
+        window.dashSelectedCheckIn = null;
+        window.dashSelectedCheckOut = null;
 
-            const container = document.getElementById('calendario-range-inline');
-            if (container) {
-                if (container._flatpickr) {
-                    container._flatpickr.destroy();
+        window.inicializarCalendarioDashboard = function() {
+            const dInicioVal = document.getElementById('filtro-data-inicio')?.value;
+            const dFimVal = document.getElementById('filtro-data-fim')?.value;
+            
+            if (dInicioVal && dFimVal) {
+                window.dashSelectedCheckIn = new Date(dInicioVal + 'T12:00:00');
+                window.dashSelectedCheckOut = new Date(dFimVal + 'T12:00:00');
+                dashCalendarDate = new Date(dInicioVal + 'T12:00:00');
+            } else {
+                window.dashSelectedCheckIn = null;
+                window.dashSelectedCheckOut = null;
+                dashCalendarDate = new Date();
+            }
+            
+            window.atualizarInstrucoesCalendarioDashboard();
+            window.renderizarCalendarioDashboard();
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        };
+
+        window.navegarMesDashboard = function(direction) {
+            dashCalendarDate.setMonth(dashCalendarDate.getMonth() + direction);
+            window.renderizarCalendarioDashboard();
+        };
+
+        window.renderizarCalendarioDashboard = function() {
+            const grid = document.getElementById('dash-calendar-days-grid');
+            const title = document.getElementById('dash-calendar-current-month');
+            if (!grid || !title) return;
+
+            grid.innerHTML = '';
+            
+            const year = dashCalendarDate.getFullYear();
+            const month = dashCalendarDate.getMonth();
+
+            const monthNames = [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+            title.textContent = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'cal-day-empty';
+                grid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.textContent = day;
+                dayCell.className = 'cal-day cal-day-available dark:text-slate-300 dark:hover:bg-white/10';
+
+                const cellDate = new Date(year, month, day);
+                cellDate.setHours(12, 0, 0, 0);
+
+                const tCell = cellDate.getTime();
+                const tIn = window.dashSelectedCheckIn ? window.dashSelectedCheckIn.getTime() : null;
+                const tOut = window.dashSelectedCheckOut ? window.dashSelectedCheckOut.getTime() : null;
+
+                if (tIn && tCell === tIn) {
+                    dayCell.className = 'cal-day cal-day-selected';
+                } else if (tOut && tCell === tOut) {
+                    dayCell.className = 'cal-day cal-day-selected';
+                } else if (tIn && tOut && tCell > tIn && tCell < tOut) {
+                    dayCell.className = 'cal-day cal-day-in-range dark:bg-brand/20 dark:text-white';
                 }
 
-                const dInicio = document.getElementById('filtro-data-inicio')?.value || '';
-                const dFim = document.getElementById('filtro-data-fim')?.value || '';
-
-                flatpickr(container, {
-                    locale: "pt",
-                    mode: "range",
-                    inline: true,
-                    showMonths: 1, // Exibe exatamente 1 único mês por vez para visual compacto
-                    dateFormat: "Y-m-d",
-                    defaultDate: [dInicio, dFim],
-                    onChange: function(selectedDates, dateStr) {
-                        const alpineEl = document.getElementById('reservas-controle-cabecalho');
-                        if (alpineEl && window.Alpine) {
-                            const data = Alpine.$data(alpineEl);
-                            if (selectedDates.length === 2) {
-                                const d1 = selectedDates[0];
-                                const d2 = selectedDates[1];
-                                
-                                const label1 = d1.toLocaleDateString('pt-BR');
-                                const label2 = d2.toLocaleDateString('pt-BR');
-                                
-                                data.periodoTempLabel = `${label1} a ${label2}`;
-                                data.periodoValido = true;
-                                data.passoInstrucao = 'Pronto para aplicar';
-                                
-                                const y1 = d1.getFullYear();
-                                const m1 = String(d1.getMonth() + 1).padStart(2, '0');
-                                const r1 = String(d1.getDate()).padStart(2, '0');
-                                data.tempDataInicio = `${y1}-${m1}-${r1}`;
-                                
-                                const y2 = d2.getFullYear();
-                                const m2 = String(d2.getMonth() + 1).padStart(2, '0');
-                                const r2 = String(d2.getDate()).padStart(2, '0');
-                                data.tempDataFim = `${y2}-${m2}-${r2}`;
-                            } else {
-                                data.periodoValido = false;
-                                if (selectedDates.length === 1) {
-                                    data.periodoTempLabel = selectedDates[0].toLocaleDateString('pt-BR') + '...';
-                                    data.passoInstrucao = 'Selecione a data final';
-                                } else {
-                                    data.periodoTempLabel = '';
-                                    data.passoInstrucao = 'Selecione a data inicial';
-                                }
-                            }
-                        }
-                    }
-                });
+                dayCell.onclick = () => window.clicarDiaDashboard(cellDate);
+                grid.appendChild(dayCell);
             }
-        }
-        window.initDashboardFiltro();
-        
+        };
+
+        window.clicarDiaDashboard = function(date) {
+            if (!window.dashSelectedCheckIn || (window.dashSelectedCheckIn && window.dashSelectedCheckOut)) {
+                window.dashSelectedCheckIn = date;
+                window.dashSelectedCheckOut = null;
+            } else {
+                if (date <= window.dashSelectedCheckIn) {
+                    window.dashSelectedCheckIn = date;
+                } else {
+                    window.dashSelectedCheckOut = date;
+                }
+            }
+            window.atualizarInstrucoesCalendarioDashboard();
+            window.renderizarCalendarioDashboard();
+        };
+
+        window.atualizarInstrucoesCalendarioDashboard = function() {
+            const badge = document.getElementById('dash-calendar-instruction-badge');
+            const title = document.getElementById('dash-calendar-title-instruction');
+            const subtitle = document.getElementById('dash-calendar-subtitle-instruction');
+            const inSummary = document.getElementById('dash-summary-checkin');
+            const outSummary = document.getElementById('dash-summary-checkout');
+            const confirmBtn = document.getElementById('dash-btn-confirm-dates');
+
+            const formatDateDisplay = (date) => {
+                if (!date) return "-";
+                const d = String(date.getDate()).padStart(2, '0');
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const y = date.getFullYear();
+                return `${d}/${m}/${y}`;
+            };
+
+            if (inSummary) inSummary.textContent = formatDateDisplay(window.dashSelectedCheckIn);
+            if (outSummary) outSummary.textContent = formatDateDisplay(window.dashSelectedCheckOut);
+
+            if (!window.dashSelectedCheckIn) {
+                if (badge) {
+                    badge.textContent = "Check-in";
+                    badge.className = "inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-brand/10 text-brand dark:bg-brand/20 mb-2";
+                }
+                if (title) title.textContent = "Dia da entrada (check-in)";
+                if (subtitle) subtitle.textContent = "Selecione o dia do seu check-in no calendário";
+                if (confirmBtn) confirmBtn.disabled = true;
+            } else if (window.dashSelectedCheckIn && !window.dashSelectedCheckOut) {
+                if (badge) {
+                    badge.textContent = "Checkout";
+                    badge.className = "inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 mb-2";
+                }
+                if (title) title.textContent = "Dia da saída (checkout)";
+                if (subtitle) subtitle.textContent = "Agora, selecione o dia da sua saída no calendário";
+                if (confirmBtn) confirmBtn.disabled = true;
+            } else {
+                if (badge) {
+                    badge.textContent = "Concluído";
+                    badge.className = "inline-flex px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 mb-2";
+                }
+                if (title) title.textContent = "Período selecionado!";
+                if (subtitle) subtitle.textContent = "Clique em confirmar para aplicar a filtragem no dashboard";
+                if (confirmBtn) confirmBtn.disabled = false;
+            }
+        };
+
         // Se o HTMX redefinir os elementos, reinicializamos se necessário
         document.body.addEventListener('htmx:afterOnLoad', () => {
             if (typeof lucide !== 'undefined') {
@@ -4812,8 +4964,8 @@
         });
 
         document.body.addEventListener('htmx:afterSwap', () => {
-            if (typeof window.initDashboardFiltro === 'function') {
-                window.initDashboardFiltro();
+            if (typeof window.inicializarCalendarioDashboard === 'function') {
+                window.inicializarCalendarioDashboard();
             }
         });
     });
