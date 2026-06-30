@@ -987,7 +987,7 @@ x-data="{
         
         <div class="h-20 flex items-center justify-center md:justify-start px-4 border-b border-slate-200/50 dark:border-navie-border flex-shrink-0 whitespace-nowrap transition-all duration-300">
             <!-- EXPANDIDO (Aberto ou no Hover) -->
-            <div :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="items-center justify-center gap-3 w-full animate-in fade-in zoom-in duration-300">
+            <div x-cloak :class="sidebarMobileOpen ? 'flex' : 'hidden group-hover/sidebar:flex'" class="items-center justify-center gap-3 w-full animate-in fade-in zoom-in duration-300">
                 <div class="flex items-center gap-2">
                     <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-6 w-auto object-contain flex-shrink-0" title="Naviê Vibe">
                     <span class="text-brand-900 dark:text-white font-black tracking-tight text-sm truncate max-w-[110px]">
@@ -1007,7 +1007,7 @@ x-data="{
             </div>
 
             <!-- RECOLHIDO (Fechado) -->
-            <div :class="sidebarMobileOpen ? 'hidden' : 'flex group-hover/sidebar:hidden'" class="flex-col items-center justify-center gap-2 w-full h-full py-2">
+            <div x-cloak :class="sidebarMobileOpen ? 'hidden' : 'flex group-hover/sidebar:hidden'" class="flex-col items-center justify-center gap-2 w-full h-full py-2">
                 <img src="{% static 'images/logo.png' %}" alt="Naviê" class="h-5 w-auto object-contain flex-shrink-0" title="Naviê Vibe">
                 
                 <div class="w-4 h-[2px] bg-slate-200 dark:bg-navie-border rounded-full shrink-0"></div>
