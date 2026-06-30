@@ -835,9 +835,6 @@ def partner_dashboard(request):
             selected_quarto = hotel.quartos.get(id=quarto_id)
         except Exception:
             pass
-    if not selected_quarto:
-        selected_quarto = hotel.quartos.first()
-        
     # 2. Filtro de Período (Default: Hoje até hoje + 7 dias)
     data_inicio = hoje
     data_fim = hoje + timedelta(days=7)
@@ -891,7 +888,7 @@ def partner_dashboard(request):
     if selected_quarto:
         res_periodo_sel = res_periodo.filter(unidade__quarto=selected_quarto)
     else:
-        res_periodo_sel = res_periodo.none()
+        res_periodo_sel = res_periodo
         
     ativos_qtd = res_periodo_sel.count()
     hospedados_qtd = res_periodo_sel.filter(status='hospedado').aggregate(models.Sum('quantidade_hospedes'))['quantidade_hospedes__sum'] or 0
