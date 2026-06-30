@@ -910,7 +910,12 @@ def partner_dashboard(request):
         nums = re.findall(r'\d+', identificador or '')
         return int(nums[0]) if nums else 999999
     
-    unidades_ordenadas = sorted(unidades, key=lambda u: get_number(u.identificador))
+    if selected_quarto:
+        unidades_timeline = selected_quarto.unidades.filter(ativa=True)
+    else:
+        unidades_timeline = unidades
+
+    unidades_ordenadas = sorted(unidades_timeline, key=lambda u: get_number(u.identificador))
 
     unidades_data = []
     for uni in unidades_ordenadas:
@@ -1119,6 +1124,8 @@ def partner_dashboard(request):
         return render(request, 'hoteis/atividades/partials/kanban.html', context)
     elif is_htmx and view_type == 'reservas_grid':
         return render(request, 'hoteis/partials/reservas_grid.html', context)
+    elif is_htmx and view_type == 'reservas_timeline':
+        return render(request, 'hoteis/partials/reservas_timeline.html', context)
         
     return render(request, 'hoteis/partner_dashboard.html', context)
 

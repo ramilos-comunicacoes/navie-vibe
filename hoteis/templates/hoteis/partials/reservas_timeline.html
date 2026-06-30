@@ -1,0 +1,49 @@
+<!-- Tabela Flat Estilo Planilha Excel (Linhas e divisórias bem marcadas) -->
+<div class="overflow-x-auto select-none border-b border-slate-200 dark:border-white/10">
+    <div class="min-w-[800px] divide-y divide-slate-200 dark:divide-white/10">
+        
+        <!-- Corpo de Acomodações e Barrinhas -->
+        {% for uni_data in unidades_data %}
+        <div class="flex items-center hover:bg-slate-50/40 dark:hover:bg-white/5 transition-colors">
+            <!-- Nome do quarto/unidade -->
+            <div class="w-36 px-3 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3 h-full flex items-center min-h-[48px] text-[9px] tracking-tight leading-tight uppercase">
+                <span class="truncate" title="{{ uni_data.unidade.identificador }} ({{ uni_data.unidade.quarto.nome }})">
+                    {{ uni_data.unidade.identificador }} - {{ uni_data.unidade.quarto.nome }}
+                </span>
+            </div>
+            
+            <!-- Grid de 7 dias com divisores verticais estilo Excel -->
+            <div class="flex-1 grid grid-cols-7 gap-0 h-12 items-center relative divide-x divide-slate-200 dark:divide-white/10">
+                <!-- Slots de Dias -->
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                <div class="col-span-1 h-full flex items-center justify-center relative"></div>
+                
+                <!-- Desenho de Reservas Reais / Pílula Contínua sobreposta no grid -->
+                <div class="absolute inset-0 flex items-center pointer-events-none px-1">
+                    {% for r in uni_data.reservas %}
+                    <div style="left: {{ r.gantt_left|stringformat:".4f" }}%; width: {{ r.gantt_width|stringformat:".4f" }}%;"
+                         class="absolute pointer-events-auto z-10 bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/50 hover:border-brand text-brand text-[9px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer"
+                         title="Hóspede: {{ r.hospede_nome }} | Check-in: {{ r.data_checkin|date:'d/m' }} a {{ r.data_checkout|date:'d/m' }}">
+                        <span class="truncate">#{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
+                        <span class="shrink-0 text-[7px] bg-brand text-white px-1.5 py-0.5 rounded font-black">{{ r.get_status_display }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="w-full text-center text-[9px] text-slate-400/80 font-bold uppercase tracking-widest select-none">
+                        Livre
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
+            Nenhuma acomodação cadastrada para este hotel.
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -69,12 +69,18 @@
     <div x-show="activeTab === 'reservas'" class="flex items-center gap-2 sm:gap-2.5" x-transition.opacity style="display: none;"
          x-data="{
             quartoOpen: false,
-            quartoLabel: '{{ selected_quarto.nome|default:"Selecionar" }}',
+            quartoLabel: '{{ selected_quarto.nome|default:"Geral (Todos)" }}',
             selectQuarto(id, label) {
                 this.quartoLabel = label;
                 this.quartoOpen = false;
                 document.getElementById('hidden-quarto-id').value = id;
-                htmx.ajax('GET', '{% url 'hoteis:partner_dashboard' %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + document.getElementById('filtro-data-inicio').value + '&data_fim=' + document.getElementById('filtro-data-fim').value, '#reservas-grid-container');
+                const inicio = document.getElementById('filtro-data-inicio')?.value || '';
+                const fim = document.getElementById('filtro-data-fim')?.value || '';
+                if (this.reservasTab === 'timeline') {
+                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
+                } else {
+                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + id + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
+                }
             }
          }">
 
@@ -107,6 +113,14 @@
             <!-- Dropdown List Estilizado -->
             <div x-show="quartoOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
                  class="absolute top-full left-0 mt-1.5 z-50 min-w-[200px] bg-white dark:bg-[#1a1a1a] border border-slate-200/80 dark:border-white/10 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/40 overflow-hidden py-1.5" style="display: none;">
+                
+                <!-- Opção Geral (Todos os Quartos) -->
+                <button @click="selectQuarto('', 'Geral (Todos)')" type="button"
+                        class="w-full text-left px-4 py-2.5 text-xs font-black text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2.5 {% if not selected_quarto %}bg-slate-50 dark:bg-white/5 text-brand{% endif %}">
+                    <span class="w-1.5 h-1.5 rounded-full {% if not selected_quarto %}bg-brand dark:bg-white{% else %}bg-slate-300 dark:bg-white/20{% endif %} shrink-0"></span>
+                    <span>Geral (Todos)</span>
+                </button>
+
                 {% for q in quartos %}
                 <button @click="selectQuarto('{{ q.id }}', '{{ q.nome }}')" type="button"
                         class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors flex items-center gap-2.5 {% if q == selected_quarto %}bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white{% endif %}">
@@ -115,7 +129,7 @@
                 </button>
                 {% endfor %}
             </div>
-            <input type="hidden" id="hidden-quarto-id" name="quarto_id" value="{{ selected_quarto.id }}">
+            <input type="hidden" id="hidden-quarto-id" name="quarto_id" value="{{ selected_quarto.id|default:"" }}">
         </div>
 
         <!-- Separador visual -->
@@ -1236,55 +1250,8 @@
 
         <!-- Aba 2: Linha do Tempo (Apenas Notebook / Tablet) -->
         <div x-show="reservasTab === 'timeline'" class="hidden md:block w-full animate-in fade-in duration-300 !mt-0" style="display: none;">
-            
-            <!-- Tabela Flat Estilo Planilha Excel (Linhas e divisórias bem marcadas) -->
-            <div class="overflow-x-auto select-none border-b border-slate-200 dark:border-white/10">
-                <div class="min-w-[800px] divide-y divide-slate-200 dark:divide-white/10">
-                    
-                    <!-- Corpo de Acomodações e Barrinhas -->
-                    {% for uni_data in unidades_data %}
-                    <div class="flex items-center hover:bg-slate-50/40 dark:hover:bg-white/5 transition-colors">
-                        <!-- Nome do quarto/unidade -->
-                        <div class="w-36 px-3 shrink-0 font-bold text-slate-700 dark:text-white border-r border-slate-200 dark:border-white/10 py-3 h-full flex items-center min-h-[48px] text-[9px] tracking-tight leading-tight uppercase">
-                            <span class="truncate" title="{{ uni_data.unidade.identificador }} ({{ uni_data.unidade.quarto.nome }})">
-                                {{ uni_data.unidade.identificador }} - {{ uni_data.unidade.quarto.nome }}
-                            </span>
-                        </div>
-                        
-                        <!-- Grid de 7 dias com divisores verticais estilo Excel -->
-                        <div class="flex-1 grid grid-cols-7 gap-0 h-12 items-center relative divide-x divide-slate-200 dark:divide-white/10">
-                            <!-- Slots de Dias -->
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            <div class="col-span-1 h-full flex items-center justify-center relative"></div>
-                            
-                            <!-- Desenho de Reservas Reais / Pílula Contínua sobreposta no grid -->
-                            <div class="absolute inset-0 flex items-center pointer-events-none px-1">
-                                {% for r in uni_data.reservas %}
-                                <div style="left: {{ r.gantt_left|stringformat:".4f" }}%; width: {{ r.gantt_width|stringformat:".4f" }}%;"
-                                     class="absolute pointer-events-auto z-10 bg-brand-500/10 dark:bg-brand-500/20 border border-brand-500/30 dark:border-brand-500/50 hover:border-brand text-brand text-[9px] font-black rounded-xl px-3 py-1 flex items-center justify-between shadow-sm hover:scale-[1.01] transition-all cursor-pointer"
-                                     title="Hóspede: {{ r.hospede_nome }} | Check-in: {{ r.data_checkin|date:'d/m' }} a {{ r.data_checkout|date:'d/m' }}">
-                                    <span class="truncate">#{{ r.id|stringformat:"s"|slice:":6"|upper }} - {{ r.hospede_nome }}</span>
-                                    <span class="shrink-0 text-[7px] bg-brand text-white px-1.5 py-0.5 rounded font-black">{{ r.get_status_display }}</span>
-                                </div>
-                                {% empty %}
-                                <div class="w-full text-center text-[9px] text-slate-400/80 font-bold uppercase tracking-widest select-none">
-                                    Livre
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="py-8 text-center text-slate-400 font-semibold text-xs uppercase tracking-wider">
-                        Nenhuma acomodação cadastrada para este hotel.
-                    </div>
-                    {% endfor %}
-                </div>
+            <div id="reservas-timeline-container" class="w-full">
+                {% include 'hoteis/partials/reservas_timeline.html' %}
             </div>
         </div>
     </div>
@@ -4702,8 +4669,13 @@
             const quartoId = document.getElementById('hidden-quarto-id')?.value || '';
             const inicio = document.getElementById('filtro-data-inicio')?.value || '';
             const fim = document.getElementById('filtro-data-fim')?.value || '';
-            if (quartoId && inicio && fim) {
-                htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
+            if (inicio && fim) {
+                const tab = window.Alpine ? Alpine.evaluate(document.body, 'reservasTab') : 'mapa';
+                if (tab === 'timeline') {
+                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_timeline&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-timeline-container');
+                } else {
+                    htmx.ajax('GET', '{% url "hoteis:partner_dashboard" %}?view=reservas_grid&quarto_id=' + quartoId + '&data_inicio=' + inicio + '&data_fim=' + fim, '#reservas-grid-container');
+                }
             }
         }
 
