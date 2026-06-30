@@ -1557,29 +1557,33 @@ x-data="{
     <!-- ─────────────────────────────────────────────────────────────────
          ASSISTENTE VIRTUAL IN-APP HOTELEIRO (Chat Flutuante)
          ───────────────────────────────────────────────────────────────── -->
-    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }" 
-         class="fixed bottom-6 z-[9999] font-sans transition-all duration-300 ease-in-out"
-         :class="chatOpen ? 'right-6 md:right-[424px]' : 'right-6'">
+    <!-- Wrapper Estático do Chat (Sem transição de movimento) -->
+    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }">
         
-        <!-- Botão Flutuante (FAB) -->
-        <button @click="chatOpen = !chatOpen; if(chatOpen) setTimeout(scrollBottom, 100)" 
-                class="w-12 h-12 bg-brand hover:bg-brand/95 text-white rounded-full flex items-center justify-center shadow-xl shadow-brand/30 hover:-translate-y-1 hover:scale-105 transition-all duration-300 relative group border border-white/20">
+        <!-- Contêiner do Botão Flutuante (FAB) - Este sim se move no desktop -->
+        <div class="fixed bottom-6 right-6 z-[9999] font-sans transition-all duration-300 ease-in-out"
+             :class="chatOpen ? 'md:right-[424px]' : 'right-6'">
             
-            <span x-show="!chatOpen" class="flex items-center justify-center">
-                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
-            </span>
-            
-            <span x-show="chatOpen" style="display: none;" class="flex items-center justify-center">
-                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="x" class="w-5 h-5"></i></span>
-            </span>
-            <!-- Indicador Online -->
-            <span class="absolute top-0 right-0 flex h-4 w-4">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white dark:border-navie-bg bg-green-500"></span>
-            </span>
-        </button>
+            <!-- Botão Flutuante (FAB) -->
+            <button @click="chatOpen = !chatOpen; if(chatOpen) setTimeout(scrollBottom, 100)" 
+                    class="w-12 h-12 bg-brand hover:bg-brand/95 text-white rounded-full flex items-center justify-center shadow-xl shadow-brand/30 hover:-translate-y-1 hover:scale-105 transition-all duration-300 relative group border border-white/20">
+                
+                <span x-show="!chatOpen" class="flex items-center justify-center">
+                    <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
+                </span>
+                
+                <span x-show="chatOpen" style="display: none;" class="flex items-center justify-center">
+                    <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="x" class="w-5 h-5"></i></span>
+                </span>
+                <!-- Indicador Online -->
+                <span class="absolute top-0 right-0 flex h-4 w-4">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white dark:border-navie-bg bg-green-500"></span>
+                </span>
+            </button>
+        </div>
 
-        <!-- Janela do Chat -->
+        <!-- Janela do Chat (Irmã Estática da Div do FAB) -->
         <div x-show="chatOpen" style="display: none;"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
