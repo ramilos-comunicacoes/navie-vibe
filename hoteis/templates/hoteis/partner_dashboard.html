@@ -562,20 +562,6 @@
     </div>
 </div>
 
-<!-- Terceiro Sub-cabeçalho Integrado: Dias da Semana da Linha do Tempo (Apenas Notebook / Tablet) -->
-<div x-show="activeTab === 'reservas' && reservasTab === 'timeline'" 
-     class="hidden md:flex bg-slate-50/80 dark:bg-white/5 border-b border-slate-200/50 dark:border-navie-border px-6 py-2.5 transition-all" 
-     style="display: none;" 
-     x-transition.opacity>
-    <div class="w-full flex text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-wider items-center select-none">
-        <div class="w-36 px-4 shrink-0 border-r border-slate-200 dark:border-white/10 truncate">Acomodação</div>
-        <div class="flex-1 grid grid-cols-7 gap-0 text-center divide-x divide-slate-200 dark:divide-white/10">
-            {% for dia in dias_gantt %}
-            <div class="py-1">{{ dia|date:"D"|upper }} ({{ dia|date:"d/m" }})</div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block painel_content %}
