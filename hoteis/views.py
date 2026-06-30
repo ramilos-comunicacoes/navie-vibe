@@ -3249,8 +3249,12 @@ def checkout_processar(request):
         
         # Estrutura base do payer
         payer_email = titular_fnrh['email']
-        if (settings.DEBUG or getattr(settings, 'MERCADOPAGO_SANDBOX', False)) and not payer_email.endswith('@testuser.com'):
-            payer_email = "TESTUSER6095556049045318276@testuser.com"
+        if (settings.DEBUG or getattr(settings, 'MERCADOPAGO_SANDBOX', False)):
+            buyer_env = getattr(settings, 'MERCADOPAGO_BUYER_EMAIL', '')
+            if buyer_env:
+                payer_email = buyer_env
+            elif not payer_email.endswith('@testuser.com'):
+                payer_email = "TESTUSER6095556049045318276@testuser.com"
  
         payer = {
             "email": payer_email,

@@ -292,6 +292,7 @@ MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', 'APP_USR-2
 MERCADOPAGO_CLIENT_ID = os.environ.get('MERCADOPAGO_CLIENT_ID', '2530092998607852')
 MERCADOPAGO_CLIENT_SECRET = os.environ.get('MERCADOPAGO_CLIENT_SECRET', MERCADOPAGO_ACCESS_TOKEN)
 MERCADOPAGO_SANDBOX = os.environ.get('MERCADOPAGO_SANDBOX', 'False') == 'True'
+MERCADOPAGO_BUYER_EMAIL = os.environ.get('MERCADOPAGO_BUYER_EMAIL', '')
 
 # Evita colisão de sessão quando rodando outros projetos Django em localhost em portas diferentes
 SESSION_COOKIE_NAME = 'navievibe_sessionid'
