@@ -24,6 +24,7 @@ urlpatterns = [
     path('hospedagens/configuracoes/salvar/', views.partner_salvar_configuracoes, name='partner_salvar_configuracoes'),
     path('hospedagens/configuracoes/geral/salvar/', views.partner_salvar_configuracoes_geral, name='partner_salvar_configuracoes_geral'),
     path('hospedagens/financeiro/mp/conectar/', financeiro_views.view_mp_conectar, name='mp_conectar'),
+    path('hospedagens/financeiro/mp/conectar-sandbox/', financeiro_views.view_mp_conectar_sandbox, name='mp_conectar_sandbox'),
     path('hospedagens/financeiro/mp/callback/', financeiro_views.view_mp_callback, name='mp_callback'),
     
     # Gestão de Quartos (Reativa via HTMX)

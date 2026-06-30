@@ -1110,6 +1110,7 @@ def partner_dashboard(request):
         'destaques_secao': destaques_secao,
         'tem_destaques_personalizado': tem_destaques_personalizado,
         'galeria_slots': galeria_slots,
+        'debug': settings.DEBUG,
     }
     
     is_htmx = request.headers.get('HX-Request') == 'true'

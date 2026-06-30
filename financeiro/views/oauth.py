@@ -109,3 +109,51 @@ def view_mp_callback(request):
         messages.error(request, f"Falha de comunicação com o Mercado Pago: {str(e)}")
         
     return redirect('hoteis:partner_dashboard')
+
+
+@login_required
+def view_mp_conectar_sandbox(request):
+    """
+    Simula uma conexão de sandbox Mercado Pago sem passar pelo fluxo real do OAuth (Útil em ambiente de testes/debug)
+    """
+    if not settings.DEBUG:
+        messages.error(request, "A conexão simulada só é permitida em ambiente de desenvolvimento (DEBUG=True).")
+        return redirect('hoteis:partner_dashboard')
+        
+    if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
+        messages.error(request, "Acesso restrito.")
+        return redirect('hoteis:partner_dashboard')
+        
+    hotel = request.user.perfil_parceiro.hotel
+    empresa = hotel.empresa
+    if not empresa:
+        messages.error(request, "Nenhuma empresa associada ao hotel logado.")
+        return redirect('hoteis:partner_dashboard')
+        
+    client_id = getattr(settings, 'MERCADOPAGO_CLIENT_ID', '')
+    access_token = getattr(settings, 'MERCADOPAGO_ACCESS_TOKEN', '')
+    
+    if not client_id or not access_token:
+        messages.error(request, "client_id ou access_token ausentes nas configurações.")
+        return redirect('hoteis:partner_dashboard')
+        
+    expires_in = 15552000 # 180 dias
+    
+    conexao, created = MercadoPagoConexao.objects.update_or_create(
+        empresa=empresa,
+        defaults={
+            'mp_user_id': str(client_id),
+            'access_token': access_token,
+            'refresh_token': 'sandbox_refresh_token',
+            'token_expira_em': timezone.now() + timedelta(seconds=expires_in)
+        }
+    )
+    
+    messages.success(request, "Conexão de testes do Mercado Pago simulada com sucesso!")
+    
+    if request.headers.get('HX-Request') == 'true':
+        from django.http import HttpResponse
+        response = HttpResponse()
+        response['HX-Location'] = '/hospedagens/sistema/?tab=financeiro&financeiro_tab=mp'
+        return response
+    return redirect('/hospedagens/sistema/?tab=financeiro&financeiro_tab=mp')
