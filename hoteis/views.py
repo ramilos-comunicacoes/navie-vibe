@@ -3249,7 +3249,7 @@ def checkout_processar(request):
         
         # Estrutura base do payer
         payer_email = titular_fnrh['email']
-        if settings.DEBUG and not payer_email.endswith('@testuser.com'):
+        if (settings.DEBUG or getattr(settings, 'MERCADOPAGO_SANDBOX', False)) and not payer_email.endswith('@testuser.com'):
             payer_email = "TESTUSER6095556049045318276@testuser.com"
  
         payer = {
