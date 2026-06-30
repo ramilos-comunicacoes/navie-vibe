@@ -1584,7 +1584,8 @@ x-data="{
         </div>
 
         <!-- Janela do Chat (Irmã Estática da Div do FAB) -->
-        <div x-show="chatOpen" style="display: none;"
+        <div id="navie-chat-window"
+             x-show="chatOpen" style="display: none;"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
              x-transition:enter-end="opacity-100 translate-y-0 md:translate-x-0"
@@ -1647,6 +1648,41 @@ x-data="{
             
             <!-- Script Local do Chat -->
             <script>
+                // Ajuste inteligente para teclados virtuais em dispositivos móveis e tablets (Visual Viewport API)
+                if (window.visualViewport) {
+                    const adjustChatForKeyboard = () => {
+                        const chatWindow = document.getElementById('navie-chat-window');
+                        if (!chatWindow) return;
+                        
+                        const isMobileOrTablet = window.innerWidth < 1024 || /Mobi|Android|iPhone|iPad|Macintosh/i.test(navigator.userAgent);
+                        
+                        if (isMobileOrTablet) {
+                            const keyboardHeight = window.innerHeight - window.visualViewport.height;
+                            
+                            if (keyboardHeight > 30) {
+                                // Teclado ativo: ajusta bottom para a altura exata do teclado e encolhe o chat
+                                chatWindow.style.bottom = `${keyboardHeight}px`;
+                                chatWindow.style.height = `${window.visualViewport.height}px`;
+                            } else {
+                                // Teclado inativo: remove overrides e volta ao CSS padrão
+                                chatWindow.style.bottom = '';
+                                chatWindow.style.height = '';
+                            }
+                            
+                            // Força rolagem de mensagens após ajuste
+                            const messagesArea = document.getElementById('chat-messages');
+                            if (messagesArea) {
+                                setTimeout(() => {
+                                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                                }, 80);
+                            }
+                        }
+                    };
+                    
+                    window.visualViewport.addEventListener('resize', adjustChatForKeyboard);
+                    window.visualViewport.addEventListener('scroll', adjustChatForKeyboard);
+                }
+
                 document.getElementById('chat-form').addEventListener('htmx:beforeRequest', function(e) {
                     const input = this.querySelector('[name="mensagem"]');
                     const text = input.value;
