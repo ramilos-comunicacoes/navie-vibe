@@ -302,8 +302,8 @@ LOGIN_URL = 'clientes:login_cadastro'
 
 # Configurações de Segurança para Produção (HTTPS atrás de Proxy Nginx)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
 SESSION_COOKIE_DOMAIN = '.navievibe.com'
 
 # Armazena mensagens na sessão do banco de dados (evita cookies duplicados/presos no navegador)
