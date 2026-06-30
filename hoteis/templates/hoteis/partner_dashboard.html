@@ -4324,6 +4324,31 @@
                     });
                 }
 
+                // Listeners para a seção Sobre do Hotel (Vitrine / Site)
+                const sobreTituloHotel = document.getElementById('sobre_titulo_hotel');
+                const sobreTextoHotel = document.getElementById('sobre_texto_hotel_input');
+                const sobreFundoHotel = document.getElementById('sobre_cor_fundo_hotel_hex');
+                const sobreTextHotel = document.getElementById('sobre_cor_texto_hotel_hex');
+                const sobreRadioInputsHotel = document.querySelectorAll('#form-salvar-config input[name="sobre_midia_tipo"]');
+
+                if (sobreTituloHotel) {
+                    sobreTituloHotel.addEventListener('input', updateAllIframes);
+                }
+                if (sobreTextoHotel) {
+                    sobreTextoHotel.addEventListener('input', updateAllIframes);
+                }
+                if (sobreFundoHotel) {
+                    sobreFundoHotel.addEventListener('input', updateAllIframes);
+                }
+                if (sobreTextHotel) {
+                    sobreTextHotel.addEventListener('input', updateAllIframes);
+                }
+                if (sobreRadioInputsHotel) {
+                    sobreRadioInputsHotel.forEach(radio => {
+                        radio.addEventListener('change', updateAllIframes);
+                    });
+                }
+
                 // Bind iframe load events dynamically
                 const desktopIframe = document.getElementById('hero-preview-iframe-desktop');
                 const mobileIframe = document.getElementById('hero-preview-iframe-mobile');
