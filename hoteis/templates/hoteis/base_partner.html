@@ -1587,7 +1587,7 @@ x-data="{
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 translate-y-0 md:translate-x-0"
              x-transition:leave-end="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
-             class="absolute bottom-16 right-0 w-[300px] sm:w-[340px] h-[70dvh] max-h-[450px] md:fixed md:top-0 md:right-0 md:bottom-0 md:h-screen md:max-h-none md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200/60 md:dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-white/10 flex flex-col overflow-hidden">
+             class="fixed inset-0 w-full h-full md:fixed md:top-0 md:right-0 md:bottom-0 md:h-screen md:max-h-none md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200/60 md:dark:border-white/10 bg-white dark:bg-slate-900 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden">
             
             <!-- Header do Chat -->
             <div class="h-[76px] bg-gradient-to-r from-brand to-brand/80 px-5 flex items-center justify-between shrink-0 relative overflow-hidden">
@@ -1622,7 +1622,7 @@ x-data="{
             </div>
 
             <!-- Formulário de Envio -->
-            <div class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10 md:pb-6">
+            <div class="p-3 pb-5 bg-white dark:bg-slate-900 border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10 md:pb-6">
                 <form id="chat-form" 
                       hx-post="{% url 'hoteis:ia_enviar_chat' %}" 
                       hx-target="#chat-messages" 
