@@ -1,4 +1,5 @@
 from django.test import TestCase, RequestFactory
+from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.messages.storage.base import BaseStorage
@@ -259,3 +260,119 @@ class FinanceiroTestCase(TestCase):
         
         response = criar_transacao_api(request)
         self.assertEqual(response.status_code, 400)
+
+    @patch('requests.get')
+    def test_webhook_processamento_pagamento_aprovado(self, mock_get):
+        """Testa se o webhook do Mercado Pago aprova a reserva corretamente ao receber o evento de aprovado."""
+        # 1. Configurar reserva de teste pendente com pagamento_id
+        reserva_teste = Reserva.objects.create(
+            unidade=self.unidade,
+            data_checkin=datetime.date.today(),
+            data_checkout=datetime.date.today() + datetime.timedelta(days=2),
+            valor_total=900.00,
+            status='pendente',
+            pagamento_id='PAY_TEST_123',
+            quantidade_hospedes=2,
+            hospede_nome='Hóspede Teste'
+        )
+
+        # 2. Configurar mock da resposta do requests para retornar pagamento aprovado
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "status": "approved",
+            "status_detail": "accredited"
+        }
+
+        # 3. Disparar a requisição POST para o webhook (simulando DEBUG=True para aceitar a assinatura vazia)
+        payload = {
+            "type": "payment",
+            "data": {
+                "id": "PAY_TEST_123"
+            }
+        }
+
+        from django.test import override_settings
+        with override_settings(DEBUG=True):
+            response = self.client.post(
+                '/hospedagens/financeiro/mp/webhook/',
+                data=payload,
+                content_type='application/json'
+            )
+
+        # 4. Validar resultado
+        self.assertEqual(response.status_code, 200)
+        reserva_teste.refresh_from_db()
+        self.assertEqual(reserva_teste.status, 'confirmada')
+        
+        # Verificar se gravou no ReservaLog
+        self.assertTrue(reserva_teste.logs.filter(acao='webhook_pagamento_approved').exists())
+
+    @patch('requests.get')
+    def test_webhook_processamento_pagamento_cancelado(self, mock_get):
+        """Testa se o webhook do Mercado Pago cancela a reserva corretamente ao receber o evento de recusado/cancelado."""
+        # 1. Configurar reserva de teste pendente com pagamento_id
+        reserva_teste = Reserva.objects.create(
+            unidade=self.unidade,
+            data_checkin=datetime.date.today(),
+            data_checkout=datetime.date.today() + datetime.timedelta(days=2),
+            valor_total=900.00,
+            status='pendente',
+            pagamento_id='PAY_TEST_456',
+            quantidade_hospedes=2,
+            hospede_nome='Hóspede Teste 2'
+        )
+
+        # 2. Configurar mock da resposta do requests para retornar pagamento cancelado
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "status": "cancelled",
+            "status_detail": "expired"
+        }
+
+        # 3. Disparar a requisição POST para o webhook
+        payload = {
+            "type": "payment",
+            "data": {
+                "id": "PAY_TEST_456"
+            }
+        }
+
+        from django.test import override_settings
+        with override_settings(DEBUG=True):
+            response = self.client.post(
+                '/hospedagens/financeiro/mp/webhook/',
+                data=payload,
+                content_type='application/json'
+            )
+
+        # 4. Validar resultado
+        self.assertEqual(response.status_code, 200)
+        reserva_teste.refresh_from_db()
+        self.assertEqual(reserva_teste.status, 'cancelada')
+        
+        # Verificar se gravou no ReservaLog
+        self.assertTrue(reserva_teste.logs.filter(acao='webhook_pagamento_cancelled').exists())
+
+    def test_webhook_assinatura_invalida_prod(self):
+        """Testa se o webhook do Mercado Pago rejeita com 401 em produção (DEBUG=False) se a assinatura for inválida."""
+        payload = {
+            "type": "payment",
+            "data": {
+                "id": "PAY_TEST_999"
+            }
+        }
+
+        from django.test import override_settings
+        with override_settings(DEBUG=False, MERCADOPAGO_WEBHOOK_SECRET='valid_secret'):
+            response = self.client.post(
+                '/hospedagens/financeiro/mp/webhook/',
+                data=payload,
+                content_type='application/json',
+                HTTP_X_SIGNATURE='ts=1234,v1=wrong_hash',
+                HTTP_X_REQUEST_ID='req_123'
+            )
+
+        self.assertEqual(response.status_code, 401)
+

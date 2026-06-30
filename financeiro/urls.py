@@ -9,4 +9,5 @@ urlpatterns = [
     path('mp/conectar/', views.view_mp_conectar, name='mp_conectar'),
     path('mp/conectar-sandbox/', views.view_mp_conectar_sandbox, name='mp_conectar_sandbox'),
     path('mp/callback/', views.view_mp_callback, name='mp_callback'),
+    path('mp/webhook/', views.view_mp_webhook, name='mp_webhook'),
 ]

@@ -3336,6 +3336,8 @@ def checkout_processar(request):
         if forma_pagamento == 'cartao' and status_pagamento != 'approved':
             return JsonResponse({'success': False, 'error': f'O pagamento foi recusado pelo banco. Detalhe: {status_detail}'}, status=400)
             
+        pagamento_id = str(resp_data.get('id', ''))
+            
         # 3. Criar a Reserva no Banco
         status_reserva = 'confirmada' if status_pagamento == 'approved' else 'pendente'
         reserva = Reserva.objects.create(
@@ -3352,6 +3354,7 @@ def checkout_processar(request):
             ganho_liquido_plataforma=fin['ganho_liquido'],
             status=status_reserva,
             canal_venda='marketplace',
+            pagamento_id=pagamento_id,
             hospede_nome=titular_fnrh['nome'],
             hospede_cpf=titular_fnrh['cpf'],
             hospede_email=titular_fnrh['email'],

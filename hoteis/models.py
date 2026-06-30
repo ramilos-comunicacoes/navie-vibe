@@ -282,6 +282,7 @@ class Reserva(models.Model):
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente', db_index=True)
     canal_venda = models.CharField(max_length=50, default='marketplace', help_text="marketplace ou walk-in")
+    pagamento_id = models.CharField("ID do Pagamento no Gateway", max_length=100, blank=True, null=True, db_index=True)
     
     # Datas de execução reais de portaria
     checkin_realizado_em = models.DateTimeField(null=True, blank=True)

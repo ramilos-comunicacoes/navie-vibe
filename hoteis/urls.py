@@ -26,6 +26,7 @@ urlpatterns = [
     path('hospedagens/financeiro/mp/conectar/', financeiro_views.view_mp_conectar, name='mp_conectar'),
     path('hospedagens/financeiro/mp/conectar-sandbox/', financeiro_views.view_mp_conectar_sandbox, name='mp_conectar_sandbox'),
     path('hospedagens/financeiro/mp/callback/', financeiro_views.view_mp_callback, name='mp_callback'),
+    path('hospedagens/financeiro/mp/webhook/', financeiro_views.view_mp_webhook, name='mp_webhook'),
     
     # Gestão de Quartos (Reativa via HTMX)
     path('hospedagens/quartos/formulario/', views.partner_quarto_formulario, name='partner_quarto_formulario'),
