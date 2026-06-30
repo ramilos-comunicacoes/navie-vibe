@@ -234,8 +234,8 @@ x-init="
     });
 "
 x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none" x-cloak>
-    <!-- Backdrop Blur -->
-    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity z-10 pointer-events-auto" @click="open = false; document.getElementById('modal-container').innerHTML = ''"></div>
+    <!-- Backdrop Blur (Sem fechamento ao clicar fora) -->
+    <div class="absolute inset-0 bg-black/75 backdrop-blur-sm transition-opacity z-10 pointer-events-auto"></div>
     
     <!-- Modal Content Card (Narrower Padding) -->
     <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-white/10 w-full max-w-2xl overflow-hidden relative z-50 p-6 transform transition-all duration-300 animate-in fade-in zoom-in-95 flex flex-col max-h-[95vh] pointer-events-auto"

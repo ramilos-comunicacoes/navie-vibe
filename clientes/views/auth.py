@@ -46,7 +46,22 @@ def api_login(request):
         return JsonResponse({'ok': False, 'erro': 'Preencha CPF e senha.'}, status=400)
 
     # Django authentication using username (CPF) and password
+    # Normalizar o CPF para tentar autenticar com e sem formatação (pontos e traço)
+    username_limpo = ''.join(c for c in username if c.isdigit())
+    username_formatado = username
+    if len(username_limpo) == 11:
+        username_formatado = f"{username_limpo[:3]}.{username_limpo[3:6]}.{username_limpo[6:9]}-{username_limpo[9:]}"
+
+    # 1. Tenta com o formato enviado
     user = authenticate(request, username=username, password=password)
+    
+    # 2. Se falhar, tenta com o CPF limpo (apenas números)
+    if user is None and username_limpo != username:
+        user = authenticate(request, username=username_limpo, password=password)
+        
+    # 3. Se falhar, tenta com o CPF formatado
+    if user is None and username_formatado != username:
+        user = authenticate(request, username=username_formatado, password=password)
     
     if user is not None:
         if user.is_active:

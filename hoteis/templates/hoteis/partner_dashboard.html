@@ -170,9 +170,10 @@
         <!-- Filtro de Período Unificado com Botão Único e Modal Inline -->
         <div class="relative flex items-center">
             <button @click="abrirModalCalendario()" type="button"
-                    class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-black rounded-2xl pl-3.5 pr-4 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all flex items-center gap-2">
-                <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand shrink-0"></i>
-                <span x-text="periodoLabel"></span>
+                    class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-black rounded-xl md:rounded-2xl w-9 h-9 md:w-auto md:h-auto p-0 md:pl-3.5 md:pr-4 py-2 md:py-2.5 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all flex items-center justify-center md:justify-start gap-2"
+                    title="Escolher Período">
+                <i data-lucide="calendar" class="w-4 h-4 md:w-3.5 md:h-3.5 text-brand shrink-0"></i>
+                <span x-text="periodoLabel" class="hidden md:inline"></span>
             </button>
             <input type="hidden" id="filtro-data-inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}">
             <input type="hidden" id="filtro-data-fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
