@@ -76,6 +76,7 @@
             periodoValido: true,
             tempDataInicio: '{{ data_inicio|date:"Y-m-d" }}',
             tempDataFim: '{{ data_fim|date:"Y-m-d" }}',
+            passoInstrucao: 'Pronto para aplicar',
             selectQuarto(id, label) {
                 this.quartoLabel = label;
                 this.quartoOpen = false;
@@ -177,16 +178,17 @@
                 <!-- Overlay escuro com blur -->
                 <div class="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" @click="calendarioOpen = false"></div>
                 
-                <!-- Conteúdo do Modal -->
-                <div class="bg-white dark:bg-[#121212] rounded-[28px] border border-slate-200/80 dark:border-white/10 shadow-2xl p-6 relative z-10 w-full max-w-[650px] animate-in zoom-in-95 duration-200 flex flex-col gap-4">
+                <!-- Conteúdo do Modal (Tamanho Compacto de Canal Único de 1 Mês, IDÊNTICO ao visual público guiado) -->
+                <div class="bg-white dark:bg-[#121212] rounded-[2.5rem] border border-slate-200/80 dark:border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.3)] p-6 relative z-10 w-full max-w-[360px] animate-in zoom-in-95 duration-200 flex flex-col gap-4">
                     
-                    <!-- Cabeçalho do Modal -->
-                    <div class="flex items-center justify-between">
+                    <!-- Cabeçalho do Modal (Premium Guiado) -->
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
                         <div>
-                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Selecionar Período de Ocupação</h4>
-                            <p class="text-[9px] sm:text-[10px] text-slate-400 dark:text-navie-textsec mt-0.5 leading-tight font-bold">
-                                Clique na data inicial e na data final do período que deseja visualizar.
-                            </p>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-brand/10 text-brand dark:bg-brand/20"
+                                  x-text="passoInstrucao">
+                                Selecione a data inicial (check-in)
+                            </span>
+                            <h4 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider mt-1.5">Selecionar Período</h4>
                         </div>
                         <button @click="calendarioOpen = false" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer focus:outline-none">
                             <i data-lucide="x" class="w-4 h-4"></i>
@@ -194,22 +196,23 @@
                     </div>
                     
                     <!-- Contêiner do Flatpickr Inline -->
-                    <div class="flex justify-center bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-2xl p-4 overflow-hidden">
+                    <div class="flex justify-center bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 rounded-[1.5rem] p-3 overflow-hidden">
                         <div id="calendario-range-inline" class="w-full flex justify-center"></div>
                     </div>
                     
                     <!-- Rodapé / Controles -->
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-white/5">
-                        <div class="text-[10px] sm:text-xs font-bold text-slate-500 dark:text-navie-textsec">
-                            Selecionado: <span class="text-brand font-black" x-text="periodoTempLabel || 'Nenhum período selecionado'"></span>
+                    <div class="flex flex-col gap-3 pt-2 border-t border-slate-100 dark:border-white/5">
+                        <div class="bg-slate-50 dark:bg-white/[0.02] rounded-xl p-2.5 border border-slate-100 dark:border-white/5 text-center">
+                            <span class="text-[8px] font-black uppercase tracking-wider text-slate-400 block">Período de Visualização</span>
+                            <span class="text-[10px] sm:text-xs font-black text-slate-800 dark:text-white mt-0.5 block" x-text="periodoTempLabel || '-'"></span>
                         </div>
                         <div class="flex items-center gap-2">
                             <button @click="calendarioOpen = false" type="button"
-                                    class="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                                    class="flex-1 px-4 py-2.5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-all text-center">
                                 Cancelar
                             </button>
                             <button @click="confirmarPeriodo()" type="button" :disabled="!periodoValido"
-                                    class="px-5 py-2 bg-brand text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-brand/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="flex-1 px-4 py-2.5 bg-brand text-white text-[10px] sm:text-xs font-black rounded-xl cursor-pointer hover:bg-brand/90 transition-all disabled:opacity-30 disabled:cursor-not-allowed text-center">
                                 Aplicar Período
                             </button>
                         </div>
@@ -4757,7 +4760,7 @@
                     locale: "pt",
                     mode: "range",
                     inline: true,
-                    showMonths: window.innerWidth >= 640 ? 2 : 1,
+                    showMonths: 1, // Exibe exatamente 1 único mês por vez para visual compacto
                     dateFormat: "Y-m-d",
                     defaultDate: [dInicio, dFim],
                     onChange: function(selectedDates, dateStr) {
@@ -4773,6 +4776,7 @@
                                 
                                 data.periodoTempLabel = `${label1} a ${label2}`;
                                 data.periodoValido = true;
+                                data.passoInstrucao = 'Pronto para aplicar';
                                 
                                 const y1 = d1.getFullYear();
                                 const m1 = String(d1.getMonth() + 1).padStart(2, '0');
@@ -4787,8 +4791,10 @@
                                 data.periodoValido = false;
                                 if (selectedDates.length === 1) {
                                     data.periodoTempLabel = selectedDates[0].toLocaleDateString('pt-BR') + '...';
+                                    data.passoInstrucao = 'Selecione a data final';
                                 } else {
                                     data.periodoTempLabel = '';
+                                    data.passoInstrucao = 'Selecione a data inicial';
                                 }
                             }
                         }
