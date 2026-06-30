@@ -221,7 +221,7 @@ class FinanceiroTestCase(TestCase):
         
         response = criar_transacao_api(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['HX-Refresh'], 'true')
+        self.assertEqual(response['HX-Location'], '/hospedagens/sistema/?tab=financeiro')
 
     def test_criar_transacao_api_invalid_valor(self):
         """Testa a validação contra valores monetários inválidos ou nulos."""
