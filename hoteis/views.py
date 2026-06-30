@@ -2038,10 +2038,9 @@ def partner_criar_tarefa(request):
             
             if request.headers.get('HX-Request') == 'true':
                 response = HttpResponse()
-                from django.urls import reverse
-                response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+                response['HX-Location'] = '/hospedagens/sistema/?tab=atividades'
                 return response
-            return redirect('hoteis:partner_dashboard')
+            return redirect('/hospedagens/sistema/?tab=atividades')
             
     equipe = hotel.equipe.all()
     unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
@@ -2132,10 +2131,9 @@ def partner_editar_tarefa(request, tarefa_id):
             
             if request.headers.get('HX-Request') == 'true':
                 response = HttpResponse()
-                from django.urls import reverse
-                response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+                response['HX-Location'] = '/hospedagens/sistema/?tab=atividades'
                 return response
-            return redirect('hoteis:partner_dashboard')
+            return redirect('/hospedagens/sistema/?tab=atividades')
             
     equipe = hotel.equipe.all()
     unidades = UnidadeQuarto.objects.filter(quarto__hotel=hotel, ativa=True)
@@ -2180,10 +2178,9 @@ def partner_deletar_tarefa(request, tarefa_id):
     
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        from django.urls import reverse
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=atividades'
         return response
-    return redirect('hoteis:partner_dashboard')
+    return redirect('/hospedagens/sistema/?tab=atividades')
 
 
 @login_required(login_url='hoteis:partner_login')
@@ -2360,6 +2357,10 @@ def partner_salvar_configuracoes(request):
 
     hotel.save()
     messages.success(request, "Configurações do estabelecimento gravadas com sucesso!")
+    if request.headers.get('HX-Request') == 'true':
+        response = HttpResponse()
+        response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=site'
+        return response
     return redirect('/hospedagens/sistema/?tab=configuracoes&config_tab=site')
 
 
@@ -2443,6 +2444,10 @@ def partner_salvar_configuracoes_geral(request):
             
     empresa.save()
     messages.success(request, "Configurações gerais do grupo gravadas com sucesso!")
+    if request.headers.get('HX-Request') == 'true':
+        response = HttpResponse()
+        response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=geral'
+        return response
     return redirect('/hospedagens/sistema/?tab=configuracoes&config_tab=geral')
 
 
@@ -4580,7 +4585,7 @@ def partner_secao_salvar(request, secao_id=None):
                     item.save()
         
         response = HttpResponse()
-        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
         return response
         
     return HttpResponse("Método inválido.", status=405)
@@ -4667,7 +4672,7 @@ def partner_secao_destaques_salvar(request):
             item.save()
             
         response = HttpResponse()
-        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
         return response
         
     return HttpResponse("Método inválido.", status=405)
@@ -4687,7 +4692,7 @@ def partner_secao_deletar(request, secao_id):
     secao.delete()
     
     response = HttpResponse()
-    response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+    response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
     return response
 
 
@@ -4765,7 +4770,7 @@ def partner_secao_item_salvar(request, item_id=None):
         item.save()
         
         response = HttpResponse()
-        response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+        response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
         return response
         
     return HttpResponse("Método inválido.", status=405)
@@ -4785,7 +4790,7 @@ def partner_secao_item_deletar(request, item_id):
     item.delete()
     
     response = HttpResponse()
-    response['HX-Redirect'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
+    response['HX-Location'] = '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes'
     return response
 
 

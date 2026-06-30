@@ -470,7 +470,7 @@ def receber_compra(request, compra_id):
         messages.error(request, "Esta compra não está pendente!")
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
         
@@ -510,7 +510,7 @@ def receber_compra(request, compra_id):
     messages.success(request, f"Compra #{compra.id} recebida! Estoque abastecido e despesa lançada no financeiro.")
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
         return response
     return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -525,7 +525,7 @@ def cancelar_compra(request, compra_id):
         messages.error(request, "Esta compra já está cancelada!")
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
         
@@ -553,7 +553,7 @@ def cancelar_compra(request, compra_id):
     messages.success(request, f"Compra #{compra.id} cancelada com sucesso.")
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
         return response
     return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -753,7 +753,7 @@ def toggle_compra_recebido(request, compra_id):
     
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
         return response
     return render(request, 'estoque/partials/compra_row.html', {'compra': compra})
 
@@ -770,7 +770,7 @@ def reverter_movimento(request, movimento_id):
         messages.error(request, msg)
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -779,7 +779,7 @@ def reverter_movimento(request, movimento_id):
         messages.error(request, msg)
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -813,7 +813,7 @@ def reverter_movimento(request, movimento_id):
     messages.success(request, msg)
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
         return response
 
     return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
@@ -831,7 +831,7 @@ def relancar_movimento(request, movimento_id):
         messages.error(request, msg)
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -840,7 +840,7 @@ def relancar_movimento(request, movimento_id):
         messages.error(request, msg)
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -853,7 +853,7 @@ def relancar_movimento(request, movimento_id):
         messages.error(request, msg)
         if request.headers.get('HX-Request') == 'true':
             response = HttpResponse()
-            response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+            response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
             return response
         return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))
 
@@ -897,7 +897,7 @@ def relancar_movimento(request, movimento_id):
     messages.success(request, msg)
     if request.headers.get('HX-Request') == 'true':
         response = HttpResponse()
-        response['HX-Redirect'] = reverse('hoteis:partner_dashboard')
+        response['HX-Location'] = '/hospedagens/sistema/?tab=estoque'
         return response
 
     return HttpResponseRedirect(reverse('hoteis:partner_dashboard'))

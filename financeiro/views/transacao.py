@@ -151,11 +151,10 @@ def criar_transacao_api(request):
             arquivo=arq
         )
     
-    # 9. Resposta reativa compatível com HTMX
+    # 9. Resposta reativa compatível com HTMX (Navegação SPA suave sem reload)
     if request.headers.get('HX-Request') == 'true':
-        # Retorna cabeçalho do HTMX que instrui a página principal a recarregar de forma limpa
         response = HttpResponse()
-        response['HX-Refresh'] = 'true'
+        response['HX-Location'] = '/hospedagens/sistema/?tab=financeiro'
         return response
         
     messages.success(request, f"Lançamento {transacao.codigo} registrado com sucesso!")

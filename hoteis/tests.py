@@ -734,7 +734,7 @@ class PartnerSecaoTestCase(TestCase):
         
         response = partner_secao_salvar(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.headers.get('HX-Redirect'), '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes')
+        self.assertEqual(response.headers.get('HX-Location'), '/hospedagens/sistema/?tab=configuracoes&config_tab=secoes')
         
         secao = HotelSecao.objects.get(titulo='Atrações Sítio', hotel=self.hotel)
         self.assertEqual(secao.tipo, 'atracoes')

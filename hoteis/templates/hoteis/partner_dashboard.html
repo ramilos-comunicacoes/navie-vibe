@@ -36,14 +36,14 @@
 
         
         <!-- Botão Salvar Configurações Gerais -->
-        <button x-show="configTab === 'geral'" type="button" onclick="document.getElementById('form-salvar-config-geral').submit();"
+        <button x-show="configTab === 'geral'" type="button" onclick="document.getElementById('form-salvar-config-geral').requestSubmit();"
                 class="bg-brand hover:bg-brand/90 text-white px-4 h-9 rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
             <span class="hidden sm:inline">Salvar Geral</span>
         </button>
         
         <!-- Botão Salvar Configurações (Apenas na sub-aba 'site') -->
-        <button x-show="configTab === 'site'" type="button" onclick="document.getElementById('form-salvar-config').submit();"
+        <button x-show="configTab === 'site'" type="button" onclick="document.getElementById('form-salvar-config').requestSubmit();"
                 class="bg-brand hover:bg-brand/90 text-white px-4 h-9 rounded-full text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="check" class="w-3.5 h-3.5"></i></span>
             <span class="hidden sm:inline">Salvar Alterações</span>
@@ -1432,7 +1432,14 @@
         <!-- SUB-ABA 0: CONFIGURAÇÃO GERAL DO GRUPO (APENAS SE FOR PORTAL UNIFICADO) -->
         {% if hotel.empresa and hotel.empresa.modalidade_portal == 'unificado' %}
         <div x-show="configTab === 'geral'" x-transition:enter="transition ease-out duration-300" class="space-y-6" style="display: none;">
-            <form id="form-salvar-config-geral" action="{% url 'hoteis:partner_salvar_configuracoes_geral' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="form-salvar-config-geral" 
+                  action="{% url 'hoteis:partner_salvar_configuracoes_geral' %}" 
+                  method="POST" 
+                  enctype="multipart/form-data" 
+                  hx-boost="true" 
+                  hx-target="body" 
+                  hx-push-url="true" 
+                  class="space-y-6">
                 {% csrf_token %}
                 
                 <div class="space-y-6 w-full">
@@ -2216,7 +2223,14 @@
 
         <!-- SUB-ABA 1: VITRINE / SITE -->
         <div x-show="configTab === 'site'" x-transition:enter="transition ease-out duration-300" class="space-y-6">
-            <form id="form-salvar-config" action="{% url 'hoteis:partner_salvar_configuracoes' %}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <form id="form-salvar-config" 
+                  action="{% url 'hoteis:partner_salvar_configuracoes' %}" 
+                  method="POST" 
+                  enctype="multipart/form-data" 
+                  hx-boost="true" 
+                  hx-target="body" 
+                  hx-push-url="true" 
+                  class="space-y-6">
                 {% csrf_token %}
                 
                 <div class="space-y-6 w-full">
