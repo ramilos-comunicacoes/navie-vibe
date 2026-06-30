@@ -12,6 +12,7 @@ from django.db import models
 from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tarefa, HospedeReserva, VeiculoReserva, ReservaLog, ProdutoConsumo, PedidoServico, ItemPedidoServico, HotelSecao, HotelSecaoItem, HotelImagem
 from .utils import checar_disponibilidade_quarto, buscar_datas_proximas
 from decimal import Decimal
+from django.conf import settings
 
 class UnifiedPortalWrapper:
     def __init__(self, empresa, first_hotel):
