@@ -1,6 +1,13 @@
-# Credenciais de Teste - Mercado Pago Sandbox
+# Credenciais de Teste - Mercado Pago Sandbox (NavieVibe Connect)
 
-Este documento armazena as credenciais das contas de teste (sandbox) do Mercado Pago geradas para o desenvolvimento e testes do portal de reservas e do painel financeiro do Naviê Vibe.
+Este documento armazena as credenciais das contas de teste (sandbox) do Mercado Pago geradas para a nova aplicação **NavieVibe Connect** no portal de reservas e no painel financeiro do Naviê Vibe.
+
+## 🔑 Credenciais da Aplicação (Configurar no .env)
+*   **Número da Aplicação (Client ID):** `3780361702227175`
+*   **Access Token (Client Secret):** `APP_USR-3780361702227175-070112-f0854c11ef933d3a3bc036badf9f6b38-3507431941`
+*   **Public Key:** `APP_USR-e180ad48-3fc5-4aaa-9ad5-bdc0628e3b91`
+
+---
 
 ## 👤 Conta de Teste: Vendedor (Merchant)
 *Esta conta deve ser utilizada para fazer o login no Mercado Pago após clicar em **"Conectar com o Mercado Pago"** no painel financeiro.*
