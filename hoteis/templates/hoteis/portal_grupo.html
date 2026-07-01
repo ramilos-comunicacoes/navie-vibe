@@ -63,10 +63,30 @@
         const rawSecColor = "{{ empresa.cor_secundaria|default:'#10b981' }}";
         let hexSec = rawSecColor.replace('#', '');
         if (hexSec.length === 3) { hexSec = hexSec[0]+hexSec[0]+hexSec[1]+hexSec[1]+hexSec[2]+hexSec[2]; }
-        const sr = parseInt(hexSec.substring(0, 2), 16);
-        const sg = parseInt(hexSec.substring(2, 4), 16);
-        const sb = parseInt(hexSec.substring(4, 6), 16);
+        const sr = parseInt(hexSec.substring(0, 2), 16) || 16;
+        const sg = parseInt(hexSec.substring(2, 4), 16) || 185;
+        const sb = parseInt(hexSec.substring(4, 6), 16) || 129;
+        
+        // Calcular contraste YIQ para a cor secundária
+        const yiqSec = ((sr * 299) + (sg * 587) + (sb * 114)) / 1000;
+        let secTextColor = "#ffffff";
+        let secColorBurned = "#" + hexSec;
+        
+        if (yiqSec >= 170) { // Cor secundária clara! (Usa tom mais escuro/queimado para contraste)
+            const factor = 0.45;
+            const sdr = Math.max(0, Math.round(sr * factor));
+            const sdg = Math.max(0, Math.round(sg * factor));
+            const sdb = Math.max(0, Math.round(sb * factor));
+            secColorBurned = "#" + ((1 << 24) + (sdr << 16) + (sdg << 8) + sdb).toString(16).slice(1);
+            secTextColor = secColorBurned;
+        } else { // Cor secundária escura! (Usa branco)
+            secTextColor = "#ffffff";
+            secColorBurned = "#" + hexSec;
+        }
+        
         document.documentElement.style.setProperty('--brand-color-secondary', "#" + hexSec);
+        document.documentElement.style.setProperty('--brand-text-color-secondary', secTextColor);
+        document.documentElement.style.setProperty('--brand-color-secondary-burned', secColorBurned);
         document.documentElement.style.setProperty('--brand-color-secondary-alpha', `rgba(${sr}, ${sg}, ${sb}, 0.15)`);
     })();
 </script>
@@ -101,7 +121,7 @@
     /* Utilitários de Cor Secundária */
     .text-action-secundario { color: var(--brand-color-secondary) !important; }
     .border-action-secundario { border-color: var(--brand-color-secondary) !important; }
-    .bg-action-secundario { background-color: var(--brand-color-secondary) !important; }
+    .bg-action-secundario { background-color: var(--brand-color-secondary) !important; color: var(--brand-text-color-secondary) !important; }
     .bg-action-secundario-alpha { background-color: var(--brand-color-secondary-alpha) !important; }
 
     /* Cabeçalho transparente premium exclusivo */
@@ -1081,10 +1101,12 @@
                                     :id="'switch-btn-' + p.id"
                                     @click="activeId = p.id; updateMap(p); updateBg();"
                                     class="relative z-10 flex items-center gap-2 px-5 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-extrabold cursor-pointer select-none transition-colors duration-300 flex-shrink-0 border-0 bg-transparent"
-                                    :class="activeId === p.id ? 'text-white' : 'text-slate-600 hover:text-slate-900'">
+                                    :class="activeId === p.id ? '' : 'text-slate-600 hover:text-slate-900'"
+                                    :style="activeId === p.id ? 'color: var(--brand-text-color-secondary) !important;' : ''">
                                 <!-- Pin Icon -->
                                 <svg class="w-3.5 h-3.5 shrink-0 transition-colors duration-300"
-                                     :class="activeId === p.id ? 'text-white' : 'text-slate-400'"
+                                     :class="activeId === p.id ? '' : 'text-slate-400'"
+                                     :style="activeId === p.id ? 'color: var(--brand-text-color-secondary) !important;' : ''"
                                      fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path>

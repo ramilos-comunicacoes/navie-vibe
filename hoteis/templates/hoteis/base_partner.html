@@ -394,7 +394,7 @@ x-data="{
                             overlay: 'rgba(0, 0, 0, 0.7)',
                             glass: 'rgba(255, 255, 255, 0.05)', // Painel de vidro fosco
                             border: 'rgba(255, 255, 255, 0.1)', // Linha divisória fina
-                            textsec: '#a0a0a0'          // Texto secundário discreto
+                            textsec: '#cbd5e1'          // Texto secundário discreto e legível no escuro/glass
                         }
                     }
                 }
@@ -1557,37 +1557,42 @@ x-data="{
     <!-- ─────────────────────────────────────────────────────────────────
          ASSISTENTE VIRTUAL IN-APP HOTELEIRO (Chat Flutuante)
          ───────────────────────────────────────────────────────────────── -->
-    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }" 
-         class="fixed bottom-6 z-[9999] font-sans transition-all duration-300 ease-in-out"
-         :class="chatOpen ? 'right-6 md:right-[424px]' : 'right-6'">
+    <!-- Wrapper Estático do Chat (Sem transição de movimento) -->
+    <div x-data="{ chatOpen: false, scrollBottom() { const c = document.getElementById('chat-messages'); if (c) c.scrollTop = c.scrollHeight; } }">
         
-        <!-- Botão Flutuante (FAB) -->
-        <button @click="chatOpen = !chatOpen; if(chatOpen) setTimeout(scrollBottom, 100)" 
-                class="w-12 h-12 bg-brand hover:bg-brand/95 text-white rounded-full flex items-center justify-center shadow-xl shadow-brand/30 hover:-translate-y-1 hover:scale-105 transition-all duration-300 relative group border border-white/20">
+        <!-- Contêiner do Botão Flutuante (FAB) - Este sim se move no desktop -->
+        <div class="fixed bottom-6 right-6 z-[9999] font-sans transition-all duration-300 ease-in-out"
+             :class="chatOpen ? 'md:right-[424px]' : 'right-6'">
             
-            <span x-show="!chatOpen" class="flex items-center justify-center">
-                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
-            </span>
-            
-            <span x-show="chatOpen" style="display: none;" class="flex items-center justify-center">
-                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="x" class="w-5 h-5"></i></span>
-            </span>
-            <!-- Indicador Online -->
-            <span class="absolute top-0 right-0 flex h-4 w-4">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white dark:border-navie-bg bg-green-500"></span>
-            </span>
-        </button>
+            <!-- Botão Flutuante (FAB) -->
+            <button @click="chatOpen = !chatOpen; if(chatOpen) setTimeout(scrollBottom, 100)" 
+                    class="w-12 h-12 bg-brand hover:bg-brand/95 text-white rounded-full flex items-center justify-center shadow-xl shadow-brand/30 hover:-translate-y-1 hover:scale-105 transition-all duration-300 relative group border border-white/20">
+                
+                <span x-show="!chatOpen" class="flex items-center justify-center">
+                    <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="message-circle" class="w-5 h-5"></i></span>
+                </span>
+                
+                <span x-show="chatOpen" style="display: none;" class="flex items-center justify-center">
+                    <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="x" class="w-5 h-5"></i></span>
+                </span>
+                <!-- Indicador Online -->
+                <span class="absolute top-0 right-0 flex h-4 w-4">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-4 w-4 border-2 border-white dark:border-navie-bg bg-green-500"></span>
+                </span>
+            </button>
+        </div>
 
-        <!-- Janela do Chat -->
-        <div x-show="chatOpen" style="display: none;"
+        <!-- Janela do Chat (Irmã Estática da Div do FAB) -->
+        <div id="navie-chat-window"
+             x-show="chatOpen" style="display: none;"
              x-transition:enter="transition ease-out duration-300 transform"
              x-transition:enter-start="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
              x-transition:enter-end="opacity-100 translate-y-0 md:translate-x-0"
              x-transition:leave="transition ease-in duration-200 transform"
              x-transition:leave-start="opacity-100 translate-y-0 md:translate-x-0"
              x-transition:leave-end="opacity-0 translate-y-10 md:opacity-100 md:translate-y-0 md:translate-x-full"
-             class="absolute bottom-16 right-0 w-[300px] sm:w-[340px] h-[450px] md:fixed md:top-0 md:right-0 md:bottom-0 md:h-screen md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200/60 md:dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] border border-slate-200/60 dark:border-white/10 flex flex-col overflow-hidden">
+             class="fixed inset-0 w-full h-full md:fixed md:top-0 md:left-auto md:right-0 md:bottom-0 md:h-screen md:max-h-none md:w-[400px] md:rounded-none md:border-y-0 md:border-r-0 md:border-l md:border-slate-200/60 md:dark:border-white/10 bg-white dark:bg-slate-900 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden z-[9999]">
             
             <!-- Header do Chat -->
             <div class="h-[76px] bg-gradient-to-r from-brand to-brand/80 px-5 flex items-center justify-between shrink-0 relative overflow-hidden">
@@ -1622,7 +1627,7 @@ x-data="{
             </div>
 
             <!-- Formulário de Envio -->
-            <div class="p-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10 md:pb-6">
+            <div class="p-3 pb-5 bg-white dark:bg-slate-900 border-t border-slate-200/60 dark:border-white/5 shrink-0 z-10 md:pb-6">
                 <form id="chat-form" 
                       hx-post="{% url 'hoteis:ia_enviar_chat' %}" 
                       hx-target="#chat-messages" 
@@ -1643,6 +1648,41 @@ x-data="{
             
             <!-- Script Local do Chat -->
             <script>
+                // Ajuste inteligente para teclados virtuais em dispositivos móveis e tablets (Visual Viewport API)
+                if (window.visualViewport) {
+                    const adjustChatForKeyboard = () => {
+                        const chatWindow = document.getElementById('navie-chat-window');
+                        if (!chatWindow) return;
+                        
+                        const isMobileOrTablet = window.innerWidth < 1024 || /Mobi|Android|iPhone|iPad|Macintosh/i.test(navigator.userAgent);
+                        
+                        if (isMobileOrTablet) {
+                            const keyboardHeight = window.innerHeight - window.visualViewport.height;
+                            
+                            if (keyboardHeight > 30) {
+                                // Teclado ativo: ajusta bottom para a altura exata do teclado e encolhe o chat
+                                chatWindow.style.bottom = `${keyboardHeight}px`;
+                                chatWindow.style.height = `${window.visualViewport.height}px`;
+                            } else {
+                                // Teclado inativo: remove overrides e volta ao CSS padrão
+                                chatWindow.style.bottom = '';
+                                chatWindow.style.height = '';
+                            }
+                            
+                            // Força rolagem de mensagens após ajuste
+                            const messagesArea = document.getElementById('chat-messages');
+                            if (messagesArea) {
+                                setTimeout(() => {
+                                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                                }, 80);
+                            }
+                        }
+                    };
+                    
+                    window.visualViewport.addEventListener('resize', adjustChatForKeyboard);
+                    window.visualViewport.addEventListener('scroll', adjustChatForKeyboard);
+                }
+
                 document.getElementById('chat-form').addEventListener('htmx:beforeRequest', function(e) {
                     const input = this.querySelector('[name="mensagem"]');
                     const text = input.value;

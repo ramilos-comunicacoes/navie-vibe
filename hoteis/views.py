@@ -3167,8 +3167,10 @@ def checkout_processar(request):
             buyer_env = getattr(settings, 'MERCADOPAGO_BUYER_EMAIL', '')
             if buyer_env:
                 payer_email = buyer_env
-            elif not payer_email.endswith('@testuser.com'):
-                payer_email = "TESTUSER6095556049045318276@testuser.com"
+            else:
+                # O endpoint /v1/payments (Checkout Transparente) rejeita emails @testuser.com
+                # com erro 4390 "Payer email forbidden". Usar email fictício comum.
+                payer_email = "test_payer@example.com"
  
         payer = {
             "email": payer_email,

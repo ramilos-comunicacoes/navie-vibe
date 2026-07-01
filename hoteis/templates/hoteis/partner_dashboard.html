@@ -167,12 +167,12 @@
         <!-- Separador visual -->
         <div class="w-px h-6 bg-slate-200 dark:bg-white/10 hidden sm:block"></div>
 
-        <!-- Filtro de Período Unificado com Botão Único e Modal Inline -->
+        <!-- Filtro de Período Unificado com Botão Único (Ícone Apenas) -->
         <div class="relative flex items-center">
             <button @click="abrirModalCalendario()" type="button"
-                    class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white text-xs font-black rounded-2xl pl-3.5 pr-4 py-2 sm:py-2.5 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all flex items-center gap-2">
-                <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand shrink-0"></i>
-                <span x-text="periodoLabel"></span>
+                    class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm outline-none cursor-pointer hover:border-brand/50 focus:border-brand transition-all hover:scale-[1.02] active:scale-95"
+                    title="Escolher Período">
+                <i data-lucide="calendar" class="w-5 h-5 text-brand"></i>
             </button>
             <input type="hidden" id="filtro-data-inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}">
             <input type="hidden" id="filtro-data-fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
@@ -337,6 +337,29 @@
 {% endblock %}
 
 {% block sub_header %}
+<!-- Wrapper estático para controle de visibilidade via AlpineJS (evita conflito HTMX swap) -->
+<div x-show="activeTab === 'reservas'" x-cloak>
+    <!-- Sub-header Fino e Compacto de KPIs de Reservas (Desktop e Mobile) -->
+    <div id="kpi-sub-header" class="bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 py-2 w-full flex-shrink-0 z-50 text-[10px] font-bold text-slate-500 dark:text-navie-textsec transition-colors">
+        <div class="max-w-[1440px] mx-auto w-full flex items-center justify-start gap-4 sm:gap-6 select-none leading-none">
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-brand"></span>
+                <span>Reservas Ativas: <strong class="text-slate-800 dark:text-white font-black text-[11px] ml-0.5">{{ ativos_qtd }}</strong></span>
+            </div>
+            <div class="w-px h-3.5 bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Hóspedes Hospedados: <strong class="text-emerald-600 dark:text-emerald-400 font-black text-[11px] ml-0.5">{{ hospedados_qtd }}</strong></span>
+            </div>
+            <div class="w-px h-3.5 bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                <span>Check-ins Pendentes: <strong class="text-blue-600 dark:text-blue-400 font-black text-[11px] ml-0.5">{{ pendentes_qtd }}</strong></span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Sub-cabeçalho Mobile para as abas de Atividades -->
 <div x-show="activeTab === 'atividades'" class="md:hidden bg-white/40 dark:bg-black/20 backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2.5 flex justify-center items-center" style="display: none;" x-transition.opacity>
     <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner w-full max-w-sm justify-between">
