@@ -266,6 +266,13 @@ x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 
                         <span x-text="i === 1 ? 'Hóspede 1' : 'Hóspede ' + i"></span>
                     </button>
                 </template>
+                {% if not is_create %}
+                <button type="button" @click="activeGuestTab = 'comprovante'"
+                        :class="activeGuestTab === 'comprovante' ? 'bg-brand text-brand-contrastText shadow-sm font-black' : 'text-slate-500 dark:text-navie-textsec hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
+                        class="px-3 py-1.5 rounded-xl text-[9px] transition-all uppercase tracking-wider shrink-0 select-none cursor-pointer">
+                    <span>Comprovante</span>
+                </button>
+                {% endif %}
             </div>
             
             <!-- Close X Button -->
@@ -651,10 +658,149 @@ x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 
                         {% endfor %}
                     </div>
                 </div>
+
+                {% if not is_create %}
+                <!-- Aba Comprovante -->
+                <div x-show="activeGuestTab === 'comprovante'" class="space-y-5 animate-in fade-in duration-200">
+                    <div id="voucher-ticket-container" class="p-6 rounded-3xl bg-slate-50 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 space-y-5 select-none relative overflow-hidden">
+                        <!-- Top Header print-only style -->
+                        <div class="flex justify-between items-center pb-4 border-b border-dashed border-slate-300 dark:border-white/10">
+                            <div>
+                                <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Naviê Vibe</h4>
+                                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{{ hotel.nome }}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Código do Voucher</span>
+                                <h3 class="text-sm font-extrabold text-brand uppercase mt-0.5">#{{ reserva.id|slice:":8"|upper }}</h3>
+                            </div>
+                        </div>
+
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Hóspede Titular</span>
+                                <span class="font-bold text-slate-800 dark:text-white mt-0.5 block">{{ reserva.hospede_nome }}</span>
+                                {% if reserva.hospede_cpf %}
+                                <span class="text-[9px] text-slate-400 block mt-0.5">CPF: {{ reserva.hospede_cpf }}</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Quantidade</span>
+                                <span class="font-bold text-slate-800 dark:text-white mt-0.5 block">{{ reserva.quantidade_hospedes }} Hóspede(s)</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Check-in</span>
+                                <span class="font-bold text-slate-800 dark:text-white mt-0.5 block">{{ reserva.data_checkin|date:"d/m/Y" }}</span>
+                                <span class="text-[9px] text-slate-400 block">A partir das 14:00</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Check-out</span>
+                                <span class="font-bold text-slate-800 dark:text-white mt-0.5 block">{{ reserva.data_checkout|date:"d/m/Y" }}</span>
+                                <span class="text-[9px] text-slate-400 block">Até as 12:00</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Acomodação</span>
+                                <span class="font-bold text-slate-800 dark:text-white mt-0.5 block">{{ reserva.unidade.quarto.nome }} - Quarto {{ reserva.unidade.identificador }}</span>
+                            </div>
+                            <div class="col-span-2 pt-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center">
+                                <div>
+                                    <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider">Total da Estadia</span>
+                                    <span class="text-[9px] text-slate-400 font-semibold">Valor final confirmado</span>
+                                </div>
+                                <span class="text-base font-black text-emerald-600 dark:text-emerald-400">R$ {{ reserva.valor_total|floatformat:2 }}</span>
+                            </div>
+                        </div>
+
+                        <!-- QR Code Area -->
+                        <div class="flex flex-col items-center justify-center p-4 bg-slate-100 dark:bg-black/20 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center mb-2.5">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ reserva.id }}" alt="QR Code" class="w-24 h-24">
+                            </div>
+                            <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center leading-normal">
+                                Apresente este QR Code para agilizar a sua entrada no hotel
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Voucher Actions Buttons (WhatsApp / Print / Email) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <!-- Print / PDF Button -->
+                        <button type="button" onclick="printVoucherContent()"
+                                class="py-3 rounded-2xl bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-800 dark:text-white font-black text-[9px] uppercase tracking-widest border border-slate-200 dark:border-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01] active:scale-[0.99]">
+                            <i data-lucide="printer" class="w-4.5 h-4.5 text-brand"></i> Imprimir / Salvar PDF
+                        </button>
+                        
+                        <!-- Send Email Button -->
+                        <div class="flex flex-col w-full">
+                            <button type="button"
+                                    hx-post="{% url 'hoteis:partner_reserva_enviar_email' reserva.id %}"
+                                    hx-target="#email-send-status-slot"
+                                    class="py-3 rounded-2xl bg-brand hover:scale-[1.01] active:scale-[0.99] text-brand-contrastText font-black text-[9px] uppercase tracking-widest shadow-xl shadow-brand/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i data-lucide="mail" class="w-4.5 h-4.5"></i> Enviar por E-mail
+                            </button>
+                            <div id="email-send-status-slot" class="w-full text-center"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Voucher Script -->
+                <script>
+                    function printVoucherContent() {
+                        const win = window.open('', '_blank');
+                        win.document.write('<html><head><title>Comprovante de Reserva - Naviê Vibe</title>');
+                        win.document.write('<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">');
+                        win.document.write('<style>');
+                        win.document.write('body { font-family: "Outfit", sans-serif; padding: 40px; color: #0f172a; display: flex; justify-content: center; }');
+                        win.document.write('.ticket { width: 420px; border: 2px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }');
+                        win.document.write('.header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 16px; margin-bottom: 20px; }');
+                        win.document.write('.header h4 { margin: 0; font-size: 18px; font-weight: 800; color: #0b1a30; }');
+                        win.document.write('.header span { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }');
+                        win.document.write('.header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #ff7a00; }');
+                        win.document.write('.grid { display: grid; grid-template-cols: 1fr 1fr; gap: 16px; font-size: 13px; margin-bottom: 20px; }');
+                        win.document.write('.col-2 { grid-column: span 2; }');
+                        win.document.write('.label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }');
+                        win.document.write('.value { font-weight: 700; color: #0f172a; margin-top: 2px; }');
+                        win.document.write('.footer-total { border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; }');
+                        win.document.write('.total-price { font-size: 18px; font-weight: 800; color: #16a34a; }');
+                        win.document.write('.qr-box { background: #f1f5f9; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 16px; border: 1px solid #e2e8f0; }');
+                        win.document.write('.qr-img { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block; margin-bottom: 8px; }');
+                        win.document.write('.qr-text { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }');
+                        win.document.write('</style>');
+                        win.document.write('</head><body>');
+                        
+                        win.document.write('<div class="ticket">');
+                        win.document.write('  <div class="header">');
+                        win.document.write('    <div><h4>Naviê Vibe</h4><span>{{ hotel.nome }}</span></div>');
+                        win.document.write('    <div style="text-align: right;"><span style="font-size: 9px;">Voucher</span><h3>#{{ reserva.id|slice:":8"|upper }}</h3></div>');
+                        win.document.write('  </div>');
+                        win.document.write('  <div class="grid">');
+                        win.document.write('    <div class="col-2"><div class="label">Hóspede Titular</div><div class="value">{{ reserva.hospede_nome }}</div>');
+                        win.document.write('    {% if reserva.hospede_cpf %}<div style="font-size: 10px; color:#64748b; margin-top: 2px;">CPF: {{ reserva.hospede_cpf }}</div>{% endif %}</div>');
+                        win.document.write('    <div><div class="label">Hóspedes</div><div class="value">{{ reserva.quantidade_hospedes }} Pessoa(s)</div></div>');
+                        win.document.write('    <div><div class="label">Check-in</div><div class="value">{{ reserva.data_checkin|date:"d/m/Y" }}</div></div>');
+                        win.document.write('    <div><div class="label">Check-out</div><div class="value">{{ reserva.data_checkout|date:"d/m/Y" }}</div></div>');
+                        win.document.write('    <div class="col-2"><div class="label">Acomodação</div><div class="value">{{ reserva.unidade.quarto.nome }} - Quarto {{ reserva.unidade.identificador }}</div></div>');
+                        win.document.write('  </div>');
+                        win.document.write('  <div class="footer-total">');
+                        win.document.write('    <div><div class="label">Total Estadia</div><div style="font-size: 10px; color:#64748b;">Valor Pago</div></div>');
+                        win.document.write('    <div class="total-price">R$ {{ reserva.valor_total|floatformat:2 }}</div>');
+                        win.document.write('  </div>');
+                        win.document.write('  <div class="qr-box">');
+                        win.document.write('    <div class="qr-img"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ reserva.id }}" width="110" height="110"></div>');
+                        win.document.write('    <div class="qr-text">Apresente este QR Code ao chegar para realizar seu check-in</div>');
+                        win.document.write('  </div>');
+                        win.document.write('</div>');
+                        
+                        win.document.write('<script>window.onload = function() { window.print(); window.close(); }<\/script>');
+                        win.document.write('</body></html>');
+                        win.document.close();
+                    }
+                </script>
+                {% endif %}
             </div>
             
             <!-- Actions Footer (Narrower Toggles) -->
-            <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-shrink-0">
+            <div x-show="activeGuestTab !== 'comprovante'" class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-shrink-0">
                 <button type="submit"
                         class="flex-1 py-2.5 rounded-2xl bg-brand hover:scale-[1.01] active:scale-[0.99] text-brand-contrastText font-black text-[9px] uppercase tracking-widest shadow-xl shadow-brand/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                     <i data-lucide="check" class="w-4 h-4"></i> Salvar Lançamento

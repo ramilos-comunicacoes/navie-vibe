@@ -56,6 +56,7 @@ urlpatterns = [
     path('hospedagens/reservas/<uuid:reserva_id>/checkout/', views.partner_reserva_checkout, name='partner_reserva_checkout'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkout-mapa/', views.partner_checkout_quarto_mapa, name='partner_checkout_quarto_mapa'),
     path('hospedagens/reservas/<uuid:reserva_id>/cancelar/', views.partner_reserva_cancelar, name='partner_reserva_cancelar'),
+    path('hospedagens/reservas/<uuid:reserva_id>/enviar-email/', views.partner_reserva_enviar_email, name='partner_reserva_enviar_email'),
     path('hospedagens/validador/buscar/', views.partner_validador_buscar, name='partner_validador_buscar'),
     path('hospedagens/validador/<uuid:reserva_id>/checkin/', views.partner_validador_checkin, name='partner_validador_checkin'),
     

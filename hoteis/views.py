@@ -3989,6 +3989,39 @@ def partner_reserva_cancelar(request, reserva_id):
 
 
 @login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_reserva_enviar_email(request, reserva_id):
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    
+    from comunicacoes.emails import enviar_email_confirmacao_reserva
+    enviou = enviar_email_confirmacao_reserva(reserva)
+    
+    if enviou:
+        html = """
+        <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mt-2 uppercase flex items-center justify-center gap-1.5 animate-pulse bg-emerald-500/10 border border-emerald-500/20 py-2.5 px-4 rounded-xl">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
+            </svg>
+            <span>E-mail de confirmação enviado!</span>
+        </div>
+        """
+    else:
+        html = """
+        <div class="text-[10px] font-black text-red-600 dark:text-red-400 mt-2 uppercase flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/20 py-2.5 px-4 rounded-xl">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"></path>
+            </svg>
+            <span>Falha ao enviar. Hóspede sem e-mail?</span>
+        </div>
+        """
+    return HttpResponse(html)
+
+
+@login_required(login_url='hoteis:partner_login')
 def partner_hospedes_pedidos(request):
     """
     Retorna a lista de pedidos de quarto do hotel logado (útil para atualização assíncrona).
