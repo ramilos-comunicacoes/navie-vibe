@@ -4002,21 +4002,23 @@ def partner_reserva_enviar_email(request, reserva_id):
     
     if enviou:
         html = """
-        <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 mt-2 uppercase flex items-center justify-center gap-1.5 animate-pulse bg-emerald-500/10 border border-emerald-500/20 py-2.5 px-4 rounded-xl">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <button type="button" disabled
+                class="w-full py-3 rounded-2xl bg-emerald-600 text-white font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 opacity-90 cursor-default">
+            <svg class="w-4 h-4 text-white animate-bounce" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
             </svg>
-            <span>E-mail de confirmação enviado!</span>
-        </div>
+            <span>E-mail Enviado com Sucesso!</span>
+        </button>
         """
     else:
         html = """
-        <div class="text-[10px] font-black text-red-600 dark:text-red-400 mt-2 uppercase flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/20 py-2.5 px-4 rounded-xl">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <button type="button" disabled
+                class="w-full py-3 rounded-2xl bg-red-600 text-white font-black text-[9px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 opacity-90 cursor-default">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"></path>
             </svg>
-            <span>Falha ao enviar. Hóspede sem e-mail?</span>
-        </div>
+            <span>Falha ao Enviar (Sem E-mail?)</span>
+        </button>
         """
     return HttpResponse(html)
 
