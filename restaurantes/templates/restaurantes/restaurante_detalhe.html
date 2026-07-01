@@ -331,22 +331,26 @@
     .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
     .portal-desktop-grid { display: none !important; }
     @media (min-width: 768px) { .portal-desktop-grid { display: grid !important; } }
-    /* SWIPER CARROSSEL MOBILE FULL BLEED (SAINDO DA TELA) & SEM GRADIENTE */
+    /* SWIPER CARROSSEL MOBILE ESTILO POUSADA (FULL-BLEED E OVERFLOW VISÍVEL) */
     @media (max-width: 639px) {
         .restaurante-galeria-swiper {
+            width: 100vw !important;
+            margin-left: calc(-50vw + 50%) !important;
+            position: relative !important;
+            overflow: visible !important;
             -webkit-mask-image: none !important;
             mask-image: none !important;
             border-radius: 0 !important;
-            margin-left: -2rem !important; /* Compensando px-4 do main + px-4 do container */
-            margin-right: -2rem !important;
-            width: calc(100% + 4rem) !important;
+            background-color: transparent !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
-            background-color: transparent !important;
         }
         .restaurante-galeria-swiper .swiper-wrapper {
             padding-bottom: 1.5rem !important;
             transition-timing-function: linear !important; /* Efeito contínuo infinito */
+        }
+        .restaurante-galeria-swiper .swiper-slide {
+            width: 200px !important;
         }
     }
     @media (min-width: 640px) {
@@ -929,7 +933,9 @@
             };
 
             if (isMobile) {
-                // Efeito marquee contínuo linear no mobile
+                // Efeito marquee contínuo linear no mobile (estilo Pousada)
+                options.slidesPerView = 'auto';
+                options.spaceBetween = 16;
                 options.speed = 4000;
                 options.autoplay = {
                     delay: 0,
