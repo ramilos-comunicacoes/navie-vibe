@@ -52,8 +52,15 @@ def partner_auth(request):
                     user = None
                     
             if user is not None:
-                # Checa se o usuário possui perfil de restaurante
-                if hasattr(user, 'perfil_restaurante'):
+                if user.is_superuser:
+                    auth_login(request, user)
+                    messages.success(request, f"Bem-vindo, Administrador {user.first_name or user.username}!")
+                    if is_htmx:
+                        response = HttpResponse()
+                        response['HX-Redirect'] = reverse('restaurantes:partner_dashboard')
+                        return response
+                    return redirect('restaurantes:partner_dashboard')
+                elif hasattr(user, 'perfil_restaurante'):
                     perfil = user.perfil_restaurante
                     if perfil.ativo:
                         auth_login(request, user)
@@ -109,22 +116,111 @@ def partner_auth(request):
 def partner_dashboard(request):
     """
     O painel B2B adaptativo do parceiro de restaurante.
+    Suporta visão consolidada de Superusuário.
     """
-    # Garante que possui perfil de restaurante
-    if not hasattr(request.user, 'perfil_restaurante'):
-        messages.error(request, "Acesso negado. Esta conta não possui perfil de restaurante.")
-        return redirect('restaurantes:partner_login')
+    is_superuser = request.user.is_superuser
+    
+    # Se for POST e for superusuário, processamos ações administrativas
+    if request.method == 'POST' and is_superuser:
+        action = request.POST.get('superuser_action')
+        if action == 'reset_password':
+            user_id = request.POST.get('user_id')
+            new_password = request.POST.get('new_password', '').strip()
+            if user_id and new_password:
+                user = User.objects.using('default').filter(id=user_id).first()
+                if user:
+                    user.set_password(new_password)
+                    user.save(using='default')
+                    messages.success(request, f"Senha do usuário {user.username} redefinida com sucesso.")
+                else:
+                    messages.error(request, "Usuário não encontrado.")
+            else:
+                messages.error(request, "Campos inválidos.")
+            return redirect(request.path + '?tab=superuser')
+            
+        elif action == 'toggle_status':
+            perfil_id = request.POST.get('perfil_id')
+            if perfil_id:
+                perfil_u = RestauranteUsuario.objects.using('restaurantes').filter(id=perfil_id).first()
+                if perfil_u:
+                    perfil_u.ativo = not perfil_u.ativo
+                    perfil_u.save(using='restaurantes')
+                    status_str = "ativado" if perfil_u.ativo else "desativado"
+                    messages.success(request, f"Perfil do usuário {perfil_u.user.username} foi {status_str}.")
+                else:
+                    messages.error(request, "Perfil de parceiro não encontrado.")
+            return redirect(request.path + '?tab=superuser')
+            
+        elif action == 'change_role':
+            perfil_id = request.POST.get('perfil_id')
+            new_role = request.POST.get('role')
+            if perfil_id and new_role:
+                perfil_u = RestauranteUsuario.objects.using('restaurantes').filter(id=perfil_id).first()
+                if perfil_u:
+                    perfil_u.role = new_role
+                    perfil_u.save(using='restaurantes')
+                    messages.success(request, f"Cargo do usuário {perfil_u.user.username} alterado para {perfil_u.get_role_display()}.")
+                else:
+                    messages.error(request, "Perfil de parceiro não encontrado.")
+            return redirect(request.path + '?tab=superuser')
+
+    restaurante = None
+    restaurantes_todos = None
+    equipes_todas = None
+    perfil = None
+
+    if is_superuser:
+        selected_id = request.GET.get('gerenciar_restaurante_id')
+        if selected_id:
+            if selected_id == 'clear':
+                if 'superuser_restaurante_id' in request.session:
+                    del request.session['superuser_restaurante_id']
+            else:
+                request.session['superuser_restaurante_id'] = int(selected_id)
         
-    perfil = request.user.perfil_restaurante
-    restaurante = perfil.restaurante
-    
-    # Atrações cadastradas
-    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante)
-    
+        superuser_restaurante_id = request.session.get('superuser_restaurante_id')
+        restaurantes_todos = Restaurante.objects.using('restaurantes').all()
+        equipes_todas = RestauranteUsuario.objects.using('restaurantes').all()
+        
+        for eq in equipes_todas:
+            eq.user = User.objects.using('default').filter(id=eq.user_id).first()
+
+        if superuser_restaurante_id:
+            restaurante = Restaurante.objects.using('restaurantes').filter(id=superuser_restaurante_id).first()
+            if not restaurante:
+                restaurante = restaurantes_todos.first()
+        else:
+            restaurante = None
+            
+        class SuperuserPerfil:
+            role = 'proprietario'
+            ativo = True
+            user = request.user
+        perfil = SuperuserPerfil()
+    else:
+        if not hasattr(request.user, 'perfil_restaurante'):
+            messages.error(request, "Acesso negado. Esta conta não possui perfil de restaurante.")
+            return redirect('restaurantes:partner_login')
+            
+        perfil = request.user.perfil_restaurante
+        if not perfil.ativo:
+            messages.error(request, "Sua conta de parceiro está inativa ou aguardando aprovação.")
+            return redirect('restaurantes:partner_login')
+            
+        restaurante = perfil.restaurante
+
+    if restaurante:
+        atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante)
+    else:
+        atracoes = RestauranteAtracao.objects.using('restaurantes').none()
+
     context = {
         'perfil': perfil,
         'restaurante': restaurante,
         'atracoes': atracoes,
+        'is_superuser': is_superuser,
+        'restaurantes_todos': restaurantes_todos,
+        'equipes_todas': equipes_todas,
     }
     return render(request, 'restaurantes/partner_dashboard.html', context)
 

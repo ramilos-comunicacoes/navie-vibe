@@ -33,7 +33,8 @@ def get_git_modified_files():
     logos = [
         "media/restaurantes/logos/manaca_logo.png",
         "media/restaurantes/logos/manaca_flower.png",
-        "register_restaurants_navie.py"
+        "register_restaurants_navie.py",
+        "create_restaurant_credentials.py"
     ]
     for logo in logos:
         if os.path.exists(logo) and logo not in files:
@@ -104,6 +105,7 @@ def deploy_to_server(host, files_to_upload):
             f"cd {REMOTE_DIR} && venv/bin/python manage.py migrate --database=restaurantes",
             f"cd {REMOTE_DIR} && venv/bin/python manage.py collectstatic --no-input",
             f"cd {REMOTE_DIR} && venv/bin/python register_restaurants_navie.py",
+            f"cd {REMOTE_DIR} && venv/bin/python create_restaurant_credentials.py",
             "systemctl restart navievibe"
         ]
         
