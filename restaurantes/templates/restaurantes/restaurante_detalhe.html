@@ -331,10 +331,41 @@
     .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
     .portal-desktop-grid { display: none !important; }
     @media (min-width: 768px) { .portal-desktop-grid { display: grid !important; } }
-    {% if not restaurante.sobre_banner and not restaurante.imagem and not restaurante.sobre_video %}
-    .sobre-left-column { width: 100% !important; padding-right: 0 !important; }
-    .sobre-media-container { display: none !important; }
-    {% endif %}
+    /* SWIPER CARROSSEL MOBILE FULL BLEED (SAINDO DA TELA) & SEM GRADIENTE */
+    @media (max-width: 639px) {
+        .restaurante-galeria-swiper {
+            -webkit-mask-image: none !important;
+            mask-image: none !important;
+            border-radius: 0 !important;
+            margin-left: -1rem !important;
+            margin-right: -1rem !important;
+            width: calc(100% + 2rem) !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            background-color: transparent !important;
+        }
+        .restaurante-galeria-swiper .swiper-wrapper {
+            padding-bottom: 1.5rem !important;
+            transition-timing-function: linear !important; /* Efeito contínuo infinito */
+        }
+    }
+    @media (min-width: 640px) {
+        .restaurante-galeria-swiper {
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+        }
+    }
+
+    /* Estilo do botão Ler mais */
+    #sobre-readmore-btn {
+        color: var(--brand-color, #ef4444);
+        margin-top: 0.75rem;
+        font-size: 11px;
+        transition: opacity 0.2s;
+    }
+    #sobre-readmore-btn:hover {
+        opacity: 0.8;
+    }
 </style>
 {% endblock %}
 
@@ -524,8 +555,7 @@
 
             <!-- Carrossel de fotos 3:4 -->
             <div class="w-full">
-                <div class="swiper restaurante-galeria-swiper w-full rounded-[2.5rem] overflow-hidden bg-slate-50 p-2 z-0"
-                     style="-webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%); mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);">
+                <div class="swiper restaurante-galeria-swiper w-full rounded-[2.5rem] overflow-hidden bg-slate-50 p-2 z-0">
                     <div class="swiper-wrapper">
                         {% for img in galeria %}
                         <div class="swiper-slide aspect-[3/4] relative rounded-3xl overflow-hidden shadow-md group">
@@ -858,18 +888,28 @@
         const textEl = document.getElementById('sobre-texto');
         const btnEl = document.getElementById('sobre-readmore-btn');
         if (textEl && btnEl) {
-            setTimeout(() => { if (textEl.scrollHeight > textEl.clientHeight) btnEl.classList.remove('hidden'); }, 50);
+            const checkHeight = () => {
+                if (textEl.scrollHeight > textEl.clientHeight) {
+                    btnEl.classList.remove('hidden');
+                } else {
+                    btnEl.classList.add('hidden');
+                }
+            };
+            setTimeout(checkHeight, 100);
+            setTimeout(checkHeight, 600);
+            window.addEventListener('load', checkHeight);
+            window.addEventListener('resize', checkHeight);
         }
     }
 
     function initSwiperGaleria() {
         if (typeof Swiper !== 'undefined') {
-            new Swiper('.restaurante-galeria-swiper', {
-                slidesPerView: 1.2,
-                spaceBetween: 16,
+            const isMobile = window.innerWidth < 640;
+            const options = {
+                slidesPerView: 1.35,
+                spaceBetween: 12,
                 centeredSlides: false,
                 loop: true,
-                autoplay: { delay: 3000, disableOnInteraction: false },
                 grabCursor: true,
                 pagination: {
                     el: '.swiper-pagination',
@@ -878,7 +918,7 @@
                 breakpoints: {
                     480: {
                         slidesPerView: 1.8,
-                        spaceBetween: 16,
+                        spaceBetween: 14,
                     },
                     640: {
                         slidesPerView: 2.5,
@@ -893,7 +933,25 @@
                         spaceBetween: 24,
                     }
                 }
-            });
+            };
+
+            if (isMobile) {
+                // Efeito marquee contínuo linear no mobile
+                options.speed = 4000;
+                options.autoplay = {
+                    delay: 0,
+                    disableOnInteraction: false
+                };
+            } else {
+                // Autoplay padrão pausado em telas maiores
+                options.speed = 600;
+                options.autoplay = {
+                    delay: 3000,
+                    disableOnInteraction: false
+                };
+            }
+
+            new Swiper('.restaurante-galeria-swiper', options);
         }
     }
 
