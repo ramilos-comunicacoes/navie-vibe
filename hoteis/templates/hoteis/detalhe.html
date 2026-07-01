@@ -413,6 +413,7 @@
             padding-top: 75px !important;
             padding-bottom: 20px !important;
             justify-content: center !important;
+            transform: translateY(-28px) !important;
         }
         #hero-logo-wrapper {
             width: 72px !important;
@@ -647,9 +648,11 @@
         }
         .sobre-left-column {
             width: 42%;
-            padding-top: 64px; /* Margem de cima exclusiva do título no desktop */
-            padding-bottom: 28px;
+            padding-top: 24px !important;
+            padding-bottom: 24px !important;
             padding-right: 32px;
+            justify-content: center !important;
+            gap: 12px !important;
         }
         .sobre-title-wrapper {
             margin-bottom: 12px;
@@ -976,42 +979,66 @@
         {% endfor %}
         <!-- Seção Cross-Selling de Unidades do Grupo -->
         {% if hotel.empresa and hotel.empresa.hoteis.count > 1 %}
-        <div class="mt-16 border-t border-slate-150 pt-16 scroll-animate-left">
-            <div class="mb-10 text-center md:text-left">
-                <span class="text-xs font-black text-brand uppercase tracking-widest">Nossa Rede</span>
+        <div class="mt-16 border-t-[3px] pt-16 scroll-animate-left" style="border-color: var(--brand-color) !important;">
+            <div class="mb-10 text-left pl-4 border-l-4 md:border-l-[6px]" style="border-color: var(--brand-color) !important;">
+                <span class="text-xs font-black text-brand uppercase tracking-widest" style="color: var(--brand-color-burned) !important;">Nossa Rede</span>
                 <h3 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mt-1">Conheça nossas outras pousadas</h3>
                 <p class="text-slate-450 mt-2 text-xs sm:text-sm font-semibold">Hospedagens operadas com o mesmo selo de excelência e hospitalidade.</p>
             </div>
             
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-6">
                 {% for h in hotel.empresa.hoteis.all %}
                     {% if h.id != hotel.id and h.status == 'ativo' %}
-                        <div class="bg-slate-50 border border-slate-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:-translate-y-1 transition duration-300 flex flex-col justify-between h-full">
-                            <div>
-                                <div class="h-28 sm:h-36 md:h-40 lg:h-44 overflow-hidden relative bg-slate-200">
-                                    {% if h.logo %}
-                                        <img src="{{ h.logo.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover">
-                                    {% elif h.banner %}
-                                        <img src="{{ h.banner.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover">
-                                    {% else %}
-                                        <div class="w-full h-full flex items-center justify-center">
-                                            <i data-lucide="building" class="w-8 h-8 sm:w-12 sm:h-12 text-slate-400"></i>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="p-3 sm:p-5 space-y-1 sm:space-y-2">
-                                    <h4 class="text-xs sm:text-base font-bold text-slate-800 line-clamp-1">{{ h.nome }}</h4>
-                                    <p class="text-[10px] sm:text-xs text-slate-450 leading-relaxed line-clamp-2 sm:line-clamp-3 font-semibold">{{ h.descricao }}</p>
+                        <a href="{% url 'hoteis:detalhe' h.id %}" 
+                           hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                           class="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group transition-all duration-300 flex flex-col h-full hover:-translate-y-1">
+                            <div class="relative overflow-hidden h-28 sm:h-36 md:h-40 lg:h-44 bg-slate-200">
+                                {% if h.imagem_card %}
+                                    <img src="{{ h.imagem_card.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';">
+                                {% elif h.banner %}
+                                    <img src="{{ h.banner.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';">
+                                {% elif h.logo %}
+                                    <img src="{{ h.logo.url }}" alt="{{ h.nome }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                {% else %}
+                                    <div class="w-full h-full bg-slate-100 flex items-center justify-center">
+                                        <i data-lucide="building" class="w-8 h-8 sm:w-12 sm:h-12 text-slate-400"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="absolute top-2.5 left-2.5 bg-slate-900/40 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10 select-none">
+                                    <span class="text-[8px] font-black uppercase text-white tracking-widest">
+                                        {% if 'pousada' in h.nome.lower %}
+                                            Pousada
+                                        {% elif 'chale' in h.nome.lower or 'chalé' in h.nome.lower %}
+                                            Chalé
+                                        {% else %}
+                                            Hotel
+                                        {% endif %}
+                                    </span>
                                 </div>
                             </div>
-                            <div class="p-3 sm:p-5 pt-0">
-                                <a href="{% url 'hoteis:detalhe' h.id %}" 
-                                   hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                                   class="block w-full text-center py-2 sm:py-3 bg-action-blue hover:opacity-90 text-white rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black shadow-sm transition active:scale-95">
-                                    Visitar Pousada
-                                </a>
+                            <div class="p-3.5 sm:p-5 flex flex-col justify-between flex-grow">
+                                <div>
+                                    <h4 class="font-extrabold text-xs sm:text-base text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1" style="color: var(--brand-color-burned) !important;">{{ h.nome }}</h4>
+                                    <p class="text-[9px] sm:text-xs text-slate-500 flex items-center gap-1">
+                                        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="map-pin" class="w-3 h-3"></i></span>
+                                        {{ h.local.cidade }} / {{ h.local.estado }}
+                                    </p>
+                                </div>
+                                <div class="mt-3.5 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex justify-between items-center">
+                                    <div class="flex flex-col">
+                                        <span class="text-[7px] sm:text-[8px] font-black text-slate-400 uppercase tracking-wider leading-none">A partir de</span>
+                                        <span class="text-[10px] sm:text-xs font-black text-blue-600 leading-normal mt-0.5" style="color: var(--brand-color) !important;">Sob consulta</span>
+                                    </div>
+                                    <div class="bg-blue-50 text-blue-600 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] sm:text-xs font-extrabold group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shrink-0"
+                                         style="background-color: var(--brand-color-alpha) !important; color: var(--brand-color) !important;"
+                                         onmouseover="this.style.backgroundColor='var(--brand-color)'; this.style.color='#ffffff';"
+                                         onmouseout="this.style.backgroundColor='var(--brand-color-alpha)'; this.style.color='var(--brand-color)';">
+                                        Ver mais
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     {% endif %}
                 {% endfor %}
             </div>

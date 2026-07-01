@@ -1,12 +1,20 @@
+<style>
+    @media (min-width: 1024px) {
+        .acomodacoes-grid-desktop {
+            grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+        }
+    }
+</style>
+
 <div class="space-y-4">
-    <div class="flex flex-col text-left mb-6">
+    <!-- Cabeçalho com tracinho vertical na cor do hotel -->
+    <div class="flex flex-col text-left mb-6 pl-4 border-l-4 md:border-l-[6px]" style="border-color: var(--brand-color) !important;">
         <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossas Acomodações</span>
-        <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Quartos prontos para você</h3>
+        <h3 class="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 leading-tight tracking-tight">Quartos prontos para você</h3>
     </div>
     
-    <!-- Redesign Grid para estilo Airbnb (Cards verticais funcionam bem em grids de 2 ou 3 colunas) -->
-    <!-- Vamos usar 2 colunas para focar bem nas fotos -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5" id="lista-quartos">
+    <!-- Grid que assume 5 colunas em telas desktop a partir de LG (1024px) -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 acomodacoes-grid-desktop gap-4 md:gap-5" id="lista-quartos">
         {% for quarto in quartos %}
         {% include 'hoteis/partials/quarto_card.html' with quarto=quarto hotel=hotel %}
         {% empty %}
