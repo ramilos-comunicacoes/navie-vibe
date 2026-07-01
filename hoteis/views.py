@@ -4891,8 +4891,14 @@ def partner_validador_buscar(request):
         
     if not reserva and uuid_str:
         try:
-            reserva = Reserva.objects.filter(unidade__quarto__hotel=hotel, id=uuid_str).first()
-        except (ValueError, TypeError):
+            from django.db.models.functions import Cast
+            from django.db.models import CharField
+            # Permite busca por parte do UUID (ex: primeiros 8 dígitos)
+            reserva = Reserva.objects.annotate(uuid_str_cast=Cast('id', CharField())).filter(
+                unidade__quarto__hotel=hotel,
+                uuid_str_cast__icontains=uuid_str
+            ).first()
+        except Exception:
             pass
             
     return render(request, 'hoteis/partials/validador_resultado.html', {

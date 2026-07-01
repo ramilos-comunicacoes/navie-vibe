@@ -4646,24 +4646,74 @@
          TELA DE PORTARIA / RECEPÇÃO
          ───────────────────────────────────────────────────────────── -->
     {% if perfil.role == 'portaria' %}
+    <!-- Biblioteca HTML5 QR Code para leitura de câmeras B2C/B2B -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <div x-show="activeTab === 'checkin'" class="space-y-6" x-transition:enter="transition ease-out duration-300" style="display: none;">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- QR Code mock-scanner -->
-            <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md flex flex-col justify-between items-center text-center">
+            
+            <!-- QR Code Scanner -->
+            <div x-data="{ scanning: false, html5Qrcode: null }" 
+                 class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md flex flex-col justify-between items-center text-center">
                 <div>
                     <h4 class="text-lg font-bold text-slate-800 dark:text-white">QR Code Scanner</h4>
                     <p class="text-xs text-slate-400 mt-1">Validador dinâmico de estadias da plataforma Naviê</p>
                 </div>
+                
                 <div class="relative w-48 h-48 border border-brand-500/20 dark:border-navie-border bg-slate-50 dark:bg-black/40 flex items-center justify-center rounded-3xl my-6 overflow-hidden">
                     <!-- Scanner Laser Laser effect -->
-                    <div class="absolute top-0 left-0 right-0 h-0.5 bg-brand-500 animate-bounce"></div>
-                    <span class="flex items-center text-brand-600 dark:text-slate-400" style="pointer-events:none;"><i data-lucide="qr-code" class="w-20 h-20"></i></span>
+                    <div x-show="!scanning" class="absolute top-0 left-0 right-0 h-0.5 bg-brand-500 animate-bounce"></div>
+                    
+                    <!-- Scanner camera reader target -->
+                    <div id="reader" style="width: 100%; height: 100%;" x-show="scanning"></div>
+                    
+                    <span x-show="!scanning" class="flex items-center text-brand-600 dark:text-slate-400" style="pointer-events:none;"><i data-lucide="qr-code" class="w-20 h-20"></i></span>
                 </div>
-                <button class="bg-brand-600 hover:bg-brand-500 text-white w-full py-3 rounded-2xl text-xs font-bold transition-all shadow-md shadow-brand-600/10">Ativar Câmera</button>
+                
+                <button type="button" 
+                        @click="
+                            if (!scanning) {
+                                scanning = true;
+                                $nextTick(() => {
+                                    html5Qrcode = new Html5Qrcode('reader');
+                                    html5Qrcode.start(
+                                        { facingMode: 'environment' },
+                                        { fps: 10, qrbox: { width: 150, height: 150 } },
+                                        (decodedText) => {
+                                            // Sucesso
+                                            scanning = false;
+                                            html5Qrcode.stop();
+                                            // Coloca o valor no input de UUID e envia o formulário
+                                            document.querySelector('input[name=uuid]').value = decodedText;
+                                            // Dispara a busca via HTMX
+                                            htmx.trigger('#validador-form', 'submit');
+                                        },
+                                        (errorMessage) => {
+                                            // Erro de leitura normal
+                                        }
+                                    ).catch(err => {
+                                        console.error(err);
+                                        scanning = false;
+                                        alert('Não foi possível acessar a câmera. Certifique-se de que a permissão de câmera foi concedida no navegador.');
+                                    });
+                                });
+                            } else {
+                                scanning = false;
+                                if (html5Qrcode) {
+                                    html5Qrcode.stop().then(() => { html5Qrcode = null; }).catch(e => { console.error(e); });
+                                }
+                            }
+                        "
+                        :class="scanning ? 'bg-red-600 hover:bg-red-500 text-white shadow-red-600/10' : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/10'"
+                        class="w-full py-3 rounded-2xl text-xs font-bold transition-all shadow-md cursor-pointer"
+                        x-text="scanning ? 'Parar Câmera' : 'Ativar Câmera'">
+                    Ativar Câmera
+                </button>
             </div>
 
             <!-- Busca manual -->
-            <form hx-post="{% url 'hoteis:partner_validador_buscar' %}"
+            <form id="validador-form"
+                  hx-post="{% url 'hoteis:partner_validador_buscar' %}"
                   hx-target="#validador-resultados"
                   hx-swap="innerHTML"
                   class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md flex flex-col justify-between">
@@ -4675,7 +4725,9 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">CPF do Hóspede</label>
-                            <input type="text" name="cpf" placeholder="000.000.000-00" class="w-full bg-slate-50 dark:bg-black/25 border border-slate-200 dark:border-navie-border focus:border-brand-500 rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all">
+                            <input type="text" name="cpf" maxlength="14" placeholder="000.000.000-00" 
+                                   oninput="this.value = this.value.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');"
+                                   class="w-full bg-slate-50 dark:bg-black/25 border border-slate-200 dark:border-navie-border focus:border-brand-500 rounded-2xl px-4 py-3 text-sm focus:outline-none transition-all">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2">Localizador (UUID)</label>
