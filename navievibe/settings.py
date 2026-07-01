@@ -319,6 +319,10 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'suporte@navievibe.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'ligaibi78@P')
 DEFAULT_FROM_EMAIL = f'Naviê Vibe <{EMAIL_HOST_USER}>'
 
+# Limites de upload de arquivos (100 MB para suporte a fotos e vídeos de alta qualidade)
+DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
+FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600
+
 
 
 

@@ -13,6 +13,10 @@ from .models import Hotel, ParceiroUsuario, Reserva, Quarto, UnidadeQuarto, Tare
 from .utils import checar_disponibilidade_quarto, buscar_datas_proximas
 from decimal import Decimal
 from django.conf import settings
+from io import BytesIO
+import os
+from django.core.files.base import ContentFile
+from PIL import Image
 
 class UnifiedPortalWrapper:
     def __init__(self, empresa, first_hotel):
@@ -2739,9 +2743,32 @@ def partner_quarto_salvar(request):
         # Limite de no máximo 10 fotos no total
         if current_count + idx >= 10:
             break
+            
+        # Converte e compacta a imagem para WebP no backend
+        try:
+            pil_img = Image.open(img)
+            # Trata transparência
+            if pil_img.mode in ('RGBA', 'LA'):
+                background = Image.new('RGBA', pil_img.size, (255, 255, 255, 0))
+                background.paste(pil_img, mask=pil_img.split()[-1])
+                pil_img = background
+            elif pil_img.mode != 'RGB':
+                pil_img = pil_img.convert('RGB')
+                
+            # Compactação WebP
+            buf = BytesIO()
+            pil_img.save(buf, format='WEBP', quality=80)
+            buf.seek(0)
+            
+            orig_name = os.path.splitext(img.name)[0]
+            webp_name = f"{orig_name}.webp"
+            processed_file = ContentFile(buf.read(), name=webp_name)
+        except Exception:
+            processed_file = img
+
         QuartoImagem.objects.create(
             quarto=quarto,
-            url_imagem=img,
+            url_imagem=processed_file,
             ordem=current_count + idx
         )
         

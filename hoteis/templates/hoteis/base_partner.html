@@ -1260,7 +1260,7 @@ x-data="{
                         {% if perfil.role == 'portaria' %}
                         <span x-show="activeTab === 'quartos'" style="display: none;">Mapa de Quartos</span>
                         {% else %}
-                        <div x-show="activeTab === 'quartos'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
+                        <div x-show="activeTab === 'quartos'" class="hidden lg:inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
                                     :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                                     class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none">
@@ -1275,8 +1275,8 @@ x-data="{
                             </button>
                         </div>
                         {% endif %}
-                        <span x-show="activeTab === 'reservas'" class="md:hidden animate-in fade-in" style="display: none;">Aprovações & Reservas</span>
-                        <div x-show="activeTab === 'reservas'" class="hidden md:inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
+                        <span x-show="activeTab === 'reservas'" class="lg:hidden animate-in fade-in" style="display: none;">Aprovações & Reservas</span>
+                        <div x-show="activeTab === 'reservas'" class="hidden lg:inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="reservasTab = 'mapa'; localStorage.setItem('partner_reservas_tab', 'mapa')"
                                     :class="reservasTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                                     class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer">
@@ -1311,7 +1311,7 @@ x-data="{
                         <span x-show="activeTab === 'configuracoes' && configTab === 'geral'" style="display: none;">Configurações Gerais do Grupo</span>
                         <span x-show="activeTab === 'configuracoes' && configTab === 'assinatura'" style="display: none;">Plano & Assinatura SaaS</span>
                         
-                        <div x-show="activeTab === 'hospedes'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
+                        <div x-show="activeTab === 'hospedes'" class="hidden lg:inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="hospedesSubTab = 'ativos'; localStorage.setItem('partner_hospedes_tab', 'ativos')"
                                     :class="hospedesSubTab === 'ativos' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                                     class="px-3.5 py-1.5 rounded-xl text-xs tracking-tight transition-all flex items-center gap-1.5 focus:outline-none cursor-pointer">
@@ -1384,10 +1384,10 @@ x-data="{
                     <!-- Alternador de Pousadas Premium (Custom Dropdown) -->
                     <div x-data="{ open: false }" class="relative z-[90]">
                         <button @click="open = !open" @click.outside="open = false" 
-                                class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white px-3 h-9 rounded-full transition-colors items-center gap-2 text-xs font-medium shadow-sm dark:shadow-none">
+                                class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white h-9 w-9 lg:w-auto lg:px-3 justify-center items-center rounded-2xl transition-colors gap-2 text-xs font-medium shadow-sm dark:shadow-none shrink-0">
                             <span class="flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="building" class="w-3.5 h-3.5"></i></span>
-                            <span class="truncate max-w-[120px]" x-text="activeTab === 'configuracoes' && configTab === 'geral' ? 'Geral (Grupo)' : '{{ hotel.nome }}'">{{ hotel.nome }}</span>
-                            <span class="flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="chevron-down" class="w-3 h-3"></i></span>
+                            <span class="hidden lg:inline truncate max-w-[120px]" x-text="activeTab === 'configuracoes' && configTab === 'geral' ? 'Geral (Grupo)' : '{{ hotel.nome }}'">{{ hotel.nome }}</span>
+                            <span class="hidden lg:flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="chevron-down" class="w-3 h-3"></i></span>
                         </button>
                         
                         <div x-show="open" x-transition.opacity style="display: none;"
@@ -1436,10 +1436,10 @@ x-data="{
                             else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
                         }
                     "
-                    class="hidden sm:flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white px-3 h-9 rounded-full transition-colors items-center gap-2 text-xs font-medium shadow-sm dark:shadow-none">
+                    class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white h-9 w-9 lg:w-auto lg:px-3 justify-center items-center rounded-2xl transition-colors gap-2 text-xs font-medium shadow-sm dark:shadow-none shrink-0">
                     <span x-show="!isFullscreen" class="flex items-center" style="pointer-events: none;"><i data-lucide="maximize" class="w-3.5 h-3.5"></i></span>
                     <span x-show="isFullscreen" style="display:none" class="flex items-center" style="pointer-events: none;"><i data-lucide="minimize" class="w-3.5 h-3.5"></i></span>
-                    <span x-text="isFullscreen ? 'Sair' : 'Tela Cheia'"></span>
+                    <span class="hidden lg:inline" x-text="isFullscreen ? 'Sair' : 'Tela Cheia'"></span>
                 </button>
 
                 <!-- Alternar Temas (Claro / Glass) -->
@@ -1463,7 +1463,7 @@ x-data="{
         <!-- SUB-HEADER -->
         <div id="sub-header-container" class="relative z-10 flex-shrink-0">
             <!-- Alternador de Abas de Quartos no Mobile -->
-            <div x-show="activeTab === 'quartos'" class="md:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
+            <div x-show="activeTab === 'quartos'" class="lg:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
                 <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full max-w-sm">
                     <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
                             :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
@@ -1481,7 +1481,7 @@ x-data="{
             </div>
 
             <!-- Alternador de Abas de Hóspedes no Mobile -->
-            <div x-show="activeTab === 'hospedes'" class="md:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
+            <div x-show="activeTab === 'hospedes'" class="lg:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
                 <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full max-w-sm">
                     <button type="button" @click="hospedesSubTab = 'ativos'; localStorage.setItem('partner_hospedes_tab', 'ativos')"
                             :class="hospedesSubTab === 'ativos' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
@@ -1823,12 +1823,51 @@ x-data="{
     <script>
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
+        // Sistema de Alerta Customizado (Design Naviê Glassmorphic)
+        function showCustomAlert(title, message, type = 'error') {
+            const existing = document.getElementById('custom-app-alert');
+            if (existing) existing.remove();
+
+            const alertDiv = document.createElement('div');
+            alertDiv.id = 'custom-app-alert';
+            alertDiv.className = 'fixed top-6 right-6 z-[99999] max-w-md w-full sm:w-[380px] bg-white/90 dark:bg-slate-900/95 backdrop-blur-md border border-red-500/20 dark:border-red-500/30 text-slate-800 dark:text-white p-5 rounded-3xl shadow-2xl flex gap-4 animate-in slide-in-from-top-4 duration-300';
+            
+            if (type === 'success') {
+                alertDiv.className = alertDiv.className.replace(/border-red-500\/\d+/g, 'border-emerald-500/20 dark:border-emerald-500/30');
+            }
+
+            const iconColor = type === 'success' ? 'text-emerald-500' : 'text-red-500';
+            const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+
+            alertDiv.innerHTML = `
+                <div class="shrink-0 ${iconColor} flex items-start pt-0.5">
+                    <i data-lucide="${iconName}" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h5 class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">${title}</h5>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mt-1 leading-normal">${message}</p>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="shrink-0 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors h-fit focus:outline-none cursor-pointer">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 6000);
+        }
+
         // Intercepta erros globais de requisição do HTMX (como 413 arquivo muito grande)
         document.addEventListener('htmx:responseError', function(e) {
             if (e.detail.xhr.status === 413) {
-                alert("Erro: O arquivo enviado é muito grande. Por favor, verifique o tamanho do arquivo ou configure o Nginx da sua VPS.");
+                showCustomAlert("Limite Excedido", "O arquivo enviado é muito grande. O limite máximo da plataforma é de 100 MB. Verifique o arquivo e tente novamente.", "error");
             } else {
-                alert("Ocorreu um erro ao processar a requisição (Código: " + e.detail.xhr.status + ").");
+                showCustomAlert("Erro de Sistema", "Ocorreu um erro ao processar a requisição (Código: " + e.detail.xhr.status + ").", "error");
             }
         });
 
