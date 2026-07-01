@@ -554,12 +554,16 @@ def restaurante_detalhe(request, slug):
 
     galeria_data = {
         'manaca-da-serra': [
-            {"titulo": "Jardim de Inverno", "url": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&h=800&q=80"},
-            {"titulo": "Salão Principal", "url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&h=800&q=80"},
-            {"titulo": "Cantinho Aconchegante", "url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&h=800&q=80"},
-            {"titulo": "Filé Grelhado", "url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&h=800&q=80"},
-            {"titulo": "Gastronomia Autoral", "url": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&h=800&q=80"},
-            {"titulo": "Carta de Vinhos", "url": "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Filé Mignon com Fritas", "url": "/media/restaurantes/galeria/manaca/file_mignon.png"},
+            {"titulo": "Camarão ao Fettuccine", "url": "/media/restaurantes/galeria/manaca/camarao_fettuccine.png"},
+            {"titulo": "Risoto Carne de Sol", "url": "/media/restaurantes/galeria/manaca/risoto_carne_sol.png"},
+            {"titulo": "Maminha Laminada", "url": "/media/restaurantes/galeria/manaca/maminha_laminada.png"},
+            {"titulo": "Croquete Vaca Atolada", "url": "/media/restaurantes/galeria/manaca/croquete_vaca_atolada.png"},
+            {"titulo": "Croquete de Linguiça Toscana", "url": "/media/restaurantes/galeria/manaca/croquete_toscana.png"},
+            {"titulo": "Salada Agridoce", "url": "/media/restaurantes/galeria/manaca/salada_agridoce.png"},
+            {"titulo": "Banana Flambada", "url": "/media/restaurantes/galeria/manaca/banana_flambada.png"},
+            {"titulo": "Compota Caseira", "url": "/media/restaurantes/galeria/manaca/compota.png"},
+            {"titulo": "Soda de Verão", "url": "/media/restaurantes/galeria/manaca/soda_verao.png"},
         ],
         'casa-de-engenho': [
             {"titulo": "Arquitetura Rústica", "url": "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=600&h=800&q=80"},

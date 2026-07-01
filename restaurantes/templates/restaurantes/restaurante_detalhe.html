@@ -523,10 +523,21 @@
                     <div class="swiper-wrapper">
                         {% for img in galeria %}
                         <div class="swiper-slide aspect-[3/4] relative rounded-3xl overflow-hidden shadow-md group">
-                            <img src="{{ img.url }}" alt="{{ img.titulo }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
-                                <span class="text-xs font-black text-white uppercase tracking-wider">{{ img.titulo }}</span>
-                            </div>
+                            {% if restaurante.cardapio_url %}
+                            <a href="{{ restaurante.cardapio_url }}" target="_blank" class="block w-full h-full text-decoration-none">
+                            {% endif %}
+                                <img src="{{ img.url }}" alt="{{ img.titulo }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-5">
+                                    <span class="text-xs font-black text-white uppercase tracking-wider">{{ img.titulo }}</span>
+                                    {% if restaurante.cardapio_url %}
+                                    <span class="text-white/90 bg-black/40 backdrop-blur-sm p-1.5 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-brand-primary group-hover:border-brand-primary transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            {% if restaurante.cardapio_url %}
+                            </a>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
