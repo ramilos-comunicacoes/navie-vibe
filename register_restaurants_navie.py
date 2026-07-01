@@ -53,8 +53,8 @@ def register_restaurants():
             "whatsapp_privado": "88988882222",
             "email_contato": "contato@manacadaserra.com.br",
             "instagram": "https://www.instagram.com/manaca.restaurante/",
-            "cor_primaria": "#140a1b",  # Ameixa Escura / Plum Black
-            "cor_secundaria": "#c16096",  # Rosa/Magenta Manacá
+            "cor_primaria": "#c16096",  # Rosa/Magenta Manacá
+            "cor_secundaria": "#140a1b",  # Ameixa Escura / Plum Black
             "descricao": "O seu refúgio gastronômico em Tianguá. Um ambiente aconchegante que combina sabores únicos com uma experiência acolhedora, ideal para qualquer momento do dia.",
             "banner": "restaurantes/banners/manaca_da_serra_banner.png",
             "imagem": "restaurantes/logos/manaca-da-serra_logo.jpg",

@@ -276,14 +276,14 @@
     }
 
     /* SOBRE — mobile (card interno com altura fixa, estilo original) */
-    .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; }
+    .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; margin-bottom: 2.5rem; }
     .sobre-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
     .sobre-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
     #sobre-texto, #sobre-texto * { font-family: 'Poppins', sans-serif !important; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important; }
     @media (max-width: 767px) {
-        .sobre-section-wrapper:not(.h-auto) { height: 38vh; min-height: 190px; max-height: 250px; }
+        .sobre-section-wrapper:not(.h-auto) { height: 42vh; min-height: 220px; max-height: 290px; }
         .sobre-flex-container { padding-left: 24px; padding-right: 16px; }
-        .sobre-left-column { width: 44% !important; padding-top: 40px !important; padding-bottom: 24px !important; padding-right: 12px !important; justify-content: center !important; gap: 8px; }
+        .sobre-left-column { width: 44% !important; padding-top: 40px !important; padding-bottom: 30px !important; padding-right: 12px !important; justify-content: center !important; gap: 10px; }
         .sobre-media-container { width: 56% !important; }
         .sobre-media-gradient { background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%) !important; }
         .sobre-title-wrapper { margin-bottom: 8px; gap: 8px; }
@@ -296,9 +296,9 @@
     @media (min-width: 768px) {
         /* A seção sobre ocupa toda a largura da página no desktop */
         #sobre-outer-wrapper { margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
-        .sobre-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; border-radius: 0 !important; }
+        .sobre-section-wrapper:not(.h-auto) { height: 35vh; min-height: 260px; max-height: 310px; border-radius: 0 !important; }
         .sobre-flex-container { padding-left: 48px; padding-right: 48px; }
-        .sobre-left-column { width: 42%; padding-top: 64px; padding-bottom: 28px; padding-right: 32px; }
+        .sobre-left-column { width: 42%; padding-top: 64px; padding-bottom: 34px; padding-right: 32px; }
         .sobre-title-wrapper { margin-bottom: 12px; gap: 6px; }
         .sobre-title-line { width: 6px; }
         #sobre-titulo { font-size: 20px; }
@@ -306,6 +306,22 @@
         #sobre-readmore-btn { margin-top: 8px; font-size: 12px; }
     }
     @media (min-width: 1280px) { .sobre-flex-container { padding-left: 80px; padding-right: 80px; } }
+
+    /* Custom Adaptive Colors overrides for base layouts */
+    .header-profile-btn {
+        background-color: var(--brand-color-alpha) !important;
+        border-color: var(--brand-color-alpha-focus) !important;
+        color: var(--brand-color-burned) !important;
+    }
+    .header-profile-btn:hover {
+        background-color: var(--brand-color) !important;
+        color: var(--brand-text-color) !important;
+    }
+    .type-cursor { background-color: var(--brand-color) !important; }
+    
+    footer > div:first-of-type {
+        background: linear-gradient(135deg, var(--brand-color-burned) 0%, var(--brand-color) 100%) !important;
+    }
 
     .line-clamp-4 { display: -webkit-box !important; -webkit-line-clamp: 4 !important; -webkit-box-orient: vertical !important; overflow: hidden !important; }
     .line-clamp-none { display: block !important; -webkit-line-clamp: unset !important; overflow: visible !important; }
@@ -651,15 +667,15 @@
             <div class="flex flex-col justify-start">
                 <div class="flex items-stretch sobre-title-wrapper">
                     <span class="sobre-title-line shrink-0" style="background-color:var(--sobre-text-color);border-radius:9999px !important;"></span>
-                    <h2 id="sobre-titulo-desktop" class="font-black tracking-wider leading-tight uppercase">
+                    <h2 id="sobre-titulo" class="font-black tracking-wider leading-tight uppercase">
                         {{ restaurante.sobre_titulo|default:'Sobre o Restaurante' }}
                     </h2>
                 </div>
-                <div id="sobre-texto-desktop" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
+                <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 transition-all duration-300">
                     {% if restaurante.sobre_texto %}{{ restaurante.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa história, nossa cozinha e o que nos torna um lugar especial na Serra da Ibiapaba.</p>{% endif %}
                 </div>
             </div>
-            <button id="sobre-readmore-btn-desktop" type="button" onclick="toggleSobreExpanderDesktop()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
+            <button id="sobre-readmore-btn" type="button" onclick="toggleSobreExpander()" class="hidden self-start font-black uppercase tracking-wider cursor-pointer border-none bg-transparent p-0 hover:underline">
                 Ler mais
             </button>
         </div>
@@ -830,12 +846,12 @@
         }, 600);
     };
 
-    // SOBRE EXPANDER — Mobile
+    // SOBRE EXPANDER — Universal (Mobile/Tablet/Desktop)
     let isSobreExpanded = false;
     window.toggleSobreExpander = function() {
         const textEl = document.getElementById('sobre-texto');
         const btnEl = document.getElementById('sobre-readmore-btn');
-        const sectionEl = document.getElementById('sobre-section-mobile');
+        const sectionEl = document.getElementById('sobre-section');
         if (!textEl || !btnEl || !sectionEl) return;
         isSobreExpanded = !isSobreExpanded;
         if (isSobreExpanded) {
@@ -852,40 +868,11 @@
         }
     };
 
-    // SOBRE EXPANDER — Desktop
-    let isSobreExpandedDesktop = false;
-    window.toggleSobreExpanderDesktop = function() {
-        const textEl = document.getElementById('sobre-texto-desktop');
-        const btnEl = document.getElementById('sobre-readmore-btn-desktop');
-        const sectionEl = document.getElementById('sobre-section');
-        if (!textEl || !btnEl || !sectionEl) return;
-        isSobreExpandedDesktop = !isSobreExpandedDesktop;
-        if (isSobreExpandedDesktop) {
-            textEl.classList.remove('line-clamp-4');
-            textEl.classList.add('line-clamp-none');
-            sectionEl.classList.add('h-auto');
-            btnEl.textContent = 'Ler menos';
-        } else {
-            textEl.classList.remove('line-clamp-none');
-            textEl.classList.add('line-clamp-4');
-            sectionEl.classList.remove('h-auto');
-            btnEl.textContent = 'Ler mais';
-            sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    };
-
     function initSobreExpander() {
-        // Mobile
-        const textMobile = document.getElementById('sobre-texto');
-        const btnMobile = document.getElementById('sobre-readmore-btn');
-        if (textMobile && btnMobile) {
-            setTimeout(() => { if (textMobile.scrollHeight > textMobile.clientHeight) btnMobile.classList.remove('hidden'); }, 50);
-        }
-        // Desktop
-        const textDesktop = document.getElementById('sobre-texto-desktop');
-        const btnDesktop = document.getElementById('sobre-readmore-btn-desktop');
-        if (textDesktop && btnDesktop) {
-            setTimeout(() => { if (textDesktop.scrollHeight > textDesktop.clientHeight) btnDesktop.classList.remove('hidden'); }, 50);
+        const textEl = document.getElementById('sobre-texto');
+        const btnEl = document.getElementById('sobre-readmore-btn');
+        if (textEl && btnEl) {
+            setTimeout(() => { if (textEl.scrollHeight > textEl.clientHeight) btnEl.classList.remove('hidden'); }, 50);
         }
     }
 
