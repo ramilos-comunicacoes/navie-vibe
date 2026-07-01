@@ -3,8 +3,8 @@
 {% if destaques_personalizado %}
     <!-- ── VITRINE DESTAQUES PERSONALIZADOS ── -->
     <div class="mb-10 md:mb-12">
-        <!-- ── MOBILE LAYOUT (Até MD/LG) ── -->
-        <div class="block lg:hidden">
+        <!-- ── MOBILE LAYOUT (Até MD) ── -->
+        <div class="block md:hidden">
             <!-- Cabeçalho Centralizado original -->
             <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
@@ -144,10 +144,10 @@
             </div>
         </div>
 
-        <!-- ── DESKTOP LAYOUT (LG e Superior) ── -->
-        <div class="hidden lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center max-w-[85rem] mx-auto px-4 w-full">
+        <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
+        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
             <!-- Cabeçalho Alinhado à Esquerda -->
-            <div class="lg:col-span-4 text-left pr-4">
+            <div class="md:col-span-4 text-left pr-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
                 {% if destaques_personalizado.subtitulo %}
@@ -157,131 +157,71 @@
                 {% endif %}
             </div>
 
-            <!-- Cards à Direita -->
-            <div class="lg:col-span-8 w-full">
-                {% if destaques_personalizado.itens.all|length > 3 %}
-                    <!-- Swiper Carousel (Mais de 3 itens) -->
-                    <div class="swiper highlights-swiper relative px-4 w-full"
-                         x-data="{}"
-                         x-init="
-                            new Swiper($el, {
-                                slidesPerView: 3,
-                                spaceBetween: 24,
-                                pagination: {
-                                    el: '.swiper-pagination',
-                                    clickable: true,
-                                },
-                                breakpoints: {
-                                    1024: {
-                                        slidesPerView: 2,
-                                        spaceBetween: 20
-                                    },
-                                    1280: {
-                                        slidesPerView: 3,
-                                        spaceBetween: 24
-                                    }
-                                }
-                            });
-                         ">
-                        <div class="swiper-wrapper py-4">
-                            {% for item in destaques_personalizado.itens.all %}
-                                <div class="swiper-slide h-auto">
-                                    <a href="{{ item.link_cta|default:'#' }}"
-                                       {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                                       class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
-                                        
-                                        <div class="absolute inset-0 w-full h-full bg-slate-900">
-                                            {% if item.video %}
-                                                <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                                            {% elif item.imagem %}
-                                                <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                                            {% else %}
-                                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                                    <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                                                </div>
-                                            {% endif %}
-                                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                                        </div>
-
-                                        <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                                            {% if forloop.counter0 == 0 %}
-                                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
-                                            {% elif forloop.counter0 == 1 %}
-                                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
-                                            {% else %}
-                                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
-                                            {% endif %}
-
-                                            <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
-                                            {% if item.descricao %}
-                                                <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
-                                            {% endif %}
-                                            
-                                            {% if item.preco %}
-                                                <div class="flex justify-between items-center w-full">
-                                                    <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </a>
-                                </div>
-                            {% endfor %}
-                        </div>
-                        <div class="swiper-pagination !position-relative mt-4"></div>
-                    </div>
-                {% else %}
-                    <!-- Grid Simples (3 ou menos itens) -->
-                    <div class="grid grid-cols-{{ destaques_personalizado.itens.all|length }} gap-4 lg:gap-6 w-full">
+            <!-- Cards à Direita (Carrossel Horizontal Swiper) -->
+            <div class="md:col-span-8 w-full overflow-hidden">
+                <div class="swiper desktop-highlights-swiper relative w-full"
+                     x-data="{}"
+                     x-init="
+                        new Swiper($el, {
+                            slidesPerView: 'auto',
+                            spaceBetween: 24,
+                            grabCursor: true,
+                            freeMode: true,
+                        });
+                     ">
+                    <div class="swiper-wrapper py-4">
                         {% for item in destaques_personalizado.itens.all %}
-                        <a href="{{ item.link_cta|default:'#' }}"
-                           {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                           class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
-                            
-                            <div class="absolute inset-0 w-full h-full">
-                                {% if item.video %}
-                                    <video src="{{ item.video.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                                {% elif item.imagem %}
-                                    <img src="{{ item.imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                                {% else %}
-                                    <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                        <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                            <div class="swiper-slide w-[280px] shrink-0 h-auto">
+                                <a href="{{ item.link_cta|default:'#' }}"
+                                   {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
+                                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
+                                    
+                                    <div class="absolute inset-0 w-full h-full bg-slate-900">
+                                        {% if item.video %}
+                                            <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
+                                        {% elif item.imagem %}
+                                            <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
+                                        {% else %}
+                                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
                                     </div>
-                                {% endif %}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                            </div>
 
-                            <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                                {% if forloop.counter0 == 0 %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
-                                {% elif forloop.counter0 == 1 %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
-                                {% else %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
-                                {% endif %}
+                                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
+                                        {% if forloop.counter0 == 0 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
+                                        {% elif forloop.counter0 == 1 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
+                                        {% else %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
+                                        {% endif %}
 
-                                <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
-                                {% if item.descricao %}
-                                    <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
-                                {% endif %}
-                                
-                                {% if item.preco %}
-                                    <div class="flex justify-between items-center w-full">
-                                        <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
+                                        {% if item.descricao %}
+                                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
+                                        {% endif %}
+                                        
+                                        {% if item.preco %}
+                                            <div class="flex justify-between items-center w-full">
+                                                <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                {% endif %}
+                                </a>
                             </div>
-                        </a>
                         {% endfor %}
                     </div>
-                {% endif %}
+                </div>
             </div>
         </div>
     </div>
 {% else %}
     <!-- ── VITRINE DESTAQUES PADRÃO DO SISTEMA (QUARTOS) ── -->
     <div class="mb-10 md:mb-12">
-        <!-- ── MOBILE LAYOUT (Até MD/LG) ── -->
-        <div class="block lg:hidden">
+        <!-- ── MOBILE LAYOUT (Até MD) ── -->
+        <div class="block md:hidden">
             <!-- Cabeçalho Centralizado original -->
             <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
@@ -411,10 +351,10 @@
             </div>
         </div>
 
-        <!-- ── DESKTOP LAYOUT (LG e Superior) ── -->
-        <div class="hidden lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center max-w-[85rem] mx-auto px-4 w-full">
+        <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
+        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
             <!-- Cabeçalho Alinhado à Esquerda -->
-            <div class="lg:col-span-4 text-left pr-4">
+            <div class="md:col-span-4 text-left pr-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
                 <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
@@ -422,46 +362,59 @@
                 </p>
             </div>
 
-            <!-- Cards à Direita (Grid de 3 colunas) -->
-            <div class="lg:col-span-8 w-full">
-                <div class="grid grid-cols-3 gap-4 lg:gap-6 w-full">
-                    {% for quarto in quartos_destaque %}
-                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
-                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                       class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
-                        
-                        <!-- Imagem do Quarto -->
-                        <div class="absolute inset-0 w-full h-full">
-                            {% if quarto.imagens.all %}
-                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
-                            {% else %}
-                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                    <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                                </div>
-                            {% endif %}
-                            <!-- Gradiente escuro no fundo -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                        </div>
+            <!-- Cards à Direita (Carrossel Horizontal Swiper) -->
+            <div class="md:col-span-8 w-full overflow-hidden">
+                <div class="swiper desktop-highlights-swiper relative w-full"
+                     x-data="{}"
+                     x-init="
+                        new Swiper($el, {
+                            slidesPerView: 'auto',
+                            spaceBetween: 24,
+                            grabCursor: true,
+                            freeMode: true,
+                        });
+                     ">
+                    <div class="swiper-wrapper py-4">
+                        {% for quarto in quartos_destaque %}
+                            <div class="swiper-slide w-[280px] shrink-0 h-auto">
+                                <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
+                                   hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
+                                    
+                                    <!-- Imagem do Quarto -->
+                                    <div class="absolute inset-0 w-full h-full">
+                                        {% if quarto.imagens.all %}
+                                            <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                        {% else %}
+                                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                            </div>
+                                        {% endif %}
+                                        <!-- Gradiente escuro no fundo -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+                                    </div>
 
-                        <!-- Conteúdo em cima do card (Alinhado à Base) -->
-                        <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                            {% if forloop.counter0 == 0 %}
-                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
-                            {% elif forloop.counter0 == 1 %}
-                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
-                            {% else %}
-                                <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
-                            {% endif %}
+                                    <!-- Conteúdo em cima do card (Alinhado à Base) -->
+                                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
+                                        {% if forloop.counter0 == 0 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
+                                        {% elif forloop.counter0 == 1 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
+                                        {% else %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
+                                        {% endif %}
 
-                            <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
-                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
-                            
-                            <div class="flex justify-between items-center w-full">
-                                <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
+                                        <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                                        
+                                        <div class="flex justify-between items-center w-full">
+                                            <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                        </div>
+                                    </div>
+                                </a>
                             </div>
-                        </div>
-                    </a>
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
