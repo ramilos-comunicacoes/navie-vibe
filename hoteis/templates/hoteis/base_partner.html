@@ -1959,6 +1959,96 @@ x-data="{
                 }
             }
         });
+
+        // Mostrar o loading overlay do barquinho apenas para o salvamento de quartos
+        document.body.addEventListener('htmx:beforeRequest', (event) => {
+            const path = event.detail.pathInfo ? event.detail.pathInfo.requestPath : '';
+            if (path && path.includes('/quartos/salvar/')) {
+                const overlay = document.getElementById('global-loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('hidden');
+                }
+            }
+        });
+
+        document.body.addEventListener('htmx:afterRequest', (event) => {
+            const overlay = document.getElementById('global-loading-overlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
     </script>
+
+    <!-- Global Glassmorphic Loading Overlay (Barquinho Naviê) -->
+    <div id="global-loading-overlay" class="fixed inset-0 z-[99999] bg-slate-900/60 dark:bg-black/75 backdrop-blur-md flex flex-col items-center justify-center text-center select-none animate-in fade-in duration-300 hidden">
+        <style>
+            /* --- Animações Senoidais de Física Fluida --- */
+            @keyframes floatBoatOverlay {
+                0% { transform: translateY(0) rotate(0deg); }
+                50% { transform: translateY(-10px) rotate(4deg); }
+                100% { transform: translateY(0) rotate(0deg); }
+            }
+            @keyframes waveLeftOverlay {
+                0% { transform: translateX(0); }
+                50% { transform: translateX(-25%); }
+                100% { transform: translateX(0); }
+            }
+            @keyframes waveRightOverlay {
+                0% { transform: translateX(-25%); }
+                50% { transform: translateX(0); }
+                100% { transform: translateX(-25%); }
+            }
+            
+            .animate-paperboat-vector-overlay {
+                animation: floatBoatOverlay 4s ease-in-out infinite;
+            }
+            .animate-wave-path-1-overlay {
+                animation: waveLeftOverlay 12s linear infinite;
+            }
+            .animate-wave-path-2-overlay {
+                animation: waveRightOverlay 8s linear infinite;
+            }
+        </style>
+
+        <!-- Canvas Circular de Vidro Fosco (Glassmorphism) -->
+        <div class="relative w-48 h-48 rounded-full border border-slate-200/20 dark:border-white/10 bg-white/10 dark:bg-black/40 backdrop-blur-xl shadow-2xl flex flex-col items-center justify-center overflow-hidden mb-6">
+            <!-- Glow Gradiente de Fundo -->
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-brand/20 pointer-events-none"></div>
+
+            <!-- Barquinho -->
+            <div class="absolute bottom-12 z-20 text-brand animate-paperboat-vector-overlay">
+                <svg class="w-20 h-20 drop-shadow-[0_8px_16px_rgba(245,158,11,0.4)]" 
+                     viewBox="0 0 100 100" 
+                     fill="none" 
+                     xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 15L50 58L22 58L50 15Z" fill="currentColor" fill-opacity="0.85"/>
+                    <path d="M52 10L52 58L78 58L52 10Z" fill="currentColor" fill-opacity="0.6"/>
+                    <path d="M10 60L50 58L42 78L22 78L10 60Z" fill="currentColor" fill-opacity="0.95"/>
+                    <path d="M90 60L50 58L58 78L78 78L90 60Z" fill="currentColor" fill-opacity="0.75"/>
+                </svg>
+            </div>
+
+            <!-- Ondas Senoidais SVG -->
+            <div class="absolute bottom-0 left-0 w-[200%] h-14 overflow-hidden pointer-events-none z-30">
+                <svg class="w-full h-full" viewBox="0 0 1200 120" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="waveGradOverlay1" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="var(--brand-color)" stop-opacity="0.4"/>
+                            <stop offset="100%" stop-color="var(--brand-color)" stop-opacity="0.8"/>
+                        </linearGradient>
+                        <linearGradient id="waveGradOverlay2" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="var(--brand-color)" stop-opacity="0.6"/>
+                            <stop offset="100%" stop-color="var(--brand-color)" stop-opacity="1"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="animate-wave-path-1-overlay" d="M0,60 C150,100 350,20 500,60 C650,100 850,20 1000,60 C1150,100 1300,20 1400,60 L1400,120 L0,120 Z" fill="url(#waveGradOverlay1)"></path>
+                    <path class="animate-wave-path-2-overlay" d="M0,70 C180,30 300,110 480,70 C660,30 780,110 960,70 C1140,30 1260,110 1440,70 L1440,120 L0,120 Z" fill="url(#waveGradOverlay2)"></path>
+                </svg>
+            </div>
+        </div>
+
+        <h3 class="text-sm font-black text-white uppercase tracking-widest animate-pulse">Enviando arquivos...</h3>
+        <p class="text-[10px] text-slate-400 mt-1.5 font-bold">Navegando nas nuvens para salvar sua acomodação</p>
+    </div>
 </body>
 </html>
