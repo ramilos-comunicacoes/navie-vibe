@@ -190,9 +190,9 @@
             {% for r in restaurantes %}
             <article class="restaurant-card">
                 <!-- Imagem / Banner -->
-                <div class="restaurant-banner relative overflow-hidden">
+                <div class="restaurant-banner relative overflow-hidden rounded-t-[22px]">
                     {% if r.imagem %}
-                    <img src="{{ r.imagem.url }}" alt="{{ r.nome }}" class="w-full h-full object-cover">
+                    <img src="{{ r.imagem.url }}" alt="{{ r.nome }}" class="w-full h-full object-contain p-4">
                     {% else %}
                     <div class="w-full h-full bg-slate-200 flex items-center justify-center">
                         <i data-lucide="image" class="w-12 h-12 text-slate-400"></i>
