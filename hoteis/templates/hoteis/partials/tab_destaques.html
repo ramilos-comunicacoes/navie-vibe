@@ -15,7 +15,7 @@
             flex-direction: row !important;
             align-items: center !important;
             width: 100% !important;
-            gap: 2rem !important;
+            gap: 2.5rem !important;
         }
     }
     
@@ -30,15 +30,15 @@
         width: 65% !important;
         flex-grow: 1 !important;
         overflow: hidden !important;
-        height: 480px !important;
+        height: 520px !important;
         position: relative !important;
     }
     
-    /* Container interno que segura os slides absolutos */
+    /* Container interno que segura os slides absolutos com folga de altura para o zoom 3D */
     .desktop-3d-container {
         position: relative !important;
         width: 100% !important;
-        height: 420px !important;
+        height: 460px !important;
         overflow: hidden !important;
     }
     
@@ -203,12 +203,12 @@
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
         <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
-            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura com fonte aumentada) -->
             <div class="desktop-highlights-text">
-                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
-                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
+                <span class="text-[11px] md:text-xs lg:text-sm font-black uppercase tracking-widest text-slate-400 mb-2 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
                 {% if destaques_personalizado.subtitulo %}
-                    <p class="text-xs md:text-sm text-slate-500 font-medium mt-3 leading-relaxed">
+                    <p class="text-xs md:text-base lg:text-lg xl:text-xl text-slate-500 font-medium mt-4 lg:mt-6 leading-relaxed">
                         {{ destaques_personalizado.subtitulo }}
                     </p>
                 {% endif %}
@@ -272,7 +272,7 @@
                  @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
                  @mouseenter="stopAutoplay()">
                 
-                <div class="desktop-3d-container flex items-start pt-2 justify-center">
+                <div class="desktop-3d-container flex items-start pt-6 justify-center">
                     {% for item in destaques_personalizado.itens.all %}
                     <div class="desktop-3d-slide select-none"
                          style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
@@ -476,11 +476,11 @@
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
         <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
-            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura com fonte aumentada) -->
             <div class="desktop-highlights-text">
-                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
-                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
-                <p class="text-xs md:text-sm text-slate-500 font-medium mt-3 leading-relaxed">
+                <span class="text-[11px] md:text-xs lg:text-sm font-black uppercase tracking-widest text-slate-400 mb-2 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
+                <p class="text-xs md:text-base lg:text-lg xl:text-xl text-slate-500 font-medium mt-4 lg:mt-6 leading-relaxed">
                     Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.
                 </p>
             </div>
@@ -543,7 +543,7 @@
                  @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
                  @mouseenter="stopAutoplay()">
                 
-                <div class="desktop-3d-container flex items-start pt-2 justify-center">
+                <div class="desktop-3d-container flex items-start pt-6 justify-center">
                     {% for quarto in quartos_destaque %}
                     <div class="desktop-3d-slide select-none"
                          style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
@@ -568,7 +568,7 @@
                                         <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
                                     </div>
                                 {% endif %}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
                             </div>
 
                             <!-- Conteúdo em cima do card (Alinhado à Base) -->
