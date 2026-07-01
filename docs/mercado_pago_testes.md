@@ -3,9 +3,10 @@
 Este documento armazena as credenciais das contas de teste (sandbox) do Mercado Pago geradas para a nova aplicação **NavieVibe Connect** no portal de reservas e no painel financeiro do Naviê Vibe.
 
 ## 🔑 Credenciais da Aplicação (Configurar no .env)
-*   **Número da Aplicação (Client ID):** `3780361702227175`
-*   **Access Token (Client Secret):** `APP_USR-3780361702227175-070112-f0854c11ef933d3a3bc036badf9f6b38-3507431941`
-*   **Public Key:** `APP_USR-e180ad48-3fc5-4aaa-9ad5-bdc0628e3b91`
+*   **Número da Aplicação (Client ID de Teste):** `3780361702227175`
+*   **Client Secret (Chave Secreta da Aplicação):** `wUL0p64hW6g1IAaxgvW5ab2DDZwEpOnl`
+*   **Access Token (De Teste):** `APP_USR-3780361702227175-070112-f0854c11ef933d3a3bc036badf9f6b38-3507431941`
+*   **Public Key (De Teste):** `APP_USR-e180ad48-3fc5-4aaa-9ad5-bdc0628e3b91`
 
 ---
 
