@@ -1,10 +1,26 @@
 {% if destaques_personalizado or quartos_destaque %}
+<style>
+    .mobile-only-highlights {
+        display: block !important;
+    }
+    .desktop-only-highlights {
+        display: none !important;
+    }
+    @media (min-width: 768px) {
+        .mobile-only-highlights {
+            display: none !important;
+        }
+        .desktop-only-highlights {
+            display: grid !important;
+        }
+    }
+</style>
 
 {% if destaques_personalizado %}
     <!-- ── VITRINE DESTAQUES PERSONALIZADOS ── -->
     <div class="mb-10 md:mb-12">
         <!-- ── MOBILE LAYOUT (Até MD) ── -->
-        <div class="block md:hidden">
+        <div class="mobile-only-highlights">
             <!-- Cabeçalho Centralizado original -->
             <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
@@ -145,7 +161,7 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
+        <div class="desktop-only-highlights md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
             <!-- Cabeçalho Alinhado à Esquerda -->
             <div class="md:col-span-4 text-left pr-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
@@ -221,7 +237,7 @@
     <!-- ── VITRINE DESTAQUES PADRÃO DO SISTEMA (QUARTOS) ── -->
     <div class="mb-10 md:mb-12">
         <!-- ── MOBILE LAYOUT (Até MD) ── -->
-        <div class="block md:hidden">
+        <div class="mobile-only-highlights">
             <!-- Cabeçalho Centralizado original -->
             <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
@@ -352,7 +368,7 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
+        <div class="desktop-only-highlights md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
             <!-- Cabeçalho Alinhado à Esquerda -->
             <div class="md:col-span-4 text-left pr-4">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
