@@ -11,7 +11,37 @@
             display: none !important;
         }
         .desktop-only-highlights {
-            display: grid !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 2rem !important;
+        }
+    }
+    
+    /* Regras de largura flexíveis para o split horizontal de desktop */
+    .desktop-highlights-text {
+        width: 35% !important;
+        flex-shrink: 0 !important;
+        text-align: left !important;
+    }
+    
+    .desktop-highlights-carousel {
+        width: 65% !important;
+        flex-grow: 1 !important;
+        overflow: hidden !important;
+    }
+    
+    /* Configuração de tamanho e proporção física rígida dos cards no desktop */
+    .desktop-card-highlight {
+        width: 300px !important;
+        height: 400px !important;
+        flex-shrink: 0 !important;
+    }
+    @media (min-width: 1280px) {
+        .desktop-card-highlight {
+            width: 320px !important;
+            height: 427px !important;
         }
     }
     
@@ -177,9 +207,9 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full grid-cols-12 gap-8 items-center">
-            <!-- Cabeçalho Alinhado à Esquerda (4 colunas) -->
-            <div class="col-span-4 text-left pr-6">
+        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <div class="desktop-highlights-text">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
                 {% if destaques_personalizado.subtitulo %}
@@ -189,13 +219,13 @@
                 {% endif %}
             </div>
 
-            <!-- Carrossel de Cards à Direita (8 colunas) -->
-            <div class="col-span-8 w-full overflow-hidden">
+            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <div class="desktop-highlights-carousel">
                 <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
                     {% for item in destaques_personalizado.itens.all %}
                         <a href="{{ item.link_cta|default:'#' }}"
                            {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                           class="w-[290px] xl:w-[320px] shrink-0 aspect-[3/4] relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
+                           class="desktop-card-highlight relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
                             
                             <div class="absolute inset-0 w-full h-full bg-slate-900">
                                 {% if item.video %}
@@ -371,9 +401,9 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full grid-cols-12 gap-8 items-center">
-            <!-- Cabeçalho Alinhado à Esquerda (4 colunas) -->
-            <div class="col-span-4 text-left pr-6">
+        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <div class="desktop-highlights-text">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
                 <p class="text-xs md:text-sm text-slate-500 font-medium mt-3 leading-relaxed">
@@ -381,16 +411,16 @@
                 </p>
             </div>
 
-            <!-- Carrossel de Cards à Direita (8 colunas) -->
-            <div class="col-span-8 w-full overflow-hidden">
+            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <div class="desktop-highlights-carousel">
                 <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
                     {% for quarto in quartos_destaque %}
                         <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
                            hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                           class="w-[290px] xl:w-[320px] shrink-0 aspect-[3/4] relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
+                           class="desktop-card-highlight relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
                             
                             <!-- Imagem do Quarto -->
-                            <div class="absolute inset-0 w-full h-full">
+                            <div class="absolute inset-0 w-full h-full bg-slate-900">
                                 {% if quarto.imagens.all %}
                                     <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
                                 {% else %}
