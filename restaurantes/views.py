@@ -52,8 +52,15 @@ def partner_auth(request):
                     user = None
                     
             if user is not None:
-                # Checa se o usuário possui perfil de restaurante
-                if hasattr(user, 'perfil_restaurante'):
+                if user.is_superuser:
+                    auth_login(request, user)
+                    messages.success(request, f"Bem-vindo, Administrador {user.first_name or user.username}!")
+                    if is_htmx:
+                        response = HttpResponse()
+                        response['HX-Redirect'] = reverse('restaurantes:partner_dashboard')
+                        return response
+                    return redirect('restaurantes:partner_dashboard')
+                elif hasattr(user, 'perfil_restaurante'):
                     perfil = user.perfil_restaurante
                     if perfil.ativo:
                         auth_login(request, user)
@@ -109,22 +116,111 @@ def partner_auth(request):
 def partner_dashboard(request):
     """
     O painel B2B adaptativo do parceiro de restaurante.
+    Suporta visão consolidada de Superusuário.
     """
-    # Garante que possui perfil de restaurante
-    if not hasattr(request.user, 'perfil_restaurante'):
-        messages.error(request, "Acesso negado. Esta conta não possui perfil de restaurante.")
-        return redirect('restaurantes:partner_login')
+    is_superuser = request.user.is_superuser
+    
+    # Se for POST e for superusuário, processamos ações administrativas
+    if request.method == 'POST' and is_superuser:
+        action = request.POST.get('superuser_action')
+        if action == 'reset_password':
+            user_id = request.POST.get('user_id')
+            new_password = request.POST.get('new_password', '').strip()
+            if user_id and new_password:
+                user = User.objects.using('default').filter(id=user_id).first()
+                if user:
+                    user.set_password(new_password)
+                    user.save(using='default')
+                    messages.success(request, f"Senha do usuário {user.username} redefinida com sucesso.")
+                else:
+                    messages.error(request, "Usuário não encontrado.")
+            else:
+                messages.error(request, "Campos inválidos.")
+            return redirect(request.path + '?tab=superuser')
+            
+        elif action == 'toggle_status':
+            perfil_id = request.POST.get('perfil_id')
+            if perfil_id:
+                perfil_u = RestauranteUsuario.objects.using('restaurantes').filter(id=perfil_id).first()
+                if perfil_u:
+                    perfil_u.ativo = not perfil_u.ativo
+                    perfil_u.save(using='restaurantes')
+                    status_str = "ativado" if perfil_u.ativo else "desativado"
+                    messages.success(request, f"Perfil do usuário {perfil_u.user.username} foi {status_str}.")
+                else:
+                    messages.error(request, "Perfil de parceiro não encontrado.")
+            return redirect(request.path + '?tab=superuser')
+            
+        elif action == 'change_role':
+            perfil_id = request.POST.get('perfil_id')
+            new_role = request.POST.get('role')
+            if perfil_id and new_role:
+                perfil_u = RestauranteUsuario.objects.using('restaurantes').filter(id=perfil_id).first()
+                if perfil_u:
+                    perfil_u.role = new_role
+                    perfil_u.save(using='restaurantes')
+                    messages.success(request, f"Cargo do usuário {perfil_u.user.username} alterado para {perfil_u.get_role_display()}.")
+                else:
+                    messages.error(request, "Perfil de parceiro não encontrado.")
+            return redirect(request.path + '?tab=superuser')
+
+    restaurante = None
+    restaurantes_todos = None
+    equipes_todas = None
+    perfil = None
+
+    if is_superuser:
+        selected_id = request.GET.get('gerenciar_restaurante_id')
+        if selected_id:
+            if selected_id == 'clear':
+                if 'superuser_restaurante_id' in request.session:
+                    del request.session['superuser_restaurante_id']
+            else:
+                request.session['superuser_restaurante_id'] = int(selected_id)
         
-    perfil = request.user.perfil_restaurante
-    restaurante = perfil.restaurante
-    
-    # Atrações cadastradas
-    atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante)
-    
+        superuser_restaurante_id = request.session.get('superuser_restaurante_id')
+        restaurantes_todos = Restaurante.objects.using('restaurantes').all()
+        equipes_todas = RestauranteUsuario.objects.using('restaurantes').all()
+        
+        for eq in equipes_todas:
+            eq.user = User.objects.using('default').filter(id=eq.user_id).first()
+
+        if superuser_restaurante_id:
+            restaurante = Restaurante.objects.using('restaurantes').filter(id=superuser_restaurante_id).first()
+            if not restaurante:
+                restaurante = restaurantes_todos.first()
+        else:
+            restaurante = None
+            
+        class SuperuserPerfil:
+            role = 'proprietario'
+            ativo = True
+            user = request.user
+        perfil = SuperuserPerfil()
+    else:
+        if not hasattr(request.user, 'perfil_restaurante'):
+            messages.error(request, "Acesso negado. Esta conta não possui perfil de restaurante.")
+            return redirect('restaurantes:partner_login')
+            
+        perfil = request.user.perfil_restaurante
+        if not perfil.ativo:
+            messages.error(request, "Sua conta de parceiro está inativa ou aguardando aprovação.")
+            return redirect('restaurantes:partner_login')
+            
+        restaurante = perfil.restaurante
+
+    if restaurante:
+        atracoes = RestauranteAtracao.objects.using('restaurantes').filter(restaurante=restaurante)
+    else:
+        atracoes = RestauranteAtracao.objects.using('restaurantes').none()
+
     context = {
         'perfil': perfil,
         'restaurante': restaurante,
         'atracoes': atracoes,
+        'is_superuser': is_superuser,
+        'restaurantes_todos': restaurantes_todos,
+        'equipes_todas': equipes_todas,
     }
     return render(request, 'restaurantes/partner_dashboard.html', context)
 
@@ -384,6 +480,29 @@ def restaurante_detalhe(request, slug):
     from django.shortcuts import get_object_or_404
     restaurante = get_object_or_404(Restaurante.objects.using('restaurantes'), slug=slug, ativo=True)
 
+    # Força o redirecionamento para o subdomínio correspondente caso acessado via domínio principal navievibe.com
+    host_clean = request.get_host().split(':')[0].lower()
+    if request.subdomains_supported and 'navievibe.com' in host_clean:
+        subdomain_now = host_clean.split('.')[0]
+        if subdomain_now != restaurante.slug_normalized:
+            parts = host_clean.split('.')
+            if len(parts) > 1:
+                base_domain = host_clean
+                reservados = ['www', 'admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media', 'dashboard', 'navievibe']
+                if subdomain_now in reservados or len(parts) > 2:
+                    base_domain = '.'.join(parts[1:])
+                port = ":" + request.get_host().split(":")[1] if ":" in request.get_host() else ""
+                target_url = f"{request.scheme}://{restaurante.slug_normalized}.{base_domain}{port}/"
+                return redirect(target_url)
+        elif request.path != '/':
+            # Se o subdomínio já está correto, mas acessaram a URL completa (/restaurantes/slug/),
+            # redireciona para a raiz do subdomínio
+            return redirect(f"{request.scheme}://{request.get_host()}/")
+    elif request.subdomains_supported and request.path != '/':
+        # Se for um domínio próprio (ex: manacadaserra.com ou www.manacadaserra.com)
+        # e o path não for a raiz, redireciona para a raiz do domínio próprio
+        return redirect(f"{request.scheme}://{request.get_host()}/")
+
     # Busca as atrações ativas do restaurante (hoje em diante ou sem data)
     from django.utils import timezone
     from django.db.models import Q
@@ -414,16 +533,100 @@ def restaurante_detalhe(request, slug):
             self.imagem_url = imagem_url
 
     pratos_mock = [
-        MockPrato("Filé ao Molho Especial", "Prato Principal", "Filé mignon grelhado com molho de ervas frescas e acompanhamentos da estação.", "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Risoto de Cogumelos", "Entrada Premium", "Risoto cremoso preparado com mix de cogumelos frescos e parmesão artesanal.", "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Frango Assado da Serra", "Regional", "Frango caipira assado lentamente com temperos regionais e farofa de mandioca.", "https://images.unsplash.com/photo-1598103442097-8b74394b95c5?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Carne de Sol com Nata", "Clássico Nordestino", "Tradicional carne de sol grelhada servida com nata da terra e pirão.", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Filé ao Molho Especial", "Prato Principal", "Filé mignon grelhado com molho de ervas frescas e acompanhamentos da estação.", None),
+        MockPrato("Risoto de Cogumelos", "Entrada Premium", "Risoto cremoso preparado com mix de cogumelos frescos e parmesão artesanal.", None),
+        MockPrato("Frango Assado da Serra", "Regional", "Frango caipira assado lentamente com temperos regionais e farofa de mandioca.", None),
+        MockPrato("Carne de Sol com Nata", "Clássico Nordestino", "Tradicional carne de sol grelhada servida com nata da terra e pirão.", None),
+        MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", None),
     ]
+
+    if restaurante.slug == 'manaca-da-serra':
+        class SpecialMenuCard:
+            def __init__(self):
+                self.nome = "Cardápio & Pedidos"
+                self.categoria = "Pedidos Rápidos"
+                self.descricao = "Utilizando o link do MenuDino, o seu atendimento se torna muito mais ágil!"
+                self.imagem_url = None
+                self.is_special = True
+                self.link_url = "https://manacadaserra.menudino.com"
+        
+        pratos_mock.insert(0, SpecialMenuCard())
+
+    galeria_data = {
+        'manaca-da-serra': [
+            {"titulo": "Jardim de Inverno", "url": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Salão Principal", "url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cantinho Aconchegante", "url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Filé Grelhado", "url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Gastronomia Autoral", "url": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Carta de Vinhos", "url": "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'casa-de-engenho': [
+            {"titulo": "Arquitetura Rústica", "url": "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cozinha Regional", "url": "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Ambiente Temático", "url": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Prato Tradicional", "url": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'premibeer': [
+            {"titulo": "Torneiras de Chopp", "url": "https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Hambúrguer Gourmet", "url": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cerveja Artesanal", "url": "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Espaço Pub", "url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'biene-cacau': [
+            {"titulo": "Trufas Artesanais", "url": "https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cafeteria Charmosa", "url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Confeitaria Fina", "url": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cacau Selecionado", "url": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&w=600&h=800&q=80"},
+        ]
+    }
+    galeria = galeria_data.get(restaurante.slug, [])
+
+    slug_clean = restaurante.slug.replace('-', '').replace('_', '')
+    cardapio_url = f"https://{slug_clean}.menudino.com"
 
     context = {
         'restaurante': restaurante,
         'atracoes': atracoes,
         'pratos_mock': pratos_mock,
+        'galeria': galeria,
+        'cardapio_url': cardapio_url,
     }
     return render(request, 'restaurantes/restaurante_detalhe.html', context)
+
+
+def restaurante_lista(request):
+    """
+    Lista todos os restaurantes ativos com busca e filtros de especialidades.
+    """
+    busca = request.GET.get('busca', '').strip()
+    especialidade = request.GET.get('especialidade', '').strip()
+
+    from django.db.models import Q
+    restaurantes_qs = Restaurante.objects.filter(ativo=True)
+
+    if busca:
+        restaurantes_qs = restaurantes_qs.filter(
+            Q(nome__icontains=busca) |
+            Q(cidade_nome__icontains=busca) |
+            Q(especialidade__icontains=busca) |
+            Q(descricao__icontains=busca)
+        )
+    
+    if especialidade:
+        restaurantes_qs = restaurantes_qs.filter(especialidade__iexact=especialidade)
+
+    # Obter lista de especialidades únicas para o filtro rápido
+    especialidades = list(
+        Restaurante.objects.filter(ativo=True)
+        .values_list('especialidade', flat=True)
+        .distinct()
+    )
+
+    context = {
+        'restaurantes': restaurantes_qs,
+        'busca': busca,
+        'especialidade_selecionada': especialidade,
+        'especialidades': especialidades,
+    }
+    return render(request, 'restaurantes/restaurante_lista.html', context)

@@ -7,7 +7,7 @@
           theme: localStorage.getItem('theme') || 'light', 
           sidebarMobileOpen: false,
           sidebarExpanded: false,
-          activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('restaurant_active_tab') || 'dashboard', 
+          activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('restaurant_active_tab') || '{% if is_superuser and not restaurante %}superuser{% else %}dashboard{% endif %}', 
           activeSubTab: (new URLSearchParams(window.location.search)).get('sub') || 'site',
           drawerOpen: false,
           
@@ -240,6 +240,20 @@
                                 <span x-show="sidebarExpanded || sidebarMobileOpen" x-transition.opacity.duration.300 class="ml-3">Configurações</span>
                             </a>
                         </li>
+
+                        <!-- Controle Geral (Superusuário) -->
+                        {% if is_superuser %}
+                        <li>
+                            <a href="javascript:void(0)" @click="activeTab = 'superuser'" 
+                               :class="(activeTab === 'superuser' ? 'text-red-500 bg-red-500/10 dark:bg-red-500/15 font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-slate-100/50 dark:hover:bg-white/5') + ' ' + ((sidebarExpanded || sidebarMobileOpen) ? 'justify-start' : 'justify-center')" 
+                               class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-all overflow-hidden whitespace-nowrap group/link">
+                                <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                    <i data-lucide="shield-alert" class="w-5 h-5 text-amber-500"></i>
+                                </div>
+                                <span x-show="sidebarExpanded || sidebarMobileOpen" x-transition.opacity.duration.300 class="ml-3">Controle Geral</span>
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>
@@ -401,6 +415,19 @@
                                 </button>
                             </div>
                         {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if is_superuser and restaurante %}
+                    <!-- Superuser Impersonation Warning Banner -->
+                    <div class="mb-6 bg-amber-500/10 border border-amber-500/35 text-amber-800 dark:text-amber-300 p-4 rounded-xl text-sm font-semibold flex items-center justify-between gap-3 shadow-sm max-w-4xl">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="shield-alert" class="w-5 h-5 shrink-0 text-amber-500 animate-bounce"></i>
+                            <span>Você está gerenciando o restaurante <strong>{{ restaurante.nome }}</strong> (Modo Superusuário).</span>
+                        </div>
+                        <a href="?gerenciar_restaurante_id=clear" class="bg-amber-500 hover:bg-amber-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider text-decoration-none transition-colors border-none cursor-pointer">
+                            Sair da Gestão
+                        </a>
                     </div>
                 {% endif %}
 

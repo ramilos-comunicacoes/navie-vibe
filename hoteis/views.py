@@ -64,6 +64,12 @@ def home(request):
     if hotel_atual:
         return vanity_url(request, slug=hotel_atual.slug)
 
+    # Se acessado via subdomínio de restaurante, redireciona/exibe o restaurante correspondente
+    restaurante_atual = getattr(request, 'restaurante_atual', None)
+    if restaurante_atual:
+        from restaurantes.views import restaurante_detalhe
+        return restaurante_detalhe(request, slug=restaurante_atual.slug)
+
     # Incrementa contador de visualizações global da plataforma
     from core.models import PlataformaConfig
     try:
@@ -213,100 +219,7 @@ def home(request):
     from restaurantes.models import Restaurante as RealRestaurante
     restaurantes_reais = list(RealRestaurante.objects.filter(ativo=True)[:16])
     
-    # Criamos os mocks para manter o grid preenchido se houverem menos de 8
-    class MockRestaurante:
-        def __init__(self, id, nome, especialidade, imagem_url, cidade_nome, endereco, whatsapp):
-            self.id = id
-            self.nome = nome
-            self.especialidade = especialidade
-            self.imagem_url = imagem_url
-            self.cidade_nome = cidade_nome
-            self.endereco = endereco
-            self.whatsapp = whatsapp
-
-        @property
-        def imagem(self):
-            class UrlHelper:
-                def __init__(self, url):
-                    self.url = url
-            return UrlHelper(self.imagem_url) if self.imagem_url else None
-
-    mocks = [
-        MockRestaurante(
-            id=101,
-            nome="Cantina da Serra",
-            especialidade="Massas & Vinho",
-            imagem_url="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Tianguá",
-            endereco="Av. Central, 120",
-            whatsapp="88999990011"
-        ),
-        MockRestaurante(
-            id=102,
-            nome="Sabor da Terra",
-            especialidade="Culinária Regional",
-            imagem_url="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Ubajara",
-            endereco="Rua das Flores, 45",
-            whatsapp="88999990022"
-        ),
-        MockRestaurante(
-            id=103,
-            nome="Pizzaria Bella Vista",
-            especialidade="Pizzas no Forno a Lenha",
-            imagem_url="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Viçosa do Ceará",
-            endereco="Mirante da Serra",
-            whatsapp="88999990033"
-        ),
-        MockRestaurante(
-            id=104,
-            nome="Espaço Gourmet",
-            especialidade="Carnes Nobres & Parrilla",
-            imagem_url="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="São Benedito",
-            endereco="Av. Pinheiro, 200",
-            whatsapp="88999990044"
-        ),
-        MockRestaurante(
-            id=105,
-            nome="Serra Bistrô",
-            especialidade="Gastronomia Contemporânea",
-            imagem_url="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Guaraciaba do Norte",
-            endereco="Rua do Comércio, 88",
-            whatsapp="88999990055"
-        ),
-        MockRestaurante(
-            id=106,
-            nome="Estação do Sabor",
-            especialidade="Self-Service & Petiscos",
-            imagem_url="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Ipu",
-            endereco="Praça de Fátima, 10",
-            whatsapp="88999990066"
-        ),
-        MockRestaurante(
-            id=107,
-            nome="Café Colonial Ibiapaba",
-            especialidade="Cafés & Doces Artesanais",
-            imagem_url="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Ibiapina",
-            endereco="Av. Independência, 340",
-            whatsapp="88999990077"
-        ),
-        MockRestaurante(
-            id=108,
-            nome="Churrascaria do Sol",
-            especialidade="Rodízio Completo",
-            imagem_url="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80",
-            cidade_nome="Croatá",
-            endereco="BR-222, Km 10",
-            whatsapp="88999990088"
-        ),
-    ]
-    
-    restaurantes = restaurantes_reais + mocks[:max(0, 8 - len(restaurantes_reais))]
+    restaurantes = restaurantes_reais
     
     context = {
         'destaque': destaque,
@@ -323,7 +236,8 @@ def cidade_detalhe(request, cidade_slug):
     Exibe o portal de experiências B2C exclusivo de uma cidade da Ibiapaba.
     Exibe carrosséis temáticos para: Shows/Eventos, Pousadas, Restaurantes e Cinema.
     """
-    from .models import Cidade, Hotel, Restaurante
+    from .models import Cidade, Hotel
+    from restaurantes.models import Restaurante
     from eventos.models import Evento
     from cinema.models import Filme
     
@@ -416,7 +330,7 @@ def cidade_detalhe(request, cidade_slug):
         ]
 
     # 3. Restaurantes (Reais com fallback dinâmico)
-    restaurantes = list(Restaurante.objects.filter(cidade_nome__iexact=cidade.nome, ativo=True))
+    restaurantes = list(Restaurante.objects.using('restaurantes').filter(cidade_nome__iexact=cidade.nome, ativo=True))
     if not restaurantes:
         class MockRestaurante:
             def __init__(self, nome, especialidade, imagem_url, endereco, whatsapp):

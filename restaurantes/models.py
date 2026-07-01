@@ -9,6 +9,7 @@ class Restaurante(models.Model):
     whatsapp = models.CharField("WhatsApp para Reservas/Pedidos (Público)", max_length=20, blank=True, null=True)
     whatsapp_privado = models.CharField("WhatsApp Privado (Contato Naviê)", max_length=20, blank=True, null=True)
     email_contato = models.EmailField("E-mail Público / Contato", blank=True, null=True)
+    instagram = models.CharField("Instagram (URL)", max_length=255, blank=True, null=True)
     especialidade = models.CharField("Especialidade Culinária", max_length=150, blank=True, null=True, help_text="Ex: Pizzaria, Massas, Regional")
     imagem = models.ImageField("Foto Principal", upload_to='restaurantes/', blank=True, null=True)
     cidade_nome = models.CharField("Nome da Cidade", max_length=100, blank=True, null=True)
@@ -44,6 +45,10 @@ class Restaurante(models.Model):
         verbose_name = "Restaurante"
         verbose_name_plural = "Restaurantes"
         ordering = ['nome']
+
+    @property
+    def slug_normalized(self):
+        return self.slug.replace('-', '').replace('_', '')
 
     def __str__(self):
         return self.nome

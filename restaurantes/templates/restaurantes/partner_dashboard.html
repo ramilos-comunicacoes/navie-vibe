@@ -915,6 +915,107 @@
              </div>
          </div>
      </div>
+<!-- ABA SUPERUSUÁRIO (CONTROLE GERAL) -->
+<div x-show="activeTab === 'superuser'" style="display: none;" class="space-y-6">
+    <div class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+        <h3 class="font-extrabold text-sm text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-5 flex items-center gap-2">
+            <i class="w-5 h-5 text-amber-500 animate-pulse" data-lucide="shield-check"></i>
+            <span>Painel de Controle do Administrador</span>
+        </h3>
+        
+        <!-- Grid de Seleção de Restaurante -->
+        <div class="space-y-4">
+            <h4 class="text-xs font-black uppercase text-slate-400 tracking-widest">Restaurantes Cadastrados</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {% for r in restaurantes_todos %}
+                <div class="bg-white/40 dark:bg-black/10 border border-slate-200/50 dark:border-white/5 rounded-2xl p-5 flex flex-col justify-between h-36 hover:shadow-md transition-shadow">
+                    <div>
+                        <h5 class="text-sm font-black text-slate-800 dark:text-white">{{ r.nome }}</h5>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider font-semibold">{{ r.especialidade }}</p>
+                        <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-bold">{{ r.cidade_nome }}</p>
+                    </div>
+                    <div class="flex justify-between items-center mt-4">
+                        <span class="text-[9px] font-black tracking-widest uppercase {% if r.ativo %}text-emerald-500{% else %}text-red-500{% endif %}">
+                            {% if r.ativo %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                        <a href="?gerenciar_restaurante_id={{ r.id }}" class="bg-red-500 hover:bg-red-650 text-white font-black px-3.5 py-1.5 rounded-xl text-[10px] uppercase tracking-wider text-decoration-none transition-all flex items-center gap-1">
+                            <i data-lucide="settings-2" class="w-3.5 h-3.5"></i>
+                            <span>Gerenciar</span>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Gestão de Credenciais / Equipes -->
+    <div class="glass-card rounded-2xl p-6 border border-slate-200/50 dark:border-white/5 shadow-sm">
+        <h3 class="font-extrabold text-xs text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-white/5 pb-3 mb-5 flex items-center gap-2">
+            <i class="w-4 h-4 text-amber-500" data-lucide="users"></i>
+            <span>Credenciais de Parceiros (B2B)</span>
+        </h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="border-b border-slate-100 dark:border-white/5 text-[9px] font-black uppercase tracking-wider text-slate-400">
+                        <th class="py-3 px-4">Usuário</th>
+                        <th class="py-3 px-4">E-mail</th>
+                        <th class="py-3 px-4">Restaurante</th>
+                        <th class="py-3 px-4">Função</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-white/5 text-slate-700 dark:text-slate-350">
+                    {% for eq in equipes_todas %}
+                    <tr>
+                        <td class="py-3 px-4 font-bold text-slate-850 dark:text-white">{{ eq.user.username }}</td>
+                        <td class="py-3 px-4 font-medium">{{ eq.user.email }}</td>
+                        <td class="py-3 px-4 font-semibold">{{ eq.restaurante.nome }}</td>
+                        <td class="py-3 px-4 uppercase tracking-wider text-[9px] font-black text-slate-400">
+                            {{ eq.get_role_display }}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest {% if eq.ativo %}bg-emerald-500/10 text-emerald-500{% else %}bg-red-500/10 text-red-500{% endif %}">
+                                {% if eq.ativo %}Ativo{% else %}Pendente{% endif %}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-right space-x-2">
+                            <!-- Toggle Status Form -->
+                            <form method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="superuser_action" value="toggle_status">
+                                <input type="hidden" name="perfil_id" value="{{ eq.id }}">
+                                <button type="submit" class="border-none bg-transparent hover:text-red-500 text-slate-400 hover:text-red-500 font-bold text-[10px] uppercase cursor-pointer">
+                                    {% if eq.ativo %}Desativar{% else %}Ativar{% endif %}
+                                </button>
+                            </form>
+                            <!-- Alterar Cargo Form -->
+                            <form method="POST" class="inline" onsubmit="return confirm('Alterar cargo do parceiro?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="superuser_action" value="change_role">
+                                <input type="hidden" name="perfil_id" value="{{ eq.id }}">
+                                <select name="role" onchange="this.form.submit()" class="bg-transparent border border-slate-200/50 dark:border-white/10 text-[10px] font-bold py-1 px-2 rounded-lg text-slate-700 dark:text-white cursor-pointer focus:outline-none">
+                                    <option value="proprietario" {% if eq.role == 'proprietario' %}selected{% endif %}>Proprietário</option>
+                                    <option value="gerente" {% if eq.role == 'gerente' %}selected{% endif %}>Gerente</option>
+                                    <option value="atendente" {% if eq.role == 'atendente' %}selected{% endif %}>Atendente</option>
+                                </select>
+                            </form>
+                            <!-- Alterar Senha Modal Trigger -->
+                            <button type="button" @click="let psw = prompt('Digite a nova senha para {{ eq.user.username }}:'); if(psw) { const f = document.createElement('form'); f.method='POST'; f.innerHTML='{% csrf_token %}<input type=\'hidden\' name=\'superuser_action\' value=\'reset_password\'><input type=\'hidden\' name=\'user_id\' value=\'{{ eq.user.id }}\'><input type=\'hidden\' name=\'new_password\' value=\''+psw+'\'><input type=\'hidden\' name=\'csrfmiddlewaretoken\' value=\'{{ csrf_token }}\'>'; document.body.appendChild(f); f.submit(); }"
+                                    class="border-none bg-transparent text-slate-400 hover:text-amber-500 font-bold text-[10px] uppercase cursor-pointer">
+                                Mudar Senha
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 </div>
 {% endblock %}
 
