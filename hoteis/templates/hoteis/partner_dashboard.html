@@ -53,15 +53,15 @@
     <!-- Controles das Acomodações no Cabeçalho -->
     <div x-show="activeTab === 'quartos' && quartosTab === 'categorias'" class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300" x-transition.opacity style="display: none;">
         <!-- Criar Promoção -->
-        <button class="hidden sm:flex bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-sm items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
+        <button class="flex h-9 w-9 lg:w-auto lg:px-4 bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-white/10 rounded-full text-xs font-black transition-all shadow-sm items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 shrink-0">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="tag" class="w-3.5 h-3.5"></i></span>
-            <span>Criar Promoção</span>
+            <span class="hidden lg:inline">Criar Promoção</span>
         </button>
         <!-- Adicionar Quarto -->
         <button hx-get="{% url 'hoteis:partner_quarto_formulario' %}" hx-target="#quartos-container" hx-swap="innerHTML"
-                class="hidden sm:flex bg-brand hover:bg-brand/90 text-white px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md shadow-brand/25 items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95">
+                class="flex h-9 w-9 lg:w-auto lg:px-4 bg-brand hover:bg-brand/90 text-white rounded-full text-xs font-black transition-all shadow-md shadow-brand/25 items-center justify-center gap-1.5 hover:scale-[1.02] active:scale-95 shrink-0">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="plus" class="w-4 h-4"></i></span>
-            <span>Adicionar Quarto</span>
+            <span class="hidden lg:inline">Adicionar Quarto</span>
         </button>
     </div>
 
