@@ -548,7 +548,6 @@
         position: relative;
         width: 100%;
         overflow: hidden;
-        transition: all 0.5s ease-in-out;
         border-top-left-radius: 1.5rem !important;
         border-top-right-radius: 1.5rem !important;
     }
@@ -571,12 +570,22 @@
     .sobre-left-column {
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Mantém o título no topo e o botão no fundo da seção */
+        justify-content: center !important;
         height: 100%;
         min-width: 0;
     }
 
-    /* Regras de Texto Gerais */
+    /* Regras de Texto Gerais e Transição Suave Apple-like */
+    #sobre-texto {
+        max-height: 90px;
+        overflow: hidden;
+        transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @media (min-width: 768px) {
+        #sobre-texto {
+            max-height: 115px;
+        }
+    }
     #sobre-texto, #sobre-texto * {
         font-family: 'Poppins', sans-serif !important;
         white-space: normal !important;
@@ -586,21 +595,15 @@
 
     /* REGRAS DO SOBRE: MOBILE (Telas < 768px) */
     @media (max-width: 767px) {
-        .sobre-section-wrapper:not(.h-auto) {
-            height: 38vh;
-            min-height: 190px;
-            max-height: 250px;
-        }
         .sobre-flex-container {
             padding-left: 24px; /* pl-6 equivalent: afasta da curva esquerda */
             padding-right: 16px;
         }
         .sobre-left-column {
             width: 44% !important;
-            padding-top: 40px !important;
+            padding-top: 24px !important;
             padding-bottom: 24px !important;
             padding-right: 12px !important;
-            justify-content: center !important;
             gap: 8px;
         }
         .sobre-media-container {
@@ -631,11 +634,6 @@
 
     /* REGRAS DO SOBRE: DESKTOP (Telas >= 768px) */
     @media (min-width: 768px) {
-        .sobre-section-wrapper:not(.h-auto) {
-            height: 30vh;
-            min-height: 220px;
-            max-height: 280px;
-        }
         .sobre-flex-container {
             padding-left: 24px; /* Alinha com o padding padrão md do site */
             padding-right: 24px;
@@ -648,10 +646,9 @@
         }
         .sobre-left-column {
             width: 42%;
-            padding-top: 24px !important;
-            padding-bottom: 24px !important;
+            padding-top: 32px !important;
+            padding-bottom: 32px !important;
             padding-right: 32px;
-            justify-content: center !important;
             gap: 12px !important;
         }
         .sobre-title-wrapper {
@@ -814,7 +811,7 @@
                             {{ hotel.sobre_titulo|default:'Sobre a Pousada' }}
                         </h2>
                     </div>
-                    <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 md:line-clamp-5 transition-all duration-300">
+                    <div id="sobre-texto" class="font-medium opacity-95 pr-1">
                         {% if hotel.sobre_texto %}{{ hotel.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa pousada e viva experiências únicas com o melhor conforto.</p>{% endif %}
                     </div>
                 </div>
@@ -1301,10 +1298,10 @@
 
         function checkSobreTruncation() {
             if (!sobreTextoEl || !sobreBtnEl) return;
-            // Se o scrollHeight for maior que o clientHeight E a seção não estiver expandida, mostre o botão
-            if (sobreTextoEl.scrollHeight > sobreTextoEl.clientHeight && !isSobreExpanded) {
+            const threshold = window.innerWidth < 768 ? 95 : 120;
+            if (sobreTextoEl.scrollHeight > threshold) {
                 sobreBtnEl.classList.remove('hidden');
-            } else if (!isSobreExpanded) {
+            } else {
                 sobreBtnEl.classList.add('hidden');
             }
         }
@@ -1315,44 +1312,15 @@
             if (!sectionEl) return;
             
             isSobreExpanded = !isSobreExpanded;
-            const currentHeight = sectionEl.offsetHeight;
             
             if (isSobreExpanded) {
-                sobreTextoEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
-                sobreTextoEl.classList.add('line-clamp-none');
-                
-                sectionEl.style.maxHeight = currentHeight + 'px';
-                sectionEl.offsetHeight; // force reflow
-                
-                sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
-                const targetHeight = sectionEl.scrollHeight;
-                sectionEl.style.maxHeight = targetHeight + 'px';
-                
+                const fullHeight = sobreTextoEl.scrollHeight;
+                sobreTextoEl.style.maxHeight = fullHeight + 'px';
                 sobreBtnEl.textContent = 'Ler menos';
-                
-                setTimeout(() => {
-                    if (isSobreExpanded) {
-                        sectionEl.style.maxHeight = 'none';
-                    }
-                }, 500);
             } else {
-                sectionEl.style.maxHeight = sectionEl.scrollHeight + 'px';
-                sectionEl.offsetHeight; // force reflow
-                
-                const isMobile = window.innerWidth < 768;
-                const collapsedMax = isMobile ? 250 : 280;
-                sectionEl.style.maxHeight = collapsedMax + 'px';
-                
-                sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
+                const collapsedMax = window.innerWidth < 768 ? 90 : 115;
+                sobreTextoEl.style.maxHeight = collapsedMax + 'px';
                 sobreBtnEl.textContent = 'Ler mais';
-                
-                setTimeout(() => {
-                    if (!isSobreExpanded) {
-                        sobreTextoEl.classList.remove('line-clamp-none');
-                        sobreTextoEl.classList.add('line-clamp-4', 'md:line-clamp-5');
-                        sectionEl.style.maxHeight = '';
-                    }
-                }, 500);
                 
                 sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }

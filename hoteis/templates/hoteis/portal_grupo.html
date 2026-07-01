@@ -237,7 +237,6 @@
         position: relative;
         width: 100%;
         overflow: hidden;
-        transition: all 0.5s ease-in-out;
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
     }
@@ -260,12 +259,22 @@
     .sobre-left-column {
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Mantém o título no topo e o botão no fundo da seção */
+        justify-content: center !important;
         height: 100%;
         min-width: 0;
     }
 
-    /* Regras de Texto Gerais */
+    /* Regras de Texto Gerais e Transição Suave Apple-like */
+    #sobre-texto {
+        max-height: 90px;
+        overflow: hidden;
+        transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    @media (min-width: 768px) {
+        #sobre-texto {
+            max-height: 115px;
+        }
+    }
     #sobre-texto, #sobre-texto * {
         font-family: 'Poppins', sans-serif !important;
         white-space: normal !important;
@@ -275,21 +284,15 @@
 
     /* REGRAS DO SOBRE: MOBILE (Telas < 768px) */
     @media (max-width: 767px) {
-        .sobre-section-wrapper:not(.h-auto) {
-            height: 38vh;
-            min-height: 190px;
-            max-height: 250px;
-        }
         .sobre-flex-container {
             padding-left: 24px; /* pl-6 equivalent: afasta da curva esquerda */
             padding-right: 16px;
         }
         .sobre-left-column {
             width: 44% !important;
-            padding-top: 40px !important;
+            padding-top: 24px !important;
             padding-bottom: 24px !important;
             padding-right: 12px !important;
-            justify-content: center !important;
             gap: 8px;
         }
         .sobre-media-container {
@@ -320,11 +323,6 @@
 
     /* REGRAS DO SOBRE: DESKTOP (Telas >= 768px) */
     @media (min-width: 768px) {
-        .sobre-section-wrapper:not(.h-auto) {
-            height: 30vh;
-            min-height: 220px;
-            max-height: 280px;
-        }
         .sobre-flex-container {
             padding-left: 24px; /* Alinha com o padding padrão md do site */
             padding-right: 24px;
@@ -337,9 +335,10 @@
         }
         .sobre-left-column {
             width: 42%;
-            padding-top: 64px; /* Margem de cima exclusiva do título no desktop */
-            padding-bottom: 28px;
+            padding-top: 32px !important;
+            padding-bottom: 32px !important;
             padding-right: 32px;
+            gap: 12px !important;
         }
         .sobre-title-wrapper {
             margin-bottom: 12px;
@@ -535,7 +534,7 @@
                             {{ empresa.sobre_titulo|default:'Sobre a Rede' }}
                         </h2>
                     </div>
-                    <div id="sobre-texto" class="font-medium opacity-95 pr-1 line-clamp-4 md:line-clamp-5 transition-all duration-300">
+                    <div id="sobre-texto" class="font-medium opacity-95 pr-1">
                         {% if empresa.sobre_texto %}{{ empresa.sobre_texto|safe }}{% else %}<p>Conheça mais sobre a nossa rede de pousadas e viva experiências únicas com o melhor conforto do Ceará.</p>{% endif %}
                     </div>
                 </div>
@@ -1364,21 +1363,12 @@
         const btnEl = document.getElementById('sobre-readmore-btn');
         if (!textEl || !btnEl) return;
         
-        // Remove clamping class to measure natural scrollHeight
-        textEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
-        const fullHeight = textEl.scrollHeight;
-        
-        // Restore clamp class
-        textEl.classList.add('line-clamp-4', 'md:line-clamp-5');
-        
-        setTimeout(() => {
-            const isOverflowing = textEl.scrollHeight > textEl.clientHeight;
-            if (isOverflowing) {
-                btnEl.classList.remove('hidden');
-            } else {
-                btnEl.classList.add('hidden');
-            }
-        }, 50);
+        const threshold = window.innerWidth < 768 ? 95 : 120;
+        if (textEl.scrollHeight > threshold) {
+            btnEl.classList.remove('hidden');
+        } else {
+            btnEl.classList.add('hidden');
+        }
     }
 
     let isSobreExpanded = false;
@@ -1390,44 +1380,15 @@
         if (!textEl || !btnEl || !sectionEl) return;
         
         isSobreExpanded = !isSobreExpanded;
-        const currentHeight = sectionEl.offsetHeight;
         
         if (isSobreExpanded) {
-            textEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
-            textEl.classList.add('line-clamp-none');
-            
-            sectionEl.style.maxHeight = currentHeight + 'px';
-            sectionEl.offsetHeight; // force reflow
-            
-            sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
-            const targetHeight = sectionEl.scrollHeight;
-            sectionEl.style.maxHeight = targetHeight + 'px';
-            
+            const fullHeight = textEl.scrollHeight;
+            textEl.style.maxHeight = fullHeight + 'px';
             btnEl.textContent = 'Ler menos';
-            
-            setTimeout(() => {
-                if (isSobreExpanded) {
-                    sectionEl.style.maxHeight = 'none';
-                }
-            }, 500);
         } else {
-            sectionEl.style.maxHeight = sectionEl.scrollHeight + 'px';
-            sectionEl.offsetHeight; // force reflow
-            
-            const isMobile = window.innerWidth < 768;
-            const collapsedMax = isMobile ? 250 : 280;
-            sectionEl.style.maxHeight = collapsedMax + 'px';
-            
-            sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
+            const collapsedMax = window.innerWidth < 768 ? 90 : 115;
+            textEl.style.maxHeight = collapsedMax + 'px';
             btnEl.textContent = 'Ler mais';
-            
-            setTimeout(() => {
-                if (!isSobreExpanded) {
-                    textEl.classList.remove('line-clamp-none');
-                    textEl.classList.add('line-clamp-4', 'md:line-clamp-5');
-                    sectionEl.style.maxHeight = '';
-                }
-            }, 500);
             
             sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
