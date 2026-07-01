@@ -4771,57 +4771,40 @@
          SEÇÃO HÓSPEDES & ATENDIMENTO (CONCIERGE / CONSUMO)
          ───────────────────────────────────────────────────────────── -->
     <div x-show="activeTab === 'hospedes'" 
-         x-data="{ hospedesSubTab: 'ativos', showLancarConsumo: false, selectedReservaId: '', selectedReservaNome: '', selectedUnidade: '', lancarProdutoId: '', lancarQtd: 1, lancarObs: '' }"
+         x-data="{ showLancarConsumo: false, selectedReservaId: '', selectedReservaNome: '', selectedUnidade: '', lancarProdutoId: '', lancarQtd: 1, lancarObs: '' }"
          class="space-y-6 animate-in fade-in duration-300" 
          x-transition:enter="transition ease-out duration-300"
          style="display: none;">
         
-        <!-- Header & Sub-Tabs Switcher -->
-        <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h4 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <span class="flex items-center text-brand" style="pointer-events:none;"><i data-lucide="bell-ring" class="w-5 h-5"></i></span>
-                    Atendimento / Central de Hóspedes
-                </h4>
-                <p class="text-xs text-slate-400 mt-1">Gerencie a estadia, atenda pedidos de room service e fature frigobar/bomboniere ao vivo.</p>
-            </div>
-            
-            <!-- Sub-Tabs Capsule Carrousel -->
-            <div class="bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5 flex items-center gap-1 select-none">
-                <button type="button" @click="hospedesSubTab = 'ativos'"
-                        :class="hospedesSubTab === 'ativos' ? 'bg-brand text-brand-contrastText shadow-sm font-black' : 'text-slate-500 dark:text-navie-textsec hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
-                        class="px-4 py-2 rounded-xl text-[10px] transition-all uppercase tracking-wider shrink-0 cursor-pointer flex items-center gap-1.5">
-                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="users" class="w-3.5 h-3.5"></i></span> Hóspedes Ativos
-                </button>
-                <button type="button" @click="hospedesSubTab = 'pedidos'"
-                        :class="hospedesSubTab === 'pedidos' ? 'bg-brand text-brand-contrastText shadow-sm font-black' : 'text-slate-500 dark:text-navie-textsec hover:text-brand hover:bg-slate-200/50 dark:hover:bg-white/5'"
-                        class="px-4 py-2 rounded-xl text-[10px] transition-all uppercase tracking-wider shrink-0 cursor-pointer flex items-center gap-1.5">
-                    <span class="flex items-center" style="pointer-events:none;"><i data-lucide="concierge-bell" class="w-3.5 h-3.5"></i></span> Central de Pedidos
-                </button>
-            </div>
-        </div>
-
         <!-- SUB-TAB 1: HÓSPEDES ATIVOS -->
         <div x-show="hospedesSubTab === 'ativos'" class="space-y-6" x-transition.opacity>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {% for r in hospedes_ativos %}
                     <div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-[2rem] p-6 shadow-sm backdrop-blur-md hover:border-brand/40 group transition-all relative overflow-hidden flex flex-col justify-between h-[230px]">
+                        
                         <!-- Card Header -->
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-11 h-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center font-black text-sm shrink-0">
-                                    {{ r.unidade.identificador }}
+                        <div>
+                            <div class="flex items-center justify-between mb-3.5">
+                                <!-- Acomodação (Suíte / Número) -->
+                                <div class="flex items-center gap-2">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-brand/10 text-brand font-black text-xs shrink-0">
+                                        {{ r.unidade.identificador }}
+                                    </span>
+                                    <span class="text-[11px] font-black text-slate-700 dark:text-slate-200 truncate max-w-[120px]" title="{{ r.unidade.quarto.nome }}">
+                                        {{ r.unidade.quarto.nome }}
+                                    </span>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <h5 class="text-sm font-extrabold text-slate-800 dark:text-white truncate" title="{{ r.hospede_nome }}">{{ r.hospede_nome }}</h5>
-                                    <p class="text-[10px] text-slate-400 mt-0.5 truncate">{{ r.hospede_email|default:"Sem email cadastrado" }}</p>
+                                <!-- Checkout Data -->
+                                <div class="text-right shrink-0">
+                                    <span class="block text-[8px] font-black uppercase text-slate-400 leading-none">Checkout</span>
+                                    <span class="block text-[10px] font-extrabold text-slate-600 dark:text-slate-300 mt-0.5">{{ r.data_checkout|date:"d/m" }}</span>
                                 </div>
                             </div>
                             
-                            <!-- Check-out Date Badge -->
-                            <div class="shrink-0 flex flex-col items-end">
-                                <span class="text-[8px] font-black uppercase text-slate-400">Checkout</span>
-                                <span class="text-[10px] font-bold text-slate-700 dark:text-white mt-0.5">{{ r.data_checkout|date:"d/m/Y" }}</span>
+                            <!-- Hóspede Titular -->
+                            <div class="min-w-0">
+                                <h5 class="text-sm font-black text-slate-800 dark:text-white truncate" title="{{ r.hospede_nome }}">{{ r.hospede_nome }}</h5>
+                                <p class="text-[10px] text-slate-400 mt-0.5 truncate">{{ r.hospede_email|default:"Sem e-mail" }}</p>
                             </div>
                         </div>
                         
@@ -4832,7 +4815,7 @@
                                 <span>Consumo Acumulado:</span>
                             </div>
                             <div class="font-black text-brand text-sm">
-                                R$ <span class="moeda-br" data-valor="{% if r.valor_total %}{{ r.valor_total }}{% else %}0.00{% endif %}">0,00</span>
+                                R$ <span class="moeda-br" data-valor="{{ r.consumo_acumulado }}">0,00</span>
                             </div>
                         </div>
                         

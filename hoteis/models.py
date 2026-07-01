@@ -325,6 +325,12 @@ class Reserva(models.Model):
         if self.data_checkin and self.data_checkout:
             return (self.data_checkout - self.data_checkin).days
         return 1
+
+    @property
+    def consumo_acumulado(self):
+        from django.db.models import Sum
+        total = self.pedidos_servico.exclude(status='cancelado').aggregate(total=Sum('valor_total'))['total']
+        return total or 0.00
         
     def __str__(self):
         return f"Reserva #{str(self.id)[:8].upper()} - {self.unidade.identificador}"

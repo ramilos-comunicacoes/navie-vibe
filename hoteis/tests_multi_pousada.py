@@ -84,6 +84,13 @@ class MultiPousadaTestCase(TestCase):
             role='portaria',
             ativo=True
         )
+        self.user_camareira = User.objects.create_user(username='juliana_camareira', password='password123')
+        self.perfil_camareira = ParceiroUsuario.objects.create(
+            user=self.user_camareira,
+            hotel=self.hotel_a,
+            role='camareira',
+            ativo=True
+        )
         
         # Initialize middleware
         self.middleware = PartnerHotelMiddleware(get_response=lambda r: r)
@@ -147,9 +154,9 @@ class MultiPousadaTestCase(TestCase):
         self.assertEqual(request.user.perfil_parceiro.hotel.id, self.hotel_a.id)
 
     def test_operatives_cannot_switch_hotel(self):
-        # Roberto Portaria (operativo role) tries to switch to hotel_b
+        # Juliana Camareira (operativo role) tries to switch to hotel_b
         request = self.factory.get(f'/hospedagens/sistema/?set_hotel={self.hotel_b.id}')
-        request = self._prepare_request(request, self.user_portaria)
+        request = self._prepare_request(request, self.user_camareira)
         
         self.middleware(request)
         
@@ -159,3 +166,19 @@ class MultiPousadaTestCase(TestCase):
         
         # and list of authorized hotels should be empty
         self.assertEqual(request.hoteis_autorizados, [])
+
+    def test_portaria_can_switch_hotel(self):
+        # Roberto Portaria tries to switch to hotel_b
+        request = self.factory.get(f'/hospedagens/sistema/?set_hotel={self.hotel_b.id}')
+        request = self._prepare_request(request, self.user_portaria)
+        
+        self.middleware(request)
+        
+        # Switch should succeed, switching to hotel_b
+        self.assertEqual(request.hotel_ativo.id, self.hotel_b.id)
+        self.assertEqual(request.user.perfil_parceiro.hotel.id, self.hotel_b.id)
+        
+        # and list of authorized hotels should contain both
+        hoteis_ids = [h.id for h in request.hoteis_autorizados]
+        self.assertIn(self.hotel_a.id, hoteis_ids)
+        self.assertIn(self.hotel_b.id, hoteis_ids)
