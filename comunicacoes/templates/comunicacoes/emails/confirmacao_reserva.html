@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Confirmada - Naviê Vibe</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; color: #333333;">
+
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6f9; padding: 20px 0;">
+        <tr>
+            <td align="center">
+                
+                <!-- Container principal do email -->
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                    
+                    <!-- Cabeçalho / Logo -->
+                    <tr>
+                        <td align="center" style="background-color: #1e293b; padding: 30px 20px;">
+                            <h2 style="margin: 0; color: #f97316; font-size: 24px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
+                                Naviê Vibe
+                            </h2>
+                            <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 11px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
+                                Comprovante de Reserva
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Corpo do Email -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            
+                            <!-- Boas-vindas -->
+                            <h3 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 700; color: #1e293b;">
+                                Olá, {{ reserva.hospede_nome }}!
+                            </h3>
+                            <p style="margin: 0 0 25px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
+                                Sua reserva na pousada <strong>{{ hotel.nome }}</strong> foi confirmada e o seu pagamento foi processado com sucesso! Veja abaixo os detalhes da sua estadia:
+                            </p>
+                            
+                            <!-- Cartão de Detalhes da Reserva (Voucher) -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px border-slate-200; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+                                <tr>
+                                    <td colspan="2" style="padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Voucher Código</span>
+                                        <h4 style="margin: 3px 0 0 0; font-size: 18px; font-weight: 800; color: #f97316;">
+                                            #{{ reserva.id|stringformat:"s"|slice:":8"|upper }}
+                                        </h4>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="padding-top: 15px; width: 50%;">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Check-in (Entrada)</span>
+                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                            {{ reserva.data_checkin|date:"d/m/Y" }}
+                                        </p>
+                                        <span style="font-size: 11px; color: #64748b;">A partir das 14:00</span>
+                                    </td>
+                                    <td style="padding-top: 15px; width: 50%;">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Check-out (Saída)</span>
+                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                            {{ reserva.data_checkout|date:"d/m/Y" }}
+                                        </p>
+                                        <span style="font-size: 11px; color: #64748b;">Até as 12:00</span>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="padding-top: 20px; border-top: 1px solid #e2e8f0; margin-top: 15px;" colspan="2">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Acomodação</span>
+                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                            {{ reserva.unidade.quarto.nome }} ({{ reserva.unidade.identificador }})
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="padding-top: 15px; width: 50%;">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Hóspedes</span>
+                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
+                                            {{ reserva.quantidade_hospedes }} Pessoa(s)
+                                        </p>
+                                    </td>
+                                    <td style="padding-top: 15px; width: 50%;">
+                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Canal de Venda</span>
+                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b; text-transform: capitalize;">
+                                            {{ reserva.canal_venda }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Resumo Financeiro -->
+                            <h4 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 750; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Detalhes do Pagamento
+                            </h4>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 10px 0; color: #64748b; border-bottom: 1px solid #f1f5f9;">Total das Estadias</td>
+                                    <td align="right" style="padding: 10px 0; font-weight: bold; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
+                                        R$ {{ reserva.valor_total }}
+                                    </td>
+                                </tr>
+                                <tr style="font-size: 16px;">
+                                    <td style="padding: 15px 0 0 0; font-weight: bold; color: #1e293b;">Valor Pago</td>
+                                    <td align="right" style="padding: 15px 0 0 0; font-weight: 900; color: #16a34a;">
+                                        R$ {{ reserva.valor_total }}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Botão de Ação -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://pousadasramilos.navievibe.com/clientes/painel/" target="_blank" style="display: inline-block; background-color: #f97316; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 14px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2); transition: background-color 0.2s;">
+                                            Acessar Meu Painel de Hóspede
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Rodapé -->
+                    <tr>
+                        <td align="center" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 25px 20px;">
+                            <p style="margin: 0; font-size: 13px; color: #1e293b; font-weight: bold;">
+                                {{ hotel.nome }}
+                            </p>
+                            {% if hotel.endereco_completo %}
+                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">
+                                {{ hotel.endereco_completo }}
+                            </p>
+                            {% endif %}
+                            <p style="margin: 15px 0 0 0; font-size: 10px; color: #94a3b8; line-height: 1.4;">
+                                Este é um e-mail automático enviado pelo sistema de reservas da pousada.<br>
+                                Por favor, não responda a este e-mail. Se tiver dúvidas, entre em contato com a nossa equipe.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

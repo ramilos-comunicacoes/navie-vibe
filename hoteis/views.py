@@ -3641,6 +3641,14 @@ def partner_reserva_criar(request):
                 cor=request.POST.get('cor_1', '').strip()
             )
             
+        # Enviar comprovante de confirmação de reserva via e-mail se status for confirmada
+        if status == 'confirmada':
+            try:
+                from comunicacoes.emails import enviar_email_confirmacao_reserva
+                enviar_email_confirmacao_reserva(reserva)
+            except Exception as email_err:
+                print(f"B2B Walk-in: Erro ao disparar e-mail de confirmação no create: {email_err}", flush=True)
+
         response = HttpResponse("""
             <script>
                 document.getElementById('modal-container').innerHTML = '';
@@ -3715,6 +3723,7 @@ def partner_reserva_salvar(request, reserva_id):
         
     hotel = request.user.perfil_parceiro.hotel
     reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    status_antigo = reserva.status
     
     unidade_id = request.POST.get('unidade_id')
     data_checkin_str = request.POST.get('data_checkin')
@@ -3836,6 +3845,14 @@ def partner_reserva_salvar(request, reserva_id):
     else:
         VeiculoReserva.objects.filter(reserva=reserva).delete()
         
+    # Enviar comprovante de confirmação de reserva via e-mail se status mudou para confirmada nesta edição
+    if status == 'confirmada' and status_antigo != 'confirmada':
+        try:
+            from comunicacoes.emails import enviar_email_confirmacao_reserva
+            enviar_email_confirmacao_reserva(reserva)
+        except Exception as email_err:
+            print(f"B2B Walk-in: Erro ao disparar e-mail de confirmação no save: {email_err}", flush=True)
+
     response = HttpResponse("""
         <script>
             document.getElementById('modal-container').innerHTML = '';

@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'estoque',
     'administracao',
     'restaurantes',
+    'comunicacoes',
 ]
 
 MIDDLEWARE = [
@@ -308,6 +309,16 @@ SESSION_COOKIE_DOMAIN = '.navievibe.com'
 
 # Armazena mensagens na sessão do banco de dados (evita cookies duplicados/presos no navegador)
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# Configurações de E-mail (Hostinger SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.hostinger.com'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'suporte@navievibe.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'ligaibi78@P')
+DEFAULT_FROM_EMAIL = f'Naviê Vibe <{EMAIL_HOST_USER}>'
+
 
 
 
