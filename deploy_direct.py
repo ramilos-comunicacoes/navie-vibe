@@ -33,6 +33,8 @@ def get_git_modified_files():
     logos = [
         "media/restaurantes/logos/manaca_logo.png",
         "media/restaurantes/logos/manaca_flower.png",
+        "media/restaurantes/logos/premibeer_logo.png",
+        "media/restaurantes/logos/premibeer_favicon.png",
         "register_restaurants_navie.py",
         "create_restaurant_credentials.py"
     ]

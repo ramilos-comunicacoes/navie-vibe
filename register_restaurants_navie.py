@@ -82,7 +82,7 @@ def register_restaurants():
             "descricao": "A primeira cervejaria da Serra da Ibiapaba! Uma fusão perfeita entre cervejas artesanais de excelência e pratos elaborados, criando a vibe ideal para curtir com os amigos.",
             "banner": "restaurantes/banners/premibeer_banner.png",
             "imagem": "restaurantes/banners/premibeer_banner.png",
-            "logo": None,
+            "logo": "restaurantes/logos/premibeer_logo.png",
             "sobre_titulo": "Cerveja Artesanal de Verdade",
             "sobre_texto": "A Premibeer orgulhosamente trouxe a cultura das microcervejarias para o topo da Serra da Ibiapaba. Unindo paixão por malte e lúpulo com a pureza da água da nossa serra, criamos receitas únicas de cerveja artesanal servidas diretamente da fonte. Para acompanhar nossas torneiras de chopp sempre frescas, nosso cardápio de Gastro Pub oferece hambúrgueres artesanais robustos, petiscos clássicos de boteco e carnes defumadas de sabor incomparável. A vibe perfeita para celebrar a vida!",
             "sobre_cor_fundo": "#fafaf9",
