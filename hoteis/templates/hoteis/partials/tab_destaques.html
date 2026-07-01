@@ -1,31 +1,21 @@
 {% if destaques_personalizado or quartos_destaque %}
-<style>
-    .destaques-desktop-grid {
-        display: none !important;
-    }
-    @media (min-width: 768px) {
-        .destaques-desktop-grid {
-            display: grid !important;
-        }
-    }
-</style>
 
 {% if destaques_personalizado %}
     <!-- ── VITRINE DESTAQUES PERSONALIZADOS ── -->
-    <div class="mb-10 md:mb-12">
-        <!-- Cabeçalho Centralizado -->
-        <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+    <div class="mb-10 md:mb-12 max-w-[85rem] mx-auto px-4 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
+        <!-- Cabeçalho (Centralizado no mobile, alinhado à esquerda no desktop) -->
+        <div class="text-center lg:text-left max-w-2xl mx-auto lg:mx-0 mb-6 lg:mb-0 lg:col-span-4">
             <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
             <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
             {% if destaques_personalizado.subtitulo %}
-                <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed max-w-xl mx-auto">
+                <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
                     {{ destaques_personalizado.subtitulo }}
                 </p>
             {% endif %}
         </div>
 
-        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de MD) ── -->
-        <div class="block md:hidden -mx-4 w-[calc(100%+2rem)]"
+        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de LG) ── -->
+        <div class="block lg:hidden -mx-4 w-[calc(100%+2rem)] lg:col-span-12"
              x-data="{ 
                 active: 1, 
                 total: {{ destaques_personalizado.itens.all|length }},
@@ -151,35 +141,37 @@
             {% endif %}
         </div>
 
-        <!-- ── DESKTOP: GRID DE COLUNAS OU CARROSSEL SWIPER ── -->
+        <!-- ── DESKTOP: GRID DE COLUNAS OU CARROSSEL SWIPER (LG e Superior) ── -->
         {% if destaques_personalizado.itens.all|length > 3 %}
             <!-- Swiper Carousel (Mais de 3 itens) -->
-            <div class="swiper highlights-swiper max-w-[85rem] mx-auto hidden md:block relative px-4"
+            <div class="swiper highlights-swiper lg:col-span-8 hidden lg:block relative px-4 w-full"
                  x-data="{}"
                  x-init="
                     new Swiper($el, {
                         slidesPerView: 3,
-                        spaceBetween: 28,
+                        spaceBetween: 24,
                         pagination: {
                             el: '.swiper-pagination',
                             clickable: true,
                         },
                         breakpoints: {
-                            768: {
-                                slidesPerView: 2,
-                            },
                             1024: {
+                                slidesPerView: 2,
+                                spaceBetween: 20
+                            },
+                            1280: {
                                 slidesPerView: 3,
+                                spaceBetween: 24
                             }
                         }
                     });
                  ">
-                <div class="swiper-wrapper py-6">
+                <div class="swiper-wrapper py-4">
                     {% for item in destaques_personalizado.itens.all %}
                         <div class="swiper-slide h-auto">
                             <a href="{{ item.link_cta|default:'#' }}"
                                {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                               class="relative rounded-[2.5rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
+                               class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
                                 
                                 <div class="absolute inset-0 w-full h-full bg-slate-900">
                                     {% if item.video %}
@@ -194,23 +186,23 @@
                                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
                                 </div>
 
-                                <div class="relative z-10 mt-auto p-8 flex flex-col items-start text-left w-full">
+                                <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
                                     {% if forloop.counter0 == 0 %}
-                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-3">EXPERIÊNCIA</span>
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
                                     {% elif forloop.counter0 == 1 %}
-                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-3">LAZER</span>
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
                                     {% else %}
-                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-3">CONFORTO</span>
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
                                     {% endif %}
 
-                                    <h4 class="text-2xl font-black text-white leading-tight tracking-tight mb-2 truncate w-full">{{ item.titulo }}</h4>
+                                    <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
                                     {% if item.descricao %}
-                                        <p class="text-sm text-white/80 font-bold mb-4 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
+                                        <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
                                     {% endif %}
                                     
                                     {% if item.preco %}
                                         <div class="flex justify-between items-center w-full">
-                                            <span class="text-sm text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                            <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -222,11 +214,11 @@
             </div>
         {% else %}
             <!-- Grid Simples (3 ou menos itens) -->
-            <div class="destaques-desktop-grid grid grid-cols-1 md:grid-cols-{{ destaques_personalizado.itens.all|length }} gap-6 lg:gap-8 max-w-[85rem] mx-auto px-4">
+            <div class="hidden lg:grid lg:col-span-8 grid-cols-1 md:grid-cols-{{ destaques_personalizado.itens.all|length }} gap-4 lg:gap-6 w-full">
                 {% for item in destaques_personalizado.itens.all %}
                 <a href="{{ item.link_cta|default:'#' }}"
                    {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                   class="relative rounded-[2.5rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
+                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
                     
                     <div class="absolute inset-0 w-full h-full">
                         {% if item.video %}
@@ -241,23 +233,23 @@
                         <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
                     </div>
 
-                    <div class="relative z-10 mt-auto p-8 flex flex-col items-start text-left w-full">
+                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
                         {% if forloop.counter0 == 0 %}
-                            <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-3">EXPERIÊNCIA</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
                         {% elif forloop.counter0 == 1 %}
-                            <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-3">LAZER</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
                         {% else %}
-                            <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-3">CONFORTO</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
                         {% endif %}
 
-                        <h4 class="text-2xl font-black text-white leading-tight tracking-tight mb-2 truncate w-full">{{ item.titulo }}</h4>
+                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
                         {% if item.descricao %}
-                            <p class="text-sm text-white/80 font-bold mb-4 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
+                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
                         {% endif %}
                         
                         {% if item.preco %}
                             <div class="flex justify-between items-center w-full">
-                                <span class="text-sm text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
                             </div>
                         {% endif %}
                     </div>
@@ -268,18 +260,18 @@
     </div>
 {% else %}
     <!-- ── VITRINE DESTAQUES PADRÃO DO SISTEMA (QUARTOS) ── -->
-    <div class="mb-10 md:mb-12">
-        <!-- Cabeçalho Centralizado para o Destaque (Estilo Pousada Ramiros) -->
-        <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+    <div class="mb-10 md:mb-12 max-w-[85rem] mx-auto px-4 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
+        <!-- Cabeçalho (Centralizado no mobile, alinhado à esquerda no desktop) -->
+        <div class="text-center lg:text-left max-w-2xl mx-auto lg:mx-0 mb-6 lg:mb-0 lg:col-span-4">
             <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
             <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
-            <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed max-w-xl mx-auto">
+            <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
                 Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.
             </p>
         </div>
 
-        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de MD) ── -->
-        <div class="block md:hidden -mx-4 w-[calc(100%+2rem)]"
+        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de LG) ── -->
+        <div class="block lg:hidden -mx-4 w-[calc(100%+2rem)] lg:col-span-12"
              x-data="{ 
                 active: 2, 
                 total: {{ quartos_destaque|length }},
@@ -338,47 +330,51 @@
             
             <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
                 {% for quarto in quartos_destaque %}
-                <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
-                   hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                   class="absolute w-[76%] h-[360px] rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-700 ease-out select-none flex flex-col group"
-                   :style="active === {{ forloop.counter }} 
-                           ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1;' 
-                           : (active === 1 && {{ forloop.counter }} === 2) || (active === 2 && {{ forloop.counter }} === 3) || (active === 3 && {{ forloop.counter }} === 1)
-                           ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65;'
-                           : 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65;'">
+                <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
+                     style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
+                     :style="active === {{ forloop.counter }} 
+                            ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                            : (active % total) + 1 === {{ forloop.counter }}
+                            ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                            : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
+                            ? 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                            : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
                     
-                    <!-- Imagem do Quarto -->
-                    <div class="absolute inset-0 w-full h-full bg-slate-900">
-                        {% if quarto.imagens.all %}
-                            <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
-                        {% else %}
-                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
-                            </div>
-                        {% endif %}
+                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
+                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                       class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block">
                         
-                        <!-- Gradiente Escuro -->
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                    </div>
-
-                    <!-- Conteúdo por Cima do Card -->
-                    <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
-                        {% if forloop.counter0 == 0 %}
-                            <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">HOSPEDAGEM</span>
-                        {% elif forloop.counter0 == 1 %}
-                            <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">PARAÍSO</span>
-                        {% else %}
-                            <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">ACONCHEGO</span>
-                        {% endif %}
-
-                        <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ quarto.nome }}</h4>
-                        <p class="text-xs text-white/80 line-clamp-2 leading-relaxed w-full font-bold mb-3">{{ quarto.descricao|striptags }}</p>
-                        
-                        <div class="flex justify-between items-center w-full">
-                            <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                        <!-- Imagem do Quarto -->
+                        <div class="absolute inset-0 w-full h-full">
+                            {% if quarto.imagens.all %}
+                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                            {% else %}
+                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                </div>
+                            {% endif %}
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
                         </div>
-                    </div>
-                </a>
+
+                        <!-- Conteúdo -->
+                        <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
+                            {% if forloop.counter0 == 0 %}
+                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">HOSPEDAGEM</span>
+                            {% elif forloop.counter0 == 1 %}
+                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">PARAÍSO</span>
+                            {% else %}
+                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">ACONCHEGO</span>
+                            {% endif %}
+
+                            <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ quarto.nome }}</h4>
+                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                            
+                            <div class="flex justify-between items-center w-full">
+                                <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
                 {% endfor %}
             </div>
 
@@ -393,12 +389,12 @@
             </div>
         </div>
 
-        <!-- ── DESKTOP: GRID DE 3 COLUNAS (MD e Superior) ── -->
-        <div class="destaques-desktop-grid grid-cols-3 gap-6 lg:gap-8 max-w-[85rem] mx-auto px-4">
+        <!-- ── DESKTOP: GRID DE 3 COLUNAS (LG e Superior) ── -->
+        <div class="hidden lg:grid lg:col-span-8 grid-cols-3 gap-4 lg:gap-6 w-full">
             {% for quarto in quartos_destaque %}
             <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
                hx-boost="true" hx-target="body" hx-swap="outerHTML"
-               class="relative rounded-[2.5rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
+               class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
                 
                 <!-- Imagem do Quarto -->
                 <div class="absolute inset-0 w-full h-full">
@@ -414,20 +410,20 @@
                 </div>
 
                 <!-- Conteúdo em cima do card (Alinhado à Base) -->
-                <div class="relative z-10 mt-auto p-8 flex flex-col items-start text-left w-full">
+                <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
                     {% if forloop.counter0 == 0 %}
-                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-3">HOSPEDAGEM</span>
+                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
                     {% elif forloop.counter0 == 1 %}
-                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-3">PARAÍSO</span>
+                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
                     {% else %}
-                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-3">ACONCHEGO</span>
+                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
                     {% endif %}
 
-                    <h4 class="text-2xl font-black text-white leading-tight tracking-tight mb-2 truncate w-full">{{ quarto.nome }}</h4>
-                    <p class="text-sm text-white/80 font-bold mb-4 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                    <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
+                    <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
                     
                     <div class="flex justify-between items-center w-full">
-                        <span class="text-sm text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                        <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
                     </div>
                 </div>
             </a>
