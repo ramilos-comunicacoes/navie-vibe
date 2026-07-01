@@ -33,7 +33,7 @@ def register_restaurants():
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
             "banner": "restaurantes/banners/casa_de_engenho_banner.png",
-            "imagem": "restaurantes/logos/casa-de-engenho_logo.jpg",
+            "imagem": "restaurantes/banners/casa_de_engenho_banner.png",
             "logo": "restaurantes/logos/casa-de-engenho_logo.jpg",
             "sobre_titulo": "Nossa Tradição & Sabor",
             "sobre_texto": "Na Casa de Engenho, cada prato conta uma história. Nascido do desejo de preservar as ricas traditions da culinária cearense e nordestina, nosso restaurante oferece uma verdadeira viagem no tempo. Com uma decoração rústica inspirada nos antigos engenhos de cana-de-açúcar, combinamos ingredientes locais frescos com técnicas artesanais de cozimento lento. Venha saborear nossa tradicional carne de sol com nata, baião de dois quentinho e doces caseiros deliciosos.",
@@ -57,7 +57,7 @@ def register_restaurants():
             "cor_secundaria": "#c16096",  # Rosa/Magenta Manacá
             "descricao": "O seu refúgio gastronômico em Tianguá. Um ambiente aconchegante que combina sabores únicos com uma experiência acolhedora, ideal para qualquer momento do dia.",
             "banner": "restaurantes/banners/manaca_da_serra_banner.png",
-            "imagem": "restaurantes/logos/manaca-da-serra_logo.jpg",
+            "imagem": "restaurantes/banners/manaca_da_serra_banner.png",
             "logo": "restaurantes/logos/manaca-da-serra_logo.jpg",
             "sobre_titulo": "Um Refúgio Acolhedor",
             "sobre_texto": "O Manacá da Serra nasceu sob a brisa fresca e acolhedora da serra da Ibiapaba. Nosso espaço foi projetado para ser um verdadeiro refúgio do dia a dia, onde a pressa dá lugar à contemplação e ao prazer de uma boa refeição. Nosso cardápio celebra a culinária contemporânea com toques serranos, utilizando vegetais orgânicos cultivados na própria região e carnes nobres grelhadas com precisão. Perfeito para um almoço em família ou um jantar romântico sob a luz de velas.",
@@ -81,7 +81,7 @@ def register_restaurants():
             "cor_secundaria": "#1e293b",  # Slate
             "descricao": "A primeira cervejaria da Serra da Ibiapaba! Uma fusão perfeita entre cervejas artesanais de excelência e pratos elaborados, criando a vibe ideal para curtir com os amigos.",
             "banner": "restaurantes/banners/premibeer_banner.png",
-            "imagem": "restaurantes/logos/premibeer_logo.jpg",
+            "imagem": "restaurantes/banners/premibeer_banner.png",
             "logo": "restaurantes/logos/premibeer_logo.png",
             "sobre_titulo": "Cerveja Artesanal de Verdade",
             "sobre_texto": "A Premibeer orgulhosamente trouxe a cultura das microcervejarias para o topo da Serra da Ibiapaba. Unindo paixão por malte e lúpulo com a pureza da água da nossa serra, criamos receitas únicas de cerveja artesanal servidas diretamente da fonte. Para acompanhar nossas torneiras de chopp sempre frescas, nosso cardápio de Gastro Pub oferece hambúrgueres artesanais robustos, petiscos clássicos de boteco e carnes defumadas de sabor incomparável. A vibe perfeita para celebrar a vida!",
@@ -105,7 +105,7 @@ def register_restaurants():
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
             "banner": "restaurantes/banners/biene_cacau_banner.png",
-            "imagem": "restaurantes/logos/biene-cacau_logo.jpg",
+            "imagem": "restaurantes/banners/biene_cacau_banner.png",
             "logo": "restaurantes/logos/biene-cacau_logo.jpg",
             "sobre_titulo": "Da Amêndoa à Barra",
             "sobre_texto": "Na Biene Cacau, acreditamos que o chocolate de verdade deve ser puro, ético e extraordinário. Somos pioneiros na Serra da Ibiapaba na fabricação de chocolates sob o conceito bean-to-bar (da amêndoa de cacau selecionada diretamente do produtor até a barra finalizada). Controlamos cada etapa do processo: torra suave, moagem em moinhos de pedra e maturação lenta. O resultado é um chocolate com notas aromáticas complexas, sem conservantes ou gorduras hidrogenadas, oferecendo uma experiência sensorial única para paladares exigentes.",
