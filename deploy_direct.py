@@ -35,6 +35,10 @@ def get_git_modified_files():
         "media/restaurantes/logos/manaca_flower.png",
         "media/restaurantes/logos/premibeer_logo.png",
         "media/restaurantes/logos/premibeer_favicon.png",
+        "media/restaurantes/logos/manaca-da-serra_logo.jpg",
+        "media/restaurantes/logos/premibeer_logo.jpg",
+        "media/restaurantes/logos/biene-cacau_logo.jpg",
+        "media/restaurantes/logos/casa-de-engenho_logo.jpg",
         "register_restaurants_navie.py",
         "create_restaurant_credentials.py"
     ]
