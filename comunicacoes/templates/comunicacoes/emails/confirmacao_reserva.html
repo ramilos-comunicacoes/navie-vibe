@@ -3,22 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
     <title>Reserva Confirmada - Naviê Vibe</title>
     <!-- Importação de fontes modernas -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-</head>
-<body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
+    <style>
+        /* Estilos globais e resets para e-mails */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100% !important;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            background-color: #f0f4f8;
+            font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        img {
+            border: 0;
+            outline: none;
+            text-decoration: none;
+            -ms-interpolation-mode: bicubic;
+        }
 
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f4f8; padding: 30px 0;">
+        /* Suporte robusto a Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            .body-bg {
+                background-color: #0f172a !important;
+            }
+            .card-bg {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            .header-bg {
+                background-color: #0b1a30 !important; /* Mantém azul escuro */
+            }
+            .text-dark {
+                color: #f8fafc !important;
+            }
+            .text-muted {
+                color: #94a3b8 !important;
+            }
+            .ticket-header {
+                background-color: #334155 !important;
+                border-bottom-color: #475569 !important;
+            }
+            .divider {
+                border-top-color: #334155 !important;
+            }
+            .btn-blue {
+                background-color: #3b82f6 !important;
+                background: #3b82f6 !important;
+            }
+            .footer-bg {
+                background-color: #1e293b !important;
+                border-top-color: #334155 !important;
+            }
+            .qr-holder {
+                background-color: #ffffff !important; /* QR code sempre com fundo branco para leitura */
+            }
+        }
+    </style>
+</head>
+<body class="body-bg" style="margin: 0; padding: 0; background-color: #f0f4f8; color: #1e293b;">
+
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" class="body-bg" style="background-color: #f0f4f8; padding: 30px 0;">
         <tr>
             <td align="center">
                 
                 <!-- Card Container Principal -->
-                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);">
+                <table border="0" cellpadding="0" cellspacing="0" width="600" class="card-bg" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); border-collapse: collapse;">
                     
                     <!-- Cabeçalho Azul -->
-                    <tr>
-                        <td style="background-color: #0b1a30; padding: 25px 35px; border-bottom: 3px solid #ff7a00;">
+                    <tr class="header-bg" style="background-color: #0b1a30;">
+                        <td class="header-bg" style="background-color: #0b1a30; padding: 25px 35px; border-bottom: 3px solid #ff7a00;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <!-- Logo do Naviê Vibe (Branca) -->
@@ -26,11 +85,11 @@
                                         <img src="https://pousadasramilos.navievibe.com/static/images/logo_navie_completa_white.png" alt="Naviê Vibe" style="display: block; height: 38px; width: auto;" height="38">
                                     </td>
                                     <!-- Logo da Pousada (Branca / Duotone) -->
-                                    <td align="right" style="vertical-align: middle; color: #ffffff; font-size: 14px; font-weight: 600;">
+                                    <td align="right" style="vertical-align: middle; color: #ffffff !important; font-size: 14px; font-weight: 600;">
                                         {% if hotel.logo %}
                                             <img src="https://pousadasramilos.navievibe.com{{ hotel.logo.url }}" alt="{{ hotel.nome }}" style="display: block; height: 35px; width: auto; filter: brightness(0) invert(1); -webkit-filter: brightness(0) invert(1);" height="35">
                                         {% else %}
-                                            <span style="letter-spacing: 0.5px; font-size: 12px; text-transform: uppercase;">{{ hotel.nome }}</span>
+                                            <span style="letter-spacing: 0.5px; font-size: 12px; text-transform: uppercase; color: #ffffff !important;">{{ hotel.nome }}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -43,22 +102,22 @@
                         <td style="padding: 40px 35px;">
                             
                             <!-- Mensagem de Boas-vindas -->
-                            <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #0b1a30;">
+                            <h2 class="text-dark" style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #0b1a30;">
                                 Olá, {{ reserva.hospede_nome }}!
                             </h2>
-                            <p style="margin: 0 0 25px 0; font-size: 15px; line-height: 1.6; color: #475569; font-weight: 400;">
-                                <strong>Prepara as malas!</strong> Estamos muito felizes em confirmar sua estadia. Seu pagamento foi processado com sucesso e o seu voucher digital já está gerado.
+                            <p class="text-muted" style="margin: 0 0 25px 0; font-size: 15px; line-height: 1.6; color: #475569; font-weight: 400;">
+                                <strong class="text-dark" style="color: #0b1a30;">Prepara as malas!</strong> Estamos muito felizes em confirmar sua estadia. Seu pagamento foi processado com sucesso e o seu voucher digital já está gerado.
                             </p>
                             
                             <!-- Voucher Digital (Estilo Boarding Pass) -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin-bottom: 30px;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" class="card-bg" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin-bottom: 30px; border-collapse: collapse;">
                                 <!-- Topo do Ticket -->
                                 <tr>
-                                    <td style="background-color: #f1f5f9; padding: 15px 20px; border-bottom: 2px dashed #cbd5e1;" colspan="2">
+                                    <td class="ticket-header" style="background-color: #f1f5f9; padding: 15px 20px; border-bottom: 2px dashed #cbd5e1;" colspan="2">
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
                                                 <td>
-                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Código do Voucher</span>
+                                                    <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Código do Voucher</span>
                                                     <h3 style="margin: 2px 0 0 0; font-size: 20px; font-weight: 800; color: #ff7a00;">#{{ voucher_codigo }}</h3>
                                                 </td>
                                                 <td align="right" style="vertical-align: middle;">
@@ -72,25 +131,25 @@
                                 <!-- Datas de Checkin e Checkout -->
                                 <tr>
                                     <td style="padding: 20px 20px 10px 20px; width: 50%; vertical-align: top;">
-                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-in (Entrada)</span>
-                                        <h4 style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkin|date:"d/m/Y" }}</h4>
-                                        <span style="font-size: 12px; color: #64748b;">A partir das 14:00</span>
+                                        <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-in (Entrada)</span>
+                                        <h4 class="text-dark" style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkin|date:"d/m/Y" }}</h4>
+                                        <span class="text-muted" style="font-size: 12px; color: #64748b;">A partir das 14:00</span>
                                     </td>
                                     <td style="padding: 20px 20px 10px 20px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
-                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-out (Saída)</span>
-                                        <h4 style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkout|date:"d/m/Y" }}</h4>
-                                        <span style="font-size: 12px; color: #64748b;">Até as 12:00</span>
+                                        <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-out (Saída)</span>
+                                        <h4 class="text-dark" style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkout|date:"d/m/Y" }}</h4>
+                                        <span class="text-muted" style="font-size: 12px; color: #64748b;">Até as 12:00</span>
                                     </td>
                                 </tr>
                                 
                                 <!-- Detalhes da Acomodação -->
                                 <tr>
                                     <td style="padding: 10px 20px 20px 20px; border-top: 1px solid #e2e8f0;" colspan="2">
-                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Acomodação Reservada</span>
-                                        <h4 style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0b1a30;">
+                                        <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Acomodação Reservada</span>
+                                        <h4 class="text-dark" style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0b1a30;">
                                             {{ reserva.unidade.quarto.nome }} - Unidade: {{ reserva.unidade.identificador }}
                                         </h4>
-                                        <span style="font-size: 12px; color: #64748b;">Pousada: {{ hotel.nome }}</span>
+                                        <span class="text-muted" style="font-size: 12px; color: #64748b;">Pousada: {{ hotel.nome }}</span>
                                     </td>
                                 </tr>
                                 
@@ -100,15 +159,15 @@
                                         <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                             <tr>
                                                 <td style="width: 60%;">
-                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspede Titular</span>
-                                                    <h4 style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.hospede_nome }}</h4>
+                                                    <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspede Titular</span>
+                                                    <h4 class="text-dark" style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.hospede_nome }}</h4>
                                                     {% if hospede_cpf_mascarado %}
-                                                    <span style="font-size: 12px; color: #64748b;">CPF: {{ hospede_cpf_mascarado }}</span>
+                                                    <span class="text-muted" style="font-size: 12px; color: #64748b;">CPF: {{ hospede_cpf_mascarado }}</span>
                                                     {% endif %}
                                                 </td>
                                                 <td style="width: 40%; vertical-align: top;" align="right">
-                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspedes</span>
-                                                    <h4 style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.quantidade_hospedes }} Pessoa(s)</h4>
+                                                    <span class="text-muted" style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspedes</span>
+                                                    <h4 class="text-dark" style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.quantidade_hospedes }} Pessoa(s)</h4>
                                                 </td>
                                             </tr>
                                         </table>
@@ -118,14 +177,14 @@
                                 <!-- QR Code de Check-in -->
                                 <tr>
                                     <td style="padding: 25px 20px; background-color: #f1f5f9; text-align: center; border-top: 1px solid #e2e8f0;" colspan="2" align="center">
-                                        <table border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; display: inline-block;">
+                                        <table border="0" cellpadding="0" cellspacing="0" class="qr-holder" style="background-color: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; display: inline-block;">
                                             <tr>
-                                                <td align="center">
-                                                    <img src="{{ qr_code_url }}" alt="QR Code da Reserva" style="display: block;" width="140" height="140">
+                                                <td align="center" style="background-color: #ffffff;">
+                                                    <img src="{{ qr_code_url }}" alt="QR Code da Reserva" style="display: block; background-color: #ffffff;" width="140" height="140">
                                                 </td>
                                             </tr>
                                         </table>
-                                        <p style="margin: 10px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        <p class="text-muted" style="margin: 10px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
                                             Apresente este QR Code ao chegar para agilizar seu Check-in
                                         </p>
                                     </td>
@@ -133,31 +192,37 @@
                             </table>
                             
                             <!-- Detalhes do Pagamento -->
-                            <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #0b1a30; text-transform: uppercase; letter-spacing: 1px;">
+                            <h3 class="text-dark" style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #0b1a30; text-transform: uppercase; letter-spacing: 1px;">
                                 Resumo Financeiro
                             </h3>
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px; margin-bottom: 35px; border-collapse: collapse;">
                                 <tr>
-                                    <td style="padding: 12px 0; color: #64748b; border-bottom: 1px solid #f1f5f9;">Valor das Diárias</td>
-                                    <td align="right" style="padding: 12px 0; font-weight: 600; color: #0b1a30; border-bottom: 1px solid #f1f5f9;">
+                                    <td class="text-muted" style="padding: 12px 0; color: #64748b; border-bottom: 1px solid #f1f5f9;">Valor das Diárias</td>
+                                    <td align="right" class="text-dark" style="padding: 12px 0; font-weight: 600; color: #0b1a30; border-bottom: 1px solid #f1f5f9;">
                                         R$ {{ reserva.valor_total }}
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="padding: 15px 0 0 0; font-weight: bold; color: #0b1a30; font-size: 16px;">Total Pago</td>
+                                    <td class="text-dark" style="padding: 15px 0 0 0; font-weight: bold; color: #0b1a30; font-size: 16px;">Total Pago</td>
                                     <td align="right" style="padding: 15px 0 0 0; font-weight: 800; color: #16a34a; font-size: 18px;">
                                         R$ {{ reserva.valor_total }}
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Botão de Ação -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <!-- Botão de Ação (Azul do Naviê com fallbacks robustos para Dark Mode) -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
                                 <tr>
                                     <td align="center">
-                                        <a href="https://pousadasramilos.navievibe.com/clientes/painel/" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ff7a00 0%, #e65c00 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 15px 35px; border-radius: 50px; box-shadow: 0 5px 15px rgba(255, 122, 0, 0.3); letter-spacing: 0.5px;">
-                                            Acessar Meu Painel de Hóspede
-                                        </a>
+                                        <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin: 0 auto;">
+                                            <tr>
+                                                <td align="center" bgcolor="#3b82f6" class="btn-blue" style="background-color: #3b82f6 !important; border-radius: 50px; padding: 15px 35px; text-align: center;">
+                                                    <a class="btn-blue" href="https://pousadasramilos.navievibe.com/clientes/painel/" target="_blank" style="display: block; background-color: #3b82f6 !important; color: #ffffff !important; text-decoration: none; font-size: 15px; font-weight: bold; letter-spacing: 0.5px; border-radius: 50px; border: 0;">
+                                                        Acessar Meu Painel de Hóspede
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                             </table>
@@ -166,19 +231,19 @@
                     </tr>
                     
                     <!-- Rodapé do Email -->
-                    <tr>
-                        <td align="center" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 30px 25px;">
-                            <h4 style="margin: 0 0 4px 0; font-size: 14px; color: #0b1a30; font-weight: 700;">
+                    <tr class="footer-bg" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9;">
+                        <td align="center" class="footer-bg" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 30px 25px;">
+                            <h4 class="text-dark" style="margin: 0 0 4px 0; font-size: 14px; color: #0b1a30; font-weight: 700;">
                                 {{ hotel.nome }}
                             </h4>
                             {% if hotel.endereco_completo %}
-                            <p style="margin: 0 0 15px 0; font-size: 12px; color: #64748b; max-width: 400px; line-height: 1.4;">
+                            <p class="text-muted" style="margin: 0 0 15px 0; font-size: 12px; color: #64748b; max-width: 400px; line-height: 1.4;">
                                 {{ hotel.endereco_completo }}
                             </p>
                             {% endif %}
                             
                             <!-- Separador -->
-                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0; width: 100%;">
+                            <hr class="divider" style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0; width: 100%;">
                             
                             <!-- Mensagens Legais e Opt-out -->
                             <p style="margin: 0 0 10px 0; font-size: 10px; color: #94a3b8; line-height: 1.5; max-width: 450px;">

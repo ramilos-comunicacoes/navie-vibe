@@ -16,6 +16,10 @@ def testar_email_reserva(request):
     if email_destino:
         reserva.hospede_email = email_destino
         
+    # Se a reserva de teste não tiver CPF, injeta um fictício para validação do layout no e-mail
+    if not reserva.hospede_cpf:
+        reserva.hospede_cpf = "123.456.789-00"
+
     # Dispara e-mail de teste
     sucesso = enviar_email_confirmacao_reserva(reserva)
     if sucesso:
