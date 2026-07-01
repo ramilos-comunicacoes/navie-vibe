@@ -3823,19 +3823,14 @@
 
             // Universal Image Upload Preview Handler
             function previewImageUnified(input, type) {
-                alert("previewImageUnified disparado! Tipo: " + type);
                 try {
                     const file = input.files[0];
                     if (file) {
-                        alert("Arquivo selecionado: " + file.name);
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const previewImg = document.getElementById(`${type}-preview-img`);
                             if (previewImg) {
                                 previewImg.src = e.target.result;
-                                alert("Preview img src atualizada!");
-                            } else {
-                                alert("ERRO: Elemento de preview não encontrado: " + type + "-preview-img");
                             }
                             
                             const emptyState = document.getElementById(`${type}-empty-state`);
@@ -3865,7 +3860,7 @@
                         reader.readAsDataURL(file);
                     }
                 } catch (err) {
-                    alert("Erro JS no preview: " + err.message);
+                    console.error("Erro no preview de imagem:", err);
                 }
             }
 
@@ -4182,19 +4177,14 @@
             }
 
             function previewImageUnifiedGeral(input, type) {
-                alert("previewImageUnifiedGeral disparado! Tipo: " + type);
                 try {
                     const file = input.files[0];
                     if (file) {
-                        alert("Arquivo geral selecionado: " + file.name);
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const previewImg = document.getElementById(`${type}-preview-img`);
                             if (previewImg) {
                                 previewImg.src = e.target.result;
-                                alert("Preview geral img src atualizada!");
-                            } else {
-                                alert("ERRO Geral: " + type + "-preview-img não encontrado");
                             }
                             
                             const activeState = document.getElementById(`${type}-active-state`);
@@ -4225,7 +4215,7 @@
                         reader.readAsDataURL(file);
                     }
                 } catch (err) {
-                    alert("Erro Geral JS no preview: " + err.message);
+                    console.error("Erro Geral JS no preview:", err);
                 }
             }
 
