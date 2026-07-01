@@ -540,17 +540,17 @@ def restaurante_detalhe(request, slug):
         MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", None),
     ]
 
-    if restaurante.slug == 'manaca-da-serra':
-        class SpecialMenuCard:
-            def __init__(self):
-                self.nome = "Cardápio & Pedidos"
-                self.categoria = "Pedidos Rápidos"
-                self.descricao = "Utilizando o link do MenuDino, o seu atendimento se torna muito mais ágil!"
-                self.imagem_url = None
-                self.is_special = True
-                self.link_url = "https://manacadaserra.menudino.com"
-        
-        pratos_mock.insert(0, SpecialMenuCard())
+    slug_clean = restaurante.slug.replace('-', '').replace('_', '')
+    class SpecialMenuCard:
+        def __init__(self, sc):
+            self.nome = "Cardápio & Pedidos"
+            self.categoria = "Pedidos Rápidos"
+            self.descricao = "Utilizando o link do MenuDino, o seu atendimento se torna muito mais ágil!"
+            self.imagem_url = None
+            self.is_special = True
+            self.link_url = f"https://{sc}.menudino.com"
+    
+    pratos_mock.insert(0, SpecialMenuCard(slug_clean))
 
     galeria_data = {
         'manaca-da-serra': [
