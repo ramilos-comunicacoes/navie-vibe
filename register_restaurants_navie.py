@@ -3,7 +3,7 @@ import sys
 import django
 
 # Set up django
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "navievibe.settings")
 django.setup()
 
@@ -28,16 +28,20 @@ def register_restaurants():
             "whatsapp": "88999991111",
             "whatsapp_privado": "88988881111",
             "email_contato": "contato@casadeengenho.com.br",
+            "instagram": None,
             "cor_primaria": "#b45309",  # Terracota / Âmbar
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
             "banner": "restaurantes/banners/casa_de_engenho_banner.png",
             "imagem": "restaurantes/banners/casa_de_engenho_banner.png",
+            "logo": None,
             "sobre_titulo": "Nossa Tradição & Sabor",
-            "sobre_texto": "Na Casa de Engenho, cada prato conta uma história. Nascido do desejo de preservar as ricas tradições da culinária cearense e nordestina, nosso restaurante oferece uma verdadeira viagem no tempo. Com uma decoração rústica inspirada nos antigos engenhos de cana-de-açúcar, combinamos ingredientes locais frescos com técnicas artesanais de cozimento lento. Venha saborear nossa tradicional carne de sol com nata, baião de dois quentinho e doces caseiros deliciosos.",
+            "sobre_texto": "Na Casa de Engenho, cada prato conta uma história. Nascido do desejo de preservar as ricas traditions da culinária cearense e nordestina, nosso restaurante oferece uma verdadeira viagem no tempo. Com uma decoração rústica inspirada nos antigos engenhos de cana-de-açúcar, combinamos ingredientes locais frescos com técnicas artesanais de cozimento lento. Venha saborear nossa tradicional carne de sol com nata, baião de dois quentinho e doces caseiros deliciosos.",
             "sobre_cor_fundo": "#fef3c7",
             "sobre_cor_texto": "#78350f",
             "venda_online": True,
+            "latitude": -3.7440084,
+            "longitude": -40.9930183
         },
         {
             "nome": "Manacá da Serra",
@@ -45,19 +49,23 @@ def register_restaurants():
             "especialidade": "Restaurante Contemporâneo",
             "cidade_nome": "Tianguá",
             "endereco": "Rua Coronel Estanislau, 450 - Centro, Tianguá - CE",
-            "whatsapp": "88999992222",
+            "whatsapp": "5588994719344",
             "whatsapp_privado": "88988882222",
             "email_contato": "contato@manacadaserra.com.br",
-            "cor_primaria": "#8b5cf6",  # Violeta
-            "cor_secundaria": "#db2777",  # Rosa
+            "instagram": "https://www.instagram.com/manaca.restaurante/",
+            "cor_primaria": "#140a1b",  # Ameixa Escura / Plum Black
+            "cor_secundaria": "#c16096",  # Rosa/Magenta Manacá
             "descricao": "O seu refúgio gastronômico em Tianguá. Um ambiente aconchegante que combina sabores únicos com uma experiência acolhedora, ideal para qualquer momento do dia.",
             "banner": "restaurantes/banners/manaca_da_serra_banner.png",
             "imagem": "restaurantes/banners/manaca_da_serra_banner.png",
+            "logo": "restaurantes/logos/manaca_logo.png",
             "sobre_titulo": "Um Refúgio Acolhedor",
             "sobre_texto": "O Manacá da Serra nasceu sob a brisa fresca e acolhedora da serra da Ibiapaba. Nosso espaço foi projetado para ser um verdadeiro refúgio do dia a dia, onde a pressa dá lugar à contemplação e ao prazer de uma boa refeição. Nosso cardápio celebra a culinária contemporânea com toques serranos, utilizando vegetais orgânicos cultivados na própria região e carnes nobres grelhadas com precisão. Perfeito para um almoço em família ou um jantar romântico sob a luz de velas.",
-            "sobre_cor_fundo": "#f5f3ff",
-            "sobre_cor_texto": "#4c1d95",
+            "sobre_cor_fundo": "#fdf2f8",
+            "sobre_cor_texto": "#701a75",
             "venda_online": True,
+            "latitude": -3.7213182,
+            "longitude": -40.9886249
         },
         {
             "nome": "Premibeer Gastro Pub",
@@ -68,16 +76,20 @@ def register_restaurants():
             "whatsapp": "88999993333",
             "whatsapp_privado": "88988883333",
             "email_contato": "contato@premibeer.com.br",
+            "instagram": None,
             "cor_primaria": "#d97706",  # Dourado Cerveja
             "cor_secundaria": "#1e293b",  # Slate
             "descricao": "A primeira cervejaria da Serra da Ibiapaba! Uma fusão perfeita entre cervejas artesanais de excelência e pratos elaborados, criando a vibe ideal para curtir com os amigos.",
             "banner": "restaurantes/banners/premibeer_banner.png",
             "imagem": "restaurantes/banners/premibeer_banner.png",
+            "logo": None,
             "sobre_titulo": "Cerveja Artesanal de Verdade",
             "sobre_texto": "A Premibeer orgulhosamente trouxe a cultura das microcervejarias para o topo da Serra da Ibiapaba. Unindo paixão por malte e lúpulo com a pureza da água da nossa serra, criamos receitas únicas de cerveja artesanal servidas diretamente da fonte. Para acompanhar nossas torneiras de chopp sempre frescas, nosso cardápio de Gastro Pub oferece hambúrgueres artesanais robustos, petiscos clássicos de boteco e carnes defumadas de sabor incomparável. A vibe perfeita para celebrar a vida!",
             "sobre_cor_fundo": "#fafaf9",
             "sobre_cor_texto": "#1c1917",
             "venda_online": True,
+            "latitude": -3.718032,
+            "longitude": -40.9894201
         },
         {
             "nome": "Biene Cacau",
@@ -88,16 +100,20 @@ def register_restaurants():
             "whatsapp": "88999994444",
             "whatsapp_privado": "88988884444",
             "email_contato": "contato@bienecacau.com.br",
+            "instagram": None,
             "cor_primaria": "#7c2d12",  # Marrom Chocolate
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
             "banner": "restaurantes/banners/biene_cacau_banner.png",
             "imagem": "restaurantes/banners/biene_cacau_banner.png",
+            "logo": None,
             "sobre_titulo": "Da Amêndoa à Barra",
             "sobre_texto": "Na Biene Cacau, acreditamos que o chocolate de verdade deve ser puro, ético e extraordinário. Somos pioneiros na Serra da Ibiapaba na fabricação de chocolates sob o conceito bean-to-bar (da amêndoa de cacau selecionada diretamente do produtor até a barra finalizada). Controlamos cada etapa do processo: torra suave, moagem em moinhos de pedra e maturação lenta. O resultado é um chocolate com notas aromáticas complexas, sem conservantes ou gorduras hidrogenadas, oferecendo uma experiência sensorial única para paladares exigentes.",
             "sobre_cor_fundo": "#fff7ed",
             "sobre_cor_texto": "#7c2d12",
             "venda_online": True,
+            "latitude": -3.718032,
+            "longitude": -40.9894211
         }
     ]
 
@@ -113,16 +129,20 @@ def register_restaurants():
             whatsapp=data["whatsapp"],
             whatsapp_privado=data["whatsapp_privado"],
             email_contato=data["email_contato"],
+            instagram=data["instagram"],
             cor_primaria=data["cor_primaria"],
             cor_secundaria=data["cor_secundaria"],
             descricao=data["descricao"],
             banner=data["banner"],
             imagem=data["imagem"],
+            logo=data["logo"],
             sobre_titulo=data["sobre_titulo"],
             sobre_texto=data["sobre_texto"],
             sobre_cor_fundo=data["sobre_cor_fundo"],
             sobre_cor_texto=data["sobre_cor_texto"],
-            venda_online=data["venda_online"]
+            venda_online=data["venda_online"],
+            latitude=data["latitude"],
+            longitude=data["longitude"]
         )
         print(f"Restaurante criado com sucesso: {rest.nome} (slug: {rest.slug})")
         restaurantes_obj[rest.slug] = rest

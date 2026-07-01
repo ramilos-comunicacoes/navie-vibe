@@ -414,16 +414,96 @@ def restaurante_detalhe(request, slug):
             self.imagem_url = imagem_url
 
     pratos_mock = [
-        MockPrato("Filé ao Molho Especial", "Prato Principal", "Filé mignon grelhado com molho de ervas frescas e acompanhamentos da estação.", "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Risoto de Cogumelos", "Entrada Premium", "Risoto cremoso preparado com mix de cogumelos frescos e parmesão artesanal.", "https://images.unsplash.com/photo-1476124369491-e7addf5db371?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Frango Assado da Serra", "Regional", "Frango caipira assado lentamente com temperos regionais e farofa de mandioca.", "https://images.unsplash.com/photo-1598103442097-8b74394b95c5?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Carne de Sol com Nata", "Clássico Nordestino", "Tradicional carne de sol grelhada servida com nata da terra e pirão.", "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80"),
-        MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", "https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?auto=format&fit=crop&w=800&q=80"),
+        MockPrato("Filé ao Molho Especial", "Prato Principal", "Filé mignon grelhado com molho de ervas frescas e acompanhamentos da estação.", None),
+        MockPrato("Risoto de Cogumelos", "Entrada Premium", "Risoto cremoso preparado com mix de cogumelos frescos e parmesão artesanal.", None),
+        MockPrato("Frango Assado da Serra", "Regional", "Frango caipira assado lentamente com temperos regionais e farofa de mandioca.", None),
+        MockPrato("Carne de Sol com Nata", "Clássico Nordestino", "Tradicional carne de sol grelhada servida com nata da terra e pirão.", None),
+        MockPrato("Sobremesa da Casa", "Doces & Sobremesas", "Mousse especial de chocolate com calda de frutas vermelhas da propriedade.", None),
     ]
+
+    if restaurante.slug == 'manaca-da-serra':
+        class SpecialMenuCard:
+            def __init__(self):
+                self.nome = "Cardápio & Pedidos"
+                self.categoria = "Pedidos Rápidos"
+                self.descricao = "Utilizando o link do MenuDino, o seu atendimento se torna muito mais ágil!"
+                self.imagem_url = None
+                self.is_special = True
+                self.link_url = "https://manacadaserra.menudino.com"
+        
+        pratos_mock.insert(0, SpecialMenuCard())
+
+    galeria_data = {
+        'manaca-da-serra': [
+            {"titulo": "Jardim de Inverno", "url": "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Salão Principal", "url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cantinho Aconchegante", "url": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Filé Grelhado", "url": "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Gastronomia Autoral", "url": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Carta de Vinhos", "url": "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'casa-de-engenho': [
+            {"titulo": "Arquitetura Rústica", "url": "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cozinha Regional", "url": "https://images.unsplash.com/photo-1543353071-10c8ba85a904?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Ambiente Temático", "url": "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Prato Tradicional", "url": "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'premibeer': [
+            {"titulo": "Torneiras de Chopp", "url": "https://images.unsplash.com/photo-1571613316887-6f8d5cbf7ef7?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Hambúrguer Gourmet", "url": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cerveja Artesanal", "url": "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Espaço Pub", "url": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&h=800&q=80"},
+        ],
+        'biene-cacau': [
+            {"titulo": "Trufas Artesanais", "url": "https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cafeteria Charmosa", "url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Confeitaria Fina", "url": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=600&h=800&q=80"},
+            {"titulo": "Cacau Selecionado", "url": "https://images.unsplash.com/photo-1587132137056-bfbf0166836e?auto=format&fit=crop&w=600&h=800&q=80"},
+        ]
+    }
+    galeria = galeria_data.get(restaurante.slug, [])
 
     context = {
         'restaurante': restaurante,
         'atracoes': atracoes,
         'pratos_mock': pratos_mock,
+        'galeria': galeria,
     }
     return render(request, 'restaurantes/restaurante_detalhe.html', context)
+
+
+def restaurante_lista(request):
+    """
+    Lista todos os restaurantes ativos com busca e filtros de especialidades.
+    """
+    busca = request.GET.get('busca', '').strip()
+    especialidade = request.GET.get('especialidade', '').strip()
+
+    from django.db.models import Q
+    restaurantes_qs = Restaurante.objects.filter(ativo=True)
+
+    if busca:
+        restaurantes_qs = restaurantes_qs.filter(
+            Q(nome__icontains=busca) |
+            Q(cidade_nome__icontains=busca) |
+            Q(especialidade__icontains=busca) |
+            Q(descricao__icontains=busca)
+        )
+    
+    if especialidade:
+        restaurantes_qs = restaurantes_qs.filter(especialidade__iexact=especialidade)
+
+    # Obter lista de especialidades únicas para o filtro rápido
+    especialidades = list(
+        Restaurante.objects.filter(ativo=True)
+        .values_list('especialidade', flat=True)
+        .distinct()
+    )
+
+    context = {
+        'restaurantes': restaurantes_qs,
+        'busca': busca,
+        'especialidade_selecionada': especialidade,
+        'especialidades': especialidades,
+    }
+    return render(request, 'restaurantes/restaurante_lista.html', context)

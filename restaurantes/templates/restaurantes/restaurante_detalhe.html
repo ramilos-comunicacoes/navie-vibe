@@ -17,6 +17,23 @@
 <link rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>
 <script src="{% static 'js/leaflet.js' %}"></script>
 
+{% if restaurante.slug == 'manaca-da-serra' %}
+<!-- Favicon dinâmico: flor do Manacá da Serra -->
+<link rel="icon" type="image/png" href="{{ restaurante.logo.url|default:'' }}" id="dynamic-favicon">
+<script>
+    // Troca o favicon para a flor do Manacá
+    (function() {
+        var flower = "{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png";
+        var link = document.getElementById('dynamic-favicon') || document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = flower;
+        link.id = 'dynamic-favicon';
+        document.head.appendChild(link);
+    })();
+</script>
+{% endif %}
+
 <!-- Injeção Dinâmica de Cores de Branding -->
 <script>
     (function() {
@@ -101,32 +118,175 @@
         .hero-logo-box { width: 136px; height: 136px; margin-bottom: 12px; }
     }
 
-    /* ATRAÇÃO DO DIA */
-    .atracao-section-wrapper { position: relative; width: 100%; overflow: hidden; transition: all 0.5s ease-in-out; border-top-left-radius: 8px; border-top-right-radius: 8px; }
-    @media (min-width: 768px) { .atracao-section-wrapper { border-top-left-radius: 12px; border-top-right-radius: 12px; } }
-    .atracao-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
-    .atracao-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
-    @media (max-width: 767px) {
-        .atracao-section-wrapper:not(.h-auto) { height: 38vh; min-height: 190px; max-height: 250px; }
-        .atracao-flex-container { padding-left: 24px; padding-right: 16px; }
-        .atracao-left-column { width: 44% !important; padding-top: 24px !important; padding-bottom: 20px !important; padding-right: 12px !important; justify-content: center !important; gap: 6px; }
-        .atracao-media-container { width: 56% !important; }
-        .atracao-media-gradient { background: linear-gradient(to right, var(--atracao-bg-color) 0%, var(--atracao-bg-color) 12%, transparent 45%) !important; }
-        .atracao-title-wrapper { margin-bottom: 4px; gap: 6px; }
-        .atracao-title-line { width: 4px; }
-        #atracao-titulo { font-size: 14px; }
-        #atracao-texto { font-size: 10px; line-height: 1.6; }
+    /* ==========================================================================
+       ATRAÇÃO DO DIA: REGRAS ESPECÍFICAS DE ALINHAMENTO E ESPAÇAMENTO
+       ========================================================================== */
+
+    /* Regras Gerais */
+    .atracao-section-wrapper {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        transition: all 0.5s ease-in-out;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
     }
     @media (min-width: 768px) {
-        .atracao-section-wrapper:not(.h-auto) { height: 30vh; min-height: 220px; max-height: 280px; }
-        .atracao-flex-container { padding-left: 24px; padding-right: 24px; }
-        .atracao-left-column { width: 42%; padding-top: 64px; padding-bottom: 28px; padding-right: 32px; }
-        .atracao-title-wrapper { margin-bottom: 12px; gap: 6px; }
-        .atracao-title-line { width: 6px; }
-        #atracao-titulo { font-size: 20px; }
-        #atracao-texto { font-size: 13px; line-height: 1.625; }
+        .atracao-section-wrapper {
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+        }
     }
-    @media (min-width: 1280px) { .atracao-flex-container { padding-left: 48px; padding-right: 48px; } }
+
+    /* Container Flex */
+    .atracao-flex-container {
+        display: flex;
+        align-items: stretch;
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Coluna de Conteúdo (Esquerda) */
+    .atracao-left-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+        min-width: 0;
+    }
+
+    /* Textos da Atração */
+    .atracao-titulo, .atracao-titulo * {
+        font-family: 'Poppins', sans-serif !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+    .atracao-texto, .atracao-texto * {
+        font-family: 'Poppins', sans-serif !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* MOBILE (< 768px) */
+    @media (max-width: 767px) {
+        .atracao-section-wrapper:not(.h-auto) {
+            height: 38vh;
+            min-height: 200px;
+            max-height: 260px;
+        }
+        .atracao-flex-container {
+            padding-left: 24px;
+            padding-right: 16px;
+        }
+        .atracao-left-column {
+            width: 44% !important;
+            padding-top: 20px !important;
+            padding-bottom: 20px !important;
+            padding-right: 12px !important;
+            justify-content: center !important;
+            gap: 6px;
+        }
+        .atracao-media-container {
+            width: 56% !important;
+        }
+        .atracao-media-gradient {
+            background: linear-gradient(to right, var(--atracao-bg-color) 0%, var(--atracao-bg-color) 12%, transparent 45%) !important;
+        }
+        .atracao-title-wrapper {
+            margin-bottom: 6px;
+            gap: 6px;
+        }
+        .atracao-title-line {
+            width: 3px;
+            border-radius: 9999px;
+        }
+        .atracao-titulo {
+            font-size: 13px !important;
+            line-height: 1.3 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.05em !important;
+            text-transform: uppercase !important;
+        }
+        .atracao-texto {
+            font-size: 9.5px !important;
+            line-height: 1.55 !important;
+            font-weight: 500 !important;
+            opacity: 0.9;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 4 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+        .atracao-badge {
+            font-size: 7.5px !important;
+            padding: 2px 8px !important;
+        }
+    }
+
+    /* DESKTOP (>= 768px) */
+    @media (min-width: 768px) {
+        .atracao-section-wrapper:not(.h-auto) {
+            height: 30vh;
+            min-height: 230px;
+            max-height: 290px;
+        }
+        .atracao-flex-container {
+            padding-left: 32px;
+            padding-right: 32px;
+        }
+        .atracao-left-column {
+            width: 48%;
+            padding-top: 52px;
+            padding-bottom: 32px;
+            padding-right: 40px;
+        }
+        .atracao-title-wrapper {
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        .atracao-title-line {
+            width: 5px;
+            border-radius: 9999px;
+        }
+        .atracao-titulo {
+            font-size: 22px !important;
+            line-height: 1.2 !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.06em !important;
+            text-transform: uppercase !important;
+        }
+        .atracao-texto {
+            font-size: 13px !important;
+            line-height: 1.65 !important;
+            font-weight: 500 !important;
+            opacity: 0.92;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 4 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+        }
+        .atracao-badge {
+            font-size: 10px !important;
+            padding: 3px 12px !important;
+        }
+    }
+
+    /* DESKTOP LARGE (>= 1280px) */
+    @media (min-width: 1280px) {
+        .atracao-flex-container {
+            padding-left: 60px;
+            padding-right: 60px;
+        }
+        .atracao-titulo {
+            font-size: 26px !important;
+        }
+        .atracao-texto {
+            font-size: 14px !important;
+            -webkit-line-clamp: 5 !important;
+        }
+    }
 
     /* SOBRE — mobile (card interno com altura fixa, estilo original) */
     .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; }
@@ -166,6 +326,10 @@
     .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
     .portal-desktop-grid { display: none !important; }
     @media (min-width: 768px) { .portal-desktop-grid { display: grid !important; } }
+    {% if not restaurante.sobre_banner and not restaurante.imagem and not restaurante.sobre_video %}
+    .sobre-left-column { width: 100% !important; padding-right: 0 !important; }
+    .sobre-media-container { display: none !important; }
+    {% endif %}
 </style>
 {% endblock %}
 
@@ -185,7 +349,7 @@
     <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
         {% if restaurante.logo %}
         <div class="hero-logo-box flex items-center justify-center shrink-0 select-none">
-            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl" style="filter: brightness(0) invert(1) !important;">
+            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl" {% if restaurante.slug != 'manaca-da-serra' %}style="filter: brightness(0) invert(1) !important;"{% endif %}>
         </div>
         {% endif %}
 
@@ -297,26 +461,33 @@
              <div class="container mx-auto atracao-flex-container relative z-20">
                  <div class="atracao-left-column">
                      <div class="flex flex-col justify-start">
-                         <div class="flex items-center gap-2 mb-2 md:mb-3">
-                             <span class="inline-flex items-center gap-1.5 px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[11px] font-black uppercase tracking-widest bg-white/15 backdrop-blur-sm border border-white/20 text-white select-none whitespace-nowrap">
-                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 md:w-3.5 md:h-3.5"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+
+                         <!-- Badge de Data/Horário -->
+                         <div class="flex items-center gap-2 mb-2">
+                             <span class="atracao-badge inline-flex items-center gap-1.5 rounded-full font-black uppercase tracking-widest bg-white/15 backdrop-blur-sm border border-white/20 text-white select-none whitespace-nowrap">
+                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 shrink-0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                                  <span>{% if atracao.data %}{{ atracao.data|date:"d/m" }}{% else %}{{ atracao.dia }}{% endif %}</span>
                                  {% if atracao.horario %}
                                  <span class="opacity-50">•</span>
-                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 md:w-3.5 md:h-3.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="w-2.5 h-2.5 shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                  <span>{{ atracao.horario|time:"H:i" }}</span>
                                  {% endif %}
                              </span>
                          </div>
+
+                         <!-- Título com linha lateral (padrão pousada) -->
                          <div class="flex items-stretch atracao-title-wrapper">
-                             <span class="atracao-title-line shrink-0 rounded-full" style="background-color:var(--atracao-text-color);"></span>
-                             <h2 class="font-black tracking-wider leading-tight uppercase text-sm sm:text-base md:text-2xl lg:text-3xl xl:text-4xl">
+                             <span class="atracao-title-line shrink-0" style="background-color:var(--atracao-text-color);"></span>
+                             <h2 class="atracao-titulo">
                                  {{ atracao.titulo|default:'Em Breve: Novas Atrações' }}
                              </h2>
                          </div>
-                         <div class="font-medium opacity-90 pr-1 line-clamp-4 transition-all duration-300 text-xs sm:text-sm md:text-base lg:text-[17px] xl:text-lg">
+
+                         <!-- Texto da Atração -->
+                         <div class="atracao-texto pr-1 transition-all duration-300">
                              {% if atracao.texto %}{{ atracao.texto|safe }}{% else %}<p>Fique atento às nossas programações especiais com shows ao vivo, noites temáticas e eventos gastronômicos exclusivos.</p>{% endif %}
                          </div>
+
                      </div>
                  </div>
              </div>
@@ -351,75 +522,75 @@
 
     <main class="container mx-auto px-4 md:px-6 xl:px-12 pt-10 md:pt-16 pb-10">
 
-        <!-- SEÇÃO: CARDÁPIO / CONTEÚDOS / PRATOS EM DESTAQUE -->
-        <div class="max-w-[90rem] mx-auto space-y-10 pb-6">
-
-            <!-- Desktop: Grid -->
-            <section class="w-full">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
-                    <div>
-                        <h3 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Nossos Destaques</h3>
-                        <p class="text-xs text-slate-400 font-bold mt-1">Pratos e experiências que não pode perder</p>
+        <!-- SEÇÃO: CARDÁPIO DIGITAL -->
+        <div class="max-w-5xl mx-auto px-4 mb-12">
+            <div class="relative bg-gradient-to-br from-slate-900 to-slate-950 rounded-[2.5rem] overflow-hidden p-6 sm:p-10 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 border border-white/5">
+                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.05),transparent_50%)]"></div>
+                <div class="relative z-10 max-w-xl text-left space-y-4">
+                    <span class="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-action-secundario bg-white/10 border border-white/10">Cardápio Completo</span>
+                    <h3 class="text-2xl sm:text-3xl font-black text-white leading-tight">Faça seu Pedido Online</h3>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-semibold">Acesse nosso cardápio digital completo para conferir as delícias da casa, preços atualizados e fazer seu pedido de forma prática diretamente pelo celular.</p>
+                    
+                    <!-- Redes Sociais / WhatsApp / Instagram Integrados -->
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        {% if restaurante.instagram %}
+                        <a href="{{ restaurante.instagram }}" target="_blank" class="flex items-center gap-2 text-white/80 hover:text-white text-xs font-bold transition-all bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl border border-white/10 text-decoration-none">
+                            <svg class="w-4 h-4 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                            <span>Instagram</span>
+                        </a>
+                        {% endif %}
+                        {% if restaurante.whatsapp %}
+                        <a href="https://wa.me/{{ restaurante.whatsapp }}" target="_blank" class="flex items-center gap-2 text-white/80 hover:text-white text-xs font-bold transition-all bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl border border-white/10 text-decoration-none">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.858.002-2.634-1.019-5.109-2.877-6.97-1.859-1.862-4.331-2.885-6.969-2.887-5.443 0-9.87 4.422-9.873 9.861 0 1.702.446 3.366 1.294 4.819l-.993 3.626 3.734-.976zm10.713-7.512c-.29-.145-1.713-.846-1.977-.941-.264-.096-.456-.145-.648.145-.192.29-.744.941-.912 1.133-.168.19-.336.213-.626.068-.29-.145-1.223-.45-2.33-1.439-.86-.767-1.44-1.716-1.608-2.006-.168-.29-.018-.446.128-.591.13-.13.29-.338.435-.508.145-.17.193-.29.29-.483.096-.193.048-.362-.024-.508-.072-.145-.648-1.56-.888-2.14-.233-.56-.47-.482-.648-.492-.168-.008-.36-.01-.552-.01-.192 0-.504.072-.768.362-.264.29-1.008.986-1.008 2.404 0 1.418 1.032 2.79 1.176 2.985.145.193 2.033 3.104 4.925 4.35.688.297 1.226.474 1.645.607.693.22 1.324.19 1.822.115.556-.083 1.713-.699 1.953-1.376.24-.677.24-1.258.168-1.376-.072-.119-.264-.193-.556-.339z"/></svg>
+                            <span>WhatsApp</span>
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
-
-                <div class="portal-desktop-grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5 mb-6">
-                    {% for item in pratos_mock %}
-                    <div class="relative rounded-[2rem] overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col bg-slate-900 aspect-[3/4]">
-                        <div class="absolute inset-0 w-full h-full">
-                            <img src="{{ item.imagem_url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.nome }}">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                        </div>
-                        <div class="relative z-10 mt-auto p-4 xl:p-5 flex flex-col items-start text-left w-full">
-                            <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2">{{ item.categoria }}</span>
-                            <h4 class="text-base xl:text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ item.nome }}</h4>
-                            <p class="text-[11px] xl:text-xs text-white/80 line-clamp-2 leading-relaxed w-full">{{ item.descricao }}</p>
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="relative z-10 shrink-0 w-full md:w-auto">
+                    {% if restaurante.slug == 'manaca-da-serra' %}
+                    <a href="https://manacadaserra.menudino.com" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-action-secundario hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer shadow-lg active:scale-95 text-decoration-none">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        Ver Cardápio Online
+                    </a>
+                    {% else %}
+                    <a href="https://wa.me/{{ restaurante.whatsapp }}?text=Olá! Gostaria de ver o cardápio." target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-action-secundario hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer shadow-lg active:scale-95 text-decoration-none">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        Solicitar Cardápio pelo WhatsApp
+                    </a>
+                    {% endif %}
                 </div>
-
-                <!-- Mobile: Carrossel 3D -->
-                <div class="block md:hidden -mx-4 w-[calc(100%+2rem)] mb-10"
-                     x-data="{ active: 1, total: {{ pratos_mock|length }}, autoPlayInterval: null,
-                         startAutoplay() { this.autoPlayInterval = setInterval(() => { this.active = (this.active % this.total) + 1; }, 3000); },
-                         stopAutoplay() { clearInterval(this.autoPlayInterval); },
-                         touchStartX: 0, touchEndX: 0,
-                         handleTouchStart(e) { this.touchStartX = e.changedTouches[0].screenX; this.stopAutoplay(); },
-                         handleTouchEnd(e) { this.touchEndX = e.changedTouches[0].screenX; const diff = this.touchStartX - this.touchEndX; if(Math.abs(diff)>40){ this.active = diff > 0 ? (this.active % this.total)+1 : (this.active===1 ? this.total : this.active-1); } this.startAutoplay(); }
-                     }"
-                     x-init="startAutoplay()"
-                     @touchstart="handleTouchStart($event)"
-                     @touchend="handleTouchEnd($event)"
-                     @mouseenter="stopAutoplay()"
-                     @mouseleave="startAutoplay()">
-                    <div class="relative w-full h-[360px] flex items-center justify-center overflow-hidden">
-                        {% for item in pratos_mock %}
-                        <div class="absolute w-[74%] h-[310px] rounded-[2rem] overflow-hidden shadow-lg transition-all duration-500 ease-out select-none flex flex-col group bg-slate-900"
-                             x-show="active === {{ forloop.counter }} || (active === 1 ? {{ forloop.counter }} === total : {{ forloop.counter }} === active - 1) || (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1)"
-                             :style="active === {{ forloop.counter }} ? 'transform:translateX(0) scale(1.05);z-index:30;opacity:1;' : (active === total ? {{ forloop.counter }} === 1 : {{ forloop.counter }} === active + 1) ? 'transform:translateX(42%) scale(0.85);z-index:20;opacity:0.6;' : 'transform:translateX(-42%) scale(0.85);z-index:20;opacity:0.6;'">
-                            <div class="absolute inset-0 w-full h-full">
-                                <img src="{{ item.imagem_url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.nome }}">
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                            </div>
-                            <div class="relative z-10 mt-auto p-5 flex flex-col items-start text-left w-full">
-                                <span class="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-action-secundario bg-white/95 shadow-sm mb-2">{{ item.categoria }}</span>
-                                <h4 class="text-lg font-black text-white leading-tight mb-1 truncate w-full">{{ item.nome }}</h4>
-                                <p class="text-[10px] text-white/80 line-clamp-2 leading-relaxed w-full">{{ item.descricao }}</p>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <div class="flex justify-center items-center gap-2 mt-1">
-                        {% for item in pratos_mock %}
-                        <button @click="active = {{ forloop.counter }}"
-                                :class="active === {{ forloop.counter }} ? 'w-6 h-1.5 rounded-full bg-action-secundario shadow-sm' : 'w-1.5 h-1.5 rounded-full bg-slate-300'"
-                                class="transition-all duration-300 border-none"></button>
-                        {% endfor %}
-                    </div>
-                </div>
-            </section>
+            </div>
         </div>
+
+        <!-- SEÇÃO: NOSSO ESPAÇO -->
+        {% if galeria %}
+        <div class="max-w-5xl mx-auto px-4 mb-16">
+            <div class="text-center max-w-2xl mx-auto mb-6 px-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">Nosso Espaço</span>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Conheça o Ambiente</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed font-semibold">Cada detalhe do nosso restaurante foi pensado para proporcionar uma experiência acolhedora e memorável.</p>
+            </div>
+
+            <!-- Carrossel de fotos 3:4 -->
+            <div class="w-full">
+                <div class="swiper restaurante-galeria-swiper w-full rounded-[2.5rem] overflow-hidden bg-slate-50 p-2 z-0">
+                    <div class="swiper-wrapper">
+                        {% for img in galeria %}
+                        <div class="swiper-slide aspect-[3/4] relative rounded-3xl overflow-hidden shadow-md group">
+                            <img src="{{ img.url }}" alt="{{ img.titulo }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
+                                <span class="text-xs font-black text-white uppercase tracking-wider">{{ img.titulo }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- Paginação -->
+                    <div class="swiper-pagination mt-4 !relative !bottom-0 flex justify-center gap-1.5"></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- SEÇÃO: LOCALIZAÇÃO -->
         <div class="mt-8 border-t border-slate-100 pt-8">
@@ -463,7 +634,7 @@
                         </div>
 
                         <div class="col-span-12 md:col-span-5 md:row-start-3 flex flex-col gap-2.5 justify-end">
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ restaurante.latitude|default:'-4.004445' }},{{ restaurante.longitude|default:'-40.990278' }}"
+                            <a href="https://www.google.com/maps/search/?api=1&query={% if restaurante.latitude %}{{ restaurante.latitude|stringformat:'f' }}{% else %}-3.7213182{% endif %},{% if restaurante.longitude %}{{ restaurante.longitude|stringformat:'f' }}{% else %}-40.9886249{% endif %}"
                                target="_blank"
                                class="w-full bg-action-secundario hover:opacity-90 text-white font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 border-none cursor-pointer shadow-md">
                                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-6 6m0 0l-3-3m3 3V9a6 6 0 0112 0v3"></path></svg>
@@ -471,9 +642,16 @@
                             </a>
                             {% if restaurante.whatsapp %}
                             <a href="https://wa.me/{{ restaurante.whatsapp }}" target="_blank"
-                               class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
-                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                               class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer text-decoration-none">
+                                <svg class="w-4 h-4 shrink-0 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.858.002-2.634-1.019-5.109-2.877-6.97-1.859-1.862-4.331-2.885-6.969-2.887-5.443 0-9.87 4.422-9.873 9.861 0 1.702.446 3.366 1.294 4.819l-.993 3.626 3.734-.976zm10.713-7.512c-.29-.145-1.713-.846-1.977-.941-.264-.096-.456-.145-.648.145-.192.29-.744.941-.912 1.133-.168.19-.336.213-.626.068-.29-.145-1.223-.45-2.33-1.439-.86-.767-1.44-1.716-1.608-2.006-.168-.29-.018-.446.128-.591.13-.13.29-.338.435-.508.145-.17.193-.29.29-.483.096-.193.048-.362-.024-.508-.072-.145-.648-1.56-.888-2.14-.233-.56-.47-.482-.648-.492-.168-.008-.36-.01-.552-.01-.192 0-.504.072-.768.362-.264.29-1.008.986-1.008 2.404 0 1.418 1.032 2.79 1.176 2.985.145.193 2.033 3.104 4.925 4.35.688.297 1.226.474 1.645.607.693.22 1.324.19 1.822.115.556-.083 1.713-.699 1.953-1.376.24-.677.24-1.258.168-1.376-.072-.119-.264-.193-.556-.339z"/></svg>
                                 Pedir pelo WhatsApp
+                            </a>
+                            {% endif %}
+                            {% if restaurante.instagram %}
+                            <a href="{{ restaurante.instagram }}" target="_blank"
+                               class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold py-3 px-4 rounded-2xl text-[10px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer text-decoration-none">
+                                <svg class="w-4 h-4 shrink-0 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                                Instagram do Restaurante
                             </a>
                             {% endif %}
                         </div>
@@ -543,8 +721,8 @@
 
     // MAPA
     let mapObj = null, roadmapLayer = null, satelliteLayer = null;
-    const lat = {{ restaurante.latitude|default:'-4.004445'|stringformat:'f' }};
-    const lon = {{ restaurante.longitude|default:'-40.990278'|stringformat:'f' }};
+    const lat = {% if restaurante.latitude %}{{ restaurante.latitude|stringformat:'f' }}{% else %}-3.7213182{% endif %};
+    const lon = {% if restaurante.longitude %}{{ restaurante.longitude|stringformat:'f' }}{% else %}-40.9886249{% endif %};
 
     function initMap() {
         if (typeof L === 'undefined') return;
@@ -724,8 +902,43 @@
         }
     }
 
+    function initSwiperGaleria() {
+        if (typeof Swiper !== 'undefined') {
+            new Swiper('.restaurante-galeria-swiper', {
+                slidesPerView: 1.2,
+                spaceBetween: 16,
+                centeredSlides: false,
+                loop: true,
+                grabCursor: true,
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                breakpoints: {
+                    480: {
+                        slidesPerView: 1.8,
+                        spaceBetween: 16,
+                    },
+                    640: {
+                        slidesPerView: 2.5,
+                        spaceBetween: 20,
+                    },
+                    768: {
+                        slidesPerView: 3.2,
+                        spaceBetween: 20,
+                    },
+                    1024: {
+                        slidesPerView: 4.2,
+                        spaceBetween: 24,
+                    }
+                }
+            });
+        }
+    }
+
     initMap();
     initSobreExpander();
+    initSwiperGaleria();
 })();
 </script>
 

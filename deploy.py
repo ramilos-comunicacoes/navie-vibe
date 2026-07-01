@@ -10,9 +10,9 @@ except ImportError:
     import paramiko
 
 # Configurações de Produção
-SERVERS = ["31.97.20.100", "187.77.60.248"]
+SERVERS = ["187.77.60.248"]
 SSH_USER = "root"
-SSH_PASSWORD = "Porfirio75@projeto"
+SSH_PASSWORD = "papaleguas20@P"
 REMOTE_DIR = "/var/www/apps/navievibe"
 
 def run_local_cmd(cmd, desc):

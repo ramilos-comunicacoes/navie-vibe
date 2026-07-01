@@ -41,10 +41,24 @@ class SubdomainMiddleware:
                             request.subdomain = possible_subdomain
                             request.hotel_atual = hotel
                         else:
-                            # Se não for uma rota estática, de mídia, api ou admin, levanta 404
-                            if not any(request.path.startswith(prefix) for prefix in ['/static/', '/media/', '/api/', '/sistemadeadministracao/', '/accounts/', '/hospedagens/']):
-                                from django.http import Http404
-                                raise Http404("Pousada não encontrada.")
+                            from restaurantes.models import Restaurante
+                            # 3. Verifica se existe um restaurante correspondente ao subdomínio
+                            restaurante = Restaurante.objects.filter(slug=possible_subdomain, ativo=True).first()
+                            if not restaurante:
+                                normalized_subdomain = possible_subdomain.replace('-', '').replace('_', '')
+                                for r in Restaurante.objects.filter(ativo=True):
+                                    if r.slug.replace('-', '').replace('_', '') == normalized_subdomain:
+                                        restaurante = r
+                                        break
+                            
+                            if restaurante:
+                                request.subdomain = possible_subdomain
+                                request.restaurante_atual = restaurante
+                            else:
+                                # Se não for uma rota estática, de mídia, api ou admin, levanta 404
+                                if not any(request.path.startswith(prefix) for prefix in ['/static/', '/media/', '/api/', '/sistemadeadministracao/', '/accounts/', '/hospedagens/', '/restaurantes/']):
+                                    from django.http import Http404
+                                    raise Http404("Página não encontrada.")
         
         response = self.get_response(request)
         return response

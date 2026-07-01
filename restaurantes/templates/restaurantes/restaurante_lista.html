@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gastronomia & Restaurantes na Ibiapaba - Naviê Vibe{% endblock %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --catalog-bg: #f8fafc;
+        --catalog-slate: #0f172a;
+        --catalog-primary: #ef4444; /* Vermelho/Coral para Gastronomia */
+        --catalog-primary-hover: #dc2626;
+        --catalog-muted: #64748b;
+        --catalog-border: #e2e8f0;
+    }
+
+    .catalog-hero {
+        background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .catalog-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle at 80% 20%, rgba(239, 68, 68, 0.12) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .search-bar-container {
+        margin-top: -30px;
+        z-index: 10;
+        position: relative;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 24px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+    }
+
+    .filter-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid var(--catalog-border);
+        background-color: #ffffff;
+        color: var(--catalog-muted);
+        cursor: pointer;
+    }
+
+    .filter-tag:hover {
+        border-color: var(--catalog-primary);
+        color: var(--catalog-primary);
+        transform: translateY(-1px);
+    }
+
+    .filter-tag.active {
+        background-color: var(--catalog-primary);
+        border-color: var(--catalog-primary);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    .restaurant-card {
+        border-radius: 24px;
+        background-color: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.01), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .restaurant-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
+        border-color: rgba(239, 68, 68, 0.15);
+    }
+
+    .restaurant-banner {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .restaurant-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .restaurant-card:hover .restaurant-banner img {
+        transform: scale(1.04);
+    }
+
+    .restaurant-details {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex-grow: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="w-full min-h-screen bg-slate-50 pb-20">
+
+    <!-- HERO SECTION -->
+    <section class="catalog-hero py-16 md:py-24 text-center text-white">
+        <div class="container mx-auto px-6 max-w-4xl relative z-10">
+            <span class="text-xs uppercase font-extrabold tracking-widest text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full">Sabores únicos da nossa Serra</span>
+            <h1 class="text-3xl md:text-5xl font-black mt-4 leading-tight">Gastronomia & Restaurantes na Ibiapaba</h1>
+            <p class="text-slate-300 mt-3 text-sm md:text-lg max-w-2xl mx-auto font-medium">Conheça os melhores pubs, pizzarias, chocolaterias e restaurantes contemporâneos da região.</p>
+        </div>
+    </section>
+
+    <!-- BARRA DE BUSCA E FILTROS -->
+    <section class="container mx-auto px-6 max-w-6xl search-bar-container">
+        <div class="glass-card p-6 md:p-8">
+            <form method="GET" action="{% url 'restaurantes:restaurante_lista' %}" class="flex flex-col md:flex-row gap-4 items-stretch">
+                {% if especialidade_selecionada %}
+                <input type="hidden" name="especialidade" value="{{ especialidade_selecionada }}">
+                {% endif %}
+                
+                <!-- Input de Pesquisa -->
+                <div class="flex-grow relative">
+                    <i data-lucide="search" class="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" name="busca" value="{{ busca }}" placeholder="Pesquise por nome, especialidade ou endereço..." 
+                           class="w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 placeholder-slate-400 focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/10 focus:outline-none transition-all">
+                </div>
+                
+                <!-- Botão de Pesquisa -->
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3.5 rounded-2xl text-sm transition-all shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 border-none cursor-pointer">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    <span>Buscar</span>
+                </button>
+                
+                {% if busca or especialidade_selecionada %}
+                <!-- Limpar Filtros -->
+                <a href="{% url 'restaurantes:restaurante_lista' %}" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-6 py-3.5 rounded-2xl text-sm transition-all flex items-center justify-center gap-1 text-decoration-none">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                    <span>Limpar</span>
+                </a>
+                {% endif %}
+            </form>
+
+            <!-- Filtros Rápidos (Categorias/Especialidades) -->
+            <div class="flex flex-wrap gap-2.5 mt-6 pt-6 border-t border-slate-200/60 justify-center md:justify-start">
+                <a href="{% url 'restaurantes:restaurante_lista' %}{% if busca %}?busca={{ busca }}{% endif %}" 
+                   class="filter-tag {% if not especialidade_selecionada %}active{% endif %} text-decoration-none">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    <span>Todos</span>
+                </a>
+                {% for esp in especialidades %}
+                <a href="{% url 'restaurantes:restaurante_lista' %}?especialidade={{ esp }}{% if busca %}&busca={{ busca }}{% endif %}" 
+                   class="filter-tag {% if especialidade_selecionada == esp %}active{% endif %} text-decoration-none">
+                    <i data-lucide="utensils" class="w-4 h-4"></i>
+                    <span>{{ esp }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- LISTAGEM DE RESTAURANTES -->
+    <section class="container mx-auto px-6 max-w-6xl mt-12">
+        {% if restaurantes %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for r in restaurantes %}
+            <article class="restaurant-card">
+                <!-- Imagem / Banner -->
+                <div class="restaurant-banner relative overflow-hidden">
+                    {% if r.imagem %}
+                    <img src="{{ r.imagem.url }}" alt="{{ r.nome }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full bg-slate-200 flex items-center justify-center">
+                        <i data-lucide="image" class="w-12 h-12 text-slate-400"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Badge Especialidade -->
+                    <div class="absolute top-3 left-3 bg-slate-900/75 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/10 select-none max-w-[85%]">
+                        <span class="text-[8px] sm:text-[9px] font-black uppercase text-white tracking-widest truncate block" title="{{ r.especialidade }}">{{ r.especialidade }}</span>
+                    </div>
+                </div>
+
+                <div class="restaurant-details">
+                    <div class="space-y-2">
+                        <!-- Localização / Cidade -->
+                        <p class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 truncate">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-red-500"></i>
+                            <span>{{ r.cidade_nome }}</span>
+                        </p>
+                        <!-- Nome -->
+                        <h3 class="text-base sm:text-lg font-black text-slate-800 leading-snug truncate md:whitespace-normal md:line-clamp-2 md:h-12" title="{{ r.nome }}">{{ r.nome }}</h3>
+                        <!-- Descrição -->
+                        <p class="text-xs text-slate-500 font-medium leading-relaxed line-clamp-3 md:line-clamp-4">{{ r.descricao }}</p>
+                    </div>
+                    
+                    <!-- Botões de Ação -->
+                    <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col gap-2">
+                        <a href="{% url 'restaurantes:restaurante_detalhe' r.slug %}" class="w-full flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 text-decoration-none">
+                            <span>Ver Restaurante</span>
+                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                        </a>
+                        {% if r.whatsapp %}
+                        <a href="https://wa.me/{{ r.whatsapp }}" target="_blank" class="w-full flex items-center justify-center gap-1.5 bg-green-50 hover:bg-green-600 text-green-600 hover:text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 text-decoration-none">
+                            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                            <span>WhatsApp</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Caso nenhum restaurante seja retornado -->
+        <div class="glass-card p-12 text-center max-w-xl mx-auto space-y-4">
+            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                <i data-lucide="utensils" class="w-8 h-8"></i>
+            </div>
+            <h4 class="text-xl font-black text-slate-800">Nenhum restaurante encontrado</h4>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">Não encontramos estabelecimentos com os critérios informados. Tente ajustar o termo de pesquisa ou limpar os filtros.</p>
+            <a href="{% url 'restaurantes:restaurante_lista' %}" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all mt-2 text-decoration-none border-none cursor-pointer">
+                Ver Todos os Restaurantes
+            </a>
+        </div>
+        {% endif %}
+    </section>
+
+</main>
+{% endblock %}
