@@ -603,7 +603,7 @@ def restaurante_lista(request):
     especialidade = request.GET.get('especialidade', '').strip()
 
     from django.db.models import Q
-    restaurantes_qs = Restaurante.objects.filter(ativo=True)
+    restaurantes_qs = Restaurante.objects.using('restaurantes').filter(ativo=True)
 
     if busca:
         restaurantes_qs = restaurantes_qs.filter(
@@ -618,7 +618,7 @@ def restaurante_lista(request):
 
     # Obter lista de especialidades únicas para o filtro rápido
     especialidades = list(
-        Restaurante.objects.filter(ativo=True)
+        Restaurante.objects.using('restaurantes').filter(ativo=True)
         .values_list('especialidade', flat=True)
         .distinct()
     )
