@@ -384,6 +384,25 @@ def restaurante_detalhe(request, slug):
     from django.shortcuts import get_object_or_404
     restaurante = get_object_or_404(Restaurante.objects.using('restaurantes'), slug=slug, ativo=True)
 
+    # Força o redirecionamento para o subdomínio correspondente caso acessado via domínio principal
+    host_clean = request.get_host().split(':')[0].lower()
+    if request.subdomains_supported:
+        subdomain_now = host_clean.split('.')[0]
+        if subdomain_now != restaurante.slug_normalized:
+            parts = host_clean.split('.')
+            if len(parts) > 1:
+                base_domain = host_clean
+                reservados = ['www', 'admin', 'accounts', 'api', 'clientes', 'hospedagens', 'hotelaria', 'static', 'media', 'dashboard', 'navievibe']
+                if subdomain_now in reservados or len(parts) > 2:
+                    base_domain = '.'.join(parts[1:])
+                port = ":" + request.get_host().split(":")[1] if ":" in request.get_host() else ""
+                target_url = f"{request.scheme}://{restaurante.slug_normalized}.{base_domain}{port}/"
+                return redirect(target_url)
+        elif request.path != '/':
+            # Se o subdomínio já está correto, mas acessaram a URL completa (/restaurantes/slug/),
+            # redireciona para a raiz do subdomínio
+            return redirect(f"{request.scheme}://{request.get_host()}/")
+
     # Busca as atrações ativas do restaurante (hoje em diante ou sem data)
     from django.utils import timezone
     from django.db.models import Q
