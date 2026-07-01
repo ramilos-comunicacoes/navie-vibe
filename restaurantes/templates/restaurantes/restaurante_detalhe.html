@@ -14,7 +14,7 @@
 
 {% block favicon %}
 <!-- Favicon dinâmico do restaurante -->
-<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png?v=3{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/premibeer_favicon.png?v=3{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/casa-de-engenho_favicon.png?v=3{% elif restaurante.slug == 'biene-cacau' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/biene-cacau_favicon.png?v=3{% elif restaurante.logo %}{{ restaurante.logo.url }}?v=3{% else %}/static/images/favicon.png?v=3{% endif %}" id="dynamic-favicon">
+<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/manaca-da-serra/logo/manaca_flower.png?v=4{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/premibeer/logo/favicon.png?v=4{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/casa-de-engenho/logo/favicon.png?v=4{% elif restaurante.slug == 'biene-cacau' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/biene-cacau/logo/favicon.png?v=4{% elif restaurante.logo %}{{ restaurante.logo.url }}?v=4{% else %}/static/images/favicon.png?v=4{% endif %}" id="dynamic-favicon">
 {% endblock favicon %}
 
 {% block extra_head %}
