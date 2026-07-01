@@ -17,22 +17,9 @@
 <link rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>
 <script src="{% static 'js/leaflet.js' %}"></script>
 
-{% if restaurante.slug == 'manaca-da-serra' %}
-<!-- Favicon dinâmico: flor do Manacá da Serra -->
-<link rel="icon" type="image/png" href="{{ restaurante.logo.url|default:'' }}" id="dynamic-favicon">
-<script>
-    // Troca o favicon para a flor do Manacá
-    (function() {
-        var flower = "{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png";
-        var link = document.getElementById('dynamic-favicon') || document.createElement('link');
-        link.rel = 'icon';
-        link.type = 'image/png';
-        link.href = flower;
-        link.id = 'dynamic-favicon';
-        document.head.appendChild(link);
-    })();
-</script>
-{% endif %}
+<!-- Favicon dinâmico -->
+<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png{% elif restaurante.logo %}{{ restaurante.logo.url }}{% endif %}" id="dynamic-favicon">
+
 
 <!-- Injeção Dinâmica de Cores de Branding -->
 <script>
@@ -349,7 +336,7 @@
     <div class="container mx-auto px-4 relative z-30 hero-content-wrapper">
         {% if restaurante.logo %}
         <div class="hero-logo-box flex items-center justify-center shrink-0 select-none">
-            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl" {% if restaurante.slug != 'manaca-da-serra' %}style="filter: brightness(0) invert(1) !important;"{% endif %}>
+            <img src="{{ restaurante.logo.url }}" alt="{{ restaurante.nome }}" class="max-h-full max-w-full object-contain drop-shadow-2xl">
         </div>
         {% endif %}
 
@@ -548,17 +535,10 @@
                     </div>
                 </div>
                 <div class="relative z-10 shrink-0 w-full md:w-auto">
-                    {% if restaurante.slug == 'manaca-da-serra' %}
-                    <a href="https://manacadaserra.menudino.com" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-action-secundario hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer shadow-lg active:scale-95 text-decoration-none">
+                    <a href="{{ cardapio_url }}" target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-action-secundario hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer shadow-lg active:scale-95 text-decoration-none">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                         Ver Cardápio Online
                     </a>
-                    {% else %}
-                    <a href="https://wa.me/{{ restaurante.whatsapp }}?text=Olá! Gostaria de ver o cardápio." target="_blank" class="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-action-secundario hover:opacity-90 text-white font-extrabold py-4 px-8 rounded-2xl text-xs uppercase tracking-wider transition-all border-none cursor-pointer shadow-lg active:scale-95 text-decoration-none">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        Solicitar Cardápio pelo WhatsApp
-                    </a>
-                    {% endif %}
                 </div>
             </div>
         </div>

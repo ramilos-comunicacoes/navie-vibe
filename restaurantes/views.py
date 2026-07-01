@@ -463,11 +463,15 @@ def restaurante_detalhe(request, slug):
     }
     galeria = galeria_data.get(restaurante.slug, [])
 
+    slug_clean = restaurante.slug.replace('-', '').replace('_', '')
+    cardapio_url = f"https://{slug_clean}.menudino.com"
+
     context = {
         'restaurante': restaurante,
         'atracoes': atracoes,
         'pratos_mock': pratos_mock,
         'galeria': galeria,
+        'cardapio_url': cardapio_url,
     }
     return render(request, 'restaurantes/restaurante_detalhe.html', context)
 

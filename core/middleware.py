@@ -43,10 +43,10 @@ class SubdomainMiddleware:
                         else:
                             from restaurantes.models import Restaurante
                             # 3. Verifica se existe um restaurante correspondente ao subdomínio
-                            restaurante = Restaurante.objects.filter(slug=possible_subdomain, ativo=True).first()
+                            restaurante = Restaurante.objects.using('restaurantes').filter(slug=possible_subdomain, ativo=True).first()
                             if not restaurante:
                                 normalized_subdomain = possible_subdomain.replace('-', '').replace('_', '')
-                                for r in Restaurante.objects.filter(ativo=True):
+                                for r in Restaurante.objects.using('restaurantes').filter(ativo=True):
                                     if r.slug.replace('-', '').replace('_', '') == normalized_subdomain:
                                         restaurante = r
                                         break
