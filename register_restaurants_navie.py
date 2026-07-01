@@ -33,8 +33,8 @@ def register_restaurants():
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
             "banner": "restaurantes/banners/casa_de_engenho_banner.png",
-            "imagem": "restaurantes/logos/casa-de-engenho_logo.jpg",
-            "logo": "restaurantes/logos/casa-de-engenho_logo.jpg",
+            "imagem": "restaurantes/logos/casa-de-engenho_logo.png",
+            "logo": "restaurantes/logos/casa-de-engenho_logo.png",
             "sobre_titulo": "Nossa Tradição & Sabor",
             "sobre_texto": "Na Casa de Engenho, cada prato conta uma história. Nascido do desejo de preservar as ricas traditions da culinária cearense e nordestina, nosso restaurante oferece uma verdadeira viagem no tempo. Com uma decoração rústica inspirada nos antigos engenhos de cana-de-açúcar, combinamos ingredientes locais frescos com técnicas artesanais de cozimento lento. Venha saborear nossa tradicional carne de sol com nata, baião de dois quentinho e doces caseiros deliciosos.",
             "sobre_cor_fundo": "#fef3c7",
