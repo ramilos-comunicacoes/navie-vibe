@@ -105,8 +105,8 @@ def register_restaurants():
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
             "banner": "restaurantes/banners/biene_cacau_banner.png",
-            "imagem": "restaurantes/logos/biene-cacau_logo.jpg",
-            "logo": "restaurantes/logos/biene-cacau_logo.jpg",
+            "imagem": "restaurantes/logos/biene-cacau_logo.png",
+            "logo": "restaurantes/logos/biene-cacau_logo.png",
             "sobre_titulo": "Da Amêndoa à Barra",
             "sobre_texto": "Na Biene Cacau, acreditamos que o chocolate de verdade deve ser puro, ético e extraordinário. Somos pioneiros na Serra da Ibiapaba na fabricação de chocolates sob o conceito bean-to-bar (da amêndoa de cacau selecionada diretamente do produtor até a barra finalizada). Controlamos cada etapa do processo: torra suave, moagem em moinhos de pedra e maturação lenta. O resultado é um chocolate com notas aromáticas complexas, sem conservantes ou gorduras hidrogenadas, oferecendo uma experiência sensorial única para paladares exigentes.",
             "sobre_cor_fundo": "#fff7ed",
