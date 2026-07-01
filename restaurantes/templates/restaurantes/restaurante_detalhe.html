@@ -337,9 +337,9 @@
             -webkit-mask-image: none !important;
             mask-image: none !important;
             border-radius: 0 !important;
-            margin-left: -1rem !important;
-            margin-right: -1rem !important;
-            width: calc(100% + 2rem) !important;
+            margin-left: -2rem !important; /* Compensando px-4 do main + px-4 do container */
+            margin-right: -2rem !important;
+            width: calc(100% + 4rem) !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
             background-color: transparent !important;
@@ -540,7 +540,7 @@
 
         <!-- SEÇÃO: NOSSO ESPAÇO -->
         {% if galeria %}
-        <div class="max-w-5xl mx-auto px-4 mb-16">
+        <div class="max-w-7xl mx-auto px-4 mb-16">
             <div class="text-center max-w-2xl mx-auto mb-6 px-4">
                 {% if restaurante.slug == 'manaca-da-serra' %}
                 <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">Nossos Pratos</span>
