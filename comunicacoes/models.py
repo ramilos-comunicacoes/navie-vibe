@@ -12,6 +12,7 @@ class EmailLog(models.Model):
         null=True, 
         blank=True, 
         related_name='email_logs',
+        db_constraint=False,
         help_text="Reserva associada a este e-mail (opcional)"
     )
     destinatario = models.EmailField(max_length=254, help_text="Endereço de e-mail do destinatário")
