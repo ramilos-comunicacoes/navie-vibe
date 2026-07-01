@@ -4,107 +4,148 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserva Confirmada - Naviê Vibe</title>
+    <!-- Importação de fontes modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; color: #333333;">
+<body style="margin: 0; padding: 0; background-color: #f0f4f8; font-family: 'Outfit', 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #1e293b;">
 
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f6f9; padding: 20px 0;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f0f4f8; padding: 30px 0;">
         <tr>
             <td align="center">
                 
-                <!-- Container principal do email -->
-                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <!-- Card Container Principal -->
+                <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);">
                     
-                    <!-- Cabeçalho / Logo -->
+                    <!-- Cabeçalho Azul -->
                     <tr>
-                        <td align="center" style="background-color: #1e293b; padding: 30px 20px;">
-                            <h2 style="margin: 0; color: #f97316; font-size: 24px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;">
-                                Naviê Vibe
-                            </h2>
-                            <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 11px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;">
-                                Comprovante de Reserva
-                            </p>
+                        <td style="background-color: #0b1a30; padding: 25px 35px; border-bottom: 3px solid #ff7a00;">
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <!-- Logo do Naviê Vibe (Branca) -->
+                                    <td align="left" style="vertical-align: middle;">
+                                        <img src="https://pousadasramilos.navievibe.com/static/images/logo_navie_completa_white.png" alt="Naviê Vibe" style="display: block; height: 38px; width: auto;" height="38">
+                                    </td>
+                                    <!-- Logo da Pousada (Branca / Duotone) -->
+                                    <td align="right" style="vertical-align: middle; color: #ffffff; font-size: 14px; font-weight: 600;">
+                                        {% if hotel.logo %}
+                                            <img src="https://pousadasramilos.navievibe.com{{ hotel.logo.url }}" alt="{{ hotel.nome }}" style="display: block; height: 35px; width: auto; filter: brightness(0) invert(1); -webkit-filter: brightness(0) invert(1);" height="35">
+                                        {% else %}
+                                            <span style="letter-spacing: 0.5px; font-size: 12px; text-transform: uppercase;">{{ hotel.nome }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     
-                    <!-- Corpo do Email -->
+                    <!-- Corpo Principal -->
                     <tr>
-                        <td style="padding: 40px 30px;">
+                        <td style="padding: 40px 35px;">
                             
-                            <!-- Boas-vindas -->
-                            <h3 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 700; color: #1e293b;">
+                            <!-- Mensagem de Boas-vindas -->
+                            <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #0b1a30;">
                                 Olá, {{ reserva.hospede_nome }}!
-                            </h3>
-                            <p style="margin: 0 0 25px 0; font-size: 14px; color: #64748b; line-height: 1.6;">
-                                Sua reserva na pousada <strong>{{ hotel.nome }}</strong> foi confirmada e o seu pagamento foi processado com sucesso! Veja abaixo os detalhes da sua estadia:
+                            </h2>
+                            <p style="margin: 0 0 25px 0; font-size: 15px; line-height: 1.6; color: #475569; font-weight: 400;">
+                                <strong>Prepara as malas!</strong> Estamos muito felizes em confirmar sua estadia. Seu pagamento foi processado com sucesso e o seu voucher digital já está gerado.
                             </p>
                             
-                            <!-- Cartão de Detalhes da Reserva (Voucher) -->
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px border-slate-200; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+                            <!-- Voucher Digital (Estilo Boarding Pass) -->
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin-bottom: 30px;">
+                                <!-- Topo do Ticket -->
                                 <tr>
-                                    <td colspan="2" style="padding-bottom: 15px; border-bottom: 1px solid #e2e8f0;">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Voucher Código</span>
-                                        <h4 style="margin: 3px 0 0 0; font-size: 18px; font-weight: 800; color: #f97316;">
-                                            #{{ reserva.id|stringformat:"s"|slice:":8"|upper }}
+                                    <td style="background-color: #f1f5f9; padding: 15px 20px; border-bottom: 2px dashed #cbd5e1;" colspan="2">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td>
+                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Código do Voucher</span>
+                                                    <h3 style="margin: 2px 0 0 0; font-size: 20px; font-weight: 800; color: #ff7a00;">#{{ voucher_codigo }}</h3>
+                                                </td>
+                                                <td align="right" style="vertical-align: middle;">
+                                                    <span style="display: inline-block; background-color: #dcfce7; color: #15803d; font-size: 11px; font-weight: bold; padding: 6px 12px; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px;">Reserva Confirmada</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Datas de Checkin e Checkout -->
+                                <tr>
+                                    <td style="padding: 20px 20px 10px 20px; width: 50%; vertical-align: top;">
+                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-in (Entrada)</span>
+                                        <h4 style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkin|date:"d/m/Y" }}</h4>
+                                        <span style="font-size: 12px; color: #64748b;">A partir das 14:00</span>
+                                    </td>
+                                    <td style="padding: 20px 20px 10px 20px; width: 50%; vertical-align: top; border-left: 1px solid #e2e8f0;">
+                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Check-out (Saída)</span>
+                                        <h4 style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30;">{{ reserva.data_checkout|date:"d/m/Y" }}</h4>
+                                        <span style="font-size: 12px; color: #64748b;">Até as 12:00</span>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Detalhes da Acomodação -->
+                                <tr>
+                                    <td style="padding: 10px 20px 20px 20px; border-top: 1px solid #e2e8f0;" colspan="2">
+                                        <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Acomodação Reservada</span>
+                                        <h4 style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0b1a30;">
+                                            {{ reserva.unidade.quarto.nome }} - Unidade: {{ reserva.unidade.identificador }}
                                         </h4>
+                                        <span style="font-size: 12px; color: #64748b;">Pousada: {{ hotel.nome }}</span>
                                     </td>
                                 </tr>
                                 
+                                <!-- Dados do Titular -->
                                 <tr>
-                                    <td style="padding-top: 15px; width: 50%;">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Check-in (Entrada)</span>
-                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
-                                            {{ reserva.data_checkin|date:"d/m/Y" }}
-                                        </p>
-                                        <span style="font-size: 11px; color: #64748b;">A partir das 14:00</span>
-                                    </td>
-                                    <td style="padding-top: 15px; width: 50%;">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Check-out (Saída)</span>
-                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
-                                            {{ reserva.data_checkout|date:"d/m/Y" }}
-                                        </p>
-                                        <span style="font-size: 11px; color: #64748b;">Até as 12:00</span>
+                                    <td style="padding: 15px 20px; border-top: 1px solid #e2e8f0;" colspan="2">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                            <tr>
+                                                <td style="width: 60%;">
+                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspede Titular</span>
+                                                    <h4 style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.hospede_nome }}</h4>
+                                                    {% if hospede_cpf_mascarado %}
+                                                    <span style="font-size: 12px; color: #64748b;">CPF: {{ hospede_cpf_mascarado }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="width: 40%; vertical-align: top;" align="right">
+                                                    <span style="font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Hóspedes</span>
+                                                    <h4 style="margin: 4px 0 0 0; font-size: 14px; font-weight: 700; color: #0b1a30;">{{ reserva.quantidade_hospedes }} Pessoa(s)</h4>
+                                                </td>
+                                            </tr>
+                                        </table>
                                     </td>
                                 </tr>
                                 
+                                <!-- QR Code de Check-in -->
                                 <tr>
-                                    <td style="padding-top: 20px; border-top: 1px solid #e2e8f0; margin-top: 15px;" colspan="2">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Acomodação</span>
-                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
-                                            {{ reserva.unidade.quarto.nome }} ({{ reserva.unidade.identificador }})
-                                        </p>
-                                    </td>
-                                </tr>
-                                
-                                <tr>
-                                    <td style="padding-top: 15px; width: 50%;">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Hóspedes</span>
-                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b;">
-                                            {{ reserva.quantidade_hospedes }} Pessoa(s)
-                                        </p>
-                                    </td>
-                                    <td style="padding-top: 15px; width: 50%;">
-                                        <span style="font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Canal de Venda</span>
-                                        <p style="margin: 3px 0 0 0; font-size: 14px; font-weight: 700; color: #1e293b; text-transform: capitalize;">
-                                            {{ reserva.canal_venda }}
+                                    <td style="padding: 25px 20px; background-color: #f1f5f9; text-align: center; border-top: 1px solid #e2e8f0;" colspan="2" align="center">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="background-color: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; display: inline-block;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="{{ qr_code_url }}" alt="QR Code da Reserva" style="display: block;" width="140" height="140">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <p style="margin: 10px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Apresente este QR Code ao chegar para agilizar seu Check-in
                                         </p>
                                     </td>
                                 </tr>
                             </table>
                             
-                            <!-- Resumo Financeiro -->
-                            <h4 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 750; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
-                                Detalhes do Pagamento
-                            </h4>
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px; margin-bottom: 30px;">
+                            <!-- Detalhes do Pagamento -->
+                            <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #0b1a30; text-transform: uppercase; letter-spacing: 1px;">
+                                Resumo Financeiro
+                            </h3>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 14px; margin-bottom: 35px; border-collapse: collapse;">
                                 <tr>
-                                    <td style="padding: 10px 0; color: #64748b; border-bottom: 1px solid #f1f5f9;">Total das Estadias</td>
-                                    <td align="right" style="padding: 10px 0; font-weight: bold; color: #1e293b; border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px 0; color: #64748b; border-bottom: 1px solid #f1f5f9;">Valor das Diárias</td>
+                                    <td align="right" style="padding: 12px 0; font-weight: 600; color: #0b1a30; border-bottom: 1px solid #f1f5f9;">
                                         R$ {{ reserva.valor_total }}
                                     </td>
                                 </tr>
-                                <tr style="font-size: 16px;">
-                                    <td style="padding: 15px 0 0 0; font-weight: bold; color: #1e293b;">Valor Pago</td>
-                                    <td align="right" style="padding: 15px 0 0 0; font-weight: 900; color: #16a34a;">
+                                <tr>
+                                    <td style="padding: 15px 0 0 0; font-weight: bold; color: #0b1a30; font-size: 16px;">Total Pago</td>
+                                    <td align="right" style="padding: 15px 0 0 0; font-weight: 800; color: #16a34a; font-size: 18px;">
                                         R$ {{ reserva.valor_total }}
                                     </td>
                                 </tr>
@@ -114,7 +155,7 @@
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td align="center">
-                                        <a href="https://pousadasramilos.navievibe.com/clientes/painel/" target="_blank" style="display: inline-block; background-color: #f97316; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: bold; padding: 14px 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2); transition: background-color 0.2s;">
+                                        <a href="https://pousadasramilos.navievibe.com/clientes/painel/" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #ff7a00 0%, #e65c00 100%); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: bold; padding: 15px 35px; border-radius: 50px; box-shadow: 0 5px 15px rgba(255, 122, 0, 0.3); letter-spacing: 0.5px;">
                                             Acessar Meu Painel de Hóspede
                                         </a>
                                     </td>
@@ -124,20 +165,31 @@
                         </td>
                     </tr>
                     
-                    <!-- Rodapé -->
+                    <!-- Rodapé do Email -->
                     <tr>
-                        <td align="center" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 25px 20px;">
-                            <p style="margin: 0; font-size: 13px; color: #1e293b; font-weight: bold;">
+                        <td align="center" style="background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 30px 25px;">
+                            <h4 style="margin: 0 0 4px 0; font-size: 14px; color: #0b1a30; font-weight: 700;">
                                 {{ hotel.nome }}
-                            </p>
+                            </h4>
                             {% if hotel.endereco_completo %}
-                            <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b;">
+                            <p style="margin: 0 0 15px 0; font-size: 12px; color: #64748b; max-width: 400px; line-height: 1.4;">
                                 {{ hotel.endereco_completo }}
                             </p>
                             {% endif %}
-                            <p style="margin: 15px 0 0 0; font-size: 10px; color: #94a3b8; line-height: 1.4;">
-                                Este é um e-mail automático enviado pelo sistema de reservas da pousada.<br>
-                                Por favor, não responda a este e-mail. Se tiver dúvidas, entre em contato com a nossa equipe.
+                            
+                            <!-- Separador -->
+                            <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0; width: 100%;">
+                            
+                            <!-- Mensagens Legais e Opt-out -->
+                            <p style="margin: 0 0 10px 0; font-size: 10px; color: #94a3b8; line-height: 1.5; max-width: 450px;">
+                                Este é um e-mail de transação gerado automaticamente após a aprovação da sua reserva na pousada.<br>
+                                Por favor, não responda diretamente a este remetente.
+                            </p>
+                            <p style="margin: 0; font-size: 10px; color: #94a3b8;">
+                                Não deseja mais receber esses e-mails? 
+                                <a href="https://pousadasramilos.navievibe.com/comunicacoes/descadastrar/?email={{ reserva.hospede_email }}" target="_blank" style="color: #64748b; text-decoration: underline; font-weight: 600;">
+                                    Clique aqui para cancelar a inscrição
+                                </a>
                             </p>
                         </td>
                     </tr>

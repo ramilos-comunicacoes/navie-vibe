@@ -51,11 +51,26 @@ def enviar_email_confirmacao_reserva(reserva):
         
     assunto = f"Reserva Confirmada! Seu voucher #{str(reserva.id)[:6].upper()} - Naviê Vibe"
     
+    # Prepara dados adicionais para o contexto
+    hospede_cpf_mascarado = ""
+    if reserva.hospede_cpf:
+        cpf_limpo = ''.join(filter(str.isdigit, reserva.hospede_cpf))
+        if len(cpf_limpo) == 11:
+            hospede_cpf_mascarado = f"***.{cpf_limpo[3:6]}.{cpf_limpo[6:9]}-**"
+        else:
+            hospede_cpf_mascarado = f"***.***.***-**"
+    
+    voucher_codigo = str(reserva.id)[:8].upper()
+    qr_code_url = f"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={reserva.id}"
+    
     # Renderiza o template de e-mail HTML
     try:
         html_content = render_to_string('comunicacoes/emails/confirmacao_reserva.html', {
             'reserva': reserva,
             'hotel': reserva.unidade.quarto.hotel,
+            'hospede_cpf_mascarado': hospede_cpf_mascarado,
+            'voucher_codigo': voucher_codigo,
+            'qr_code_url': qr_code_url,
         })
         text_content = strip_tags(html_content)
     except Exception as e:
