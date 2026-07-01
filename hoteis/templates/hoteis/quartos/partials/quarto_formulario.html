@@ -987,19 +987,22 @@
 </script>
 
 <!-- Out of Band swaps to update the B2B dashboard header actions to Form state -->
+<div style="display: none;" hx-swap-oob="innerHTML:#header_back_button_area">
+    <!-- Voltar -->
+    <button type="button" hx-get="{% url 'hoteis:partner_quarto_lista' %}" hx-target="#quartos-container" hx-swap="innerHTML"
+            class="bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 border border-slate-200/50 dark:border-white/5 shadow-sm cursor-pointer">
+        <span class="flex items-center" style="pointer-events:none;"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></span>
+        <span>Voltar</span>
+    </button>
+</div>
+
 <div style="display: none;" hx-swap-oob="innerHTML:#header_actions_area">
     <div class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300">
-        <!-- Voltar -->
-        <button type="button" hx-get="{% url 'hoteis:partner_quarto_lista' %}" hx-target="#quartos-container" hx-swap="innerHTML"
-                class="bg-white hover:bg-slate-50 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 border border-slate-200/50 dark:border-white/5 shadow-sm">
-            <span class="flex items-center" style="pointer-events:none;"><i data-lucide="arrow-left" class="w-3.5 h-3.5"></i></span>
-            <span>Voltar</span>
-        </button>
         <!-- Salvar (Binds to #quarto-form using HTML5 form attribute) -->
         <button type="submit" form="quarto-form"
-                class="bg-brand hover:bg-brand/90 text-white px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md shadow-brand/25 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 font-bold">
+                class="bg-brand hover:bg-brand/90 text-white px-4 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md shadow-brand/25 flex items-center gap-1.5 hover:scale-[1.02] active:scale-95 font-bold cursor-pointer">
             <span class="flex items-center" style="pointer-events:none;"><i data-lucide="save" class="w-4 h-4"></i></span>
-            <span>{% if quarto %}Salvar Alterações{% else %}Salvar Quarto{% endif %}</span>
+            <span>{% if quarto.id %}Salvar Alterações{% else %}Salvar Quarto{% endif %}</span>
         </button>
     </div>
 </div>

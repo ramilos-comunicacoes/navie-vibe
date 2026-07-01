@@ -1248,12 +1248,19 @@ x-data="{
         <header class="bg-white/60 dark:bg-navie-glass backdrop-blur-md dark:backdrop-blur-[20px] border-b border-slate-200/50 dark:border-navie-border flex items-center justify-between px-6 w-full flex-shrink-0 shadow-sm sticky top-0 z-[60] transition-colors"
                 style="height: calc(4.5rem + var(--safe-area-top)); padding-top: var(--safe-area-top);">
             
+            <style>
+                #header_back_button_area:not(:empty) + #header_title_content_area {
+                    display: none !important;
+                }
+            </style>
             <div class="flex items-center gap-4 shrink-0 mr-4">
                 <button @click="sidebarMobileOpen = !sidebarMobileOpen" class="md:hidden text-slate-500 dark:text-navie-textsec hover:text-brand transition-colors">
                     <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="menu" class="w-6 h-6"></i></span>
                 </button>
                 
-                <div class="hidden md:flex flex-col" x-show="activeTab !== 'configuracoes'">
+                <div class="hidden md:flex items-center gap-4" x-show="activeTab !== 'configuracoes'">
+                    <div id="header_back_button_area" class="flex items-center"></div>
+                    <div id="header_title_content_area" class="flex flex-col">
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
                         <span x-show="activeTab === 'financeiro'" style="display: none;">Financeiro</span>
@@ -1350,6 +1357,7 @@ x-data="{
                         <span x-show="activeTab === 'configuracoes' && configTab === 'geral'" style="display: none;">Personalização visual, logotipo, banner e slogan da rede unificada do grupo</span>
                     </div>
                 </div>
+            </div>
 
                 <!-- Alternador Site / Geral / Assinatura (Desktop apenas, alinhado à esquerda) -->
                 <div class="hidden md:flex items-center gap-1.5 p-1 bg-slate-100/80 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner" 
@@ -1464,7 +1472,7 @@ x-data="{
         <div id="sub-header-container" class="relative z-10 flex-shrink-0">
             <!-- Alternador de Abas de Quartos no Mobile -->
             <div x-show="activeTab === 'quartos'" class="lg:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
-                <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full max-w-sm">
+                <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full">
                     <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
                             :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                             class="px-3 py-1.5 rounded-lg text-[11px] tracking-tight transition-all flex items-center justify-center gap-1.5 w-1/2 focus:outline-none cursor-pointer">
@@ -1482,7 +1490,7 @@ x-data="{
 
             <!-- Alternador de Abas de Hóspedes no Mobile -->
             <div x-show="activeTab === 'hospedes'" class="lg:hidden bg-white/60 dark:bg-navie-glass backdrop-blur-md border-b border-slate-200/50 dark:border-navie-border px-4 py-2 flex justify-center items-center gap-2" style="display: none;" x-transition.opacity>
-                <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full max-w-sm">
+                <div class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-0.5 rounded-xl border border-slate-200/50 dark:border-white/10 select-none w-full">
                     <button type="button" @click="hospedesSubTab = 'ativos'; localStorage.setItem('partner_hospedes_tab', 'ativos')"
                             :class="hospedesSubTab === 'ativos' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
                             class="px-3 py-1.5 rounded-lg text-[11px] tracking-tight transition-all flex items-center justify-center gap-1.5 w-1/2 focus:outline-none cursor-pointer">

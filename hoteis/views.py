@@ -2738,6 +2738,12 @@ def partner_quarto_salvar(request):
     
     # Processa uploads de múltiplas imagens
     imagens_carregadas = request.FILES.getlist('imagens')
+    print("=" * 60)
+    print(f"DEBUG SALVAR QUARTO: {quarto.nome}")
+    print(f"Imagens carregadas (request.FILES): {request.FILES}")
+    print(f"Imagens list: {imagens_carregadas}")
+    print(f"Video file: {request.FILES.get('video_arquivo')}")
+    print("=" * 60)
     current_count = QuartoImagem.objects.filter(quarto=quarto).count()
     for idx, img in enumerate(imagens_carregadas):
         # Limite de no máximo 10 fotos no total
