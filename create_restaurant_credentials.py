@@ -14,19 +14,17 @@ def create_credentials():
     print("Iniciando a criação de credenciais para os restaurantes...")
     
     partners = [
-        {"username": "casadeengenho", "email": "contato@casadeengenho.com.br", "slug": "casa-de-engenho"},
-        {"username": "manacadaserra", "email": "contato@manacadaserra.com.br", "slug": "manaca-da-serra"},
-        {"username": "premibeer", "email": "contato@premibeer.com.br", "slug": "premibeer"},
-        {"username": "bienecacau", "email": "contato@bienecacau.com.br", "slug": "biene-cacau"},
+        {"username": "casadeengenho", "email": "contato@casadeengenho.com.br", "slug": "casa-de-engenho", "password": "casaEng@2026vibe"},
+        {"username": "manacadaserra", "email": "contato@manacadaserra.com.br", "slug": "manaca-da-serra", "password": "manacaSer@2026vibe"},
+        {"username": "premibeer", "email": "contato@premibeer.com.br", "slug": "premibeer", "password": "premiBeer@2026vibe"},
+        {"username": "bienecacau", "email": "contato@bienecacau.com.br", "slug": "biene-cacau", "password": "bieneCac@2026vibe"},
     ]
-    
-    password = "papaleguas20@P"
     
     for p in partners:
         # 1. Cria ou atualiza o usuário no banco padrão
         user, created = User.objects.using('default').get_or_create(username=p["username"])
         user.email = p["email"]
-        user.set_password(password)
+        user.set_password(p["password"])
         user.is_staff = False
         user.is_superuser = False
         user.save(using='default')
