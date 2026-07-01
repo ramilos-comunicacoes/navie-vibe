@@ -33,7 +33,7 @@ def register_restaurants():
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
             "banner": "restaurantes/banners/casa_de_engenho_banner.png",
-            "imagem": "restaurantes/logos/casa-de-engenho_logo.png",
+            "imagem": "restaurantes/logos/casa-de-engenho_logo.jpg",
             "logo": "restaurantes/logos/casa-de-engenho_logo.png",
             "sobre_titulo": "Nossa Tradição & Sabor",
             "sobre_texto": "Na Casa de Engenho, cada prato conta uma história. Nascido do desejo de preservar as ricas traditions da culinária cearense e nordestina, nosso restaurante oferece uma verdadeira viagem no tempo. Com uma decoração rústica inspirada nos antigos engenhos de cana-de-açúcar, combinamos ingredientes locais frescos com técnicas artesanais de cozimento lento. Venha saborear nossa tradicional carne de sol com nata, baião de dois quentinho e doces caseiros deliciosos.",
@@ -105,7 +105,7 @@ def register_restaurants():
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
             "banner": "restaurantes/banners/biene_cacau_banner.png",
-            "imagem": "restaurantes/logos/biene-cacau_logo.png",
+            "imagem": "restaurantes/logos/biene-cacau_logo.jpg",
             "logo": "restaurantes/logos/biene-cacau_logo.png",
             "sobre_titulo": "Da Amêndoa à Barra",
             "sobre_texto": "Na Biene Cacau, acreditamos que o chocolate de verdade deve ser puro, ético e extraordinário. Somos pioneiros na Serra da Ibiapaba na fabricação de chocolates sob o conceito bean-to-bar (da amêndoa de cacau selecionada diretamente do produtor até a barra finalizada). Controlamos cada etapa do processo: torra suave, moagem em moinhos de pedra e maturação lenta. O resultado é um chocolate com notas aromáticas complexas, sem conservantes ou gorduras hidrogenadas, oferecendo uma experiência sensorial única para paladares exigentes.",
