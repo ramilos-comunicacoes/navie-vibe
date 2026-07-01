@@ -31,35 +31,6 @@
         flex-grow: 1 !important;
         overflow: hidden !important;
     }
-    
-    /* Configuração de tamanho e proporção física rígida dos cards no desktop */
-    .desktop-card-highlight {
-        width: 300px !important;
-        height: 400px !important;
-        flex-shrink: 0 !important;
-    }
-    @media (min-width: 1280px) {
-        .desktop-card-highlight {
-            width: 320px !important;
-            height: 427px !important;
-        }
-    }
-    
-    /* Rolagem horizontal elegante e responsiva para os destaques no desktop */
-    .custom-scrollbar::-webkit-scrollbar {
-        height: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(241, 245, 249, 0.5);
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(203, 213, 225, 1);
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(148, 163, 184, 1);
-    }
 </style>
 
 {% if destaques_personalizado %}
@@ -219,49 +190,130 @@
                 {% endif %}
             </div>
 
-            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <!-- Carrossel 3D à Direita (65% de largura) -->
             <div class="desktop-highlights-carousel">
-                <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
-                    {% for item in destaques_personalizado.itens.all %}
-                        <a href="{{ item.link_cta|default:'#' }}"
-                           {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                           class="desktop-card-highlight relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
+                <div class="relative w-full h-[470px]"
+                     x-data="{ 
+                        active: 1, 
+                        total: {{ destaques_personalizado.itens.all|length }},
+                        autoPlayInterval: null,
+                        touchStartX: 0,
+                        touchEndX: 0,
+                        isMouseDown: false,
+                        startAutoplay() {
+                            if (this.total <= 1) return;
+                            this.autoPlayInterval = setInterval(() => {
+                                this.active = (this.active % this.total) + 1;
+                            }, 3500);
+                        },
+                        stopAutoplay() {
+                            clearInterval(this.autoPlayInterval);
+                        },
+                        handleTouchStart(e) {
+                            this.touchStartX = e.changedTouches[0].screenX;
+                            this.stopAutoplay();
+                        },
+                        handleTouchEnd(e) {
+                            this.touchEndX = e.changedTouches[0].screenX;
+                            this.handleSwipe(this.touchStartX, this.touchEndX);
+                            this.startAutoplay();
+                        },
+                        handleMouseDown(e) {
+                            this.touchStartX = e.clientX;
+                            this.isMouseDown = true;
+                            this.stopAutoplay();
+                        },
+                        handleMouseUp(e) {
+                            if (!this.isMouseDown) return;
+                            this.isMouseDown = false;
+                            this.touchEndX = e.clientX;
+                            this.handleSwipe(this.touchStartX, this.touchEndX);
+                            this.startAutoplay();
+                        },
+                        handleSwipe(start, end) {
+                            const diff = start - end;
+                            if (Math.abs(diff) > 40) {
+                                if (diff > 0) {
+                                    this.active = (this.active % this.total) + 1;
+                                } else {
+                                    this.active = this.active === 1 ? this.total : this.active - 1;
+                                }
+                            }
+                        }
+                     }"
+                     x-init="startAutoplay()"
+                     @touchstart="handleTouchStart($event)"
+                     @touchend="handleTouchEnd($event)"
+                     @mousedown="handleMouseDown($event)"
+                     @mouseup="handleMouseUp($event)"
+                     @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                     @mouseenter="stopAutoplay()">
+                    
+                    <div class="relative w-full h-[410px] flex items-start pt-2 justify-center overflow-hidden">
+                        {% for item in destaques_personalizado.itens.all %}
+                        <div class="absolute w-[290px] xl:w-[320px] h-[370px] xl:h-[400px] transition-all duration-700 ease-out select-none"
+                             style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
+                             :style="active === {{ forloop.counter }} 
+                                    ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                    : (active % total) + 1 === {{ forloop.counter }}
+                                    ? 'transform: translateX(46%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                    : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
+                                    ? 'transform: translateX(-46%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                    : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
                             
-                            <div class="absolute inset-0 w-full h-full bg-slate-900">
-                                {% if item.video %}
-                                    <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                                {% elif item.imagem %}
-                                    <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                                {% else %}
-                                    <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                        <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                                    </div>
-                                {% endif %}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                            </div>
-
-                            <div class="relative z-10 mt-auto p-6 xl:p-8 flex flex-col items-start text-left w-full">
-                                {% if forloop.counter0 == 0 %}
-                                    <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-3">EXPERIÊNCIA</span>
-                                {% elif forloop.counter0 == 1 %}
-                                    <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-3">LAZER</span>
-                                {% else %}
-                                    <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-3">CONFORTO</span>
-                                {% endif %}
-
-                                <h4 class="text-xl xl:text-2xl font-black text-white leading-tight tracking-tight mb-2 truncate w-full">{{ item.titulo }}</h4>
-                                {% if item.descricao %}
-                                    <p class="text-xs xl:text-sm text-white/80 font-bold mb-4 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
-                                {% endif %}
+                            <a href="{{ item.link_cta|default:'#' }}"
+                               {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
+                               class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block bg-slate-900 border border-slate-100/10">
                                 
-                                {% if item.preco %}
-                                    <div class="flex justify-between items-center w-full">
-                                        <span class="text-xs xl:text-sm text-white font-black">A partir de R$ {{ item.preco }}</span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </a>
-                    {% endfor %}
+                                <div class="absolute inset-0 w-full h-full bg-slate-900">
+                                    {% if item.video %}
+                                        <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
+                                    {% elif item.imagem %}
+                                        <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
+                                    {% else %}
+                                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                            <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                </div>
+
+                                <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
+                                    {% if forloop.counter0 == 0 %}
+                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-3">EXPERIÊNCIA</span>
+                                    {% elif forloop.counter0 == 1 %}
+                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-3">LAZER</span>
+                                    {% else %}
+                                        <span class="inline-block px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-3">CONFORTO</span>
+                                    {% endif %}
+
+                                    <h4 class="text-xl xl:text-2xl font-black text-white leading-tight tracking-tight mb-2 truncate w-full">{{ item.titulo }}</h4>
+                                    {% if item.descricao %}
+                                        <p class="text-xs xl:text-sm text-white/80 font-bold mb-4 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
+                                    {% endif %}
+                                    
+                                    {% if item.preco %}
+                                        <div class="flex justify-between items-center w-full">
+                                            <span class="text-xs xl:text-sm text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Indicadores de paginação desktop -->
+                    {% if destaques_personalizado.itens.all|length > 1 %}
+                        <div class="flex justify-center items-center gap-2 mt-4">
+                            {% for item in destaques_personalizado.itens.all %}
+                            <button @click="active = {{ forloop.counter }}"
+                                    class="transition-all duration-300 pointer-events-auto"
+                                    :class="active === {{ forloop.counter }} ? 'w-8 h-2 rounded-full bg-amber-500 shadow-sm' : 'w-2 h-2 rounded-full bg-slate-300'">
+                            </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -411,45 +463,124 @@
                 </p>
             </div>
 
-            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <!-- Carrossel 3D à Direita (65% de largura) -->
             <div class="desktop-highlights-carousel">
-                <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
-                    {% for quarto in quartos_destaque %}
-                        <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
-                           hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                           class="desktop-card-highlight relative rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 group flex flex-col bg-slate-900 border border-slate-100/10">
+                <div class="relative w-full h-[470px]"
+                     x-data="{ 
+                        active: 2, 
+                        total: {{ quartos_destaque|length }},
+                        autoPlayInterval: null,
+                        touchStartX: 0,
+                        touchEndX: 0,
+                        isMouseDown: false,
+                        startAutoplay() {
+                            if (this.total <= 1) return;
+                            this.autoPlayInterval = setInterval(() => {
+                                this.active = (this.active % this.total) + 1;
+                            }, 3500);
+                        },
+                        stopAutoplay() {
+                            clearInterval(this.autoPlayInterval);
+                        },
+                        handleTouchStart(e) {
+                            this.touchStartX = e.changedTouches[0].screenX;
+                            this.stopAutoplay();
+                        },
+                        handleTouchEnd(e) {
+                            this.touchEndX = e.changedTouches[0].screenX;
+                            this.handleSwipe(this.touchStartX, this.touchEndX);
+                            this.startAutoplay();
+                        },
+                        handleMouseDown(e) {
+                            this.touchStartX = e.clientX;
+                            this.isMouseDown = true;
+                            this.stopAutoplay();
+                        },
+                        handleMouseUp(e) {
+                            if (!this.isMouseDown) return;
+                            this.isMouseDown = false;
+                            this.touchEndX = e.clientX;
+                            this.handleSwipe(this.touchStartX, this.touchEndX);
+                            this.startAutoplay();
+                        },
+                        handleSwipe(start, end) {
+                            const diff = start - end;
+                            if (Math.abs(diff) > 40) {
+                                if (diff > 0) {
+                                    this.active = (this.active % this.total) + 1;
+                                } else {
+                                    this.active = this.active === 1 ? this.total : this.active - 1;
+                                }
+                            }
+                        }
+                     }"
+                     x-init="startAutoplay()"
+                     @touchstart="handleTouchStart($event)"
+                     @touchend="handleTouchEnd($event)"
+                     @mousedown="handleMouseDown($event)"
+                     @mouseup="handleMouseUp($event)"
+                     @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                     @mouseenter="stopAutoplay()">
+                    
+                    <div class="relative w-full h-[410px] flex items-start pt-2 justify-center overflow-hidden">
+                        {% for quarto in quartos_destaque %}
+                        <div class="absolute w-[290px] xl:w-[320px] h-[370px] xl:h-[400px] transition-all duration-700 ease-out select-none"
+                             style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
+                             :style="active === {{ forloop.counter }} 
+                                    ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                    : (active % total) + 1 === {{ forloop.counter }}
+                                    ? 'transform: translateX(46%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                    : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
+                                    ? 'transform: translateX(-46%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                    : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
                             
-                            <!-- Imagem do Quarto -->
-                            <div class="absolute inset-0 w-full h-full bg-slate-900">
-                                {% if quarto.imagens.all %}
-                                    <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
-                                {% else %}
-                                    <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                        <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                                    </div>
-                                {% endif %}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                            </div>
-
-                            <!-- Conteúdo em cima do card (Alinhado à Base) -->
-                            <div class="relative z-10 mt-auto p-6 xl:p-8 flex flex-col items-start text-left w-full">
-                                {% if forloop.counter0 == 0 %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
-                                {% elif forloop.counter0 == 1 %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
-                                {% else %}
-                                    <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
-                                {% endif %}
-
-                                <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
-                                <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                            <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
+                               hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                               class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block bg-slate-900 border border-slate-100/10">
                                 
-                                <div class="flex justify-between items-center w-full">
-                                    <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                <!-- Imagem do Quarto -->
+                                <div class="absolute inset-0 w-full h-full">
+                                    {% if quarto.imagens.all %}
+                                        <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                    {% else %}
+                                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                            <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
                                 </div>
-                            </div>
-                        </a>
-                    {% endfor %}
+
+                                <!-- Conteúdo em cima do card (Alinhado à Base) -->
+                                <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
+                                    {% if forloop.counter0 == 0 %}
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
+                                    {% elif forloop.counter0 == 1 %}
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
+                                    {% else %}
+                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
+                                    {% endif %}
+
+                                    <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
+                                    <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                                    
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Indicadores de paginação desktop -->
+                    <div class="flex justify-center items-center gap-2 mt-4">
+                        {% for quarto in quartos_destaque %}
+                        <button @click="active = {{ forloop.counter }}"
+                                class="transition-all duration-300 pointer-events-auto"
+                                :class="active === {{ forloop.counter }} ? 'w-8 h-2 rounded-full bg-amber-500 shadow-sm' : 'w-2 h-2 rounded-full bg-slate-300'">
+                        </button>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
