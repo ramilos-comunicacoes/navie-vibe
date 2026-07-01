@@ -7,9 +7,14 @@ def testar_email_reserva(request):
     Endpoint de teste rápido para validar a conexão SMTP e envio de e-mails.
     Pega a reserva mais recente com e-mail e faz o disparo em segundo plano.
     """
-    reserva = Reserva.objects.using('hospedagem').exclude(hospede_email='').first()
+    reserva = Reserva.objects.using('hospedagem').exclude(hospede_email__isnull=True).exclude(hospede_email='').first()
     if not reserva:
         return HttpResponse("Nenhuma reserva com e-mail cadastrado encontrada no banco para testes.", status=404)
+
+    # Se passar um e-mail via parâmetro GET (?email=seu-email@teste.com), envia para ele
+    email_destino = request.GET.get('email')
+    if email_destino:
+        reserva.hospede_email = email_destino
         
     # Dispara e-mail de teste
     sucesso = enviar_email_confirmacao_reserva(reserva)
