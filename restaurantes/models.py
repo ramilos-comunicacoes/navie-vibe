@@ -50,6 +50,57 @@ class Restaurante(models.Model):
     def slug_normalized(self):
         return self.slug.replace('-', '').replace('_', '')
 
+    def save(self, *args, **kwargs):
+        # Só extrai e define cores automaticamente se for a primeira criação (cor_primaria default)
+        # ou se cor_primaria estiver em branco.
+        if self.logo and (not self.cor_primaria or self.cor_primaria == '#e11d48'):
+            try:
+                from PIL import Image
+                import math
+                
+                # Abre e converte a imagem
+                img = Image.open(self.logo)
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                img = img.copy()
+                img.thumbnail((60, 60))
+                
+                # Coleta cores válidas
+                pixels = list(img.getdata())
+                valid_colors = []
+                for r, g, b in pixels:
+                    yiq = (r * 299 + g * 587 + b * 114) / 1000
+                    avg = (r + g + b) / 3
+                    variance = ((r - avg)**2 + (g - avg)**2 + (b - avg)**2) / 3
+                    std = math.sqrt(variance)
+                    
+                    # Evita brancos, pretos e cinzas puros para obter cores vivas
+                    if 35 < yiq < 220 and std > 15:
+                        valid_colors.append((r, g, b, std))
+                
+                if valid_colors:
+                    # Ordena por maior desvio padrão (cor mais viva/saturada)
+                    valid_colors.sort(key=lambda item: item[3], reverse=True)
+                    prim = valid_colors[0]
+                    self.cor_primaria = '#{:02x}{:02x}{:02x}'.format(prim[0], prim[1], prim[2])
+                    
+                    # Acha secundária que seja diferente da primária
+                    sec = None
+                    for r, g, b, std in valid_colors:
+                        dist = math.sqrt((prim[0] - r)**2 + (prim[1] - g)**2 + (prim[2] - b)**2)
+                        if dist > 80:
+                            sec = (r, g, b)
+                            break
+                    if sec:
+                        self.cor_secundaria = '#{:02x}{:02x}{:02x}'.format(sec[0], sec[1], sec[2])
+                    else:
+                        self.cor_secundaria = '#{:02x}{:02x}{:02x}'.format(255 - prim[0], 255 - prim[1], 255 - prim[2])
+            except Exception as e:
+                print("Erro ao extrair cores da logo:", str(e))
+                
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.nome
 
