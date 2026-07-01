@@ -33,7 +33,6 @@ def register_restaurants():
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
             "banner": "restaurantes/banners/casa_de_engenho_banner.png",
-            "sobre_banner": "restaurantes/banners/casa_de_engenho_banner.png",
             "imagem": "restaurantes/logos/casa-de-engenho_logo.jpg",
             "logo": "restaurantes/logos/casa-de-engenho_logo.jpg",
             "sobre_titulo": "Nossa Tradição & Sabor",
@@ -58,7 +57,6 @@ def register_restaurants():
             "cor_secundaria": "#140a1b",  # Ameixa Escura / Plum Black
             "descricao": "O seu refúgio gastronômico em Tianguá. Um ambiente aconchegante que combina sabores únicos com uma experiência acolhedora, ideal para qualquer momento do dia.",
             "banner": "restaurantes/banners/manaca_da_serra_banner.png",
-            "sobre_banner": "restaurantes/banners/manaca_da_serra_banner.png",
             "imagem": "restaurantes/logos/manaca-da-serra_logo.jpg",
             "logo": "restaurantes/logos/manaca_logo.png",
             "sobre_titulo": "Um Refúgio Acolhedor",
@@ -83,7 +81,6 @@ def register_restaurants():
             "cor_secundaria": "#1e293b",  # Slate
             "descricao": "A primeira cervejaria da Serra da Ibiapaba! Uma fusão perfeita entre cervejas artesanais de excelência e pratos elaborados, criando a vibe ideal para curtir com os amigos.",
             "banner": "restaurantes/banners/premibeer_banner.png",
-            "sobre_banner": "restaurantes/banners/premibeer_banner.png",
             "imagem": "restaurantes/logos/premibeer_logo.jpg",
             "logo": "restaurantes/logos/premibeer_logo.png",
             "sobre_titulo": "Cerveja Artesanal de Verdade",
@@ -108,7 +105,6 @@ def register_restaurants():
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
             "banner": "restaurantes/banners/biene_cacau_banner.png",
-            "sobre_banner": "restaurantes/banners/biene_cacau_banner.png",
             "imagem": "restaurantes/logos/biene-cacau_logo.jpg",
             "logo": "restaurantes/logos/biene-cacau_logo.jpg",
             "sobre_titulo": "Da Amêndoa à Barra",
@@ -138,7 +134,6 @@ def register_restaurants():
             cor_secundaria=data["cor_secundaria"],
             descricao=data["descricao"],
             banner=data["banner"],
-            sobre_banner=data.get("sobre_banner"),
             imagem=data["imagem"],
             logo=data["logo"],
             sobre_titulo=data["sobre_titulo"],
