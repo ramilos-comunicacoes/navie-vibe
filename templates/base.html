@@ -33,12 +33,24 @@
     {% endblock %}
     
     <!-- Favicon Dinâmico -->
-    {% if request.hotel_atual and request.hotel_atual.logo %}
+    {% if request.hotel_atual and request.hotel_atual.favicon %}
+        <link rel="icon" type="image/png" href="{{ request.hotel_atual.favicon.url }}">
+        <link rel="apple-touch-icon" href="{{ request.hotel_atual.favicon.url }}">
+    {% elif hotel and hotel.favicon %}
+        <link rel="icon" type="image/png" href="{{ hotel.favicon.url }}">
+        <link rel="apple-touch-icon" href="{{ hotel.favicon.url }}">
+    {% elif request.hotel_atual and request.hotel_atual.logo %}
         <link rel="icon" type="image/png" href="{{ request.hotel_atual.logo.url }}">
         <link rel="apple-touch-icon" href="{{ request.hotel_atual.logo.url }}">
     {% elif hotel and hotel.logo %}
         <link rel="icon" type="image/png" href="{{ hotel.logo.url }}">
         <link rel="apple-touch-icon" href="{{ hotel.logo.url }}">
+    {% elif empresa and empresa.favicon %}
+        <link rel="icon" type="image/png" href="{{ empresa.favicon.url }}">
+        <link rel="apple-touch-icon" href="{{ empresa.favicon.url }}">
+    {% elif empresa and empresa.logo %}
+        <link rel="icon" type="image/png" href="{{ empresa.logo.url }}">
+        <link rel="apple-touch-icon" href="{{ empresa.logo.url }}">
     {% else %}
         <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
         <link rel="apple-touch-icon" href="{% static 'images/favicon.png' %}">
