@@ -683,7 +683,7 @@
         <!-- Novo Card de Mídias e Contato à Direita -->
         <div class="sobre-right-card select-none">
             <!-- Logo do Restaurante (Bolinha perfeita sem corte) -->
-            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white flex items-center justify-center p-3" style="box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.03);">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center p-3" style="background-color: {% if restaurante.slug == 'premibeer' %}#0f172a{% else %}#ffffff{% endif %}; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.03);">
                 <img src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% endif %}" 
                      alt="Logo {{ restaurante.nome }}" 
                      class="w-full h-full object-contain">
