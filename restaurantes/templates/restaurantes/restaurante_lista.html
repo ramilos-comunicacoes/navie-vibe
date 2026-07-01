@@ -214,7 +214,7 @@
                     
                     <!-- Botões de Ação -->
                     <div class="mt-5 pt-3 border-t border-slate-100 flex flex-col gap-2">
-                        <a href="{% url 'restaurantes:restaurante_detalhe' r.slug %}" class="w-full flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 text-decoration-none">
+                        <a href="{% if r.slug_normalized and request.subdomains_supported %}{{ request.scheme }}://{{ r.slug_normalized }}.{{ request.base_host }}/{% else %}{% url 'restaurantes:restaurante_detalhe' r.slug %}{% endif %}" class="w-full flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-4 py-2 rounded-xl text-xs font-extrabold transition-all duration-300 text-decoration-none">
                             <span>Ver Restaurante</span>
                             <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                         </a>

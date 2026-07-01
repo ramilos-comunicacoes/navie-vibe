@@ -387,7 +387,7 @@
 
             <div id="restaurants-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-6 md:gap-8">
                 {% for r in restaurantes %}
-                <a href="{% url 'restaurantes:restaurante_detalhe' r.slug %}"
+                <a href="{% if r.slug_normalized and request.subdomains_supported %}{{ request.scheme }}://{{ r.slug_normalized }}.{{ request.base_host }}/{% else %}{% url 'restaurantes:restaurante_detalhe' r.slug %}{% endif %}"
                    class="event-card bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100 group transition-all duration-300 flex flex-col justify-between h-full"
                    x-show="{{ forloop.counter0 }} < (4 + clickCount * 4)"
                    x-transition:enter="transition ease-out duration-300"

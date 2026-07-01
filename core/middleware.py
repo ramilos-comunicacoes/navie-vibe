@@ -47,7 +47,7 @@ class SubdomainMiddleware:
                             if not restaurante:
                                 normalized_subdomain = possible_subdomain.replace('-', '').replace('_', '')
                                 for r in Restaurante.objects.using('restaurantes').filter(ativo=True):
-                                    if r.slug.replace('-', '').replace('_', '') == normalized_subdomain:
+                                    if r.slug_normalized == normalized_subdomain:
                                         restaurante = r
                                         break
                             

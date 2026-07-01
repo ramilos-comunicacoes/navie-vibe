@@ -46,6 +46,10 @@ class Restaurante(models.Model):
         verbose_name_plural = "Restaurantes"
         ordering = ['nome']
 
+    @property
+    def slug_normalized(self):
+        return self.slug.replace('-', '').replace('_', '')
+
     def __str__(self):
         return self.nome
 
