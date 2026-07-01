@@ -25,10 +25,10 @@ def register_restaurants():
             "especialidade": "Restaurante Temático Nordestino",
             "cidade_nome": "Tianguá",
             "endereco": "Rodovia BR-222, Km 310 - Sítio Engenho, Tianguá - CE",
-            "whatsapp": "88999991111",
+            "whatsapp": "558892763226",
             "whatsapp_privado": "88988881111",
             "email_contato": "contato@casadeengenho.com.br",
-            "instagram": None,
+            "instagram": "https://www.instagram.com/rcasadeengenho/",
             "cor_primaria": "#b45309",  # Terracota / Âmbar
             "cor_secundaria": "#f59e0b",  # Dourado
             "descricao": "A verdadeira alma do nordeste em Tianguá! Um restaurante temático nordestino perfeito para quem busca uma autêntica imersão cultural acompanhada da melhor gastronomia regional.",
@@ -41,7 +41,7 @@ def register_restaurants():
             "sobre_cor_texto": "#78350f",
             "venda_online": True,
             "latitude": -3.7440084,
-            "longitude": -40.9930183
+            "longitude": -40.9955986
         },
         {
             "nome": "Manacá da Serra",
@@ -73,10 +73,10 @@ def register_restaurants():
             "especialidade": "Gastro Pub e Cervejaria",
             "cidade_nome": "Tianguá",
             "endereco": "Av. Prefeito Jaques Nunes, 1200 - Planalto da Ibiapaba, Tianguá - CE",
-            "whatsapp": "88999993333",
+            "whatsapp": "558596699306",
             "whatsapp_privado": "88988883333",
             "email_contato": "contato@premibeer.com.br",
-            "instagram": None,
+            "instagram": "https://www.instagram.com/premibeer/",
             "cor_primaria": "#d97706",  # Dourado Cerveja
             "cor_secundaria": "#1e293b",  # Slate
             "descricao": "A primeira cervejaria da Serra da Ibiapaba! Uma fusão perfeita entre cervejas artesanais de excelência e pratos elaborados, criando a vibe ideal para curtir com os amigos.",
@@ -89,7 +89,7 @@ def register_restaurants():
             "sobre_cor_texto": "#1c1917",
             "venda_online": True,
             "latitude": -3.718032,
-            "longitude": -40.9894201
+            "longitude": -40.9920004
         },
         {
             "nome": "Biene Cacau",
@@ -97,10 +97,10 @@ def register_restaurants():
             "especialidade": "Chocolateria Artesanal",
             "cidade_nome": "Tianguá",
             "endereco": "Shopping Ibiapaba, Loja 15 - Centro, Tianguá - CE",
-            "whatsapp": "88999994444",
+            "whatsapp": "5588992237412",
             "whatsapp_privado": "88988884444",
             "email_contato": "contato@bienecacau.com.br",
-            "instagram": None,
+            "instagram": "https://www.instagram.com/bienecacau/",
             "cor_primaria": "#7c2d12",  # Marrom Chocolate
             "cor_secundaria": "#fbbf24",  # Ouro
             "descricao": "Elevando o padrão do chocolate na região. Uma marca exclusiva de chocolates artesanais com o conceito bean-to-bar (da amêndoa à barra), garantindo pureza, sabor e uma experiência premium.",
@@ -113,7 +113,7 @@ def register_restaurants():
             "sobre_cor_texto": "#7c2d12",
             "venda_online": True,
             "latitude": -3.718032,
-            "longitude": -40.9894211
+            "longitude": -40.9920004
         }
     ]
 
