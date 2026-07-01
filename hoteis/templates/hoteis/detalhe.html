@@ -1315,19 +1315,45 @@
             if (!sectionEl) return;
             
             isSobreExpanded = !isSobreExpanded;
+            const currentHeight = sectionEl.offsetHeight;
             
             if (isSobreExpanded) {
                 sobreTextoEl.classList.remove('line-clamp-4', 'md:line-clamp-5');
                 sobreTextoEl.classList.add('line-clamp-none');
+                
+                sectionEl.style.maxHeight = currentHeight + 'px';
+                sectionEl.offsetHeight; // force reflow
+                
                 sectionEl.classList.add('h-auto', 'py-10', 'md:py-16');
+                const targetHeight = sectionEl.scrollHeight;
+                sectionEl.style.maxHeight = targetHeight + 'px';
+                
                 sobreBtnEl.textContent = 'Ler menos';
+                
+                setTimeout(() => {
+                    if (isSobreExpanded) {
+                        sectionEl.style.maxHeight = 'none';
+                    }
+                }, 500);
             } else {
-                sobreTextoEl.classList.remove('line-clamp-none');
-                sobreTextoEl.classList.add('line-clamp-4', 'md:line-clamp-5');
+                sectionEl.style.maxHeight = sectionEl.scrollHeight + 'px';
+                sectionEl.offsetHeight; // force reflow
+                
+                const isMobile = window.innerWidth < 768;
+                const collapsedMax = isMobile ? 250 : 280;
+                sectionEl.style.maxHeight = collapsedMax + 'px';
+                
                 sectionEl.classList.remove('h-auto', 'py-10', 'md:py-16');
                 sobreBtnEl.textContent = 'Ler mais';
                 
-                // Smooth scroll back to section top
+                setTimeout(() => {
+                    if (!isSobreExpanded) {
+                        sobreTextoEl.classList.remove('line-clamp-none');
+                        sobreTextoEl.classList.add('line-clamp-4', 'md:line-clamp-5');
+                        sectionEl.style.maxHeight = '';
+                    }
+                }, 500);
+                
                 sectionEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         };
