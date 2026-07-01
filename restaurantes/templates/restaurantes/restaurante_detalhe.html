@@ -18,7 +18,7 @@
 <script src="{% static 'js/leaflet.js' %}"></script>
 
 <!-- Favicon dinâmico -->
-<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/premibeer_favicon.png{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/casa-de-engenho_favicon.png{% elif restaurante.logo %}{{ restaurante.logo.url }}{% else %}/static/images/favicon.png{% endif %}" id="dynamic-favicon">
+<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/premibeer_favicon.png{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/casa-de-engenho_favicon.png{% elif restaurante.slug == 'biene-cacau' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/biene-cacau_favicon.png{% elif restaurante.logo %}{{ restaurante.logo.url }}{% else %}/static/images/favicon.png{% endif %}" id="dynamic-favicon">
 
 
 <!-- Injeção Dinâmica de Cores de Branding -->

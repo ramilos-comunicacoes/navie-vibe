@@ -39,6 +39,7 @@ def get_git_modified_files():
         "media/restaurantes/logos/premibeer_logo.jpg",
         "media/restaurantes/logos/biene-cacau_logo.jpg",
         "media/restaurantes/logos/biene-cacau_logo.png",
+        "media/restaurantes/logos/biene-cacau_favicon.png",
         "media/restaurantes/logos/casa-de-engenho_logo.jpg",
         "media/restaurantes/logos/casa-de-engenho_logo.png",
         "media/restaurantes/logos/casa-de-engenho_favicon.png",
