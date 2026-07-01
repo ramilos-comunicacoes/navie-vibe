@@ -2683,7 +2683,7 @@
 
                                     <!-- Active State -->
                                     <div id="imagem_card-active-state" class="absolute inset-0 w-full h-full {% if not hotel.imagem_card %}hidden{% endif %}">
-                                        <img id="imagem_card-preview-img" src="{% if hotel.imagem_card %}{{ hotel.imagem_card.url }}{% endif %}" class="w-full h-full object-cover" alt="Card preview">
+                                        <img id="imagem_card-preview-img" src="{% if hotel.imagem_card %}{{ hotel.imagem_card.url }}{% endif %}" class="w-full h-full object-contain p-4" alt="Card preview">
                                         <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
                                             <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
                                                     onclick="event.stopPropagation(); clearUnifiedMedia('imagem_card')">
