@@ -2,432 +2,421 @@
 
 {% if destaques_personalizado %}
     <!-- ── VITRINE DESTAQUES PERSONALIZADOS ── -->
-    <div class="mb-10 md:mb-12 max-w-[85rem] mx-auto px-4 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
-        <!-- Cabeçalho (Centralizado no mobile, alinhado à esquerda no desktop) -->
-        <div class="text-center lg:text-left max-w-2xl mx-auto lg:mx-0 mb-6 lg:mb-0 lg:col-span-4">
-            <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
-            <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
-            {% if destaques_personalizado.subtitulo %}
-                <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
-                    {{ destaques_personalizado.subtitulo }}
-                </p>
-            {% endif %}
-        </div>
-
-        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de LG) ── -->
-        <div class="block lg:hidden -mx-4 w-[calc(100%+2rem)] lg:col-span-12"
-             x-data="{ 
-                active: 1, 
-                total: {{ destaques_personalizado.itens.all|length }},
-                autoPlayInterval: null,
-                touchStartX: 0,
-                touchEndX: 0,
-                isMouseDown: false,
-                startAutoplay() {
-                    if (this.total <= 1) return;
-                    this.autoPlayInterval = setInterval(() => {
-                        this.active = (this.active % this.total) + 1;
-                    }, 3500);
-                },
-                stopAutoplay() {
-                    clearInterval(this.autoPlayInterval);
-                },
-                handleTouchStart(e) {
-                    this.touchStartX = e.changedTouches[0].screenX;
-                    this.stopAutoplay();
-                },
-                handleTouchEnd(e) {
-                    this.touchEndX = e.changedTouches[0].screenX;
-                    this.handleSwipe(this.touchStartX, this.touchEndX);
-                    this.startAutoplay();
-                },
-                handleMouseDown(e) {
-                    this.touchStartX = e.clientX;
-                    this.isMouseDown = true;
-                    this.stopAutoplay();
-                },
-                handleMouseUp(e) {
-                    if (!this.isMouseDown) return;
-                    this.isMouseDown = false;
-                    this.touchEndX = e.clientX;
-                    this.handleSwipe(this.touchStartX, this.touchEndX);
-                    this.startAutoplay();
-                },
-                handleSwipe(start, end) {
-                    const diff = start - end;
-                    if (Math.abs(diff) > 40) {
-                        if (diff > 0) {
-                            this.active = (this.active % this.total) + 1;
-                        } else {
-                            this.active = this.active === 1 ? this.total : this.active - 1;
-                        }
-                    }
-                }
-             }"
-             x-init="startAutoplay()"
-             @touchstart="handleTouchStart($event)"
-             @touchend="handleTouchEnd($event)"
-             @mousedown="handleMouseDown($event)"
-             @mouseup="handleMouseUp($event)"
-             @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
-             @mouseenter="stopAutoplay()">
-            
-            <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
-                {% for item in destaques_personalizado.itens.all %}
-                <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
-                     style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
-                     :style="active === {{ forloop.counter }} 
-                            ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
-                            : (active % total) + 1 === {{ forloop.counter }}
-                            ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
-                            : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
-                            ? 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
-                            : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
-                    
-                    <a href="{{ item.link_cta|default:'#' }}"
-                       {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                       class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block">
-                        
-                        <!-- Mídia do Card -->
-                        <div class="absolute inset-0 w-full h-full bg-slate-900">
-                            {% if item.video %}
-                                <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                            {% elif item.imagem %}
-                                <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                            {% else %}
-                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
-                                </div>
-                            {% endif %}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                        </div>
-
-                        <!-- Conteúdo do Card -->
-                        <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
-                            {% if forloop.counter0 == 0 %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">EXPERIÊNCIA</span>
-                            {% elif forloop.counter0 == 1 %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">LAZER</span>
-                            {% else %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">CONFORTO</span>
-                            {% endif %}
-
-                            <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ item.titulo }}</h4>
-                            {% if item.descricao %}
-                                <p class="text-xs text-white/80 line-clamp-2 leading-relaxed w-full font-bold mb-3">{{ item.descricao|striptags }}</p>
-                            {% endif %}
-                            
-                            {% if item.preco %}
-                                <div class="flex justify-between items-center w-full">
-                                    <span class="text-xs text-white font-extrabold">A partir de R$ {{ item.preco }}</span>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
+    <div class="mb-10 md:mb-12">
+        <!-- ── MOBILE LAYOUT (Até MD) ── -->
+        <div class="block md:hidden">
+            <!-- Cabeçalho Centralizado original -->
+            <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
+                {% if destaques_personalizado.subtitulo %}
+                    <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed max-w-xl mx-auto">
+                        {{ destaques_personalizado.subtitulo }}
+                    </p>
+                {% endif %}
             </div>
 
-            <!-- Indicadores de paginação móvel -->
-            {% if destaques_personalizado.itens.all|length > 1 %}
-                <div class="flex justify-center items-center gap-2 mt-2">
+            <!-- Carrossel 3D original sem margens brancas -->
+            <div class="-mx-4 w-[calc(100%+2rem)]"
+                 x-data="{ 
+                    active: 1, 
+                    total: {{ destaques_personalizado.itens.all|length }},
+                    autoPlayInterval: null,
+                    touchStartX: 0,
+                    touchEndX: 0,
+                    isMouseDown: false,
+                    startAutoplay() {
+                        if (this.total <= 1) return;
+                        this.autoPlayInterval = setInterval(() => {
+                            this.active = (this.active % this.total) + 1;
+                        }, 3500);
+                    },
+                    stopAutoplay() {
+                        clearInterval(this.autoPlayInterval);
+                    },
+                    handleTouchStart(e) {
+                        this.touchStartX = e.changedTouches[0].screenX;
+                        this.stopAutoplay();
+                    },
+                    handleTouchEnd(e) {
+                        this.touchEndX = e.changedTouches[0].screenX;
+                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                        this.startAutoplay();
+                    },
+                    handleMouseDown(e) {
+                        this.touchStartX = e.clientX;
+                        this.isMouseDown = true;
+                        this.stopAutoplay();
+                    },
+                    handleMouseUp(e) {
+                        if (!this.isMouseDown) return;
+                        this.isMouseDown = false;
+                        this.touchEndX = e.clientX;
+                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                        this.startAutoplay();
+                    },
+                    handleSwipe(start, end) {
+                        const diff = start - end;
+                        if (Math.abs(diff) > 40) {
+                            if (diff > 0) {
+                                this.active = (this.active % this.total) + 1;
+                            } else {
+                                this.active = this.active === 1 ? this.total : this.active - 1;
+                            }
+                        }
+                    }
+                 }"
+                 x-init="startAutoplay()"
+                 @touchstart="handleTouchStart($event)"
+                 @touchend="handleTouchEnd($event)"
+                 @mousedown="handleMouseDown($event)"
+                 @mouseup="handleMouseUp($event)"
+                 @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                 @mouseenter="stopAutoplay()">
+                
+                <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
                     {% for item in destaques_personalizado.itens.all %}
+                    <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
+                         style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
+                         :style="active === {{ forloop.counter }} 
+                                ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                : (active % total) + 1 === {{ forloop.counter }}
+                                ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
+                                ? 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
+                        
+                        <a href="{{ item.link_cta|default:'#' }}"
+                           {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
+                           class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block">
+                            
+                            <!-- Mídia do Card -->
+                            <div class="absolute inset-0 w-full h-full bg-slate-900">
+                                {% if item.video %}
+                                    <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
+                                {% elif item.imagem %}
+                                    <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
+                                {% else %}
+                                    <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                        <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                            </div>
+
+                            <!-- Conteúdo do Card -->
+                            <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
+                                {% if forloop.counter0 == 0 %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">EXPERIÊNCIA</span>
+                                {% elif forloop.counter0 == 1 %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">LAZER</span>
+                                {% else %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">CONFORTO</span>
+                                {% endif %}
+
+                                <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ item.titulo }}</h4>
+                                {% if item.descricao %}
+                                    <p class="text-xs text-white/80 line-clamp-2 leading-relaxed w-full font-bold mb-3">{{ item.descricao|striptags }}</p>
+                                {% endif %}
+                                
+                                {% if item.preco %}
+                                    <div class="flex justify-between items-center w-full">
+                                        <span class="text-xs text-white font-extrabold">A partir de R$ {{ item.preco }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Indicadores de paginação móvel -->
+                {% if destaques_personalizado.itens.all|length > 1 %}
+                    <div class="flex justify-center items-center gap-2 mt-2">
+                        {% for item in destaques_personalizado.itens.all %}
+                        <button @click="active = {{ forloop.counter }}"
+                                class="transition-all duration-300"
+                                :class="active === {{ forloop.counter }} ? 'w-8 h-2 rounded-full bg-amber-500 shadow-sm' : 'w-2 h-2 rounded-full bg-slate-300'">
+                        </button>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
+        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda -->
+            <div class="md:col-span-4 text-left pr-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
+                {% if destaques_personalizado.subtitulo %}
+                    <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                        {{ destaques_personalizado.subtitulo }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Cards à Direita (Carrossel Horizontal Swiper) -->
+            <div class="md:col-span-8 w-full overflow-hidden">
+                <div class="swiper desktop-highlights-swiper relative w-full"
+                     x-data="{}"
+                     x-init="
+                        new Swiper($el, {
+                            slidesPerView: 'auto',
+                            spaceBetween: 24,
+                            grabCursor: true,
+                            freeMode: true,
+                        });
+                     ">
+                    <div class="swiper-wrapper py-4">
+                        {% for item in destaques_personalizado.itens.all %}
+                            <div class="swiper-slide w-[280px] shrink-0 h-auto">
+                                <a href="{{ item.link_cta|default:'#' }}"
+                                   {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
+                                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
+                                    
+                                    <div class="absolute inset-0 w-full h-full bg-slate-900">
+                                        {% if item.video %}
+                                            <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
+                                        {% elif item.imagem %}
+                                            <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
+                                        {% else %}
+                                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                                    </div>
+
+                                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
+                                        {% if forloop.counter0 == 0 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
+                                        {% elif forloop.counter0 == 1 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
+                                        {% else %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
+                                        {% endif %}
+
+                                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
+                                        {% if item.descricao %}
+                                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
+                                        {% endif %}
+                                        
+                                        {% if item.preco %}
+                                            <div class="flex justify-between items-center w-full">
+                                                <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- ── VITRINE DESTAQUES PADRÃO DO SISTEMA (QUARTOS) ── -->
+    <div class="mb-10 md:mb-12">
+        <!-- ── MOBILE LAYOUT (Até MD) ── -->
+        <div class="block md:hidden">
+            <!-- Cabeçalho Centralizado original -->
+            <div class="text-center max-w-2xl mx-auto mb-6 md:mb-8 px-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
+                <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed max-w-xl mx-auto">
+                    Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.
+                </p>
+            </div>
+
+            <!-- Carrossel 3D original sem margens brancas -->
+            <div class="-mx-4 w-[calc(100%+2rem)]"
+                 x-data="{ 
+                    active: 2, 
+                    total: {{ quartos_destaque|length }},
+                    autoPlayInterval: null,
+                    touchStartX: 0,
+                    touchEndX: 0,
+                    isMouseDown: false,
+                    startAutoplay() {
+                        if (this.total <= 1) return;
+                        this.autoPlayInterval = setInterval(() => {
+                            this.active = (this.active % this.total) + 1;
+                        }, 2000);
+                    },
+                    stopAutoplay() {
+                        clearInterval(this.autoPlayInterval);
+                    },
+                    handleTouchStart(e) {
+                        this.touchStartX = e.changedTouches[0].screenX;
+                        this.stopAutoplay();
+                    },
+                    handleTouchEnd(e) {
+                        this.touchEndX = e.changedTouches[0].screenX;
+                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                        this.startAutoplay();
+                    },
+                    handleMouseDown(e) {
+                        this.touchStartX = e.clientX;
+                        this.isMouseDown = true;
+                        this.stopAutoplay();
+                    },
+                    handleMouseUp(e) {
+                        if (!this.isMouseDown) return;
+                        this.isMouseDown = false;
+                        this.touchEndX = e.clientX;
+                        this.handleSwipe(this.touchStartX, this.touchEndX);
+                        this.startAutoplay();
+                    },
+                    handleSwipe(start, end) {
+                        const diff = start - end;
+                        if (Math.abs(diff) > 40) {
+                            if (diff > 0) {
+                                this.active = (this.active % this.total) + 1;
+                            } else {
+                                this.active = this.active === 1 ? this.total : this.active - 1;
+                            }
+                        }
+                    }
+                 }"
+                 x-init="startAutoplay()"
+                 @touchstart="handleTouchStart($event)"
+                 @touchend="handleTouchEnd($event)"
+                 @mousedown="handleMouseDown($event)"
+                 @mouseup="handleMouseUp($event)"
+                 @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
+                 @mouseenter="stopAutoplay()">
+                
+                <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
+                    {% for quarto in quartos_destaque %}
+                    <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
+                         style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
+                         :style="active === {{ forloop.counter }} 
+                                ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
+                                : (active % total) + 1 === {{ forloop.counter }}
+                                ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
+                                ? 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
+                                : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
+                        
+                        <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
+                           hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                           class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block">
+                            
+                            <!-- Imagem do Quarto -->
+                            <div class="absolute inset-0 w-full h-full">
+                                {% if quarto.imagens.all %}
+                                    <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                {% else %}
+                                    <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                        <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
+                            </div>
+
+                            <!-- Conteúdo -->
+                            <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
+                                {% if forloop.counter0 == 0 %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">HOSPEDAGEM</span>
+                                {% elif forloop.counter0 == 1 %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">PARAÍSO</span>
+                                {% else %}
+                                    <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">ACONCHEGO</span>
+                                {% endif %}
+
+                                <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ quarto.nome }}</h4>
+                                <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                                
+                                <div class="flex justify-between items-center w-full">
+                                    <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Indicadores de paginação móvel -->
+                <div class="flex justify-center items-center gap-2 mt-2">
+                    {% for quarto in quartos_destaque %}
                     <button @click="active = {{ forloop.counter }}"
                             class="transition-all duration-300"
                             :class="active === {{ forloop.counter }} ? 'w-8 h-2 rounded-full bg-amber-500 shadow-sm' : 'w-2 h-2 rounded-full bg-slate-300'">
                     </button>
                     {% endfor %}
                 </div>
-            {% endif %}
+            </div>
         </div>
 
-        <!-- ── DESKTOP: GRID DE COLUNAS OU CARROSSEL SWIPER (LG e Superior) ── -->
-        {% if destaques_personalizado.itens.all|length > 3 %}
-            <!-- Swiper Carousel (Mais de 3 itens) -->
-            <div class="swiper highlights-swiper lg:col-span-8 hidden lg:block relative px-4 w-full"
-                 x-data="{}"
-                 x-init="
-                    new Swiper($el, {
-                        slidesPerView: 3,
-                        spaceBetween: 24,
-                        pagination: {
-                            el: '.swiper-pagination',
-                            clickable: true,
-                        },
-                        breakpoints: {
-                            1024: {
-                                slidesPerView: 2,
-                                spaceBetween: 20
-                            },
-                            1280: {
-                                slidesPerView: 3,
-                                spaceBetween: 24
-                            }
-                        }
-                    });
-                 ">
-                <div class="swiper-wrapper py-4">
-                    {% for item in destaques_personalizado.itens.all %}
-                        <div class="swiper-slide h-auto">
-                            <a href="{{ item.link_cta|default:'#' }}"
-                               {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                               class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
-                                
-                                <div class="absolute inset-0 w-full h-full bg-slate-900">
-                                    {% if item.video %}
-                                        <video src="{{ item.video.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                                    {% elif item.imagem %}
-                                        <img src="{{ item.imagem.url }}" class="w-full h-full object-cover opacity-90 transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                                    {% else %}
-                                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                            <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                                        </div>
-                                    {% endif %}
-                                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                                </div>
+        <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
+        <div class="hidden md:grid md:grid-cols-12 md:gap-8 md:items-center max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda -->
+            <div class="md:col-span-4 text-left pr-4">
+                <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
+                <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
+                <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
+                    Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.
+                </p>
+            </div>
 
-                                <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                                    {% if forloop.counter0 == 0 %}
-                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
-                                    {% elif forloop.counter0 == 1 %}
-                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
-                                    {% else %}
-                                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
-                                    {% endif %}
-
-                                    <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
-                                    {% if item.descricao %}
-                                        <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
-                                    {% endif %}
+            <!-- Cards à Direita (Carrossel Horizontal Swiper) -->
+            <div class="md:col-span-8 w-full overflow-hidden">
+                <div class="swiper desktop-highlights-swiper relative w-full"
+                     x-data="{}"
+                     x-init="
+                        new Swiper($el, {
+                            slidesPerView: 'auto',
+                            spaceBetween: 24,
+                            grabCursor: true,
+                            freeMode: true,
+                        });
+                     ">
+                    <div class="swiper-wrapper py-4">
+                        {% for quarto in quartos_destaque %}
+                            <div class="swiper-slide w-[280px] shrink-0 h-auto">
+                                <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
+                                   hx-boost="true" hx-target="body" hx-swap="outerHTML"
+                                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10 w-full h-full block">
                                     
-                                    {% if item.preco %}
+                                    <!-- Imagem do Quarto -->
+                                    <div class="absolute inset-0 w-full h-full">
+                                        {% if quarto.imagens.all %}
+                                            <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
+                                        {% else %}
+                                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
+                                                <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                            </div>
+                                        {% endif %}
+                                        <!-- Gradiente escuro no fundo -->
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+                                    </div>
+
+                                    <!-- Conteúdo em cima do card (Alinhado à Base) -->
+                                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
+                                        {% if forloop.counter0 == 0 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
+                                        {% elif forloop.counter0 == 1 %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
+                                        {% else %}
+                                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
+                                        {% endif %}
+
+                                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
+                                        <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
+                                        
                                         <div class="flex justify-between items-center w-full">
-                                            <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
+                                            <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
                                         </div>
-                                    {% endif %}
-                                </div>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-                <div class="swiper-pagination !position-relative mt-4"></div>
-            </div>
-        {% else %}
-            <!-- Grid Simples (3 ou menos itens) -->
-            <div class="hidden lg:grid lg:col-span-8 grid-cols-1 md:grid-cols-{{ destaques_personalizado.itens.all|length }} gap-4 lg:gap-6 w-full">
-                {% for item in destaques_personalizado.itens.all %}
-                <a href="{{ item.link_cta|default:'#' }}"
-                   {% if item.is_internal_link %}hx-boost="true" hx-target="body" hx-swap="outerHTML"{% else %}target="_blank"{% endif %}
-                   class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
-                    
-                    <div class="absolute inset-0 w-full h-full">
-                        {% if item.video %}
-                            <video src="{{ item.video.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" autoplay loop muted playsinline></video>
-                        {% elif item.imagem %}
-                            <img src="{{ item.imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ item.titulo }}">
-                        {% else %}
-                            <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
+                                    </div>
+                                </a>
                             </div>
-                        {% endif %}
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                    </div>
-
-                    <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                        {% if forloop.counter0 == 0 %}
-                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">EXPERIÊNCIA</span>
-                        {% elif forloop.counter0 == 1 %}
-                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">LAZER</span>
-                        {% else %}
-                            <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">CONFORTO</span>
-                        {% endif %}
-
-                        <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ item.titulo }}</h4>
-                        {% if item.descricao %}
-                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ item.descricao|striptags }}</p>
-                        {% endif %}
-                        
-                        {% if item.preco %}
-                            <div class="flex justify-between items-center w-full">
-                                <span class="text-xs text-white font-black">A partir de R$ {{ item.preco }}</span>
-                            </div>
-                        {% endif %}
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-        {% endif %}
-    </div>
-{% else %}
-    <!-- ── VITRINE DESTAQUES PADRÃO DO SISTEMA (QUARTOS) ── -->
-    <div class="mb-10 md:mb-12 max-w-[85rem] mx-auto px-4 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-center">
-        <!-- Cabeçalho (Centralizado no mobile, alinhado à esquerda no desktop) -->
-        <div class="text-center lg:text-left max-w-2xl mx-auto lg:mx-0 mb-6 lg:mb-0 lg:col-span-4">
-            <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
-            <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
-            <p class="text-xs md:text-sm text-slate-500 font-medium mt-2 leading-relaxed">
-                Conecte-se com a natureza e com o melhor de cada região, desfrutando da nossa hospitalidade premium.
-            </p>
-        </div>
-
-        <!-- ── MÓVEL: CARROSSEL 3D ALPINEJS (Abaixo de LG) ── -->
-        <div class="block lg:hidden -mx-4 w-[calc(100%+2rem)] lg:col-span-12"
-             x-data="{ 
-                active: 2, 
-                total: {{ quartos_destaque|length }},
-                autoPlayInterval: null,
-                touchStartX: 0,
-                touchEndX: 0,
-                isMouseDown: false,
-                startAutoplay() {
-                    if (this.total <= 1) return;
-                    this.autoPlayInterval = setInterval(() => {
-                        this.active = (this.active % this.total) + 1;
-                    }, 2000);
-                },
-                stopAutoplay() {
-                    clearInterval(this.autoPlayInterval);
-                },
-                handleTouchStart(e) {
-                    this.touchStartX = e.changedTouches[0].screenX;
-                    this.stopAutoplay();
-                },
-                handleTouchEnd(e) {
-                    this.touchEndX = e.changedTouches[0].screenX;
-                    this.handleSwipe(this.touchStartX, this.touchEndX);
-                    this.startAutoplay();
-                },
-                handleMouseDown(e) {
-                    this.touchStartX = e.clientX;
-                    this.isMouseDown = true;
-                    this.stopAutoplay();
-                },
-                handleMouseUp(e) {
-                    if (!this.isMouseDown) return;
-                    this.isMouseDown = false;
-                    this.touchEndX = e.clientX;
-                    this.handleSwipe(this.touchStartX, this.touchEndX);
-                    this.startAutoplay();
-                },
-                handleSwipe(start, end) {
-                    const diff = start - end;
-                    if (Math.abs(diff) > 40) {
-                        if (diff > 0) {
-                            this.active = (this.active % this.total) + 1;
-                        } else {
-                            this.active = this.active === 1 ? this.total : this.active - 1;
-                        }
-                    }
-                }
-             }"
-             x-init="startAutoplay()"
-             @touchstart="handleTouchStart($event)"
-             @touchend="handleTouchEnd($event)"
-             @mousedown="handleMouseDown($event)"
-             @mouseup="handleMouseUp($event)"
-             @mouseleave="if(isMouseDown) { isMouseDown = false; startAutoplay(); }"
-             @mouseenter="stopAutoplay()">
-            
-            <div class="relative w-full h-[420px] flex items-start pt-4 justify-center overflow-hidden">
-                {% for quarto in quartos_destaque %}
-                <div class="absolute w-[76%] h-[360px] transition-all duration-700 ease-out select-none"
-                     style="-webkit-backface-visibility: hidden; backface-visibility: hidden; transform-style: preserve-3d;"
-                     :style="active === {{ forloop.counter }} 
-                            ? 'transform: translateX(0) scale(1.05); z-index: 30; opacity: 1; visibility: visible;' 
-                            : (active % total) + 1 === {{ forloop.counter }}
-                            ? 'transform: translateX(44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
-                            : ((active - 2 + total) % total) + 1 === {{ forloop.counter }}
-                            ? 'transform: translateX(-44%) scale(0.85); z-index: 20; opacity: 0.65; visibility: visible;'
-                            : 'transform: scale(0.7); z-index: 10; opacity: 0; visibility: hidden; pointer-events: none;'">
-                    
-                    <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
-                       hx-boost="true" hx-target="body" hx-swap="outerHTML"
-                       class="relative rounded-[2.2rem] overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.18)] flex flex-col group w-full h-full block">
-                        
-                        <!-- Imagem do Quarto -->
-                        <div class="absolute inset-0 w-full h-full">
-                            {% if quarto.imagens.all %}
-                                <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
-                            {% else %}
-                                <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                                    <i data-lucide="image" class="w-12 h-12 text-slate-600"></i>
-                                </div>
-                            {% endif %}
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent"></div>
-                        </div>
-
-                        <!-- Conteúdo -->
-                        <div class="relative z-10 mt-auto p-6 flex flex-col items-start text-left w-full">
-                            {% if forloop.counter0 == 0 %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2.5">HOSPEDAGEM</span>
-                            {% elif forloop.counter0 == 1 %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2.5">PARAÍSO</span>
-                            {% else %}
-                                <span class="inline-block px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2.5">ACONCHEGO</span>
-                            {% endif %}
-
-                            <h4 class="text-xl font-black text-white leading-snug tracking-tight truncate w-full mb-1">{{ quarto.nome }}</h4>
-                            <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
-                            
-                            <div class="flex justify-between items-center w-full">
-                                <span class="text-xs text-white font-extrabold">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-
-            <!-- Indicadores de paginação móvel -->
-            <div class="flex justify-center items-center gap-2 mt-2">
-                {% for quarto in quartos_destaque %}
-                <button @click="active = {{ forloop.counter }}"
-                        class="transition-all duration-300"
-                        :class="active === {{ forloop.counter }} ? 'w-8 h-2 rounded-full bg-amber-500 shadow-sm' : 'w-2 h-2 rounded-full bg-slate-300'">
-                </button>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ── DESKTOP: GRID DE 3 COLUNAS (LG e Superior) ── -->
-        <div class="hidden lg:grid lg:col-span-8 grid-cols-3 gap-4 lg:gap-6 w-full">
-            {% for quarto in quartos_destaque %}
-            <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
-               hx-boost="true" hx-target="body" hx-swap="outerHTML"
-               class="relative rounded-[2rem] overflow-hidden shadow-xl aspect-[3/4] group flex flex-col bg-slate-900 border border-slate-100/10">
-                
-                <!-- Imagem do Quarto -->
-                <div class="absolute inset-0 w-full h-full">
-                    {% if quarto.imagens.all %}
-                        <img src="{{ quarto.imagens.all.0.url_imagem.url }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="{{ quarto.nome }}">
-                    {% else %}
-                        <div class="w-full h-full bg-slate-800 flex items-center justify-center">
-                            <i data-lucide="image" class="w-16 h-16 text-slate-600"></i>
-                        </div>
-                    {% endif %}
-                    <!-- Gradiente escuro no fundo -->
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
-                </div>
-
-                <!-- Conteúdo em cima do card (Alinhado à Base) -->
-                <div class="relative z-10 mt-auto p-5 xl:p-6 flex flex-col items-start text-left w-full">
-                    {% if forloop.counter0 == 0 %}
-                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#2563eb] bg-white/95 shadow-sm mb-2">HOSPEDAGEM</span>
-                    {% elif forloop.counter0 == 1 %}
-                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#059669] bg-white/95 shadow-sm mb-2">PARAÍSO</span>
-                    {% else %}
-                        <span class="inline-block px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-[#7c3aed] bg-white/95 shadow-sm mb-2">ACONCHEGO</span>
-                    {% endif %}
-
-                    <h4 class="text-base xl:text-lg font-black text-white leading-tight tracking-tight mb-1.5 truncate w-full">{{ quarto.nome }}</h4>
-                    <p class="text-xs text-white/80 font-bold mb-3 line-clamp-2 leading-relaxed w-full">{{ quarto.descricao|striptags }}</p>
-                    
-                    <div class="flex justify-between items-center w-full">
-                        <span class="text-xs text-white font-black">R$ {{ quarto.preco }} <span class="text-white/60 font-normal">/ noite</span></span>
+                        {% endfor %}
                     </div>
                 </div>
-            </a>
-            {% endfor %}
+            </div>
         </div>
     </div>
 {% endif %}
