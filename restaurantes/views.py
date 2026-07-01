@@ -554,16 +554,16 @@ def restaurante_detalhe(request, slug):
 
     galeria_data = {
         'manaca-da-serra': [
-            {"titulo": "Filé Mignon com Fritas", "url": "/media/restaurantes/galeria/manaca/file_mignon.png"},
-            {"titulo": "Camarão ao Fettuccine", "url": "/media/restaurantes/galeria/manaca/camarao_fettuccine.png"},
-            {"titulo": "Risoto Carne de Sol", "url": "/media/restaurantes/galeria/manaca/risoto_carne_sol.png"},
-            {"titulo": "Maminha Laminada", "url": "/media/restaurantes/galeria/manaca/maminha_laminada.png"},
-            {"titulo": "Croquete Vaca Atolada", "url": "/media/restaurantes/galeria/manaca/croquete_vaca_atolada.png"},
-            {"titulo": "Croquete de Linguiça Toscana", "url": "/media/restaurantes/galeria/manaca/croquete_toscana.png"},
-            {"titulo": "Salada Agridoce", "url": "/media/restaurantes/galeria/manaca/salada_agridoce.png"},
-            {"titulo": "Banana Flambada", "url": "/media/restaurantes/galeria/manaca/banana_flambada.png"},
-            {"titulo": "Compota Caseira", "url": "/media/restaurantes/galeria/manaca/compota.png"},
-            {"titulo": "Soda de Verão", "url": "/media/restaurantes/galeria/manaca/soda_verao.png"},
+            {"titulo": "Filé Mignon com Fritas", "url": "/media/restaurantes/galeria/manaca/file_mignon.jpg"},
+            {"titulo": "Camarão ao Fettuccine", "url": "/media/restaurantes/galeria/manaca/camarao_fettuccine.jpg"},
+            {"titulo": "Risoto Carne de Sol", "url": "/media/restaurantes/galeria/manaca/risoto_carne_sol.jpg"},
+            {"titulo": "Maminha Laminada", "url": "/media/restaurantes/galeria/manaca/maminha_laminada.jpg"},
+            {"titulo": "Croquete Vaca Atolada", "url": "/media/restaurantes/galeria/manaca/croquete_vaca_atolada.jpg"},
+            {"titulo": "Croquete de Linguiça Toscana", "url": "/media/restaurantes/galeria/manaca/croquete_toscana.jpg"},
+            {"titulo": "Salada Agridoce", "url": "/media/restaurantes/galeria/manaca/salada_agridoce.jpg"},
+            {"titulo": "Banana Flambada", "url": "/media/restaurantes/galeria/manaca/banana_flambada.jpg"},
+            {"titulo": "Compota Caseira", "url": "/media/restaurantes/galeria/manaca/compota.jpg"},
+            {"titulo": "Soda de Verão", "url": "/media/restaurantes/galeria/manaca/soda_verao.jpg"},
         ],
         'casa-de-engenho': [
             {"titulo": "Arquitetura Rústica", "url": "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&w=600&h=800&q=80"},
