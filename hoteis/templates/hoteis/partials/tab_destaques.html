@@ -11,8 +11,25 @@
             display: none !important;
         }
         .desktop-only-highlights {
-            display: grid !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            width: 100% !important;
+            gap: 2rem !important;
         }
+    }
+    
+    /* Regras de largura flexíveis para o split horizontal de desktop */
+    .desktop-highlights-text {
+        width: 35% !important;
+        flex-shrink: 0 !important;
+        text-align: left !important;
+    }
+    
+    .desktop-highlights-carousel {
+        width: 65% !important;
+        flex-grow: 1 !important;
+        overflow: hidden !important;
     }
     
     /* Configuração de tamanho e proporção física rígida dos cards no desktop */
@@ -190,9 +207,9 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full grid-cols-12 gap-8 items-center">
-            <!-- Cabeçalho Alinhado à Esquerda (4 colunas) -->
-            <div class="col-span-4 text-left pr-6">
+        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <div class="desktop-highlights-text">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">{{ destaques_personalizado.titulo }}</h3>
                 {% if destaques_personalizado.subtitulo %}
@@ -202,8 +219,8 @@
                 {% endif %}
             </div>
 
-            <!-- Carrossel de Cards à Direita (8 colunas) -->
-            <div class="col-span-8 w-full overflow-hidden">
+            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <div class="desktop-highlights-carousel">
                 <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
                     {% for item in destaques_personalizado.itens.all %}
                         <a href="{{ item.link_cta|default:'#' }}"
@@ -384,9 +401,9 @@
         </div>
 
         <!-- ── DESKTOP LAYOUT (MD e Superior) ── -->
-        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full grid-cols-12 gap-8 items-center">
-            <!-- Cabeçalho Alinhado à Esquerda (4 colunas) -->
-            <div class="col-span-4 text-left pr-6">
+        <div class="desktop-only-highlights max-w-[85rem] mx-auto px-4 w-full">
+            <!-- Cabeçalho Alinhado à Esquerda (35% de largura) -->
+            <div class="desktop-highlights-text">
                 <span class="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5 block">Nossos Destaques</span>
                 <h3 class="text-3xl md:text-4xl font-black text-gray-900 leading-tight tracking-tight">Três experiências inesquecíveis</h3>
                 <p class="text-xs md:text-sm text-slate-500 font-medium mt-3 leading-relaxed">
@@ -394,8 +411,8 @@
                 </p>
             </div>
 
-            <!-- Carrossel de Cards à Direita (8 colunas) -->
-            <div class="col-span-8 w-full overflow-hidden">
+            <!-- Carrossel de Cards à Direita (65% de largura) -->
+            <div class="desktop-highlights-carousel">
                 <div class="flex overflow-x-auto gap-6 py-6 custom-scrollbar w-full">
                     {% for quarto in quartos_destaque %}
                         <a href="{% if request.hotel_atual %}/acomodacao/{{ quarto.slug }}/{% else %}{% url 'hoteis:quarto_detalhe' hotel.id quarto.slug %}{% endif %}"
