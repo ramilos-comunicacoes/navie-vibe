@@ -109,9 +109,17 @@
                 <div id="local-previews-grid" class="contents"></div>
 
                 <!-- Card Trigger para carregar fotos -->
-                <label class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-dashed border-slate-300 dark:border-white/10 hover:border-brand dark:hover:border-brand flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-[1.02] active:scale-95 group shrink-0">
-                    <span class="flex items-center text-slate-400 dark:text-slate-500 group-hover:text-brand transition-colors"><i data-lucide="image-plus" class="w-5 h-5"></i></span>
-                    <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">Add Foto</span>
+                <label id="add-photo-trigger-label" class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-2 border-dashed border-slate-300 dark:border-white/10 hover:border-brand dark:hover:border-brand flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-[1.02] active:scale-95 group shrink-0 relative">
+                    <!-- Normal Content -->
+                    <div id="add-photo-normal" class="flex flex-col items-center justify-center">
+                        <span class="flex items-center text-slate-400 dark:text-slate-500 group-hover:text-brand transition-colors"><i data-lucide="image-plus" class="w-5 h-5"></i></span>
+                        <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">Add Foto</span>
+                    </div>
+                    <!-- Loading Content -->
+                    <div id="add-photo-loading" class="hidden flex flex-col items-center justify-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-2 border-brand border-t-transparent"></div>
+                        <span class="text-[8px] font-black text-brand mt-1.5 uppercase tracking-wider">Lendo...</span>
+                    </div>
                     <input type="file" name="imagens" id="upload-galeria" multiple accept="image/*" class="hidden" onchange="previewLocalImages(this)">
                 </label>
             </div>
@@ -650,50 +658,85 @@
         });
     }
 
+    // Desabilita/habilita todos os botões de salvamento do formulário para evitar envios precoces
+    function setSaveButtonsState(disabled) {
+        const buttons = document.querySelectorAll('button[type="submit"], button[form="quarto-form"]');
+        buttons.forEach(btn => {
+            if (disabled) {
+                btn.setAttribute('disabled', 'true');
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+            } else {
+                btn.removeAttribute('disabled');
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
     // Chamado pelo onchange do input: acumula novos arquivos em localFiles[]
     async function previewLocalImages(input) {
         if (!input.files || input.files.length === 0) return;
 
         const savedCount = document.querySelectorAll('[id^="quarto-img-card-"]').length;
         
-        // Conversão assíncrona para WebP no cliente para otimização
-        const rawFiles = Array.from(input.files);
-        const newFiles = [];
-        for (let i = 0; i < rawFiles.length; i++) {
-            const f = rawFiles[i];
-            if (f && f.type.startsWith('image/') && f.type !== 'image/webp') {
-                try {
-                    // convertImageToWebP é declarada globalmente no base_partner.html
-                    const webpFile = await convertImageToWebP(f);
-                    newFiles.push(webpFile);
-                } catch (err) {
+        // Ativa o estado de carregamento do botão e bloqueia o salvamento
+        const normalContent = document.getElementById('add-photo-normal');
+        const loadingContent = document.getElementById('add-photo-loading');
+        if (normalContent && loadingContent) {
+            normalContent.classList.add('hidden');
+            loadingContent.classList.remove('hidden');
+        }
+        input.disabled = true;
+        setSaveButtonsState(true);
+
+        try {
+            // Conversão assíncrona para WebP no cliente para otimização
+            const rawFiles = Array.from(input.files);
+            const newFiles = [];
+            for (let i = 0; i < rawFiles.length; i++) {
+                const f = rawFiles[i];
+                if (f && f.type.startsWith('image/') && f.type !== 'image/webp') {
+                    try {
+                        // convertImageToWebP é declarada globalmente no base_partner.html
+                        const webpFile = await convertImageToWebP(f);
+                        newFiles.push(webpFile);
+                    } catch (err) {
+                        newFiles.push(f);
+                    }
+                } else {
                     newFiles.push(f);
                 }
-            } else {
-                newFiles.push(f);
             }
-        }
 
-        const totalAfter = savedCount + localFiles.length + newFiles.length;
+            const totalAfter = savedCount + localFiles.length + newFiles.length;
 
-        if (totalAfter > 10) {
-            const allowed = 10 - savedCount - localFiles.length;
-            alert(`Você já tem ${savedCount + localFiles.length} foto(s). Só é possível adicionar mais ${allowed > 0 ? allowed : 0} foto(s) (máximo 10 no total).`);
+            if (totalAfter > 10) {
+                showCustomAlert("Limite Excedido", "Você só pode adicionar no máximo 10 fotos no total.", "error", 2000);
+                input.value = '';
+                return;
+            }
+
+            // Acumula novos arquivos (evita duplicatas pelo nome+tamanho)
+            newFiles.forEach(f => {
+                const isDupe = localFiles.some(lf => lf.name === f.name && lf.size === f.size);
+                if (!isDupe) localFiles.push(f);
+            });
+
+            // Limpa o input para que o próximo "onchange" sempre dispare
             input.value = '';
-            return;
+
+            syncInputFiles();
+            renderLocalPreviews();
+        } finally {
+            // Restaura o botão e os controles de salvamento
+            if (normalContent && loadingContent) {
+                normalContent.classList.remove('hidden');
+                loadingContent.classList.add('hidden');
+            }
+            input.disabled = false;
+            setSaveButtonsState(false);
         }
-
-        // Acumula novos arquivos (evita duplicatas pelo nome+tamanho)
-        newFiles.forEach(f => {
-            const isDupe = localFiles.some(lf => lf.name === f.name && lf.size === f.size);
-            if (!isDupe) localFiles.push(f);
-        });
-
-        // Limpa o input para que o próximo "onchange" sempre dispare
-        input.value = '';
-
-        syncInputFiles();
-        renderLocalPreviews();
     }
 
     // Remove um arquivo pelo índice e re-renderiza

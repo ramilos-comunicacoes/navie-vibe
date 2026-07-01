@@ -1832,7 +1832,7 @@ x-data="{
         if (typeof lucide !== 'undefined') lucide.createIcons();
 
         // Sistema de Alerta Customizado (Design Naviê Glassmorphic)
-        function showCustomAlert(title, message, type = 'error') {
+        function showCustomAlert(title, message, type = 'error', duration = 6000) {
             const existing = document.getElementById('custom-app-alert');
             if (existing) existing.remove();
 
@@ -1867,7 +1867,7 @@ x-data="{
                 if (alertDiv.parentElement) {
                     alertDiv.remove();
                 }
-            }, 6000);
+            }, duration);
         }
 
         // Intercepta erros globais de requisição do HTMX (como 413 arquivo muito grande)
