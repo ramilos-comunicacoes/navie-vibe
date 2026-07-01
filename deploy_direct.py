@@ -31,28 +31,40 @@ def get_git_modified_files():
         
     # Adicionar logos do Manacá explicitamente (pois podem ser arquivos não rastreados/novos)
     logos = [
-        "media/restaurantes/logos/manaca_logo.png",
-        "media/restaurantes/logos/manaca_flower.png",
-        "media/restaurantes/logos/premibeer_logo.png",
-        "media/restaurantes/logos/premibeer_favicon.png",
-        "media/restaurantes/logos/manaca-da-serra_logo.jpg",
-        "media/restaurantes/logos/premibeer_logo.jpg",
-        "media/restaurantes/logos/biene-cacau_logo.jpg",
-        "media/restaurantes/logos/biene-cacau_logo.png",
-        "media/restaurantes/logos/biene-cacau_favicon.png",
-        "media/restaurantes/logos/casa-de-engenho_logo.jpg",
-        "media/restaurantes/logos/casa-de-engenho_logo.png",
-        "media/restaurantes/logos/casa-de-engenho_favicon.png",
-        "media/restaurantes/galeria/manaca/file_mignon.png",
-        "media/restaurantes/galeria/manaca/camarao_fettuccine.png",
-        "media/restaurantes/galeria/manaca/risoto_carne_sol.png",
-        "media/restaurantes/galeria/manaca/maminha_laminada.png",
-        "media/restaurantes/galeria/manaca/croquete_vaca_atolada.png",
-        "media/restaurantes/galeria/manaca/croquete_toscana.png",
-        "media/restaurantes/galeria/manaca/salada_agridoce.png",
-        "media/restaurantes/galeria/manaca/banana_flambada.png",
-        "media/restaurantes/galeria/manaca/compota.png",
-        "media/restaurantes/galeria/manaca/soda_verao.png",
+        # Casa de Engenho
+        "media/restaurantes/casa-de-engenho/logo/logo.png",
+        "media/restaurantes/casa-de-engenho/logo/logo.jpg",
+        "media/restaurantes/casa-de-engenho/logo/favicon.png",
+        "media/restaurantes/casa-de-engenho/banner/banner.png",
+        
+        # Manacá da Serra
+        "media/restaurantes/manaca-da-serra/logo/logo.png",
+        "media/restaurantes/manaca-da-serra/logo/manaca_flower.png",
+        "media/restaurantes/manaca-da-serra/logo/logo.jpg",
+        "media/restaurantes/manaca-da-serra/banner/banner.png",
+        "media/restaurantes/manaca-da-serra/carrossel/file_mignon.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/camarao_fettuccine.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/risoto_carne_sol.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/maminha_laminada.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/croquete_vaca_atolada.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/croquete_toscana.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/salada_agridoce.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/banana_flambada.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/compota.jpg",
+        "media/restaurantes/manaca-da-serra/carrossel/soda_verao.jpg",
+        
+        # Premibeer
+        "media/restaurantes/premibeer/logo/logo.png",
+        "media/restaurantes/premibeer/logo/logo.jpg",
+        "media/restaurantes/premibeer/logo/favicon.png",
+        "media/restaurantes/premibeer/banner/banner.png",
+        
+        # Biene Cacau
+        "media/restaurantes/biene-cacau/logo/logo.png",
+        "media/restaurantes/biene-cacau/logo/logo.jpg",
+        "media/restaurantes/biene-cacau/logo/favicon.png",
+        "media/restaurantes/biene-cacau/banner/banner.png",
+        
         "register_restaurants_navie.py",
         "create_restaurant_credentials.py"
     ]
