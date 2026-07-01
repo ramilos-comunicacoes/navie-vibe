@@ -1,0 +1,34 @@
+# Credenciais de Teste - Mercado Pago Sandbox
+
+Este documento armazena as credenciais das contas de teste (sandbox) do Mercado Pago geradas para o desenvolvimento e testes do portal de reservas e do painel financeiro do Naviê Vibe.
+
+## 👤 Conta de Teste: Vendedor (Merchant)
+*Esta conta deve ser utilizada para fazer o login no Mercado Pago após clicar em **"Conectar com o Mercado Pago"** no painel financeiro.*
+
+*   **User ID:** `3507431941`
+*   **E-mail / Usuário:** `TESTUSER8080380469175208771`
+*   **Senha:** `XRYf15Cu0y`
+*   **Código de verificação:** `431941`
+
+---
+
+## 🛒 Conta de Teste: Comprador (Buyer)
+*Esta conta deve ser utilizada para simular a compra de diárias no checkout de reservas do site das pousadas.*
+
+*   **User ID:** `3507431899`
+*   **E-mail / Usuário:** `TESTUSER1841139547284627165`
+*   **Senha:** `nautjKG0eZ`
+*   **Código de verificação:** `431899`
+
+---
+
+## 💳 Cartões de Teste para o Checkout
+Para realizar pagamentos simulados no checkout (Pix, cartão, etc.), consulte o menu **TESTES > Cartões de teste** no Mercado Pago Developers ou utilize os dados padrão de teste abaixo:
+
+| Bandeira | Número do Cartão | Código de Segurança (CVV) | Data de Validade |
+| :--- | :--- | :--- | :--- |
+| **Visa** | `4012 0021 0002 1234` | `123` | Qualquer data futura (ex: `12/30`) |
+| **Mastercard** | `5579 1021 0002 1234` | `123` | Qualquer data futura (ex: `12/30`) |
+| **Elo** | `6363 6821 0002 1234` | `123` | Qualquer data futura (ex: `12/30`) |
+
+*Nota: Use qualquer nome de titular fictício (ex: "JOÃO SILVA") e preencha um CPF válido fictício no checkout.*
