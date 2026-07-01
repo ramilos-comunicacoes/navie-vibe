@@ -121,6 +121,14 @@ def view_mp_webhook(request):
                         reserva.status = novo_status
                         reserva.save()
 
+                        # Enviar comprovante de confirmação de reserva via e-mail se status for confirmada
+                        if novo_status == 'confirmada':
+                            try:
+                                from comunicacoes.emails import enviar_email_confirmacao_reserva
+                                enviar_email_confirmacao_reserva(reserva)
+                            except Exception as email_err:
+                                print(f"Webhook: Erro ao disparar e-mail de confirmação: {email_err}", flush=True)
+
                         # Gravar logs de auditoria
                         ReservaLog.objects.create(
                             reserva=reserva,
