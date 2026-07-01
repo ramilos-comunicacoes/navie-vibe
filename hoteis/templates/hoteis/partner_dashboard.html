@@ -3823,56 +3823,76 @@
 
             // Universal Image Upload Preview Handler
             function previewImageUnified(input, type) {
-                // Desativado cropper para evitar bugs de usabilidade no celular
-                /*
-                if (type === 'logo') {
-                    openLogoCropper(input, type);
-                    return;
-                }
-                */
-                const file = input.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        document.getElementById(`${type}-preview-img`).src = e.target.result;
-                        document.getElementById(`${type}-empty-state`).classList.add('hidden');
-                        document.getElementById(`${type}-empty-state`).classList.remove('flex');
-                        document.getElementById(`${type}-active-state`).classList.remove('hidden');
-                        
-                        // Set deletion indicator to false
-                        document.getElementById(`remover-${type}-input`).value = 'false';
+                try {
+                    const file = input.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const previewImg = document.getElementById(`${type}-preview-img`);
+                            if (previewImg) previewImg.src = e.target.result;
+                            
+                            const emptyState = document.getElementById(`${type}-empty-state`);
+                            if (emptyState) {
+                                emptyState.classList.add('hidden');
+                                emptyState.classList.remove('flex');
+                                emptyState.classList.remove('flex-col');
+                            }
+                            
+                            const activeState = document.getElementById(`${type}-active-state`);
+                            if (activeState) activeState.classList.remove('hidden');
+                            
+                            // Set deletion indicator to false
+                            const removerInput = document.getElementById(`remover-${type}-input`);
+                            if (removerInput) removerInput.value = 'false';
 
-                        if (type === 'banner') {
-                            activeBannerLocalUrl = e.target.result;
-                            updateAllIframes();
-                        } else if (type === 'logo') {
-                            activeLogoLocalUrl = e.target.result;
-                            updateAllIframes();
-                        }
-                    };
-                    reader.readAsDataURL(file);
+                            if (type === 'banner') {
+                                activeBannerLocalUrl = e.target.result;
+                                updateAllIframes();
+                            } else if (type === 'logo') {
+                                activeLogoLocalUrl = e.target.result;
+                                updateAllIframes();
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } catch (err) {
+                    console.error("Erro no preview de imagem:", err);
                 }
             }
 
             // Universal Image Clear Handler
             function clearUnifiedMedia(type) {
-                document.getElementById(`${type}-preview-img`).src = '';
-                document.getElementById(`${type}-active-state`).classList.add('hidden');
-                document.getElementById(`${type}-empty-state`).classList.remove('hidden');
-                document.getElementById(`${type}-empty-state`).classList.add('flex');
-                
-                // Clear input file value
-                document.getElementById(`${type}-file-input`).value = '';
-                
-                // Set deletion indicator to true
-                document.getElementById(`remover-${type}-input`).value = 'true';
+                try {
+                    const previewImg = document.getElementById(`${type}-preview-img`);
+                    if (previewImg) previewImg.src = '';
+                    
+                    const activeState = document.getElementById(`${type}-active-state`);
+                    if (activeState) activeState.classList.add('hidden');
+                    
+                    const emptyState = document.getElementById(`${type}-empty-state`);
+                    if (emptyState) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.classList.add('flex');
+                        emptyState.classList.add('flex-col');
+                    }
+                    
+                    // Clear input file value
+                    const fileInput = document.getElementById(`${type}-file-input`);
+                    if (fileInput) fileInput.value = '';
+                    
+                    // Set deletion indicator to true
+                    const removerInput = document.getElementById(`remover-${type}-input`);
+                    if (removerInput) removerInput.value = 'true';
 
-                if (type === 'banner') {
-                    activeBannerLocalUrl = null;
-                    updateAllIframes();
-                } else if (type === 'logo') {
-                    activeLogoLocalUrl = null;
-                    updateAllIframes();
+                    if (type === 'banner') {
+                        activeBannerLocalUrl = null;
+                        updateAllIframes();
+                    } else if (type === 'logo') {
+                        activeLogoLocalUrl = null;
+                        updateAllIframes();
+                    }
+                } catch (err) {
+                    console.error("Erro ao limpar imagem:", err);
                 }
             }
 
