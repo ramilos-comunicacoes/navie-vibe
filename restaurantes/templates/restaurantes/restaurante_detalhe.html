@@ -365,64 +365,7 @@
             {% if restaurante.descricao %}{{ restaurante.descricao }}{% else %}Sabores únicos da Ibiapaba — reserve sua mesa e viva uma experiência gastronômica inesquecível.{% endif %}
         </p>
 
-        <!-- FERRAMENTA DE RESERVA DE MESA -->
-        <div class="w-[92%] sm:w-full max-w-xl mx-auto z-[30] relative">
-            <form method="GET" action="" onsubmit="event.preventDefault(); verificarDisponibilidade();"
-                  class="bg-white rounded-full shadow-2xl text-slate-800 border border-slate-200/80 flex flex-row items-stretch min-h-[46px] sm:min-h-[58px]">
 
-                <!-- Data da Visita -->
-                <div class="flex flex-col text-center px-4 sm:px-8 py-2 sm:py-3 flex-[1.2] border-r border-slate-100 cursor-pointer rounded-l-full hover:bg-slate-50 transition-colors"
-                     onclick="abrirCalendarioData()">
-                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none cursor-pointer truncate text-center w-full">Data da Visita</label>
-                    <input type="text" name="data" id="rest-data" placeholder="Selecione o dia" readonly
-                           class="text-[8.5px] sm:text-xs font-extrabold bg-transparent border-none p-0 pt-0.5 focus:ring-0 text-slate-800 cursor-pointer placeholder-slate-400 w-full text-center focus:outline-none"
-                           style="background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding-left:0!important;height:auto!important;margin:0!important;text-align:center!important;outline:none!important;">
-                </div>
-
-                <!-- Número de Pessoas -->
-                <div class="flex flex-col text-center px-2 sm:px-8 py-2 sm:py-3 flex-1 relative hover:bg-slate-50 transition-colors cursor-pointer"
-                     x-data="{ openGuests: false, guests: 2, guestsLabel: '2 Pessoas' }"
-                     @click="openGuests = !openGuests" @click.outside="openGuests = false">
-                    <label class="text-[7px] sm:text-[9px] font-black uppercase tracking-widest text-slate-400 select-none truncate text-center cursor-pointer">Pessoas</label>
-                    <div class="flex items-center justify-center pt-0.5 text-[8.5px] sm:text-xs font-extrabold text-slate-800 select-none text-center">
-                        <span x-text="guestsLabel" class="truncate font-bold"></span>
-                    </div>
-                    <input type="hidden" name="pessoas" id="rest-pessoas" :value="guestsLabel">
-                    <div x-show="openGuests" x-cloak @click.stop=""
-                         style="display:none;position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 8px);z-index:9999;width:140px;">
-                        <div x-transition:enter="transition ease-out duration-150"
-                             x-transition:enter-start="opacity-0 -translate-y-2 scale-95"
-                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                             class="bg-white border border-slate-200 rounded-2xl shadow-2xl p-1 max-h-60 overflow-y-auto no-scrollbar">
-                            <template x-for="g in [1, 2, 3, 4, 5, 6, 7, 8, '9 ou mais']">
-                                <button type="button"
-                                        @click="guests = g; guestsLabel = (g === 1 ? '1 Pessoa' : (typeof g === 'number' ? g + ' Pessoas' : '9 ou mais Pessoas')); openGuests = false;"
-                                        class="w-full text-left px-3 py-2 text-xs font-bold text-slate-800 hover:bg-slate-50 rounded-xl cursor-pointer border-none bg-transparent transition-colors">
-                                    <span x-text="g === 1 ? '1 Pessoa' : (typeof g === 'number' ? g + ' Pessoas' : '9 ou mais Pessoas')"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botão Buscar -->
-                <button type="submit" id="rest-search-btn"
-                        class="flex items-center justify-center bg-action-blue hover:opacity-90 cursor-pointer transition-all duration-200 border-none shrink-0 w-9 sm:w-[58px] rounded-r-full"
-                        title="Verificar Disponibilidade">
-                    <span id="rest-search-icon" class="flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--brand-text-color);" class="w-3.5 h-3.5 sm:w-5 sm:h-5">
-                            <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
-                        </svg>
-                    </span>
-                    <span id="rest-search-loader" class="hidden flex items-center justify-center">
-                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" style="color:var(--brand-text-color);">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
-                </button>
-            </form>
-        </div>
     </div>
 </div>
 
