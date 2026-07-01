@@ -511,9 +511,15 @@
         {% if galeria %}
         <div class="max-w-5xl mx-auto px-4 mb-16">
             <div class="text-center max-w-2xl mx-auto mb-6 px-4">
+                {% if restaurante.slug == 'manaca-da-serra' %}
+                <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">Nossos Pratos</span>
+                <h3 class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Conheça alguns de nossos pratos</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed font-semibold">Toda vez que clicar em uma foto de pratos no carrossel, você será direcionado para o cardápio!</p>
+                {% else %}
                 <span class="text-[11px] font-black uppercase tracking-widest text-action-secundario bg-action-secundario-alpha px-3 py-1 rounded-full mb-2 block w-fit mx-auto">Nosso Espaço</span>
                 <h3 class="text-2xl font-black text-gray-900 leading-tight tracking-tight">Conheça o Ambiente</h3>
                 <p class="text-xs text-slate-500 font-medium mt-1 leading-relaxed font-semibold">Cada detalhe do nosso restaurante foi pensado para proporcionar uma experiência acolhedora e memorável.</p>
+                {% endif %}
             </div>
 
             <!-- Carrossel de fotos 3:4 -->
