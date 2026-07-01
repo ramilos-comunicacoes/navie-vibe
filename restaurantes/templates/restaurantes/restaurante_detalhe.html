@@ -277,36 +277,35 @@
 
     /* SOBRE — mobile (card interno com altura fixa, estilo original) */
     .sobre-section-wrapper { position: relative; width: 100%; overflow: hidden; margin-bottom: 0px !important; }
-    .sobre-flex-container { display: flex; align-items: stretch; height: 100%; width: 100%; }
+    .sobre-flex-container { display: flex; align-items: stretch; min-height: 100%; width: 100%; }
     .sobre-left-column { display: flex; flex-direction: column; justify-content: space-between; height: 100%; min-width: 0; }
     #sobre-texto, #sobre-texto * { font-family: 'Poppins', sans-serif !important; white-space: normal !important; word-break: break-word !important; overflow-wrap: break-word !important; }
     @media (max-width: 767px) {
         .sobre-section-wrapper { min-height: 220px; }
-        .sobre-flex-container { padding-left: 24px; padding-right: 0px !important; }
-        .sobre-left-column { width: 44% !important; padding-top: 40px !important; padding-bottom: 30px !important; padding-right: 12px !important; justify-content: center !important; gap: 10px; }
-        .sobre-media-container { width: 56% !important; }
-        .sobre-media-gradient { background: linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 12%, transparent 45%) !important; }
+        .sobre-flex-container { padding-left: 24px; padding-right: 24px !important; flex-direction: column; gap: 24px; padding-top: 40px; padding-bottom: 40px; }
+        .sobre-left-column { width: 100% !important; padding-right: 0px !important; gap: 10px; }
+        .sobre-right-card { width: 100% !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; margin-top: 10px; }
         .sobre-title-wrapper { margin-bottom: 8px; gap: 8px; }
         .sobre-title-line { width: 4px; }
-        #sobre-titulo { font-size: 14px; }
-        #sobre-texto { font-size: 10px; line-height: 1.6; }
-        #sobre-readmore-btn { margin-top: 8px; font-size: 9px; }
+        #sobre-titulo { font-size: 16px; }
+        #sobre-texto { font-size: 11px; line-height: 1.6; }
+        #sobre-readmore-btn { margin-top: 8px; font-size: 10px; }
     }
     /* SOBRE — desktop (full-width, sem card, se estende de ponta a ponta) */
     @media (min-width: 768px) {
         /* A seção sobre ocupa toda a largura da página no desktop */
         #sobre-outer-wrapper { margin-left: 0 !important; margin-right: 0 !important; padding-left: 0 !important; padding-right: 0 !important; }
         .sobre-section-wrapper { min-height: 260px; border-radius: 0 !important; }
-        .sobre-flex-container { padding-left: 48px; padding-right: 0px !important; }
-        .sobre-left-column { width: 42% !important; padding-top: 64px; padding-bottom: 34px; padding-right: 32px; }
-        .sobre-media-container { width: 58% !important; }
+        .sobre-flex-container { padding-left: 48px; padding-right: 48px !important; align-items: center; justify-content: space-between; gap: 48px; }
+        .sobre-left-column { width: 55% !important; padding-top: 64px; padding-bottom: 64px; padding-right: 12px; }
+        .sobre-right-card { width: 40% !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px 0; }
         .sobre-title-wrapper { margin-bottom: 12px; gap: 6px; }
         .sobre-title-line { width: 6px; }
-        #sobre-titulo { font-size: 20px; }
-        #sobre-texto { font-size: 13px; line-height: 1.625; }
+        #sobre-titulo { font-size: 22px; }
+        #sobre-texto { font-size: 13px; line-height: 1.7; }
         #sobre-readmore-btn { margin-top: 8px; font-size: 12px; }
     }
-    @media (min-width: 1280px) { .sobre-flex-container { padding-left: 80px; padding-right: 0px !important; } }
+    @media (min-width: 1280px) { .sobre-flex-container { padding-left: 80px; padding-right: 80px !important; } }
 
     /* Custom Adaptive Colors overrides for base layouts */
     .header-profile-btn {
@@ -681,15 +680,34 @@
             </button>
         </div>
         
-        <!-- Mídia Direita com gradiente -->
-        <div class="sobre-media-container overflow-hidden select-none pointer-events-none shrink-0 z-10 relative">
-            <div class="sobre-media-gradient absolute inset-0 z-20" style="background:linear-gradient(to right, var(--sobre-bg-color) 0%, var(--sobre-bg-color) 20%, transparent 65%);"></div>
-            {% if restaurante.sobre_video and restaurante.sobre_midia_tipo == 'video' %}
-            <video src="{{ restaurante.sobre_video.url }}" class="absolute inset-0 w-full h-full object-cover opacity-95" autoplay loop muted playsinline></video>
-            {% else %}
-            <img src="{% if restaurante.sobre_banner %}{{ restaurante.sobre_banner.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% else %}https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1920&q=80{% endif %}"
-                 alt="{{ restaurante.nome }}" class="absolute inset-0 w-full h-full object-cover opacity-95">
-            {% endif %}
+        <!-- Novo Card de Mídias e Contato à Direita -->
+        <div class="sobre-right-card select-none">
+            <!-- Logo do Restaurante (Bolinha perfeita sem corte) -->
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white flex items-center justify-center p-3" style="box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.03);">
+                <img src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% endif %}" 
+                     alt="Logo {{ restaurante.nome }}" 
+                     class="w-full h-full object-contain">
+            </div>
+            
+            <!-- Botões de Contato Lado a Lado -->
+            <div class="flex items-center justify-center gap-3 w-full max-w-[280px]">
+                {% if restaurante.instagram %}
+                <a href="{{ restaurante.instagram }}" target="_blank"
+                   style="background-color: var(--brand-color-alpha, rgba(0,0,0,0.04)); color: var(--sobre-text-color);"
+                   class="flex-1 py-2.5 px-4 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-decoration-none hover:scale-[1.03]">
+                    <svg class="w-4 h-4 shrink-0 text-pink-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    <span>Instagram</span>
+                </a>
+                {% endif %}
+                {% if restaurante.whatsapp %}
+                <a href="https://wa.me/{{ restaurante.whatsapp }}?text=Olá! Vim através do portal e gostaria de fazer um pedido." target="_blank"
+                   style="background-color: var(--brand-color); color: var(--brand-text-color, #ffffff);"
+                   class="flex-1 py-2.5 px-4 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 text-decoration-none hover:scale-[1.03]">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                    <span>WhatsApp</span>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
