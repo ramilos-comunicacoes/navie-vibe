@@ -116,8 +116,9 @@ def view_mp_conectar_sandbox(request):
     """
     Simula uma conexão de sandbox Mercado Pago sem passar pelo fluxo real do OAuth (Útil em ambiente de testes/debug)
     """
-    if not settings.DEBUG:
-        messages.error(request, "A conexão simulada só é permitida em ambiente de desenvolvimento (DEBUG=True).")
+    # Permite a simulação de sandbox em desenvolvimento (DEBUG=True) ou para superusuários em produção
+    if not settings.DEBUG and not request.user.is_superuser:
+        messages.error(request, "A conexão simulada só é permitida em ambiente de desenvolvimento ou para administradores (superusuários).")
         return redirect('hoteis:partner_dashboard')
         
     if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
