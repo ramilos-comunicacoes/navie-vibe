@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('painel-secreto-vibe-django-admin-2026/', admin.site.urls),
     path('sistemadeadministracao/', include('administracao.urls')),
     path('accounts/', include('allauth.urls')),  # Login Social / OAuth
     path('api/', include('api.urls')),
