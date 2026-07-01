@@ -3823,13 +3823,20 @@
 
             // Universal Image Upload Preview Handler
             function previewImageUnified(input, type) {
+                alert("previewImageUnified disparado! Tipo: " + type);
                 try {
                     const file = input.files[0];
                     if (file) {
+                        alert("Arquivo selecionado: " + file.name);
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const previewImg = document.getElementById(`${type}-preview-img`);
-                            if (previewImg) previewImg.src = e.target.result;
+                            if (previewImg) {
+                                previewImg.src = e.target.result;
+                                alert("Preview img src atualizada!");
+                            } else {
+                                alert("ERRO: Elemento de preview não encontrado: " + type + "-preview-img");
+                            }
                             
                             const emptyState = document.getElementById(`${type}-empty-state`);
                             if (emptyState) {
@@ -3839,7 +3846,9 @@
                             }
                             
                             const activeState = document.getElementById(`${type}-active-state`);
-                            if (activeState) activeState.classList.remove('hidden');
+                            if (activeState) {
+                                activeState.classList.remove('hidden');
+                            }
                             
                             // Set deletion indicator to false
                             const removerInput = document.getElementById(`remover-${type}-input`);
@@ -3856,7 +3865,7 @@
                         reader.readAsDataURL(file);
                     }
                 } catch (err) {
-                    console.error("Erro no preview de imagem:", err);
+                    alert("Erro JS no preview: " + err.message);
                 }
             }
 
@@ -4173,80 +4182,92 @@
             }
 
             function previewImageUnifiedGeral(input, type) {
-                // Desativado cropper para evitar bugs de usabilidade no celular
-                /*
-                if (type === 'logo-geral') {
-                    openLogoCropper(input, type);
-                    return;
-                }
-                */
-                const file = input.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const previewImg = document.getElementById(`${type}-preview-img`);
-                        if (previewImg) {
-                            previewImg.src = e.target.result;
-                        }
-                        
-                        const activeState = document.getElementById(`${type}-active-state`);
-                        if (activeState) {
-                            activeState.classList.remove('hidden');
-                        }
-                        
-                        const emptyState = document.getElementById(`${type}-empty-state`);
-                        if (emptyState) {
-                            emptyState.classList.add('hidden');
-                            emptyState.classList.remove('flex');
-                        }
-                        
-                        document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`).value = 'false';
+                alert("previewImageUnifiedGeral disparado! Tipo: " + type);
+                try {
+                    const file = input.files[0];
+                    if (file) {
+                        alert("Arquivo geral selecionado: " + file.name);
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const previewImg = document.getElementById(`${type}-preview-img`);
+                            if (previewImg) {
+                                previewImg.src = e.target.result;
+                                alert("Preview geral img src atualizada!");
+                            } else {
+                                alert("ERRO Geral: " + type + "-preview-img não encontrado");
+                            }
+                            
+                            const activeState = document.getElementById(`${type}-active-state`);
+                            if (activeState) {
+                                activeState.classList.remove('hidden');
+                            }
+                            
+                            const emptyState = document.getElementById(`${type}-empty-state`);
+                            if (emptyState) {
+                                emptyState.classList.add('hidden');
+                                emptyState.classList.remove('flex');
+                            }
+                            
+                            const removerInput = document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`);
+                            if (removerInput) {
+                                removerInput.value = 'false';
+                            }
 
-                        if (type === 'banner-geral') {
-                            activeBannerLocalUrlGeral = e.target.result;
-                        } else if (type === 'logo-geral') {
-                            activeLogoLocalUrlGeral = e.target.result;
-                        } else if (type === 'sobre_banner-geral') {
-                            activeSobreBannerLocalUrlGeral = e.target.result;
-                        }
-                        updateAllIframesGeral();
-                    };
-                    reader.readAsDataURL(file);
+                            if (type === 'banner-geral') {
+                                activeBannerLocalUrlGeral = e.target.result;
+                            } else if (type === 'logo-geral') {
+                                activeLogoLocalUrlGeral = e.target.result;
+                            } else if (type === 'sobre_banner-geral') {
+                                activeSobreBannerLocalUrlGeral = e.target.result;
+                            }
+                            updateAllIframesGeral();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                } catch (err) {
+                    alert("Erro Geral JS no preview: " + err.message);
                 }
             }
 
             function clearUnifiedMediaGeral(type) {
-                const previewImg = document.getElementById(`${type}-preview-img`);
-                if (previewImg) {
-                    previewImg.src = '';
-                }
-                
-                const activeState = document.getElementById(`${type}-active-state`);
-                if (activeState) {
-                    activeState.classList.add('hidden');
-                }
-                
-                const emptyState = document.getElementById(`${type}-empty-state`);
-                if (emptyState) {
-                    emptyState.classList.remove('hidden');
-                    emptyState.classList.add('flex');
-                }
-                
-                const fileInput = document.getElementById(`${type}-file-input`);
-                if (fileInput) {
-                    fileInput.value = '';
-                }
-                
-                document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`).value = 'true';
+                try {
+                    const previewImg = document.getElementById(`${type}-preview-img`);
+                    if (previewImg) {
+                        previewImg.src = '';
+                    }
+                    
+                    const activeState = document.getElementById(`${type}-active-state`);
+                    if (activeState) {
+                        activeState.classList.add('hidden');
+                    }
+                    
+                    const emptyState = document.getElementById(`${type}-empty-state`);
+                    if (emptyState) {
+                        emptyState.classList.remove('hidden');
+                        emptyState.classList.add('flex');
+                    }
+                    
+                    const fileInput = document.getElementById(`${type}-file-input`);
+                    if (fileInput) {
+                        fileInput.value = '';
+                    }
+                    
+                    const removerInput = document.getElementById(`remover-${type.replace('-geral', '')}-input-geral`);
+                    if (removerInput) {
+                        removerInput.value = 'true';
+                    }
 
-                if (type === 'banner-geral') {
-                    activeBannerLocalUrlGeral = null;
-                } else if (type === 'logo-geral') {
-                    activeLogoLocalUrlGeral = null;
-                } else if (type === 'sobre_banner-geral') {
-                    activeSobreBannerLocalUrlGeral = null;
+                    if (type === 'banner-geral') {
+                        activeBannerLocalUrlGeral = null;
+                    } else if (type === 'logo-geral') {
+                        activeLogoLocalUrlGeral = null;
+                    } else if (type === 'sobre_banner-geral') {
+                        activeSobreBannerLocalUrlGeral = null;
+                    }
+                    updateAllIframesGeral();
+                } catch (err) {
+                    console.error("Erro Geral ao limpar imagem:", err);
                 }
-                updateAllIframesGeral();
             }
 
             function previewLocalHeroVideoUnifiedGeral(input) {
