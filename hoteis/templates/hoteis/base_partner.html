@@ -6,7 +6,7 @@ x-data="{
     sidebarMobileOpen: false,
     sidebarExpanded: false,
     notificationsOpen: false,
-    activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}financeiro{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
+    activeTab: (new URLSearchParams(window.location.search)).get('tab') || localStorage.getItem('partner_active_tab') || '{% if perfil.role == 'proprietario' %}financeiro{% elif perfil.role == 'gerente' %}reservas{% elif perfil.role == 'portaria' %}checkin{% elif perfil.role == 'camareira' %}limpeza{% else %}manutencao{% endif %}', 
     quartosTab: localStorage.getItem('partner_quartos_tab') || 'mapa',
     financeiroTab: localStorage.getItem('partner_financeiro_tab') || 'resumo',
     reservasTab: (window.innerWidth >= 768) ? (localStorage.getItem('partner_reservas_tab') || 'mapa') : 'mapa',
@@ -1041,6 +1041,8 @@ x-data="{
                 <ul class="space-y-1">
                     <!-- PROPRIETÁRIO / GERENTE -->
                     {% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}
+                    
+                    {% if perfil.role == 'proprietario' %}
                     <li>
                         <a href="javascript:void(0)" @click="activeTab = 'financeiro'" :class="activeTab === 'financeiro' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"
                            data-ai-purpose="tab-navigation"
@@ -1052,6 +1054,7 @@ x-data="{
                             <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Financeiro</span>
                         </a>
                     </li>
+                    {% endif %}
                     
                     <li>
                         <a href="javascript:void(0)" @click="activeTab = 'quartos'" :class="activeTab === 'quartos' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link"

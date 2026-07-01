@@ -291,6 +291,7 @@
     </div>
 
     <!-- Controles do Financeiro no Cabeçalho -->
+    {% if perfil.role == 'proprietario' %}
     <div x-show="activeTab === 'financeiro'" class="flex items-center gap-2.5 sm:gap-3 animate-in fade-in duration-300" x-transition.opacity style="display: none;">
         <!-- Alternador Fluxo / Mercado Pago -->
         <div class="relative flex items-center p-0.5 sm:p-1 bg-slate-100/80 dark:bg-white/5 rounded-full border border-slate-200/50 dark:border-white/5 shadow-inner h-9 sm:h-10 w-48 sm:w-56 overflow-hidden">
@@ -319,6 +320,7 @@
             <span class="hidden sm:inline">Novo Lançamento</span>
         </button>
     </div>
+    {% endif %}
 
     <!-- Controles do Estoque & Almoxarifado no Cabeçalho (Desktop e Mobile) -->
     <div x-show="activeTab === 'estoque'" class="flex items-center gap-1 p-0.5 sm:p-1 bg-slate-100/80 dark:bg-white/5 rounded-xl sm:rounded-2xl border border-slate-200/50 dark:border-white/5 shadow-inner" x-transition.opacity style="display: none;">
@@ -594,6 +596,7 @@
          SEÇÃO FINANCEIRA (PROPRIETÁRIO / GERENTE)
          ───────────────────────────────────────────────────────────── -->
     {% if perfil.role == 'proprietario' or perfil.role == 'gerente' %}
+    {% if perfil.role == 'proprietario' %}
     <div x-show="activeTab === 'financeiro'" style="display: none;"
          data-ai-purpose="finance-dashboard"
          data-ai-description="Dashboard financeiro contábil real do hotel. Permite gerenciar receitas, despesas e visualizar projeções de ocupação."
@@ -930,6 +933,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- ─────────────────────────────────────────────────────────────
          SEÇÃO ESTOQUE (PROPRIETÁRIO / GERENTE)

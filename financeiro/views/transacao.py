@@ -36,10 +36,10 @@ def criar_transacao_api(request):
     - Erro de Validação: Retorna JsonResponse com {'success': False, 'error': '<mensagem de erro>'} (status 400).
     - Não Autorizado: Retorna JsonResponse com {'success': False, 'error': '<motivo>'} (status 403).
     """
-    if not hasattr(request.user, 'perfil_parceiro'):
+    if not hasattr(request.user, 'perfil_parceiro') or request.user.perfil_parceiro.role != 'proprietario':
         return JsonResponse({
             'success': False, 
-            'error': 'Acesso negado. Apenas parceiros comerciais hoteleiros autenticados podem realizar lançamentos contábeis.'
+            'error': 'Acesso negado. Apenas proprietários comerciais hoteleiros autenticados podem realizar lançamentos contábeis.'
         }, status=403)
         
     hotel = request.user.perfil_parceiro.hotel

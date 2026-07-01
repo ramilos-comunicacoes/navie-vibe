@@ -789,7 +789,10 @@ class PartnerSecaoTestCase(TestCase):
         
         # Access vanity url
         from django.urls import reverse
-        response = self.client.get(reverse('hoteis:vanity_url', kwargs={'slug': self.hotel.slug}))
+        response = self.client.get(
+            reverse('hoteis:vanity_url', kwargs={'slug': self.hotel.slug}),
+            HTTP_HOST='pousadacms.navievibe.com'
+        )
         self.assertEqual(response.status_code, 200)
         self.assertIn('destaques_personalizado', response.context)
         self.assertEqual(response.context['destaques_personalizado'].id, secao.id)

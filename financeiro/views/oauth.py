@@ -16,6 +16,11 @@ def view_mp_conectar(request):
         messages.error(request, "Acesso restrito apenas para hotéis parceiros.")
         return redirect('hoteis:partner_dashboard')
         
+    perfil = request.user.perfil_parceiro
+    if perfil.role != 'proprietario':
+        messages.error(request, "Acesso negado. Apenas proprietários podem configurar o Mercado Pago.")
+        return redirect('hoteis:partner_dashboard')
+        
     client_id = getattr(settings, 'MERCADOPAGO_CLIENT_ID', '')
     if not client_id:
         messages.error(request, "Integração do Mercado Pago temporariamente indisponível (client_id ausente).")
@@ -44,6 +49,11 @@ def view_mp_callback(request):
     """
     if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
         messages.error(request, "Acesso negado.")
+        return redirect('hoteis:partner_dashboard')
+        
+    perfil = request.user.perfil_parceiro
+    if perfil.role != 'proprietario':
+        messages.error(request, "Acesso negado. Apenas proprietários podem acessar esta funcionalidade.")
         return redirect('hoteis:partner_dashboard')
         
     hotel = request.user.perfil_parceiro.hotel
@@ -123,6 +133,11 @@ def view_mp_conectar_sandbox(request):
         
     if not hasattr(request.user, 'perfil_parceiro') or not request.user.perfil_parceiro.hotel:
         messages.error(request, "Acesso restrito.")
+        return redirect('hoteis:partner_dashboard')
+        
+    perfil = request.user.perfil_parceiro
+    if perfil.role != 'proprietario':
+        messages.error(request, "Acesso negado. Apenas proprietários podem configurar o sandbox do Mercado Pago.")
         return redirect('hoteis:partner_dashboard')
         
     hotel = request.user.perfil_parceiro.hotel
