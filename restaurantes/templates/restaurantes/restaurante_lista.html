@@ -204,7 +204,7 @@
                         <!-- Localização / Cidade -->
                         <p class="text-[10px] text-slate-400 font-bold flex items-center gap-1.5 truncate">
                             <i data-lucide="map-pin" class="w-3.5 h-3.5 text-red-500"></i>
-                            <span>{{ r.cidade_nome }}</span>
+                            <span>{{ r.cidade_nome }}{% if "ce" not in r.cidade_nome|lower %} - CE{% endif %}</span>
                         </p>
                         <!-- Nome -->
                         <h3 class="text-base sm:text-lg font-black text-slate-800 leading-snug truncate md:whitespace-normal md:line-clamp-2 md:h-12" title="{{ r.nome }}">{{ r.nome }}</h3>
