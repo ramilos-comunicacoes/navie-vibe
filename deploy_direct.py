@@ -40,6 +40,7 @@ def get_git_modified_files():
         "media/restaurantes/logos/biene-cacau_logo.jpg",
         "media/restaurantes/logos/casa-de-engenho_logo.jpg",
         "media/restaurantes/logos/casa-de-engenho_logo.png",
+        "media/restaurantes/logos/casa-de-engenho_favicon.png",
         "register_restaurants_navie.py",
         "create_restaurant_credentials.py"
     ]
