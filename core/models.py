@@ -32,6 +32,13 @@ class Empresa(models.Model):
     )
     
     logo = models.ImageField(upload_to='empresas/logos/', null=True, blank=True)
+    favicon = models.ImageField(
+        'Favicon da Rede',
+        upload_to='empresas/favicons/',
+        null=True,
+        blank=True,
+        help_text='Ícone que aparece na aba do navegador. Recomenda-se imagem quadrada (ex: 32x32 ou 64x64px).'
+    )
     banner = models.ImageField(upload_to='empresas/banners/', null=True, blank=True)
     hero_tipo = models.CharField(
         'Tipo de Mídia do Hero',

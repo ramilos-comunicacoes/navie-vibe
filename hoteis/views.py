@@ -2208,6 +2208,16 @@ def partner_salvar_configuracoes(request):
     elif 'imagem_compartilhamento' in request.FILES:
         hotel.imagem_compartilhamento = request.FILES['imagem_compartilhamento']
         
+    if request.POST.get('remover_favicon') == 'true':
+        hotel.favicon = None
+    elif 'favicon' in request.FILES:
+        hotel.favicon = request.FILES['favicon']
+        
+    if request.POST.get('remover_imagem_card') == 'true':
+        hotel.imagem_card = None
+    elif 'imagem_card' in request.FILES:
+        hotel.imagem_card = request.FILES['imagem_card']
+        
     # Processa remoção ou novo upload do vídeo do banner
     if request.POST.get('remover_hero_video') == 'true':
         hotel.hero_video = None
@@ -2336,6 +2346,11 @@ def partner_salvar_configuracoes_geral(request):
         empresa.imagem_compartilhamento = None
     elif 'imagem_compartilhamento' in request.FILES:
         empresa.imagem_compartilhamento = request.FILES['imagem_compartilhamento']
+        
+    if request.POST.get('remover_favicon') == 'true':
+        empresa.favicon = None
+    elif 'favicon' in request.FILES:
+        empresa.favicon = request.FILES['favicon']
         
     if request.POST.get('remover_sobre_banner') == 'true':
         empresa.sobre_banner = None

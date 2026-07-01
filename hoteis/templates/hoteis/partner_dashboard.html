@@ -1684,7 +1684,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 b2b-element-gap">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 b2b-element-gap">
                             <!-- Logo da Rede -->
                             <div class="space-y-3">
                                 <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Logo da Rede (Logomarca do Cabeçalho)</label>
@@ -1715,6 +1715,42 @@
                                         </div>
                                     </div>
                                     <input type="hidden" name="remover_logo" id="remover-logo-input-geral" value="false">
+                                </div>
+                            </div>
+
+                            <!-- Favicon da Rede -->
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Favicon da Rede (Ícone da Aba)</label>
+                                    <span class="text-[9px] font-bold text-indigo-500 uppercase">Proporção 1:1</span>
+                                </div>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('favicon-geral-file-input').click()">
+                                    
+                                    <input type="file" id="favicon-geral-file-input" name="favicon" accept="image/*" class="hidden" 
+                                           onclick="event.stopPropagation()"
+                                           onchange="previewImageUnifiedGeral(this, 'favicon-geral')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="favicon-geral-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.empresa.favicon %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="image" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Favicon da Rede</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Quadrado (ex: 64x64px)</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="favicon-geral-active-state" class="absolute inset-0 w-full h-full {% if not hotel.empresa.favicon %}hidden{% endif %}">
+                                        <img id="favicon-geral-preview-img" src="{% if hotel.empresa.favicon %}{{ hotel.empresa.favicon.url }}{% endif %}" class="w-full h-full object-contain p-8" alt="Favicon preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMediaGeral('favicon-geral')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_favicon" id="remover-favicon-input-geral" value="false">
                                 </div>
                             </div>
 
@@ -2583,6 +2619,81 @@
                                         </div>
                                     </div>
                                     <input type="hidden" name="remover_imagem_compartilhamento" id="remover-imagem_compartilhamento-input" value="false">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nova Linha de Mídias (Favicon da Pousada & Imagem do Card de Vitrine) -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-slate-200/80 dark:border-navie-border/60">
+                            <!-- Favicon da Pousada -->
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Favicon da Pousada (Ícone da Aba)</label>
+                                    <span class="text-[9px] font-bold text-indigo-500 uppercase">Proporção 1:1</span>
+                                </div>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('favicon-file-input').click()">
+                                    
+                                    <input type="file" id="favicon-file-input" name="favicon" accept="image/*" class="hidden"
+                                           onclick="event.stopPropagation()"
+                                           onchange="previewImageUnified(this, 'favicon')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="favicon-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.favicon %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="image" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Favicon da Pousada</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Quadrado (ex: 64x64px)</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="favicon-active-state" class="absolute inset-0 w-full h-full {% if not hotel.favicon %}hidden{% endif %}">
+                                        <img id="favicon-preview-img" src="{% if hotel.favicon %}{{ hotel.favicon.url }}{% endif %}" class="w-full h-full object-contain p-8" alt="Favicon preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMedia('favicon')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_favicon" id="remover-favicon-input" value="false">
+                                </div>
+                            </div>
+
+                            <!-- Imagem do Card de Vitrine -->
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-black text-slate-400 dark:text-navie-textsec uppercase tracking-widest">Imagem do Card (Vitrine Principal)</label>
+                                    <span class="text-[9px] font-bold text-indigo-500 uppercase">Horizontal (ex: 4:3)</span>
+                                </div>
+                                <div class="relative w-full h-36 border-2 border-dashed border-slate-300 dark:border-navie-border rounded-3xl overflow-hidden flex flex-col items-center justify-center bg-slate-50/50 dark:bg-black/10 transition-colors hover:border-brand/40 group cursor-pointer"
+                                     onclick="if(!event.target.closest('.btn-delete-media')) document.getElementById('imagem_card-file-input').click()">
+                                    
+                                    <input type="file" id="imagem_card-file-input" name="imagem_card" accept="image/*" class="hidden"
+                                           onclick="event.stopPropagation()"
+                                           onchange="previewImageUnified(this, 'imagem_card')">
+                                    
+                                    <!-- Empty State -->
+                                    <div id="imagem_card-empty-state" class="flex-col items-center justify-center text-center p-4 {% if hotel.imagem_card %}hidden{% else %}flex{% endif %}">
+                                        <i data-lucide="layout" class="w-8 h-8 text-slate-400 dark:text-navie-textsec mb-2"></i>
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Subir Imagem do Card</span>
+                                        <span class="text-[10px] text-slate-400 mt-1">Exibida no catálogo da Home</span>
+                                    </div>
+
+                                    <!-- Active State -->
+                                    <div id="imagem_card-active-state" class="absolute inset-0 w-full h-full {% if not hotel.imagem_card %}hidden{% endif %}">
+                                        <img id="imagem_card-preview-img" src="{% if hotel.imagem_card %}{{ hotel.imagem_card.url }}{% endif %}" class="w-full h-full object-cover" alt="Card preview">
+                                        <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-200 z-10">
+                                            <button type="button" class="btn-delete-media bg-red-500 hover:bg-red-600 text-white px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md transition-all hover:scale-105 flex items-center gap-1.5"
+                                                    onclick="event.stopPropagation(); clearUnifiedMedia('imagem_card')">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                                <span>Apagar</span>
+                                            </button>
+                                            <span class="text-[9px] font-black text-white uppercase tracking-wider bg-black/40 px-2 py-0.5 rounded">Clique para alterar</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="remover_imagem_card" id="remover-imagem_card-input" value="false">
                                 </div>
                             </div>
                         </div>

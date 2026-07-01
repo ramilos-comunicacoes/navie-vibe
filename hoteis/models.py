@@ -82,6 +82,20 @@ class Hotel(models.Model): # Representa a operação de Hospedagem de uma Empres
     sobre_cor_fundo = models.CharField('Cor de Fundo do Sobre (Hex)', max_length=7, default='#f8fafc')
     sobre_cor_texto = models.CharField('Cor do Texto do Sobre (Hex)', max_length=7, default='#0f172a')
     logo = models.ImageField(upload_to='hoteis/logos/', null=True, blank=True, help_text="Logo oficial da pousada")
+    favicon = models.ImageField(
+        'Favicon da Pousada',
+        upload_to='hoteis/favicons/',
+        null=True,
+        blank=True,
+        help_text='Ícone que aparece na aba do navegador para esta pousada específica. Recomenda-se imagem quadrada (ex: 32x32 ou 64x64px).'
+    )
+    imagem_card = models.ImageField(
+        'Imagem do Card (Vitrine)',
+        upload_to='hoteis/cards/',
+        null=True,
+        blank=True,
+        help_text='Imagem que aparece no card de listagem desta pousada na página inicial. Se não informada, será usado o banner.'
+    )
     foto_fundo = models.ImageField(upload_to='hoteis/fundos/', null=True, blank=True, help_text="Imagem de fundo para o modo Glassmorphism")
     slug = models.SlugField(max_length=100, unique=True, null=True, blank=True, help_text="Slug da URL customizada (ex: pousadaramilostiangua)")
     visualizacoes = models.PositiveIntegerField(default=0, help_text="Total de visualizações da página do hotel")
