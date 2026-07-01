@@ -12,13 +12,15 @@
     <meta property="og:type" content="website">
 {% endblock %}
 
+{% block favicon %}
+<!-- Favicon dinâmico do restaurante -->
+<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png?v=3{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/premibeer_favicon.png?v=3{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/casa-de-engenho_favicon.png?v=3{% elif restaurante.slug == 'biene-cacau' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/biene-cacau_favicon.png?v=3{% elif restaurante.logo %}{{ restaurante.logo.url }}?v=3{% else %}/static/images/favicon.png?v=3{% endif %}" id="dynamic-favicon">
+{% endblock favicon %}
+
 {% block extra_head %}
 <!-- Leaflet CSS & JS local -->
 <link rel="stylesheet" href="{% static 'css/leaflet.css' %}"/>
 <script src="{% static 'js/leaflet.js' %}"></script>
-
-<!-- Favicon dinâmico -->
-<link rel="icon" type="image/png" href="{% if restaurante.slug == 'manaca-da-serra' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/manaca_flower.png{% elif restaurante.slug == 'premibeer' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/premibeer_favicon.png{% elif restaurante.slug == 'casa-de-engenho' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/casa-de-engenho_favicon.png{% elif restaurante.slug == 'biene-cacau' %}{{ request.scheme }}://{{ request.get_host }}/media/restaurantes/logos/biene-cacau_favicon.png{% elif restaurante.logo %}{{ restaurante.logo.url }}{% else %}/static/images/favicon.png{% endif %}" id="dynamic-favicon">
 
 
 <!-- Injeção Dinâmica de Cores de Branding -->
@@ -687,7 +689,7 @@
         <!-- Novo Card de Mídias e Contato à Direita -->
         <div class="sobre-right-card select-none">
             <!-- Logo do Restaurante (Bolinha perfeita sem corte) -->
-            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center p-3" style="background-color: {% if restaurante.slug == 'premibeer' %}#0f172a{% elif restaurante.slug == 'casa-de-engenho' %}#4a2306{% else %}#ffffff{% endif %}; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.03);">
+            <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center p-3" style="background-color: {% if restaurante.slug == 'premibeer' %}#0f172a{% elif restaurante.slug == 'casa-de-engenho' %}#4a2306{% elif restaurante.slug == 'biene-cacau' %}#27140b{% else %}#ffffff{% endif %}; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.03);">
                 <img src="{% if restaurante.logo %}{{ restaurante.logo.url }}{% elif restaurante.imagem %}{{ restaurante.imagem.url }}{% endif %}" 
                      alt="Logo {{ restaurante.nome }}" 
                      class="w-full h-full object-contain">

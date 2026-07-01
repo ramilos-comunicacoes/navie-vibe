@@ -33,6 +33,7 @@
     {% endblock %}
     
     <!-- Favicon Dinâmico -->
+    {% block favicon %}
     {% if request.hotel_atual and request.hotel_atual.favicon %}
         <link rel="icon" type="image/png" href="{{ request.hotel_atual.favicon.url }}">
         <link rel="apple-touch-icon" href="{{ request.hotel_atual.favicon.url }}">
@@ -55,6 +56,7 @@
         <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
         <link rel="apple-touch-icon" href="{% static 'images/favicon.png' %}">
     {% endif %}
+    {% endblock favicon %}
     <!-- Google Fonts: Inter (Sans), Poppins (Sans) e Quicksand (Display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
