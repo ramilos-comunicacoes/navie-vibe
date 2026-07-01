@@ -18,6 +18,11 @@ class PartnerHotelMiddleware:
             hotel_ativo = perfil.hotel
             hoteis_autorizados = []
             
+            # Dynamic switch for portaria based on subdomain if in the same company
+            if perfil.role == 'portaria' and hasattr(request, 'hotel_atual') and request.hotel_atual and perfil.hotel and perfil.hotel.empresa:
+                if request.hotel_atual.empresa == perfil.hotel.empresa:
+                    hotel_ativo = request.hotel_atual
+            
             # Global roles can toggle active properties within the same company (Empresa)
             if (perfil.role in ['proprietario', 'gerente'] or request.user.is_superuser) and perfil.hotel and perfil.hotel.empresa:
                 empresa = perfil.hotel.empresa
