@@ -4867,6 +4867,71 @@ def portal_grupo(request, slug=None):
     return render(request, 'hoteis/portal_grupo.html', context)
 
 
+@login_required(login_url='hoteis:partner_login')
+def partner_validador_buscar(request):
+    """
+    Busca uma reserva no hotel parceiro ativo pelo CPF ou pelo UUID da reserva.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    cpf = request.POST.get('cpf', '').strip()
+    uuid_str = request.POST.get('uuid', '').strip()
+    
+    from django.db.models import Q
+    reserva = None
+    
+    if cpf:
+        # Remove caracteres não numéricos
+        clean_cpf = ''.join(filter(str.isdigit, cpf))
+        reserva = Reserva.objects.filter(unidade__quarto__hotel=hotel).filter(
+            Q(hospede_cpf=cpf) | Q(hospede_cpf=clean_cpf)
+        ).first()
+        
+    if not reserva and uuid_str:
+        try:
+            reserva = Reserva.objects.filter(unidade__quarto__hotel=hotel, id=uuid_str).first()
+        except (ValueError, TypeError):
+            pass
+            
+    return render(request, 'hoteis/partials/validador_resultado.html', {
+        'reserva': reserva,
+        'sucesso': False
+    })
+
+
+@login_required(login_url='hoteis:partner_login')
+@require_POST
+def partner_validador_checkin(request, reserva_id):
+    """
+    Realiza o check-in da reserva via tela de validador de portaria.
+    """
+    if not hasattr(request.user, 'perfil_parceiro'):
+        return HttpResponse("Não autorizado", status=403)
+        
+    hotel = request.user.perfil_parceiro.hotel
+    reserva = get_object_or_404(Reserva, id=reserva_id, unidade__quarto__hotel=hotel)
+    
+    from django.utils import timezone
+    reserva.status = 'hospedado'
+    reserva.checkin_realizado_em = timezone.now()
+    reserva.save()
+    
+    # Log de ação
+    ReservaLog.objects.create(
+        reserva=reserva,
+        usuario=request.user,
+        acao='checkin',
+        detalhes=f"Check-in realizado via Validador pelo usuário {request.user.username}."
+    )
+    
+    return render(request, 'hoteis/partials/validador_resultado.html', {
+        'reserva': reserva,
+        'sucesso': True
+    })
+
+
 
 
 

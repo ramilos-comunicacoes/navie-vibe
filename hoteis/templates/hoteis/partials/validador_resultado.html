@@ -1,0 +1,93 @@
+{% load static %}
+
+{% if not reserva %}
+<div class="bg-red-500/5 dark:bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 p-5 rounded-3xl flex items-center gap-4 animate-in fade-in duration-300">
+    <span class="flex items-center text-red-500"><i data-lucide="alert-circle" class="w-6 h-6"></i></span>
+    <div>
+        <h5 class="text-sm font-black uppercase tracking-tight">Nenhuma reserva encontrada</h5>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Nenhuma reserva ativa foi localizada com o CPF ou Localizador fornecido. Verifique os dígitos e tente novamente.</p>
+    </div>
+</div>
+{% else %}
+<div class="bg-white/80 dark:bg-black/30 border border-slate-200/80 dark:border-navie-border rounded-3xl p-6 shadow-sm backdrop-blur-md animate-in fade-in duration-300 space-y-6">
+    
+    {% if sucesso %}
+    <div class="bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 p-4 rounded-2xl flex items-center gap-3">
+        <span class="flex items-center text-emerald-500"><i data-lucide="check-circle" class="w-5 h-5 animate-bounce"></i></span>
+        <span class="text-xs font-bold">Check-in de <strong>{{ reserva.hospede_nome }}</strong> realizado com sucesso em {{ reserva.checkin_realizado_em|date:"d/m/Y H:i" }}!</span>
+    </div>
+    {% endif %}
+
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-slate-100 dark:border-white/5">
+        <div>
+            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Localizador (UUID)</span>
+            <h4 class="text-sm sm:text-base font-black text-slate-800 dark:text-white mt-0.5 font-mono">{{ reserva.id }}</h4>
+        </div>
+        <div class="shrink-0">
+            {% if reserva.status == 'confirmada' %}
+                <span class="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">Confirmada</span>
+            {% elif reserva.status == 'pendente' %}
+                <span class="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">Pendente</span>
+            {% elif reserva.status == 'hospedado' %}
+                <span class="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Hospedado</span>
+            {% elif reserva.status == 'cancelada' %}
+                <span class="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-red-500/10 text-red-600 dark:text-red-400">Cancelada</span>
+            {% else %}
+                <span class="px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400">Concluída</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase">Hóspede Titular</label>
+            <span class="block text-xs font-black text-slate-800 dark:text-white mt-1">{{ reserva.hospede_nome }}</span>
+            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ reserva.hospede_cpf|default:"CPF não informado" }}</span>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase">Acomodação / Quarto</label>
+            <span class="block text-xs font-black text-slate-800 dark:text-white mt-1">{{ reserva.unidade.quarto.nome }}</span>
+            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">Nº {{ reserva.unidade.identificador }}</span>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase">Período da Estadia</label>
+            <span class="block text-xs font-black text-slate-800 dark:text-white mt-1">{{ reserva.data_checkin|date:"d/m/Y" }} a {{ reserva.data_checkout|date:"d/m/Y" }}</span>
+            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">{{ reserva.noites }} noites</span>
+        </div>
+        <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase">Valor Total</label>
+            <span class="block text-xs font-black text-slate-800 dark:text-white mt-1">R$ {{ reserva.preco_total }}</span>
+            <span class="block text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">Forma: {{ reserva.get_forma_pagamento_display|default:"Não definido" }}</span>
+        </div>
+    </div>
+
+    <div class="flex justify-end pt-4 border-t border-slate-100 dark:border-white/5">
+        {% if reserva.status == 'confirmada' or reserva.status == 'pendente' %}
+            <button hx-post="{% url 'hoteis:partner_validador_checkin' reserva.id %}"
+                    hx-target="#validador-resultados"
+                    hx-swap="innerHTML"
+                    class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-2xl text-xs font-black transition-all shadow-md shadow-brand-600/10 flex items-center gap-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i> Realizar Check-in
+            </button>
+        {% elif reserva.status == 'hospedado' %}
+            <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                <i data-lucide="check" class="w-4 h-4"></i> Hóspede já se encontra na acomodação.
+            </div>
+        {% elif reserva.status == 'cancelada' %}
+            <div class="flex items-center gap-2 text-red-600 dark:text-red-400 text-xs font-bold">
+                <i data-lucide="ban" class="w-4 h-4"></i> Reserva cancelada no sistema.
+            </div>
+        {% else %}
+            <div class="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-xs font-bold">
+                <i data-lucide="archive" class="w-4 h-4"></i> Estadia concluída e finalizada.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+<script>
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+{% endif %}

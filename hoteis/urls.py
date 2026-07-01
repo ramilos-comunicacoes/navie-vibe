@@ -56,6 +56,8 @@ urlpatterns = [
     path('hospedagens/reservas/<uuid:reserva_id>/checkout/', views.partner_reserva_checkout, name='partner_reserva_checkout'),
     path('hospedagens/reservas/<uuid:reserva_id>/checkout-mapa/', views.partner_checkout_quarto_mapa, name='partner_checkout_quarto_mapa'),
     path('hospedagens/reservas/<uuid:reserva_id>/cancelar/', views.partner_reserva_cancelar, name='partner_reserva_cancelar'),
+    path('hospedagens/validador/buscar/', views.partner_validador_buscar, name='partner_validador_buscar'),
+    path('hospedagens/validador/<uuid:reserva_id>/checkin/', views.partner_validador_checkin, name='partner_validador_checkin'),
     
     # Atendimento ao Hóspede, Concierge & Consumo
     path('hospedagens/hospedes/pedidos/', views.partner_hospedes_pedidos, name='partner_hospedes_pedidos'),
