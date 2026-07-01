@@ -2395,7 +2395,7 @@ def partner_quarto_formulario(request, quarto_id=None):
     """
     Carrega o formulário completo de criação ou edição de quarto via HTMX.
     """
-    if not hasattr(request.user, 'perfil_parceiro'):
+    if not hasattr(request.user, 'perfil_parceiro') or request.user.perfil_parceiro.role not in ['proprietario', 'gerente']:
         return HttpResponse("Não autorizado", status=403)
         
     hotel = request.user.perfil_parceiro.hotel
@@ -2632,7 +2632,7 @@ def partner_quarto_salvar(request):
     Salva ou atualiza um quarto com suporte a upload de múltiplas imagens,
     descontos multidias, categorização e SEO/IA. Retorna a grade atualizada via HTMX.
     """
-    if not hasattr(request.user, 'perfil_parceiro'):
+    if not hasattr(request.user, 'perfil_parceiro') or request.user.perfil_parceiro.role not in ['proprietario', 'gerente']:
         return HttpResponse("Não autorizado", status=403)
         
     hotel = request.user.perfil_parceiro.hotel
@@ -2758,7 +2758,7 @@ def partner_quarto_deletar(request, quarto_id):
     """
     Exclui um quarto do estabelecimento e retorna a grade atualizada via HTMX.
     """
-    if not hasattr(request.user, 'perfil_parceiro'):
+    if not hasattr(request.user, 'perfil_parceiro') or request.user.perfil_parceiro.role not in ['proprietario', 'gerente']:
         return HttpResponse("Não autorizado", status=403)
         
     hotel = request.user.perfil_parceiro.hotel
@@ -2779,7 +2779,7 @@ def partner_quarto_deletar_imagem(request, imagem_id):
     """
     Exclui uma imagem específica do quarto via HTMX. Retorna string vazia para remover o card.
     """
-    if not hasattr(request.user, 'perfil_parceiro'):
+    if not hasattr(request.user, 'perfil_parceiro') or request.user.perfil_parceiro.role not in ['proprietario', 'gerente']:
         return HttpResponse("Não autorizado", status=403)
         
     hotel = request.user.perfil_parceiro.hotel

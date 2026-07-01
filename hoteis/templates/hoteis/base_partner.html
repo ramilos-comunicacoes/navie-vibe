@@ -1140,6 +1140,22 @@ x-data="{
                         </a>
                     </li>
                     <li>
+                        <a href="javascript:void(0)" @click="activeTab = 'reservas'" :class="activeTab === 'reservas' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                            <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="calendar-check" class="w-5 h-5"></i></span>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Reservas</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="javascript:void(0)" @click="activeTab = 'quartos'; quartosTab = 'mapa';" :class="activeTab === 'quartos' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
+                            <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
+                                <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bed" class="w-5 h-5"></i></span>
+                            </div>
+                            <span class="ml-3 opacity-100 md:opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Mapa de Quartos</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="javascript:void(0)" @click="activeTab = 'hospedes'" :class="activeTab === 'hospedes' ? 'text-brand dark:text-white bg-brand-50/80 dark:bg-white/10 font-semibold' : 'text-slate-500 dark:text-navie-textsec hover:text-brand-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-white/10'" class="relative flex items-center p-2 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap group/link">
                             <div class="relative flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md">
                                 <span class="flex items-center justify-center" style="pointer-events: none;"><i data-lucide="bell-ring" class="w-5 h-5"></i></span>
@@ -1240,6 +1256,9 @@ x-data="{
                     <!-- Título Dinâmico do Cabeçalho por Abas AlpineJS -->
                     <h1 class="text-sm sm:text-base font-black text-slate-800 dark:text-white tracking-tight leading-tight uppercase">
                         <span x-show="activeTab === 'financeiro'" style="display: none;">Financeiro</span>
+                        {% if perfil.role == 'portaria' %}
+                        <span x-show="activeTab === 'quartos'" style="display: none;">Mapa de Quartos</span>
+                        {% else %}
                         <div x-show="activeTab === 'quartos'" class="inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="quartosTab = 'mapa'; localStorage.setItem('partner_quartos_tab', 'mapa')"
                                     :class="quartosTab === 'mapa' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm font-black' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium'"
@@ -1254,6 +1273,7 @@ x-data="{
                                 <span>Categorias & Acomodações</span>
                             </button>
                         </div>
+                        {% endif %}
                         <span x-show="activeTab === 'reservas'" class="md:hidden animate-in fade-in" style="display: none;">Aprovações & Reservas</span>
                         <div x-show="activeTab === 'reservas'" class="hidden md:inline-flex items-center bg-slate-100 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/10 select-none normal-case" style="display: none;">
                             <button type="button" @click="reservasTab = 'mapa'; localStorage.setItem('partner_reservas_tab', 'mapa')"
