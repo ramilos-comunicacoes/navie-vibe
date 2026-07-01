@@ -43,6 +43,16 @@ def get_git_modified_files():
         "media/restaurantes/logos/casa-de-engenho_logo.jpg",
         "media/restaurantes/logos/casa-de-engenho_logo.png",
         "media/restaurantes/logos/casa-de-engenho_favicon.png",
+        "media/restaurantes/galeria/manaca/file_mignon.png",
+        "media/restaurantes/galeria/manaca/camarao_fettuccine.png",
+        "media/restaurantes/galeria/manaca/risoto_carne_sol.png",
+        "media/restaurantes/galeria/manaca/maminha_laminada.png",
+        "media/restaurantes/galeria/manaca/croquete_vaca_atolada.png",
+        "media/restaurantes/galeria/manaca/croquete_toscana.png",
+        "media/restaurantes/galeria/manaca/salada_agridoce.png",
+        "media/restaurantes/galeria/manaca/banana_flambada.png",
+        "media/restaurantes/galeria/manaca/compota.png",
+        "media/restaurantes/galeria/manaca/soda_verao.png",
         "register_restaurants_navie.py",
         "create_restaurant_credentials.py"
     ]
