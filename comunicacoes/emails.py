@@ -49,7 +49,9 @@ def enviar_email_confirmacao_reserva(reserva):
         )
         return False
         
-    assunto = f"Reserva Confirmada! Seu voucher #{str(reserva.id)[:6].upper()} - Naviê Vibe"
+    hotel_nome = reserva.unidade.quarto.hotel.nome
+    prep = "na" if "pousada" in hotel_nome.lower() else "no"
+    assunto = f"Reserva Confirmada {prep} {hotel_nome} - Naviê Vibe"
     
     # Prepara dados adicionais para o contexto
     hospede_cpf_mascarado = ""
