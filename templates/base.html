@@ -39,6 +39,9 @@
     {% elif hotel and hotel.logo %}
         <link rel="icon" type="image/png" href="{{ hotel.logo.url }}">
         <link rel="apple-touch-icon" href="{{ hotel.logo.url }}">
+    {% elif empresa and empresa.logo %}
+        <link rel="icon" type="image/png" href="{{ empresa.logo.url }}">
+        <link rel="apple-touch-icon" href="{{ empresa.logo.url }}">
     {% else %}
         <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
         <link rel="apple-touch-icon" href="{% static 'images/favicon.png' %}">
