@@ -340,8 +340,8 @@ x-data="{
             };
             
             return {
-                50: blend(r, g, b, 0.96),
-                100: blend(r, g, b, 0.88),
+                50: blend(r, g, b, 0.08),
+                100: blend(r, g, b, 0.16),
                 500: hexColor,
                 600: blend(r, g, b, -0.15),
                 900: blend(r, g, b, -0.6)
@@ -364,20 +364,38 @@ x-data="{
         const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
         let brandText = '#ffffff';
         let brandColorBurned = activeBrandColor;
-        if (yiq >= 170) { // Light color! (Safety contrast)
-            // 55% darker for contrast readability
+        let activeMenuBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
+        let activeMenuText = activeBrandColor;
+
+        if (yiq >= 190) { // Cores muito claras (amarelos claros, beges, branco)
+            // 55% mais escuro para contraste de leitura
             const factor = 0.45;
             const dr = Math.max(0, Math.round(r * factor));
             const dg = Math.max(0, Math.round(g * factor));
             const db = Math.max(0, Math.round(b * factor));
             brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
-            brandText = brandColorBurned; // Burned color as text on top of bright background
+            brandText = brandColorBurned; // Cor queimada como texto sobre fundo claro
+            
+            activeMenuBg = `rgba(${r}, ${g}, ${b}, 0.15)`;
+            activeMenuText = brandColorBurned;
         } else {
+            // Cores médias/escuras (laranja, azul, verde, amarelo queimado)
             brandText = '#ffffff';
-            brandColorBurned = activeBrandColor;
+            // Escurece um pouco (25%) para uso geral do texto .text-brand em fundos brancos
+            const factor = 0.75;
+            const dr = Math.max(0, Math.round(r * factor));
+            const dg = Math.max(0, Math.round(g * factor));
+            const db = Math.max(0, Math.round(b * factor));
+            brandColorBurned = "#" + ((1 << 24) + (dr << 16) + (dg << 8) + db).toString(16).slice(1);
+            
+            // Fundo da aba ativa fica com a cor cheia da marca e texto branco!
+            activeMenuBg = activeBrandColor;
+            activeMenuText = '#ffffff';
         }
         document.documentElement.style.setProperty('--brand-text', brandText);
         document.documentElement.style.setProperty('--brand-color-burned', brandColorBurned);
+        document.documentElement.style.setProperty('--active-menu-bg', activeMenuBg);
+        document.documentElement.style.setProperty('--active-menu-text', activeMenuText);
 
         tailwind.config = {
             darkMode: 'class',
@@ -882,13 +900,26 @@ x-data="{
             color: var(--brand-color-burned) !important;
         }
         
-        /* Sidebar active navigation override for premium contrast */
-        .group\/sidebar a.bg-brand-50\/80 {
-            background-color: var(--brand-color-alpha) !important;
-            color: var(--brand-color-burned) !important;
+        /* Active B2B menu items & dropdown selectors contrast-safety override */
+        .group\/sidebar a.bg-brand-50\/80,
+        .relative.z-\[90\] a.bg-brand-50\/80 {
+            background-color: var(--active-menu-bg) !important;
+            color: var(--active-menu-text) !important;
         }
-        .group\/sidebar a.bg-brand-50\/80 i, .group\/sidebar a.bg-brand-50\/80 svg, .group\/sidebar a.bg-brand-50\/80 span {
-            color: var(--brand-color-burned) !important;
+        .group\/sidebar a.bg-brand-50\/80 i, .group\/sidebar a.bg-brand-50\/80 svg, .group\/sidebar a.bg-brand-50\/80 span,
+        .relative.z-\[90\] a.bg-brand-50\/80 i, .relative.z-\[90\] a.bg-brand-50\/80 svg, .relative.z-\[90\] a.bg-brand-50\/80 span {
+            color: var(--active-menu-text) !important;
+        }
+
+        /* Override back to white / glass in dark/glass mode */
+        .dark .group\/sidebar a.bg-brand-50\/80,
+        .dark .relative.z-\[90\] a.bg-brand-50\/80 {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+        .dark .group\/sidebar a.bg-brand-50\/80 i, .dark .group\/sidebar a.bg-brand-50\/80 svg, .dark .group\/sidebar a.bg-brand-50\/80 span,
+        .dark .relative.z-\[90\] a.bg-brand-50\/80 i, .dark .relative.z-\[90\] a.bg-brand-50\/80 svg, .dark .relative.z-\[90\] a.bg-brand-50\/80 span {
+            color: #ffffff !important;
         }
 
         /* Ocultar barras de rolagem nativas para seletores customizados */
@@ -1392,14 +1423,14 @@ x-data="{
                     <!-- Alternador de Pousadas Premium (Custom Dropdown) -->
                     <div x-data="{ open: false }" class="relative z-[90]">
                         <button @click="open = !open" @click.outside="open = false" 
-                                class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white h-9 w-9 lg:w-auto lg:px-3 justify-center items-center rounded-2xl transition-colors gap-2 text-xs font-medium shadow-sm dark:shadow-none shrink-0">
+                                class="flex bg-white/80 dark:bg-transparent border border-slate-200/80 dark:border-navie-border text-slate-500 dark:text-navie-textsec hover:text-brand dark:hover:text-white h-9 w-9 sm:h-10 sm:w-10 lg:w-auto lg:px-3 justify-center items-center rounded-xl transition-colors gap-2 text-xs font-medium shadow-sm dark:shadow-none shrink-0">
                             <span class="flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="building" class="w-3.5 h-3.5"></i></span>
                             <span class="hidden lg:inline truncate max-w-[120px]" x-text="activeTab === 'configuracoes' && configTab === 'geral' ? 'Geral (Grupo)' : '{{ hotel.nome }}'">{{ hotel.nome }}</span>
                             <span class="hidden lg:flex items-center justify-center text-slate-400 dark:text-navie-textsec"><i data-lucide="chevron-down" class="w-3 h-3"></i></span>
                         </button>
                         
                         <div x-show="open" x-transition.opacity style="display: none;"
-                             class="absolute left-0 right-0 mt-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-navie-border shadow-xl p-1 flex flex-col gap-1 z-[99]">
+                             class="absolute left-1/2 -translate-x-1/2 mt-1.5 w-60 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-navie-border shadow-xl p-1.5 flex flex-col gap-1 z-[99]">
                             {% for h in request.hoteis_autorizados %}
                                 <a hx-boost="true" hx-target="body" hx-push-url="true" :href="'?set_hotel={{ h.id }}&tab=' + activeTab + (activeTab === 'configuracoes' ? '&config_tab=site' : '')"
                                    class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-colors"
