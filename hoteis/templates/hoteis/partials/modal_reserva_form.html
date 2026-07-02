@@ -759,49 +759,120 @@ x-show="open" class="fixed inset-0 z-[100] flex items-center justify-center p-4 
                         win.document.write('<html><head><title>Comprovante de Reserva - Naviê Vibe</title>');
                         win.document.write('<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">');
                         win.document.write('<style>');
-                        win.document.write('body { font-family: "Outfit", sans-serif; padding: 40px; color: #0f172a; display: flex; justify-content: center; }');
-                        win.document.write('.ticket { width: 420px; border: 2px solid #e2e8f0; border-radius: 24px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }');
-                        win.document.write('.header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 16px; margin-bottom: 20px; }');
-                        win.document.write('.header h4 { margin: 0; font-size: 18px; font-weight: 800; color: #0b1a30; }');
-                        win.document.write('.header span { font-size: 11px; color: #64748b; font-weight: 600; text-transform: uppercase; }');
-                        win.document.write('.header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #ff7a00; }');
-                        win.document.write('.grid { display: grid; grid-template-cols: 1fr 1fr; gap: 16px; font-size: 13px; margin-bottom: 20px; }');
-                        win.document.write('.col-2 { grid-column: span 2; }');
-                        win.document.write('.label { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }');
-                        win.document.write('.value { font-weight: 700; color: #0f172a; margin-top: 2px; }');
-                        win.document.write('.footer-total { border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; }');
-                        win.document.write('.total-price { font-size: 18px; font-weight: 800; color: #16a34a; }');
-                        win.document.write('.qr-box { background: #f1f5f9; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 16px; border: 1px solid #e2e8f0; }');
-                        win.document.write('.qr-img { background: #fff; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; display: inline-block; margin-bottom: 8px; }');
-                        win.document.write('.qr-text { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }');
+                        win.document.write('  body { margin: 0; padding: 20px; background-color: #f0f4f8; font-family: "Outfit", sans-serif; display: flex; justify-content: center; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+                        win.document.write('  .card { width: 600px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }');
+                        win.document.write('  .header { background-color: #0b1a30; padding: 25px 35px; border-bottom: 3px solid #ff7a00; display: flex; justify-content: space-between; align-items: center; }');
+                        win.document.write('  .header img { height: 38px; width: auto; }');
+                        win.document.write('  .header span { color: #ffffff; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }');
+                        win.document.write('  .content { padding: 40px 35px; }');
+                        win.document.write('  .welcome-title { margin: 0 0 10px 0; font-size: 22px; font-weight: 800; color: #0b1a30; }');
+                        win.document.write('  .welcome-subtitle { margin: 0 0 25px 0; font-size: 15px; line-height: 1.6; color: #475569; }');
+                        win.document.write('  .ticket { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; margin-bottom: 30px; }');
+                        win.document.write('  .ticket-header { background-color: #f1f5f9; padding: 15px 20px; border-bottom: 2px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center; }');
+                        win.document.write('  .ticket-header-left { display: flex; flex-direction: column; }');
+                        win.document.write('  .ticket-header-left span { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }');
+                        win.document.write('  .ticket-header-left h3 { margin: 2px 0 0 0; font-size: 20px; font-weight: 800; color: #ff7a00; }');
+                        win.document.write('  .badge { background-color: #dcfce7; color: #15803d; font-size: 11px; font-weight: bold; padding: 6px 12px; border-radius: 30px; text-transform: uppercase; letter-spacing: 0.5px; }');
+                        win.document.write('  .dates-container { display: flex; border-bottom: 1px solid #e2e8f0; }');
+                        win.document.write('  .date-box { padding: 20px; width: 50%; box-sizing: border-box; }');
+                        win.document.write('  .date-box:first-child { border-right: 1px solid #e2e8f0; }');
+                        win.document.write('  .label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }');
+                        win.document.write('  .val { margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0b1a30; }');
+                        win.document.write('  .sub-label { font-size: 12px; color: #64748b; margin-top: 2px; display: block; }');
+                        win.document.write('  .room-details { padding: 20px; border-bottom: 1px solid #e2e8f0; }');
+                        win.document.write('  .guests-details { padding: 20px; background-color: #f8fafc; }');
+                        win.document.write('  .guest-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #0b1a30; margin-top: 5px; }');
+                        win.document.write('  .guest-row span.cpf { font-family: monospace; color: #64748b; }');
+                        win.document.write('  .qr-section { padding: 25px 20px; background-color: #f1f5f9; text-align: center; border-top: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; }');
+                        win.document.write('  .qr-holder { background-color: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; display: inline-block; margin-bottom: 10px; }');
+                        win.document.write('  .qr-holder img { display: block; }');
+                        win.document.write('  .financial-section { margin-bottom: 35px; }');
+                        win.document.write('  .financial-title { margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #0b1a30; text-transform: uppercase; letter-spacing: 1px; }');
+                        win.document.write('  .financial-row { display: flex; justify-content: space-between; font-size: 14px; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }');
+                        win.document.write('  .financial-row.total { font-size: 16px; font-weight: bold; border-bottom: none; padding-top: 15px; }');
+                        win.document.write('  .financial-row.total .price { font-size: 18px; font-weight: 800; color: #16a34a; }');
+                        win.document.write('  .footer { background-color: #f8fafc; border-top: 1px solid #f1f5f9; padding: 30px 25px; text-align: center; }');
+                        win.document.write('  .footer h4 { margin: 0 0 4px 0; font-size: 14px; color: #0b1a30; font-weight: 700; }');
+                        win.document.write('  .footer p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.4; }');
+                        win.document.write('  @media print {');
+                        win.document.write('    body { background-color: #ffffff; padding: 0; }');
+                        win.document.write('    .card { border: none; box-shadow: none; width: 100%; }');
+                        win.document.write('  }');
                         win.document.write('</style>');
                         win.document.write('</head><body>');
                         
-                        win.document.write('<div class="ticket">');
+                        win.document.write('<div class="card">');
                         win.document.write('  <div class="header">');
-                        win.document.write('    <div><h4>Naviê Vibe</h4><span>{{ hotel.nome }}</span></div>');
-                        win.document.write('    <div style="text-align: right;"><span style="font-size: 9px;">Voucher</span><h3>#{{ reserva.id|slice:":8"|upper }}</h3></div>');
+                        win.document.write('    <img src="https://pousadasramilos.navievibe.com/static/images/logo_navie_completa_white.png" alt="Naviê Vibe">');
+                        win.document.write('    <span>{{ hotel.nome }}</span>');
                         win.document.write('  </div>');
-                        win.document.write('  <div class="grid">');
-                        win.document.write('    <div class="col-2" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; margin-bottom: 4px;"><div class="label" style="margin-bottom: 6px;">Hóspedes Registrados</div>');
+                        win.document.write('  <div class="content">');
+                        win.document.write('    <h2 class="welcome-title">Olá, {{ reserva.hospede_nome }}!</h2>');
+                        win.document.write('    <p class="welcome-subtitle"><strong>Prepara as malas!</strong> Estamos muito felizes em confirmar sua estadia. Seu pagamento foi processado com sucesso e o seu voucher digital já está gerado.</p>');
+                        
+                        win.document.write('    <div class="ticket">');
+                        win.document.write('      <div class="ticket-header">');
+                        win.document.write('        <div class="ticket-header-left">');
+                        win.document.write('          <span>Código do Voucher</span>');
+                        win.document.write('          <h3>#{{ reserva.id|slice:":8"|upper }}</h3>');
+                        win.document.write('        </div>');
+                        win.document.write('        <span class="badge">Reserva Confirmada</span>');
+                        win.document.write('      </div>');
+                        
+                        win.document.write('      <div class="dates-container">');
+                        win.document.write('        <div class="date-box">');
+                        win.document.write('          <span class="label">Check-in (Entrada)</span>');
+                        win.document.write('          <h4 class="val">{{ reserva.data_checkin|date:"d/m/Y" }}</h4>');
+                        win.document.write('          <span class="sub-label">A partir das 14:00</span>');
+                        win.document.write('        </div>');
+                        win.document.write('        <div class="date-box">');
+                        win.document.write('          <span class="label">Check-out (Saída)</span>');
+                        win.document.write('          <h4 class="val">{{ reserva.data_checkout|date:"d/m/Y" }}</h4>');
+                        win.document.write('          <span class="sub-label">Até as 12:00</span>');
+                        win.document.write('        </div>');
+                        win.document.write('      </div>');
+                        
+                        win.document.write('      <div class="room-details">');
+                        win.document.write('        <span class="label">Acomodação Reservada</span>');
+                        win.document.write('        <h4 class="val" style="font-size: 15px; margin-top: 4px;">{{ reserva.unidade.quarto.nome }} - Unidade: {{ reserva.unidade.identificador }}</h4>');
+                        win.document.write('        <span class="sub-label">Pousada: {{ hotel.nome }}</span>');
+                        win.document.write('      </div>');
+                        
+                        win.document.write('      <div class="guests-details">');
+                        win.document.write('        <span class="label" style="margin-bottom: 6px; display: block;">Hóspedes Registrados</span>');
                         {% for h in hospedes %}
-                        win.document.write('      <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; font-size: 11px; margin-top: 4px;"><span>{{ h.nome }}</span><span style="font-family: monospace; color: #64748b;">{{ h.cpf|default:"-" }}</span></div>');
+                        win.document.write('        <div class="guest-row"><span>{{ h.nome }}</span><span class="cpf">{{ h.cpf|default:"-" }}</span></div>');
                         {% empty %}
-                        win.document.write('      <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a; font-size: 11px; margin-top: 4px;"><span>{{ reserva.hospede_nome }}</span><span style="font-family: monospace; color: #64748b;">{{ reserva.hospede_cpf|default:"-" }}</span></div>');
+                        win.document.write('        <div class="guest-row"><span>{{ reserva.hospede_nome }}</span><span class="cpf">{{ reserva.hospede_cpf|default:"-" }}</span></div>');
                         {% endfor %}
+                        win.document.write('      </div>');
+                        
+                        win.document.write('      <div class="qr-section">');
+                        win.document.write('        <div class="qr-holder">');
+                        win.document.write('          <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ reserva.id }}" width="140" height="140" alt="QR Code">');
+                        win.document.write('        </div>');
+                        win.document.write('        <span class="label" style="font-size: 10px; color: #64748b;">Apresente este QR Code ao chegar para agilizar seu Check-in</span>');
+                        win.document.write('      </div>');
                         win.document.write('    </div>');
-                        win.document.write('    <div><div class="label">Check-in</div><div class="value">{{ reserva.data_checkin|date:"d/m/Y" }}</div></div>');
-                        win.document.write('    <div><div class="label">Check-out</div><div class="value">{{ reserva.data_checkout|date:"d/m/Y" }}</div></div>');
-                        win.document.write('    <div><div class="label">Acomodação</div><div class="value">{{ reserva.unidade.quarto.nome }} - Quarto {{ reserva.unidade.identificador }}</div></div>');
-                        win.document.write('    <div><div class="label">Total Hóspedes</div><div class="value">{{ reserva.quantidade_hospedes }} Pessoa(s)</div></div>');
+                        
+                        win.document.write('    <div class="financial-section">');
+                        win.document.write('      <h3 class="financial-title">Resumo Financeiro</h3>');
+                        win.document.write('      <div class="financial-row">');
+                        win.document.write('        <span style="color: #64748b;">Valor das Diárias</span>');
+                        win.document.write('        <span style="font-weight: 600; color: #0b1a30;">R$ {{ reserva.valor_total }}</span>');
+                        win.document.write('      </div>');
+                        win.document.write('      <div class="financial-row total">');
+                        win.document.write('        <span style="color: #0b1a30;">Total Pago</span>');
+                        win.document.write('        <span class="price">R$ {{ reserva.valor_total }}</span>');
+                        win.document.write('      </div>');
+                        win.document.write('    </div>');
                         win.document.write('  </div>');
-                        win.document.write('  <div class="footer-total">');
-                        win.document.write('    <div><div class="label">Total Estadia</div><div style="font-size: 10px; color:#64748b;">Valor Pago</div></div>');
-                        win.document.write('    <div class="total-price">R$ {{ reserva.valor_total|floatformat:2 }}</div>');
-                        win.document.write('  </div>');
-                        win.document.write('  <div class="qr-box">');
-                        win.document.write('    <div class="qr-img"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={{ reserva.id }}" width="110" height="110"></div>');
-                        win.document.write('    <div class="qr-text">Apresente este QR Code ao chegar para realizar seu check-in</div>');
+                        
+                        win.document.write('  <div class="footer">');
+                        win.document.write('    <h4>{{ hotel.nome }}</h4>');
+                        {% if hotel.endereco_completo %}
+                        win.document.write('    <p style="margin-top: 4px;">{{ hotel.endereco_completo }}</p>');
+                        {% endif %}
                         win.document.write('  </div>');
                         win.document.write('</div>');
                         
